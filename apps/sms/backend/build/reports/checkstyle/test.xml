@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<checkstyle version="10.20.2">
-<file name="C:\Users\PC202411-1\IdeaProjects\practical-database-design\apps\sms\backend\src\test\java\com\example\sms\DatabaseConnectionTest.java">
-</file>
-<file name="C:\Users\PC202411-1\IdeaProjects\practical-database-design\apps\sms\backend\src\test\java\com\example\sms\testsetup\BaseIntegrationTest.java">
-</file>
-</checkstyle>

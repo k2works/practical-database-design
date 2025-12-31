@@ -144,5 +144,10 @@ vite.config.ts.timestamp-*
 # IDE
 .idea/
 
+# Gradle
+.gradle/
+**/build/
+!**/src/**/build/
+
 # Wiki submodule
 docs/wiki/
