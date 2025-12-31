@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Application クラスの除外 -->
+    <Match>
+        <Class name="com.example.sms.Application"/>
+    </Match>
+
+    <!-- Lombok 生成コードの除外 -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- テストクラスの除外 -->
+    <Match>
+        <Source name="~.*Test\.java"/>
+    </Match>
+</FindBugsFilter>

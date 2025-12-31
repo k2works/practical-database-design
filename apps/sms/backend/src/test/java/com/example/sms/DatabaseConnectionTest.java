@@ -1,0 +1,67 @@
+package com.example.sms;
+
+import com.example.sms.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DisplayName("データベース接続")
+class DatabaseConnectionTest extends BaseIntegrationTest {
+
+    @Autowired
+    private DataSource dataSource;
+
+    @Test
+    @DisplayName("PostgreSQLに接続できる")
+    void canConnectToPostgres() throws Exception {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT 1")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getInt(1)).isEqualTo(1);
+        }
+    }
+
+    @Test
+    @DisplayName("商品区分ENUMが作成されている")
+    void productTypeEnumExists() throws Exception {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT unnest(enum_range(NULL::商品区分))::text")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getString(1)).isEqualTo("商品");
+        }
+    }
+
+    @Test
+    @DisplayName("取引先区分ENUMが作成されている")
+    void partnerTypeEnumExists() throws Exception {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT unnest(enum_range(NULL::取引先区分))::text")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getString(1)).isEqualTo("顧客");
+        }
+    }
+
+    @Test
+    @DisplayName("税区分ENUMが作成されている")
+    void taxTypeEnumExists() throws Exception {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT unnest(enum_range(NULL::税区分))::text")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getString(1)).isEqualTo("外税");
+        }
+    }
+}

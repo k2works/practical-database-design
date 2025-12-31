@@ -1,0 +1,2 @@
+C:\Users\PC202411-1\IdeaProjects\practical-database-design\apps\sms\backend\build\classes\java\test\com\example\sms\DatabaseConnectionTest.class
+C:\Users\PC202411-1\IdeaProjects\practical-database-design\apps\sms\backend\build\classes\java\test\com\example\sms\testsetup\BaseIntegrationTest.class
