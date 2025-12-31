@@ -139,9 +139,18 @@
 ### 4.3 販売管理システムのアーキテクチャ
 
 - プロジェクト構成
-  - フロントエンド（プレゼンテーション層）
-  - バックエンド（アプリケーション層）
-  - データベース（永続化層）
+  - Domain層（ドメイン層）
+    - model（ドメインモデル）
+    - type（基本型：通貨、単位、数量等）
+    - exception（ドメイン例外）
+  - Application層（アプリケーション層）
+    - port/in（Input Port）
+    - port/out（Output Port）
+    - service（Application Service）
+  - Infrastructure層（インフラストラクチャ層）
+    - in/rest（Input Adapter - REST API）
+    - out/persistence（Output Adapter - 永続化）
+    - config（設定）
 - ヘキサゴナルアーキテクチャ（ポート&アダプター）
   - ドメイン（中心）
   - ポート（入力ポート・出力ポート）
@@ -231,6 +240,13 @@
 - 返品処理の設計
 - 赤黒処理の考え方
 
+### 6.4 リレーションと楽観ロックの設計
+
+- MyBatis ネストした ResultMap によるリレーション設定
+- ヘッダ・明細の一括取得（JOIN クエリ）
+- 楽観ロック（Optimistic Locking）の実装
+- バージョンカラムによる同時更新制御
+
 ---
 
 ## 第7章：債権管理の設計
@@ -248,6 +264,13 @@
 - 入金消込の処理
 - 債権残高管理
 
+### 7.3 リレーションと楽観ロックの設計
+
+- MyBatis ネストした ResultMap によるリレーション設定
+- ヘッダ・明細の一括取得（JOIN クエリ）
+- 楽観ロック（Optimistic Locking）の実装
+- バージョンカラムによる同時更新制御
+
 ---
 
 ## 第8章：調達管理の設計
@@ -263,6 +286,13 @@
 - 入荷データの構造
 - 検収（仕入計上）処理
 - 諸口品目の扱い
+
+### 8.3 リレーションと楽観ロックの設計
+
+- MyBatis ネストした ResultMap によるリレーション設定
+- ヘッダ・明細の一括取得（JOIN クエリ）
+- 楽観ロック（Optimistic Locking）の実装
+- バージョンカラムによる同時更新制御
 
 ---
 
@@ -280,6 +310,13 @@
 - 棚卸業務の設計
 - 在庫調整処理
 
+### 9.3 リレーションと楽観ロックの設計
+
+- MyBatis ネストした ResultMap によるリレーション設定
+- ヘッダ・明細の一括取得（JOIN クエリ）
+- 楽観ロック（Optimistic Locking）の実装
+- バージョンカラムによる同時更新制御
+
 ---
 
 ## 第10章：債務管理の設計
@@ -290,6 +327,13 @@
 - 支払方法の種類
 - 支払データ・支払明細の構造
 - 買掛金残高管理
+
+### 10.2 リレーションと楽観ロックの設計
+
+- MyBatis ネストした ResultMap によるリレーション設定
+- ヘッダ・明細の一括取得（JOIN クエリ）
+- 楽観ロック（Optimistic Locking）の実装
+- バージョンカラムによる同時更新制御
 
 ---
 
@@ -311,9 +355,18 @@
 ### 11.3 財務会計システムのアーキテクチャ
 
 - プロジェクト構成
-  - フロントエンド（プレゼンテーション層）
-  - バックエンド（アプリケーション層）
-  - データベース（永続化層）
+  - Domain層（ドメイン層）
+    - model（ドメインモデル）
+    - type（基本型：通貨、単位、数量等）
+    - exception（ドメイン例外）
+  - Application層（アプリケーション層）
+    - port/in（Input Port）
+    - port/out（Output Port）
+    - service（Application Service）
+  - Infrastructure層（インフラストラクチャ層）
+    - in/rest（Input Adapter - REST API）
+    - out/persistence（Output Adapter - 永続化）
+    - config（設定）
 - ヘキサゴナルアーキテクチャ（ポート&アダプター）
   - ドメイン（中心）
   - ポート（入力ポート・出力ポート）
@@ -471,9 +524,18 @@
 ### 17.3 生産管理システムのアーキテクチャ
 
 - プロジェクト構成
-  - フロントエンド（プレゼンテーション層）
-  - バックエンド（アプリケーション層）
-  - データベース（永続化層）
+  - Domain層（ドメイン層）
+    - model（ドメインモデル）
+    - type（基本型：通貨、単位、数量等）
+    - exception（ドメイン例外）
+  - Application層（アプリケーション層）
+    - port/in（Input Port）
+    - port/out（Output Port）
+    - service（Application Service）
+  - Infrastructure層（インフラストラクチャ層）
+    - in/rest（Input Adapter - REST API）
+    - out/persistence（Output Adapter - 永続化）
+    - config（設定）
 - ヘキサゴナルアーキテクチャ（ポート&アダプター）
   - ドメイン（中心）
   - ポート（入力ポート・出力ポート）
