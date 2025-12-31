@@ -489,6 +489,7 @@ apps/sms/
 │       │   │   ├── purchase/          # 仕入関連
 │       │   │   ├── inventory/         # 在庫関連
 │       │   │   └── billing/           # 請求関連
+│       │   ├── type/                  # 基本型（通貨、単位、数量等）
 │       │   └── exception/             # ドメイン例外
 │       │
 │       ├── application/               # アプリケーション層
@@ -625,6 +626,10 @@ backend/src/domain/
 │   └── billing/                 # 請求関連
 │       ├── Invoice.ts           # 請求
 │       └── Receipt.ts           # 入金
+├── type/                        # 基本型
+│   ├── Money.ts                 # 通貨
+│   ├── Quantity.ts              # 数量
+│   └── Unit.ts                  # 単位
 └── exception/                   # ドメイン例外
     └── DomainException.ts
 ```
