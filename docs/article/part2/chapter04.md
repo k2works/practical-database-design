@@ -498,15 +498,19 @@ apps/sms/
 │       │   └── service/               # Application Service（ユースケース実装）
 │       │
 │       └── infrastructure/            # インフラストラクチャ層
-│           ├── in/                    # Input Adapter（外部からの入力）
+│           ├── web/                   # Input Adapter（Web）
 │           │   └── rest/              # REST API
 │           │       ├── controller/    # REST Controller
 │           │       ├── dto/           # Data Transfer Object
 │           │       └── exception/     # Exception Handler
-│           ├── out/                   # Output Adapter（外部への出力）
-│           │   └── datasource/        # DB実装
-│           │       ├── mapper/        # O/R Mapper
-│           │       └── repository/    # Repository実装
+│           ├── persistence/           # Output Adapter（永続化）
+│           │   ├── database/          # データベース定義
+│           │   │   ├── migrations/    # マイグレーション
+│           │   │   ├── seeds/         # シードデータ
+│           │   │   └── schema/        # スキーマ定義
+│           │   ├── mapper/            # O/R Mapper
+│           │   ├── repository/        # Repository実装
+│           │   └── typehandler/       # 型ハンドラ
 │           └── config/                # 設定クラス
 │
 ├── frontend/                          # フロントエンド
@@ -516,11 +520,6 @@ apps/sms/
 │       ├── hooks/                     # カスタムフック
 │       ├── services/                  # API クライアント
 │       └── types/                     # 型定義
-│
-├── database/                          # データベース（永続化層）
-│   ├── migrations/                    # マイグレーション
-│   ├── seeds/                         # シードデータ
-│   └── schema/                        # スキーマ定義
 │
 └── docker-compose.yml                 # Docker 構成
 ```
@@ -663,7 +662,7 @@ interface OrderRepository {
 
 ```
 backend/src/infrastructure/
-├── in/                          # Input Adapter（プライマリアダプター）
+├── web/                         # Input Adapter（プライマリアダプター）
 │   └── rest/                    # REST API
 │       ├── controller/
 │       │   ├── OrderController.ts
@@ -674,13 +673,16 @@ backend/src/infrastructure/
 │       │   └── OrderResponse.ts
 │       └── exception/
 │           └── RestExceptionHandler.ts
-├── out/                         # Output Adapter（セカンダリアダプター）
-│   └── datasource/              # DB実装
-│       ├── mapper/
-│       │   └── OrderMapper.ts
-│       └── repository/
-│           ├── OrderRepositoryImpl.ts
-│           └── CustomerRepositoryImpl.ts
+├── persistence/                 # Output Adapter（セカンダリアダプター）
+│   ├── database/                # データベース定義
+│   │   ├── migrations/          # マイグレーション
+│   │   └── seeds/               # シードデータ
+│   ├── mapper/                  # O/R Mapper
+│   │   └── OrderMapper.ts
+│   ├── repository/              # Repository実装
+│   │   ├── OrderRepositoryImpl.ts
+│   │   └── CustomerRepositoryImpl.ts
+│   └── typehandler/             # 型ハンドラ
 └── config/                      # 設定クラス
     ├── DatabaseConfig.ts
     └── WebConfig.ts
