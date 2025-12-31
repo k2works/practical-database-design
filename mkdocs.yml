@@ -61,6 +61,7 @@ exclude_docs: |
 nav:
   - 実践データベース設計:
       - 概要: article/index.md
+      - 技術スタック: article/techstack.md
       - アウトライン: article/outline.md
       - 執筆ワークフロー: article/workflow.md
       - 第1部 基幹業務システムの全体像:
@@ -75,32 +76,39 @@ nav:
           - 第8章 調達管理の設計: article/part2/chapter08.md
           - 第9章 在庫管理の設計: article/part2/chapter09.md
           - 第10章 債務管理の設計: article/part2/chapter10.md
+          - 第11章 共通処理の設計: article/part2/chapter11.md
+          - 第12章 販売管理データ設計（B社事例）: article/part2/chapter12.md
+          - 第13章 APIサービスの実装: article/part2/chapter13.md
       - 第3部 財務会計システム:
-          - 第11章 財務会計システムの全体像: article/part3/chapter11.md
-          - 第12章 勘定科目の設計: article/part3/chapter12.md
-          - 第13章 仕訳の設計: article/part3/chapter13.md
-          - 第14章 自動仕訳の設計: article/part3/chapter14.md
-          - 第15章 勘定科目残高の設計: article/part3/chapter15.md
-          - 第16章 赤黒とログの設計: article/part3/chapter16.md
+          - 第14章 財務会計システムの全体像: article/part3/chapter14.md
+          - 第15章 勘定科目の設計: article/part3/chapter15.md
+          - 第16章 仕訳の設計: article/part3/chapter16.md
+          - 第17章 自動仕訳の設計: article/part3/chapter17.md
+          - 第18章 勘定科目残高の設計: article/part3/chapter18.md
+          - 第19章 赤黒とログの設計: article/part3/chapter19.md
+          - 第20章 財務会計データ設計（D社事例）: article/part3/chapter20.md
+          - 第21章 APIサービスの実装: article/part3/chapter21.md
       - 第4部 生産管理システム:
-          - 第17章 生産管理システムの全体像: article/part4/chapter17.md
-          - 第18章 生産管理のマスタ情報（モノ）: article/part4/chapter18.md
-          - 第19章 生産管理のマスタ情報（時・人・場所）: article/part4/chapter19.md
-          - 第20章 生産計画の設計: article/part4/chapter20.md
-          - 第21章 購買管理の設計（発注・入荷・検収）: article/part4/chapter21.md
-          - 第22章 購買管理の設計（外注委託）: article/part4/chapter22.md
-          - 第23章 工程管理の設計（製造指示・製造実績）: article/part4/chapter23.md
-          - 第24章 在庫管理の設計（受払・在庫状態）: article/part4/chapter24.md
-          - 第25章 品質管理の設計: article/part4/chapter25.md
-          - 第26章 製造原価管理の設計: article/part4/chapter26.md
+          - 第22章 生産管理システムの全体像: article/part4/chapter22.md
+          - 第23章 生産管理のマスタ情報（モノ）: article/part4/chapter23.md
+          - 第24章 生産管理のマスタ情報（時・人・場所）: article/part4/chapter24.md
+          - 第25章 生産計画の設計: article/part4/chapter25.md
+          - 第26章 購買管理の設計（発注・入荷・検収）: article/part4/chapter26.md
+          - 第27章 購買管理の設計（外注委託）: article/part4/chapter27.md
+          - 第28章 工程管理の設計（製造指示・製造実績）: article/part4/chapter28.md
+          - 第29章 在庫管理の設計（受払・在庫状態）: article/part4/chapter29.md
+          - 第30章 品質管理の設計: article/part4/chapter30.md
+          - 第31章 製造原価管理の設計: article/part4/chapter31.md
+          - 第32章 生産管理データ設計（E社事例）: article/part4/chapter32.md
+          - 第33章 APIサービスの実装: article/part4/chapter33.md
       - 第5部 エンタープライズインテグレーション:
-          - 第27章 システム統合の概要: article/part5/chapter27.md
-          - 第28章 メッセージングパターン: article/part5/chapter28.md
-          - 第29章 システム間連携パターン: article/part5/chapter29.md
-          - 第30章 マスタデータ管理（MDM）: article/part5/chapter30.md
-          - 第31章 イベント駆動アーキテクチャ: article/part5/chapter31.md
-          - 第32章 API設計とサービス連携: article/part5/chapter32.md
-          - 第33章 データ連携の実装パターン: article/part5/chapter33.md
+          - 第34章 システム統合の概要: article/part5/chapter34.md
+          - 第35章 メッセージングパターン: article/part5/chapter35.md
+          - 第36章 システム間連携パターン: article/part5/chapter36.md
+          - 第37章 マスタデータ管理（MDM）: article/part5/chapter37.md
+          - 第38章 イベント駆動アーキテクチャ: article/part5/chapter38.md
+          - 第39章 API設計とサービス連携: article/part5/chapter39.md
+          - 第40章 データ連携の実装パターン: article/part5/chapter40.md
       - 付録:
           - A 全体ER図: article/appendix/er-diagrams.md
           - B テーブル定義一覧: article/appendix/table-definitions.md
