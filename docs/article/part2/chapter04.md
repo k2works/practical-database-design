@@ -480,40 +480,58 @@ Finance --> Accounting : 入金・出金データ
 
 ```
 apps/sms/
-├── backend/                           # バックエンド
+├── backend/
+│   ├── build.gradle.kts               # Gradle ビルド設定（Kotlin DSL）
+│   ├── settings.gradle.kts            # Gradle 設定
+│   ├── config/                        # 品質管理ツール設定
+│   │   ├── checkstyle/
+│   │   │   └── checkstyle.xml
+│   │   ├── pmd/
+│   │   │   └── ruleset.xml
+│   │   └── spotbugs/
+│   │       └── exclude.xml
+│   │
 │   └── src/
-│       ├── domain/                    # ドメイン層（純粋なビジネスロジック）
-│       │   ├── model/                 # ドメインモデル（エンティティ、値オブジェクト）
-│       │   │   ├── master/            # マスタ関連
-│       │   │   ├── sales/             # 販売関連
-│       │   │   ├── purchase/          # 仕入関連
-│       │   │   ├── inventory/         # 在庫関連
-│       │   │   └── billing/           # 請求関連
-│       │   ├── type/                  # 基本型（通貨、単位、数量等）
-│       │   └── exception/             # ドメイン例外
+│       ├── main/
+│       │   ├── java/com/example/sms/
+│       │   │   │
+│       │   │   ├── domain/            # ドメイン層（純粋なビジネスロジック）
+│       │   │   │   ├── model/         # ドメインモデル（エンティティ、値オブジェクト）
+│       │   │   │   │   ├── master/    # マスタ関連
+│       │   │   │   │   └── transaction/ # トランザクション関連
+│       │   │   │   ├── type/          # 基本型（通貨、単位、数量等）
+│       │   │   │   └── exception/     # ドメイン例外
+│       │   │   │
+│       │   │   ├── application/       # アプリケーション層
+│       │   │   │   ├── port/
+│       │   │   │   │   ├── in/        # Input Port（ユースケースIF）
+│       │   │   │   │   └── out/       # Output Port（リポジトリIF）
+│       │   │   │   └── service/       # Application Service（ユースケース実装）
+│       │   │   │
+│       │   │   ├── infrastructure/    # インフラストラクチャ層
+│       │   │   │   ├── in/            # Input Adapter
+│       │   │   │   │   └── rest/      # REST API Controller
+│       │   │   │   ├── out/           # Output Adapter
+│       │   │   │   │   └── persistence/ # 永続化（MyBatis Mapper）
+│       │   │   │   └── config/        # 設定クラス
+│       │   │   │
+│       │   │   └── Application.java   # メインクラス
+│       │   │
+│       │   └── resources/
+│       │       ├── application.yml    # アプリケーション設定
+│       │       ├── db/migration/      # Flyway マイグレーション
+│       │       └── mapper/            # MyBatis XML マッパー
 │       │
-│       ├── application/               # アプリケーション層
-│       │   ├── port/
-│       │   │   ├── in/                # Input Port（ユースケースIF）
-│       │   │   └── out/               # Output Port（リポジトリIF）
-│       │   └── service/               # Application Service（ユースケース実装）
-│       │
-│       └── infrastructure/            # インフラストラクチャ層
-│           ├── in/                    # Input Adapter
-│           │   └── rest/              # REST API
-│           │       ├── controller/    # REST Controller
-│           │       ├── dto/           # Data Transfer Object
-│           │       └── exception/     # Exception Handler
-│           ├── out/                   # Output Adapter
-│           │   └── persistence/       # 永続化
-│           │       ├── database/      # データベース定義
-│           │       │   ├── migrations/# マイグレーション
-│           │       │   ├── seeds/     # シードデータ
-│           │       │   └── schema/    # スキーマ定義
-│           │       ├── mapper/        # O/R Mapper
-│           │       ├── repository/    # Repository実装
-│           │       └── typehandler/   # 型ハンドラ
-│           └── config/                # 設定クラス
+│       └── test/
+│           ├── java/com/example/sms/
+│           │   ├── testsetup/         # テスト基盤クラス
+│           │   │   └── BaseIntegrationTest.java
+│           │   ├── domain/            # ドメイン層テスト
+│           │   ├── application/       # アプリケーション層テスト
+│           │   └── infrastructure/    # インフラ層テスト
+│           │
+│           └── resources/
+│               └── application-test.yml
 │
 ├── frontend/                          # フロントエンド
 │   └── src/
