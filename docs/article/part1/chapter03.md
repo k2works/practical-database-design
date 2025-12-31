@@ -271,35 +271,15 @@ stop
 rectangle "財務会計データ" as FA #LightGray
 
 package "管理会計" as MA {
-    rectangle "経営分析" as Analysis {
-        Analysis : 収益性分析
-        Analysis : 安全性分析
-        Analysis : 効率性分析
-    }
-
-    rectangle "損益分岐点分析" as BEP {
-        BEP : 固定費・変動費分解
-        BEP : 損益分岐点売上高
-        BEP : 安全余裕率
-    }
-
-    rectangle "限界利益分析" as Margin {
-        Margin : 限界利益
-        Margin : 貢献利益
-        Margin : セグメント別分析
-    }
-
-    rectangle "投資の経済性計算" as Investment {
-        Investment : 回収期間法
-        Investment : NPV法
-        Investment : IRR法
-    }
-
-    rectangle "キャッシュフロー計算" as CF {
-        CF : 営業CF
-        CF : 投資CF
-        CF : 財務CF
-    }
+    rectangle "経営分析\n--\n収益性分析\n安全性分析\n効率性分析" as Analysis
+    
+    rectangle "損益分岐点分析\n--\n固定費・変動費分解\n損益分岐点売上高\n安全余裕率" as BEP
+    
+    rectangle "限界利益分析\n--\n限界利益\n貢献利益\nセグメント別分析" as Margin
+    
+    rectangle "投資の経済性計算\n--\n回収期間法\nNPV法\nIRR法" as Investment
+    
+    rectangle "キャッシュフロー計算\n--\n営業CF\n投資CF\n財務CF" as CF
 }
 
 FA --> Analysis
@@ -352,14 +332,21 @@ FA --> CF
 品質管理 : 受入検査 \n 出荷検査 \n トレーサビリティ
 品質管理 -> 工程管理
 
-基準情報 : BOM \n品目 \n工程 \n取引先 \n部門 \nカレンダー
-生産計画 <--> 基準情報
-購買管理 <--> 基準情報
-工程管理 <--> 基準情報
+state 基準情報 : BOM \n品目 \n工程 \n取引先 \n部門 \nカレンダー
+
+' 双方向の関連は2行に分けて記述します
+生産計画 -> 基準情報
+基準情報 -> 生産計画
+
+購買管理 -> 基準情報
+基準情報 -> 購買管理
+
+工程管理 -> 基準情報
+基準情報 -> 工程管理
 
 得意先 -> [*]
 
-@enduml
+@endumll
 ```
 
 ### 得意先 → 営業部門 → 生産計画
