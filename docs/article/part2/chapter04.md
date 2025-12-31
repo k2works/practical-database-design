@@ -480,47 +480,58 @@ Finance --> Accounting : 入金・出金データ
 
 ```
 apps/sms/
-├── frontend/                    # フロントエンド（プレゼンテーション層）
-│   ├── src/
-│   │   ├── components/          # UI コンポーネント
-│   │   ├── pages/               # ページコンポーネント
-│   │   ├── hooks/               # カスタムフック
-│   │   ├── services/            # API クライアント
-│   │   └── types/               # 型定義
-│   ├── package.json
-│   └── tsconfig.json
+├── backend/                           # バックエンド
+│   └── src/
+│       ├── domain/                    # ドメイン層（純粋なビジネスロジック）
+│       │   ├── model/                 # ドメインモデル（エンティティ、値オブジェクト）
+│       │   │   ├── master/            # マスタ関連
+│       │   │   ├── sales/             # 販売関連
+│       │   │   ├── purchase/          # 仕入関連
+│       │   │   ├── inventory/         # 在庫関連
+│       │   │   └── billing/           # 請求関連
+│       │   └── exception/             # ドメイン例外
+│       │
+│       ├── application/               # アプリケーション層
+│       │   ├── port/
+│       │   │   ├── in/                # Input Port（ユースケースIF）
+│       │   │   └── out/               # Output Port（リポジトリIF）
+│       │   └── service/               # Application Service（ユースケース実装）
+│       │
+│       └── infrastructure/            # インフラストラクチャ層
+│           ├── in/                    # Input Adapter（外部からの入力）
+│           │   └── rest/              # REST API
+│           │       ├── controller/    # REST Controller
+│           │       ├── dto/           # Data Transfer Object
+│           │       └── exception/     # Exception Handler
+│           ├── out/                   # Output Adapter（外部への出力）
+│           │   └── datasource/        # DB実装
+│           │       ├── mapper/        # O/R Mapper
+│           │       └── repository/    # Repository実装
+│           └── config/                # 設定クラス
 │
-├── backend/                     # バックエンド（アプリケーション層）
-│   ├── src/
-│   │   ├── application/         # アプリケーションサービス
-│   │   │   ├── commands/        # コマンドハンドラ
-│   │   │   ├── queries/         # クエリハンドラ
-│   │   │   └── services/        # アプリケーションサービス
-│   │   ├── domain/              # ドメイン層
-│   │   │   ├── models/          # エンティティ・値オブジェクト
-│   │   │   ├── repositories/    # リポジトリインターフェース
-│   │   │   └── services/        # ドメインサービス
-│   │   ├── infrastructure/      # インフラストラクチャ層
-│   │   │   ├── persistence/     # リポジトリ実装
-│   │   │   ├── api/             # API アダプター
-│   │   │   └── messaging/       # メッセージング
-│   │   └── presentation/        # プレゼンテーション層
-│   │       ├── controllers/     # コントローラ
-│   │       └── dto/             # DTO（Data Transfer Object）
-│   ├── package.json
-│   └── tsconfig.json
+├── frontend/                          # フロントエンド
+│   └── src/
+│       ├── components/                # UI コンポーネント
+│       ├── pages/                     # ページコンポーネント
+│       ├── hooks/                     # カスタムフック
+│       ├── services/                  # API クライアント
+│       └── types/                     # 型定義
 │
-├── database/                    # データベース（永続化層）
-│   ├── migrations/              # マイグレーション
-│   ├── seeds/                   # シードデータ
-│   └── schema/                  # スキーマ定義
+├── database/                          # データベース（永続化層）
+│   ├── migrations/                    # マイグレーション
+│   ├── seeds/                         # シードデータ
+│   └── schema/                        # スキーマ定義
 │
-├── shared/                      # 共有モジュール
-│   ├── types/                   # 共有型定義
-│   └── utils/                   # ユーティリティ
-│
-└── docker-compose.yml           # Docker 構成
+└── docker-compose.yml                 # Docker 構成
 ```
+
+**各レイヤーの責務：**
+
+| レイヤー | 責務 |
+|---|---|
+| Domain 層 | ビジネスルールとドメインモデル（外部技術に非依存） |
+| Application 層 | ユースケースの実装とオーケストレーション |
+| Infrastructure 層 | 外部技術との接続（DB、Web 等） |
 
 ### ヘキサゴナルアーキテクチャ（ポート&アダプター）
 
@@ -596,29 +607,26 @@ OutputPort --> SecondaryAdapter
 
 ```
 backend/src/domain/
-├── models/
-│   ├── estimate/                # 見積
-│   │   ├── Estimate.ts          # 見積エンティティ
-│   │   ├── EstimateId.ts        # 見積ID（値オブジェクト）
-│   │   └── EstimateItem.ts      # 見積明細
-│   ├── order/                   # 受注
-│   │   ├── Order.ts             # 受注エンティティ
-│   │   ├── OrderId.ts           # 受注ID
-│   │   └── OrderItem.ts         # 受注明細
-│   ├── shipment/                # 出荷
-│   │   ├── Shipment.ts          # 出荷エンティティ
-│   │   └── ShipmentItem.ts      # 出荷明細
-│   └── sales/                   # 売上
-│       ├── Sales.ts             # 売上エンティティ
-│       └── SalesItem.ts         # 売上明細
-├── repositories/
-│   ├── EstimateRepository.ts    # 見積リポジトリIF
-│   ├── OrderRepository.ts       # 受注リポジトリIF
-│   ├── ShipmentRepository.ts    # 出荷リポジトリIF
-│   └── SalesRepository.ts       # 売上リポジトリIF
-└── services/
-    ├── PricingService.ts        # 価格計算サービス
-    └── InventoryService.ts      # 在庫確認サービス
+├── model/                       # ドメインモデル
+│   ├── master/                  # マスタ関連
+│   │   ├── Product.ts           # 商品
+│   │   ├── Customer.ts          # 顧客
+│   │   └── Supplier.ts          # 仕入先
+│   ├── sales/                   # 販売関連
+│   │   ├── Order.ts             # 受注
+│   │   ├── OrderItem.ts         # 受注明細
+│   │   ├── Shipment.ts          # 出荷
+│   │   └── Sales.ts             # 売上
+│   ├── purchase/                # 仕入関連
+│   │   ├── Purchase.ts          # 発注
+│   │   └── PurchaseReceipt.ts   # 仕入
+│   ├── inventory/               # 在庫関連
+│   │   └── Inventory.ts         # 在庫
+│   └── billing/                 # 請求関連
+│       ├── Invoice.ts           # 請求
+│       └── Receipt.ts           # 入金
+└── exception/                   # ドメイン例外
+    └── DomainException.ts
 ```
 
 #### ポート（入力ポート・出力ポート）
@@ -655,20 +663,27 @@ interface OrderRepository {
 
 ```
 backend/src/infrastructure/
-├── persistence/                 # セカンダリアダプター（永続化）
-│   ├── PostgresOrderRepository.ts
-│   ├── PostgresEstimateRepository.ts
-│   └── ...
-├── api/                         # セカンダリアダプター（外部API）
-│   └── InventoryApiClient.ts
-└── ...
-
-backend/src/presentation/        # プライマリアダプター
-├── controllers/
-│   ├── OrderController.ts
-│   ├── EstimateController.ts
-│   └── ...
-└── ...
+├── in/                          # Input Adapter（プライマリアダプター）
+│   └── rest/                    # REST API
+│       ├── controller/
+│       │   ├── OrderController.ts
+│       │   ├── ShipmentController.ts
+│       │   └── SalesController.ts
+│       ├── dto/
+│       │   ├── OrderRequest.ts
+│       │   └── OrderResponse.ts
+│       └── exception/
+│           └── RestExceptionHandler.ts
+├── out/                         # Output Adapter（セカンダリアダプター）
+│   └── datasource/              # DB実装
+│       ├── mapper/
+│       │   └── OrderMapper.ts
+│       └── repository/
+│           ├── OrderRepositoryImpl.ts
+│           └── CustomerRepositoryImpl.ts
+└── config/                      # 設定クラス
+    ├── DatabaseConfig.ts
+    └── WebConfig.ts
 ```
 
 #### 依存性の方向と依存性逆転の原則
