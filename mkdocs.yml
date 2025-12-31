@@ -59,4 +59,49 @@ exclude_docs: |
   wiki
 
 nav:
-  - Home: index.md
+  - 実践データベース設計:
+      - 概要: article/index.md
+      - アウトライン: article/outline.md
+      - 執筆ワークフロー: article/workflow.md
+      - 第1部 基幹業務システムの全体像:
+          - 第1章 基幹業務システムとは: article/part1/chapter01.md
+          - 第2章 基幹業務システムの業務領域: article/part1/chapter02.md
+          - 第3章 業務フローの全体像: article/part1/chapter03.md
+      - 第2部 販売管理システム:
+          - 第4章 販売管理システムの全体像: article/part2/chapter04.md
+          - 第5章 マスタ情報の設計: article/part2/chapter05.md
+          - 第6章 受注・出荷・売上の設計: article/part2/chapter06.md
+          - 第7章 債権管理の設計: article/part2/chapter07.md
+          - 第8章 調達管理の設計: article/part2/chapter08.md
+          - 第9章 在庫管理の設計: article/part2/chapter09.md
+          - 第10章 債務管理の設計: article/part2/chapter10.md
+      - 第3部 財務会計システム:
+          - 第11章 財務会計システムの全体像: article/part3/chapter11.md
+          - 第12章 勘定科目の設計: article/part3/chapter12.md
+          - 第13章 仕訳の設計: article/part3/chapter13.md
+          - 第14章 自動仕訳の設計: article/part3/chapter14.md
+          - 第15章 勘定科目残高の設計: article/part3/chapter15.md
+          - 第16章 赤黒とログの設計: article/part3/chapter16.md
+      - 第4部 生産管理システム:
+          - 第17章 生産管理システムの全体像: article/part4/chapter17.md
+          - 第18章 生産管理のマスタ情報（モノ）: article/part4/chapter18.md
+          - 第19章 生産管理のマスタ情報（時・人・場所）: article/part4/chapter19.md
+          - 第20章 生産計画の設計: article/part4/chapter20.md
+          - 第21章 購買管理の設計（発注・入荷・検収）: article/part4/chapter21.md
+          - 第22章 購買管理の設計（外注委託）: article/part4/chapter22.md
+          - 第23章 工程管理の設計（製造指示・製造実績）: article/part4/chapter23.md
+          - 第24章 在庫管理の設計（受払・在庫状態）: article/part4/chapter24.md
+          - 第25章 品質管理の設計: article/part4/chapter25.md
+          - 第26章 製造原価管理の設計: article/part4/chapter26.md
+      - 第5部 エンタープライズインテグレーション:
+          - 第27章 システム統合の概要: article/part5/chapter27.md
+          - 第28章 メッセージングパターン: article/part5/chapter28.md
+          - 第29章 システム間連携パターン: article/part5/chapter29.md
+          - 第30章 マスタデータ管理（MDM）: article/part5/chapter30.md
+          - 第31章 イベント駆動アーキテクチャ: article/part5/chapter31.md
+          - 第32章 API設計とサービス連携: article/part5/chapter32.md
+          - 第33章 データ連携の実装パターン: article/part5/chapter33.md
+      - 付録:
+          - A 全体ER図: article/appendix/er-diagrams.md
+          - B テーブル定義一覧: article/appendix/table-definitions.md
+          - C 用語集: article/appendix/glossary.md
