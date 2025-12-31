@@ -470,6 +470,405 @@ Finance --> Accounting : 入金・出金データ
 
 ---
 
+## 4.3 販売管理システムのアーキテクチャ
+
+本節では、販売管理システム（SMS: Sales Management System）のプロジェクト構成とアーキテクチャについて解説します。
+
+### プロジェクト構成
+
+販売管理システムは `apps/sms` ディレクトリ以下に構築します。
+
+```
+apps/sms/
+├── frontend/                    # フロントエンド（プレゼンテーション層）
+│   ├── src/
+│   │   ├── components/          # UI コンポーネント
+│   │   ├── pages/               # ページコンポーネント
+│   │   ├── hooks/               # カスタムフック
+│   │   ├── services/            # API クライアント
+│   │   └── types/               # 型定義
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── backend/                     # バックエンド（アプリケーション層）
+│   ├── src/
+│   │   ├── application/         # アプリケーションサービス
+│   │   │   ├── commands/        # コマンドハンドラ
+│   │   │   ├── queries/         # クエリハンドラ
+│   │   │   └── services/        # アプリケーションサービス
+│   │   ├── domain/              # ドメイン層
+│   │   │   ├── models/          # エンティティ・値オブジェクト
+│   │   │   ├── repositories/    # リポジトリインターフェース
+│   │   │   └── services/        # ドメインサービス
+│   │   ├── infrastructure/      # インフラストラクチャ層
+│   │   │   ├── persistence/     # リポジトリ実装
+│   │   │   ├── api/             # API アダプター
+│   │   │   └── messaging/       # メッセージング
+│   │   └── presentation/        # プレゼンテーション層
+│   │       ├── controllers/     # コントローラ
+│   │       └── dto/             # DTO（Data Transfer Object）
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── database/                    # データベース（永続化層）
+│   ├── migrations/              # マイグレーション
+│   ├── seeds/                   # シードデータ
+│   └── schema/                  # スキーマ定義
+│
+├── shared/                      # 共有モジュール
+│   ├── types/                   # 共有型定義
+│   └── utils/                   # ユーティリティ
+│
+└── docker-compose.yml           # Docker 構成
+```
+
+### ヘキサゴナルアーキテクチャ（ポート&アダプター）
+
+販売管理システムは、ヘキサゴナルアーキテクチャ（Ports and Adapters）を採用します。このアーキテクチャにより、ビジネスロジックを外部の技術的関心事から分離し、テスト容易性と保守性を高めます。
+
+```plantuml
+@startuml
+!define HEXAGON(name) hexagon name
+
+skinparam hexagon {
+    BackgroundColor<<domain>> LightBlue
+    BackgroundColor<<port>> LightGreen
+    BackgroundColor<<adapter>> LightYellow
+}
+
+package "販売管理システム" {
+    ' ドメイン（中心）
+    hexagon "ドメイン\n(Domain)" <<domain>> as Domain {
+    }
+    note bottom of Domain
+        エンティティ
+        値オブジェクト
+        集約
+        ドメインサービス
+    end note
+
+    ' 入力ポート
+    rectangle "入力ポート\n(Input Ports)" <<port>> as InputPort {
+    }
+    note left of InputPort
+        ユースケース
+        インターフェース
+    end note
+
+    ' 出力ポート
+    rectangle "出力ポート\n(Output Ports)" <<port>> as OutputPort {
+    }
+    note right of OutputPort
+        リポジトリ
+        インターフェース
+    end note
+
+    ' プライマリアダプター
+    rectangle "プライマリアダプター\n(Primary Adapters)" <<adapter>> as PrimaryAdapter {
+    }
+    note top of PrimaryAdapter
+        REST API
+        GraphQL
+        CLI
+    end note
+
+    ' セカンダリアダプター
+    rectangle "セカンダリアダプター\n(Secondary Adapters)" <<adapter>> as SecondaryAdapter {
+    }
+    note bottom of SecondaryAdapter
+        PostgreSQL
+        Redis
+        外部 API
+    end note
+}
+
+PrimaryAdapter --> InputPort
+InputPort --> Domain
+Domain --> OutputPort
+OutputPort --> SecondaryAdapter
+
+@enduml
+```
+
+#### ドメイン（中心）
+
+ドメインはシステムの中心に位置し、ビジネスロジックを実装します。
+
+```
+backend/src/domain/
+├── models/
+│   ├── estimate/                # 見積
+│   │   ├── Estimate.ts          # 見積エンティティ
+│   │   ├── EstimateId.ts        # 見積ID（値オブジェクト）
+│   │   └── EstimateItem.ts      # 見積明細
+│   ├── order/                   # 受注
+│   │   ├── Order.ts             # 受注エンティティ
+│   │   ├── OrderId.ts           # 受注ID
+│   │   └── OrderItem.ts         # 受注明細
+│   ├── shipment/                # 出荷
+│   │   ├── Shipment.ts          # 出荷エンティティ
+│   │   └── ShipmentItem.ts      # 出荷明細
+│   └── sales/                   # 売上
+│       ├── Sales.ts             # 売上エンティティ
+│       └── SalesItem.ts         # 売上明細
+├── repositories/
+│   ├── EstimateRepository.ts    # 見積リポジトリIF
+│   ├── OrderRepository.ts       # 受注リポジトリIF
+│   ├── ShipmentRepository.ts    # 出荷リポジトリIF
+│   └── SalesRepository.ts       # 売上リポジトリIF
+└── services/
+    ├── PricingService.ts        # 価格計算サービス
+    └── InventoryService.ts      # 在庫確認サービス
+```
+
+#### ポート（入力ポート・出力ポート）
+
+ポートは、ドメインと外部世界との境界を定義するインターフェースです。
+
+| ポート種別 | 役割 | 例 |
+|---|---|---|
+| 入力ポート | 外部からの要求を受け付ける | ユースケースインターフェース |
+| 出力ポート | 外部リソースへのアクセスを抽象化 | リポジトリインターフェース |
+
+```typescript
+// 入力ポート（ユースケースインターフェース）
+interface CreateOrderUseCase {
+  execute(command: CreateOrderCommand): Promise<OrderId>;
+}
+
+// 出力ポート（リポジトリインターフェース）
+interface OrderRepository {
+  save(order: Order): Promise<void>;
+  findById(id: OrderId): Promise<Order | null>;
+  findByCustomerId(customerId: CustomerId): Promise<Order[]>;
+}
+```
+
+#### アダプター（プライマリ・セカンダリ）
+
+アダプターは、ポートの実装を提供し、外部技術とドメインを接続します。
+
+| アダプター種別 | 役割 | 例 |
+|---|---|---|
+| プライマリアダプター | 外部からの入力を処理 | REST コントローラ、CLI |
+| セカンダリアダプター | 外部リソースへの出力を処理 | DB リポジトリ実装、外部 API クライアント |
+
+```
+backend/src/infrastructure/
+├── persistence/                 # セカンダリアダプター（永続化）
+│   ├── PostgresOrderRepository.ts
+│   ├── PostgresEstimateRepository.ts
+│   └── ...
+├── api/                         # セカンダリアダプター（外部API）
+│   └── InventoryApiClient.ts
+└── ...
+
+backend/src/presentation/        # プライマリアダプター
+├── controllers/
+│   ├── OrderController.ts
+│   ├── EstimateController.ts
+│   └── ...
+└── ...
+```
+
+#### 依存性の方向と依存性逆転の原則
+
+ヘキサゴナルアーキテクチャでは、すべての依存性がドメインに向かいます。
+
+```plantuml
+@startuml
+skinparam rectangle {
+    BackgroundColor<<domain>> LightBlue
+    BackgroundColor<<app>> LightGreen
+    BackgroundColor<<infra>> LightYellow
+    BackgroundColor<<pres>> LightPink
+}
+
+rectangle "Presentation\n(プレゼンテーション層)" <<pres>> as Pres
+rectangle "Application\n(アプリケーション層)" <<app>> as App
+rectangle "Domain\n(ドメイン層)" <<domain>> as Domain
+rectangle "Infrastructure\n(インフラストラクチャ層)" <<infra>> as Infra
+
+Pres --> App
+App --> Domain
+Infra --> Domain
+
+note right of Domain
+    依存性逆転の原則（DIP）
+    ・ドメインはインターフェースを定義
+    ・インフラは実装を提供
+    ・依存の方向は常にドメインへ
+end note
+
+@enduml
+```
+
+### ドメイン駆動設計の適用
+
+#### 集約とリポジトリ
+
+販売管理システムの主要な集約を以下に示します。
+
+```plantuml
+@startuml
+!define AGGREGATE(name) rectangle name <<aggregate>>
+!define ENTITY(name) class name <<entity>>
+!define VALUE(name) class name <<value>>
+
+skinparam class {
+    BackgroundColor<<aggregate>> LightBlue
+    BackgroundColor<<entity>> LightGreen
+    BackgroundColor<<value>> LightYellow
+}
+
+package "受注集約" {
+    ENTITY(Order) {
+        +orderId: OrderId
+        +customerId: CustomerId
+        +orderDate: Date
+        +status: OrderStatus
+        +items: OrderItem[]
+        +totalAmount(): Money
+    }
+
+    ENTITY(OrderItem) {
+        +itemNo: number
+        +productId: ProductId
+        +quantity: Quantity
+        +unitPrice: Money
+    }
+
+    VALUE(OrderId) {
+        +value: string
+    }
+
+    VALUE(OrderStatus) {
+        +value: string
+    }
+
+    Order *-- OrderItem
+    Order --> OrderId
+    Order --> OrderStatus
+}
+
+@enduml
+```
+
+| 集約 | ルートエンティティ | 主な責務 |
+|---|---|---|
+| 見積集約 | Estimate | 見積の作成・更新・承認 |
+| 受注集約 | Order | 受注の登録・在庫引当・ステータス管理 |
+| 出荷集約 | Shipment | 出荷指示・出荷実績の管理 |
+| 売上集約 | Sales | 売上計上・請求データ生成 |
+
+#### ドメインサービス
+
+エンティティに属さないビジネスロジックはドメインサービスとして実装します。
+
+```typescript
+// 価格計算サービス
+class PricingService {
+  calculateOrderTotal(
+    items: OrderItem[],
+    customer: Customer,
+    discountPolicy: DiscountPolicy
+  ): Money {
+    // 顧客別単価の適用
+    // 数量割引の計算
+    // 消費税の計算
+  }
+}
+
+// 在庫引当サービス
+class InventoryAllocationService {
+  allocate(order: Order): AllocationResult {
+    // 在庫の確認
+    // 引当処理
+    // 不足時の調達依頼
+  }
+}
+```
+
+#### アプリケーションサービス
+
+アプリケーションサービスは、ユースケースを実装し、トランザクション境界を管理します。
+
+```typescript
+// 受注登録ユースケース
+class CreateOrderService implements CreateOrderUseCase {
+  constructor(
+    private orderRepository: OrderRepository,
+    private customerRepository: CustomerRepository,
+    private pricingService: PricingService,
+    private inventoryService: InventoryAllocationService
+  ) {}
+
+  async execute(command: CreateOrderCommand): Promise<OrderId> {
+    // 1. 顧客の取得
+    const customer = await this.customerRepository.findById(command.customerId);
+
+    // 2. 受注の作成
+    const order = Order.create(customer, command.items);
+
+    // 3. 価格計算
+    order.calculateTotal(this.pricingService);
+
+    // 4. 在庫引当
+    await this.inventoryService.allocate(order);
+
+    // 5. 保存
+    await this.orderRepository.save(order);
+
+    return order.id;
+  }
+}
+```
+
+### API 設計
+
+#### RESTful API の基本方針
+
+| 原則 | 説明 |
+|---|---|
+| リソース指向 | URL はリソース（名詞）を表す |
+| HTTP メソッド | GET/POST/PUT/DELETE で操作を表現 |
+| ステートレス | サーバーはセッション状態を保持しない |
+| HATEOAS | レスポンスに関連リソースへのリンクを含める |
+
+#### エンドポイント設計
+
+```
+# 見積
+GET    /api/v1/estimates              # 見積一覧
+POST   /api/v1/estimates              # 見積作成
+GET    /api/v1/estimates/{id}         # 見積詳細
+PUT    /api/v1/estimates/{id}         # 見積更新
+DELETE /api/v1/estimates/{id}         # 見積削除
+POST   /api/v1/estimates/{id}/approve # 見積承認
+
+# 受注
+GET    /api/v1/orders                 # 受注一覧
+POST   /api/v1/orders                 # 受注登録
+GET    /api/v1/orders/{id}            # 受注詳細
+PUT    /api/v1/orders/{id}            # 受注更新
+POST   /api/v1/orders/{id}/confirm    # 受注確定
+POST   /api/v1/orders/{id}/cancel     # 受注キャンセル
+
+# 出荷
+GET    /api/v1/shipments              # 出荷一覧
+POST   /api/v1/shipments              # 出荷登録
+GET    /api/v1/shipments/{id}         # 出荷詳細
+POST   /api/v1/shipments/{id}/ship    # 出荷実行
+POST   /api/v1/shipments/{id}/deliver # 配送完了
+
+# 売上
+GET    /api/v1/sales                  # 売上一覧
+POST   /api/v1/sales                  # 売上計上
+GET    /api/v1/sales/{id}             # 売上詳細
+```
+
+---
+
 ## まとめ
 
 本章では、販売管理システムの全体像について解説しました。
@@ -477,5 +876,7 @@ Finance --> Accounting : 入金・出金データ
 - **販売管理システムのスコープ**は「見積→受注→出荷→売上」の4つの主要業務
 - **5つの部門**（営業・調達・倉庫・経理・財務）がそれぞれの責務を担う
 - 部門間の連携により、一連の業務フローが成立する
+- **ヘキサゴナルアーキテクチャ**により、ドメインを中心とした疎結合な設計を実現
+- **ドメイン駆動設計**の集約・リポジトリパターンを適用
 
 次章では、販売管理システムの基盤となるマスタ情報の設計について解説します。
