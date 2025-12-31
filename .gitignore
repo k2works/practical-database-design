@@ -76,7 +76,10 @@ web_modules/
 
 # Next.js build output
 .next
-out
+/out
+
+# Java source out directories should not be ignored
+!**/src/**/out/
 
 # Nuxt.js build / generate output
 .nuxt
