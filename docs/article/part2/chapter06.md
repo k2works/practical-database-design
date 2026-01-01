@@ -133,6 +133,7 @@ entity 見積データ {
   見積日
   見積有効期限
   顧客コード <<FK>>
+  顧客枝番 <<FK>>
   担当者コード
   件名
   見積金額
@@ -167,7 +168,8 @@ entity 受注データ {
   受注番号 <<UK>>
   受注日
   顧客コード <<FK>>
-  出荷先コード <<FK>>
+  顧客枝番 <<FK>>
+  出荷先番号 <<FK>>
   担当者コード
   希望納期
   出荷予定日
@@ -249,10 +251,10 @@ title 受注ステータス遷移図
 ### マイグレーション：受注関連テーブルの作成
 
 <details>
-<summary>V006__create_quotation_order_tables.sql</summary>
+<summary>V007__create_quotation_order_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V006__create_quotation_order_tables.sql
+-- src/main/resources/db/migration/V007__create_quotation_order_tables.sql
 
 -- 見積ステータス
 CREATE TYPE 見積ステータス AS ENUM ('商談中', '受注確定', '失注', '期限切れ');
@@ -267,6 +269,7 @@ CREATE TABLE "見積データ" (
     "見積日" DATE NOT NULL,
     "見積有効期限" DATE,
     "顧客コード" VARCHAR(20) NOT NULL,
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
     "担当者コード" VARCHAR(20),
     "件名" VARCHAR(200),
     "見積金額" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
@@ -279,7 +282,7 @@ CREATE TABLE "見積データ" (
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
     CONSTRAINT "fk_見積データ_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード")
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番")
 );
 
 -- 見積明細
@@ -310,7 +313,8 @@ CREATE TABLE "受注データ" (
     "受注番号" VARCHAR(20) UNIQUE NOT NULL,
     "受注日" DATE NOT NULL,
     "顧客コード" VARCHAR(20) NOT NULL,
-    "出荷先コード" VARCHAR(20),
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
+    "出荷先番号" VARCHAR(10),
     "担当者コード" VARCHAR(20),
     "希望納期" DATE,
     "出荷予定日" DATE,
@@ -326,9 +330,9 @@ CREATE TABLE "受注データ" (
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
     CONSTRAINT "fk_受注データ_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード"),
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番"),
     CONSTRAINT "fk_受注データ_出荷先"
-        FOREIGN KEY ("出荷先コード") REFERENCES "出荷先マスタ"("出荷先コード"),
+        FOREIGN KEY ("顧客コード", "顧客枝番", "出荷先番号") REFERENCES "出荷先マスタ"("取引先コード", "顧客枝番", "出荷先番号"),
     CONSTRAINT "fk_受注データ_見積"
         FOREIGN KEY ("見積ID") REFERENCES "見積データ"("ID")
 );
@@ -417,29 +421,40 @@ public enum OrderStatus {
 // src/main/java/com/example/sms/domain/model/sales/SalesOrder.java
 package com.example.sms.domain.model.sales;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@SuppressWarnings("PMD.RedundantFieldInitializer")
 public class SalesOrder {
     private Integer id;
     private String orderNumber;
     private LocalDate orderDate;
     private String customerCode;
-    private String shipToCode;
-    private String salesRepCode;
+    private String customerBranchNumber;
+    private String shippingDestinationNumber;
+    private String representativeCode;
     private LocalDate requestedDeliveryDate;
-    private LocalDate scheduledShipDate;
-    private BigDecimal subtotal;
-    private BigDecimal taxAmount;
-    private BigDecimal totalAmount;
-    private OrderStatus status;
+    private LocalDate scheduledShippingDate;
+    @Builder.Default
+    private BigDecimal orderAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private OrderStatus status = OrderStatus.RECEIVED;
     private Integer quotationId;
     private String customerOrderNumber;
     private String remarks;
@@ -448,8 +463,8 @@ public class SalesOrder {
     private LocalDateTime updatedAt;
     private String updatedBy;
 
-    // リレーション
-    private List<SalesOrderDetail> details;
+    @Builder.Default
+    private List<SalesOrderDetail> details = new ArrayList<>();
 }
 ```
 
@@ -463,14 +478,18 @@ public class SalesOrder {
 package com.example.sms.domain.model.sales;
 
 import com.example.sms.domain.model.product.TaxCategory;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SalesOrderDetail {
     private Integer id;
     private Integer orderId;
@@ -503,8 +522,8 @@ public class SalesOrderDetail {
 <summary>OrderStatusTypeHandler.java</summary>
 
 ```java
-// src/main/java/com/example/sms/infrastructure/persistence/mybatis/typehandler/OrderStatusTypeHandler.java
-package com.example.sms.infrastructure.persistence.mybatis.typehandler;
+// src/main/java/com/example/sms/infrastructure/out/persistence/typehandler/OrderStatusTypeHandler.java
+package com.example.sms.infrastructure.out.persistence.typehandler;
 
 import com.example.sms.domain.model.sales.OrderStatus;
 import org.apache.ibatis.type.BaseTypeHandler;
@@ -808,20 +827,21 @@ public interface SalesOrderRepository {
 <!-- src/main/resources/mapper/SalesOrderMapper.xml -->
 <mapper namespace="com.example.sms.infrastructure.persistence.mapper.SalesOrderMapper">
 
-    <resultMap id="salesOrderResultMap" type="com.example.sms.domain.model.sales.SalesOrder">
+    <resultMap id="SalesOrderResultMap" type="com.example.sms.domain.model.sales.SalesOrder">
         <id property="id" column="ID"/>
         <result property="orderNumber" column="受注番号"/>
         <result property="orderDate" column="受注日"/>
         <result property="customerCode" column="顧客コード"/>
-        <result property="shipToCode" column="出荷先コード"/>
-        <result property="salesRepCode" column="担当者コード"/>
+        <result property="customerBranchNumber" column="顧客枝番"/>
+        <result property="shippingDestinationNumber" column="出荷先番号"/>
+        <result property="representativeCode" column="担当者コード"/>
         <result property="requestedDeliveryDate" column="希望納期"/>
-        <result property="scheduledShipDate" column="出荷予定日"/>
-        <result property="subtotal" column="受注金額"/>
+        <result property="scheduledShippingDate" column="出荷予定日"/>
+        <result property="orderAmount" column="受注金額"/>
         <result property="taxAmount" column="消費税額"/>
         <result property="totalAmount" column="受注合計"/>
         <result property="status" column="ステータス"
-                typeHandler="com.example.sms.infrastructure.persistence.mybatis.typehandler.OrderStatusTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler"/>
         <result property="quotationId" column="見積ID"/>
         <result property="customerOrderNumber" column="顧客注文番号"/>
         <result property="remarks" column="備考"/>
@@ -843,7 +863,7 @@ public interface SalesOrderRepository {
             <result property="unitPrice" column="単価"/>
             <result property="amount" column="金額"/>
             <result property="taxCategory" column="税区分"
-                    typeHandler="com.example.sms.infrastructure.persistence.mybatis.typehandler.TaxCategoryTypeHandler"/>
+                    typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler"/>
             <result property="taxRate" column="消費税率"/>
             <result property="taxAmount" column="明細消費税額"/>
             <result property="warehouseCode" column="倉庫コード"/>
@@ -851,16 +871,20 @@ public interface SalesOrderRepository {
         </collection>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.SalesOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "受注データ" (
-            "受注番号", "受注日", "顧客コード", "出荷先コード", "担当者コード",
-            "希望納期", "出荷予定日", "受注金額", "消費税額", "受注合計",
-            "ステータス", "見積ID", "顧客注文番号", "備考", "作成者", "更新者"
+            "受注番号", "受注日", "顧客コード", "顧客枝番", "出荷先番号",
+            "担当者コード", "希望納期", "出荷予定日", "受注金額", "消費税額",
+            "受注合計", "ステータス", "見積ID", "顧客注文番号", "備考",
+            "作成日時", "作成者", "更新日時", "更新者"
         ) VALUES (
-            #{orderNumber}, #{orderDate}, #{customerCode}, #{shipToCode}, #{salesRepCode},
-            #{requestedDeliveryDate}, #{scheduledShipDate}, #{subtotal}, #{taxAmount}, #{totalAmount},
-            #{status, typeHandler=com.example.sms.infrastructure.persistence.mybatis.typehandler.OrderStatusTypeHandler},
-            #{quotationId}, #{customerOrderNumber}, #{remarks}, #{createdBy}, #{updatedBy}
+            #{orderNumber}, #{orderDate}, #{customerCode}, #{customerBranchNumber}, #{shippingDestinationNumber},
+            #{representativeCode}, #{requestedDeliveryDate}, #{scheduledShippingDate}, #{orderAmount}, #{taxAmount},
+            #{totalAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler}::受注ステータス,
+            #{quotationId}, #{customerOrderNumber}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
         )
     </insert>
 
@@ -873,33 +897,22 @@ public interface SalesOrderRepository {
             #{orderId}, #{lineNumber}, #{productCode}, #{productName}, #{orderQuantity},
             #{allocatedQuantity}, #{shippedQuantity}, #{remainingQuantity}, #{unit},
             #{unitPrice}, #{amount},
-            #{taxCategory, typeHandler=com.example.sms.infrastructure.persistence.mybatis.typehandler.TaxCategoryTypeHandler},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
             #{taxRate}, #{taxAmount}, #{warehouseCode}, #{requestedDeliveryDate}
         )
     </insert>
 
-    <select id="findByOrderNumber" resultMap="salesOrderResultMap">
+    <select id="findByOrderNumber" resultMap="SalesOrderResultMap">
         SELECT * FROM "受注データ" WHERE "受注番号" = #{orderNumber}
     </select>
 
-    <select id="findByIdWithDetails" resultMap="salesOrderResultMap">
-        SELECT
-            o."ID", o."受注番号", o."受注日", o."顧客コード", o."出荷先コード",
-            o."担当者コード", o."希望納期", o."出荷予定日", o."受注金額", o."消費税額",
-            o."受注合計", o."ステータス", o."見積ID", o."顧客注文番号", o."備考",
-            o."作成日時", o."作成者", o."更新日時", o."更新者",
-            d."ID" AS 明細ID, d."受注ID", d."行番号", d."商品コード", d."商品名",
-            d."受注数量", d."引当数量", d."出荷数量", d."残数量", d."単位",
-            d."単価", d."金額", d."税区分", d."消費税率",
-            d."消費税額" AS 明細消費税額, d."倉庫コード",
-            d."希望納期" AS 明細希望納期
-        FROM "受注データ" o
-        LEFT JOIN "受注明細" d ON o."ID" = d."受注ID"
-        WHERE o."ID" = #{id}
-        ORDER BY d."行番号"
+    <select id="findDetailsByOrderId" resultMap="SalesOrderDetailResultMap">
+        SELECT * FROM "受注明細"
+        WHERE "受注ID" = #{orderId}
+        ORDER BY "行番号"
     </select>
 
-    <select id="findByDeliveryDateRange" resultMap="salesOrderResultMap">
+    <select id="findByDeliveryDateRange" resultMap="SalesOrderResultMap">
         SELECT * FROM "受注データ"
         WHERE "希望納期" BETWEEN #{from} AND #{to}
         ORDER BY "希望納期"
@@ -907,7 +920,7 @@ public interface SalesOrderRepository {
 
     <update id="updateStatus">
         UPDATE "受注データ"
-        SET "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.persistence.mybatis.typehandler.OrderStatusTypeHandler},
+        SET "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler},
             "更新日時" = CURRENT_TIMESTAMP
         WHERE "ID" = #{id}
     </update>
@@ -1003,43 +1016,50 @@ entity 受注明細 {
   ...
 }
 
-entity 出荷指示データ {
+entity 出荷データ {
   ID <<PK>>
   --
-  出荷指示番号 <<UK>>
-  出荷指示日
+  出荷番号 <<UK>>
+  出荷日
   受注ID <<FK>>
   顧客コード <<FK>>
-  出荷先コード <<FK>>
-  出荷予定日
+  顧客枝番 <<FK>>
+  出荷先番号 <<FK>>
+  出荷先名
+  出荷先郵便番号
+  出荷先住所1
+  出荷先住所2
+  担当者コード
   倉庫コード
   ステータス
-  配送業者コード
-  追跡番号
   備考
   作成日時
   更新日時
 }
 
-entity 出荷指示明細 {
+entity 出荷明細 {
   ID <<PK>>
   --
-  出荷指示ID <<FK>>
+  出荷ID <<FK>>
   行番号
   受注明細ID <<FK>>
   商品コード <<FK>>
   商品名
-  指示数量
   出荷数量
   単位
-  ロケーションコード
+  単価
+  金額
+  税区分
+  消費税率
+  消費税額
+  倉庫コード
   備考
 }
 
 受注データ ||--o{ 受注明細
-受注データ ||--o{ 出荷指示データ
-出荷指示データ ||--o{ 出荷指示明細
-受注明細 ||--o{ 出荷指示明細
+受注データ ||--o{ 出荷データ
+出荷データ ||--o{ 出荷明細
+受注明細 ||--o{ 出荷明細
 
 @enduml
 ```
@@ -1051,16 +1071,15 @@ entity 出荷指示明細 {
 
 title 出荷ステータス遷移図
 
-[*] --> 出荷指示
+[*] --> 出荷指示済
 
-出荷指示 --> ピッキング中 : ピッキング開始
-ピッキング中 --> 出荷準備完了 : ピッキング完了
-出荷準備完了 --> 出荷済 : 出荷完了
+出荷指示済 --> 出荷準備中 : 出荷準備開始
+出荷準備中 --> 出荷済 : 出荷完了
 
 出荷済 --> [*]
 
-出荷指示 --> キャンセル
-ピッキング中 --> キャンセル
+出荷指示済 --> キャンセル
+出荷準備中 --> キャンセル
 
 キャンセル --> [*]
 
@@ -1069,75 +1088,82 @@ title 出荷ステータス遷移図
 
 | ステータス | 説明 |
 |-----------|------|
-| **出荷指示** | 出荷指示が作成された状態 |
-| **ピッキング中** | ピッキング作業中の状態 |
-| **出荷準備完了** | 検品・梱包が完了した状態 |
+| **出荷指示済** | 出荷指示が作成された状態 |
+| **出荷準備中** | 出荷準備作業中の状態 |
 | **出荷済** | 配送業者に引き渡した状態 |
 | **キャンセル** | 出荷指示がキャンセルされた状態 |
 
 ### マイグレーション：出荷関連テーブルの作成
 
 <details>
-<summary>V007__create_shipment_tables.sql</summary>
+<summary>V008__create_shipment_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V007__create_shipment_tables.sql
+-- src/main/resources/db/migration/V008__create_shipment_tables.sql
 
 -- 出荷ステータス
-CREATE TYPE 出荷ステータス AS ENUM ('出荷指示', 'ピッキング中', '出荷準備完了', '出荷済', 'キャンセル');
+CREATE TYPE 出荷ステータス AS ENUM ('出荷指示済', '出荷準備中', '出荷済', 'キャンセル');
 
--- 出荷指示ヘッダ
-CREATE TABLE "出荷指示データ" (
+-- 出荷データ（ヘッダ）
+CREATE TABLE "出荷データ" (
     "ID" SERIAL PRIMARY KEY,
-    "出荷指示番号" VARCHAR(20) UNIQUE NOT NULL,
-    "出荷指示日" DATE NOT NULL,
+    "出荷番号" VARCHAR(20) UNIQUE NOT NULL,
+    "出荷日" DATE NOT NULL,
     "受注ID" INTEGER NOT NULL,
     "顧客コード" VARCHAR(20) NOT NULL,
-    "出荷先コード" VARCHAR(20),
-    "出荷予定日" DATE NOT NULL,
-    "倉庫コード" VARCHAR(20) NOT NULL,
-    "ステータス" 出荷ステータス DEFAULT '出荷指示' NOT NULL,
-    "配送業者コード" VARCHAR(20),
-    "追跡番号" VARCHAR(50),
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
+    "出荷先番号" VARCHAR(10),
+    "出荷先名" VARCHAR(100),
+    "出荷先郵便番号" VARCHAR(10),
+    "出荷先住所1" VARCHAR(100),
+    "出荷先住所2" VARCHAR(100),
+    "担当者コード" VARCHAR(20),
+    "倉庫コード" VARCHAR(20),
+    "ステータス" 出荷ステータス DEFAULT '出荷指示済' NOT NULL,
     "備考" TEXT,
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "作成者" VARCHAR(50),
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
-    CONSTRAINT "fk_出荷指示データ_受注"
+    CONSTRAINT "fk_出荷データ_受注"
         FOREIGN KEY ("受注ID") REFERENCES "受注データ"("ID"),
-    CONSTRAINT "fk_出荷指示データ_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード"),
-    CONSTRAINT "fk_出荷指示データ_出荷先"
-        FOREIGN KEY ("出荷先コード") REFERENCES "出荷先マスタ"("出荷先コード")
+    CONSTRAINT "fk_出荷データ_顧客"
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番"),
+    CONSTRAINT "fk_出荷データ_出荷先"
+        FOREIGN KEY ("顧客コード", "顧客枝番", "出荷先番号") REFERENCES "出荷先マスタ"("取引先コード", "顧客枝番", "出荷先番号")
 );
 
--- 出荷指示明細
-CREATE TABLE "出荷指示明細" (
+-- 出荷明細
+CREATE TABLE "出荷明細" (
     "ID" SERIAL PRIMARY KEY,
-    "出荷指示ID" INTEGER NOT NULL,
+    "出荷ID" INTEGER NOT NULL,
     "行番号" INTEGER NOT NULL,
     "受注明細ID" INTEGER NOT NULL,
     "商品コード" VARCHAR(20) NOT NULL,
     "商品名" VARCHAR(100) NOT NULL,
-    "指示数量" DECIMAL(15, 2) NOT NULL,
-    "出荷数量" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
+    "出荷数量" DECIMAL(15, 2) NOT NULL,
     "単位" VARCHAR(10),
-    "ロケーションコード" VARCHAR(20),
+    "単価" DECIMAL(15, 2) NOT NULL,
+    "金額" DECIMAL(15, 2) NOT NULL,
+    "税区分" 税区分 DEFAULT '外税' NOT NULL,
+    "消費税率" DECIMAL(5, 2) DEFAULT 10.00 NOT NULL,
+    "消費税額" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
+    "倉庫コード" VARCHAR(20),
     "備考" TEXT,
-    CONSTRAINT "fk_出荷指示明細_出荷指示"
-        FOREIGN KEY ("出荷指示ID") REFERENCES "出荷指示データ"("ID") ON DELETE CASCADE,
-    CONSTRAINT "fk_出荷指示明細_受注明細"
+    CONSTRAINT "fk_出荷明細_出荷"
+        FOREIGN KEY ("出荷ID") REFERENCES "出荷データ"("ID") ON DELETE CASCADE,
+    CONSTRAINT "fk_出荷明細_受注明細"
         FOREIGN KEY ("受注明細ID") REFERENCES "受注明細"("ID"),
-    CONSTRAINT "fk_出荷指示明細_商品"
+    CONSTRAINT "fk_出荷明細_商品"
         FOREIGN KEY ("商品コード") REFERENCES "商品マスタ"("商品コード"),
-    CONSTRAINT "uq_出荷指示明細_行番号" UNIQUE ("出荷指示ID", "行番号")
+    CONSTRAINT "uq_出荷明細_行番号" UNIQUE ("出荷ID", "行番号")
 );
 
 -- インデックス
-CREATE INDEX "idx_出荷指示データ_受注ID" ON "出荷指示データ"("受注ID");
-CREATE INDEX "idx_出荷指示データ_出荷予定日" ON "出荷指示データ"("出荷予定日");
-CREATE INDEX "idx_出荷指示データ_ステータス" ON "出荷指示データ"("ステータス");
+CREATE INDEX "idx_出荷データ_受注ID" ON "出荷データ"("受注ID");
+CREATE INDEX "idx_出荷データ_顧客コード" ON "出荷データ"("顧客コード");
+CREATE INDEX "idx_出荷データ_出荷日" ON "出荷データ"("出荷日");
+CREATE INDEX "idx_出荷データ_ステータス" ON "出荷データ"("ステータス");
 ```
 
 </details>
@@ -1148,8 +1174,8 @@ CREATE INDEX "idx_出荷指示データ_ステータス" ON "出荷指示デー�
 <summary>ShipmentStatus.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/sales/ShipmentStatus.java
-package com.example.sms.domain.model.sales;
+// src/main/java/com/example/sms/domain/model/shipping/ShipmentStatus.java
+package com.example.sms.domain.model.shipping;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -1157,9 +1183,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ShipmentStatus {
-    INSTRUCTED("出荷指示"),
-    PICKING("ピッキング中"),
-    READY("出荷準備完了"),
+    INSTRUCTED("出荷指示済"),
+    PREPARING("出荷準備中"),
     SHIPPED("出荷済"),
     CANCELLED("キャンセル");
 
@@ -1178,17 +1203,19 @@ public enum ShipmentStatus {
 
 </details>
 
-### 出荷指示エンティティ
+### 出荷エンティティ
 
 <details>
-<summary>ShipmentInstruction.java</summary>
+<summary>Shipment.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/sales/ShipmentInstruction.java
-package com.example.sms.domain.model.sales;
+// src/main/java/com/example/sms/domain/model/shipping/Shipment.java
+package com.example.sms.domain.model.shipping;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -1196,57 +1223,70 @@ import java.util.List;
 
 @Data
 @Builder
-public class ShipmentInstruction {
+@NoArgsConstructor
+@AllArgsConstructor
+@SuppressWarnings("PMD.RedundantFieldInitializer")
+public class Shipment {
     private Integer id;
-    private String instructionNumber;
-    private LocalDate instructionDate;
+    private String shipmentNumber;
+    private LocalDate shipmentDate;
     private Integer orderId;
     private String customerCode;
-    private String shipToCode;
-    private LocalDate scheduledShipDate;
+    private String customerBranchNumber;
+    private String shippingDestinationNumber;
+    private String shippingDestinationName;
+    private String shippingDestinationPostalCode;
+    private String shippingDestinationAddress1;
+    private String shippingDestinationAddress2;
+    private String representativeCode;
     private String warehouseCode;
-    private ShipmentStatus status;
-    private String carrierCode;
-    private String trackingNumber;
+    @Builder.Default
+    private ShipmentStatus status = ShipmentStatus.INSTRUCTED;
     private String remarks;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;
     private String updatedBy;
-
-    // リレーション
-    private SalesOrder order;
-    private List<ShipmentInstructionDetail> details;
+    private List<ShipmentDetail> details;
 }
 ```
 
 </details>
 
 <details>
-<summary>ShipmentInstructionDetail.java</summary>
+<summary>ShipmentDetail.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/sales/ShipmentInstructionDetail.java
-package com.example.sms.domain.model.sales;
+// src/main/java/com/example/sms/domain/model/shipping/ShipmentDetail.java
+package com.example.sms.domain.model.shipping;
 
+import com.example.sms.domain.model.product.TaxCategory;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Data
 @Builder
-public class ShipmentInstructionDetail {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ShipmentDetail {
     private Integer id;
-    private Integer shipmentInstructionId;
+    private Integer shipmentId;
     private Integer lineNumber;
     private Integer orderDetailId;
     private String productCode;
     private String productName;
-    private BigDecimal instructedQuantity;
     private BigDecimal shippedQuantity;
     private String unit;
-    private String locationCode;
+    private BigDecimal unitPrice;
+    private BigDecimal amount;
+    private TaxCategory taxCategory;
+    private BigDecimal taxRate;
+    private BigDecimal taxAmount;
+    private String warehouseCode;
     private String remarks;
 }
 ```
@@ -1489,10 +1529,10 @@ public class ShipmentService {
 
 title 売上関連テーブル
 
-entity 出荷指示データ {
+entity 出荷データ {
   ID <<PK>>
   --
-  出荷指示番号
+  出荷番号
   受注ID <<FK>>
   ステータス
   ...
@@ -1504,14 +1544,15 @@ entity 売上データ {
   売上番号 <<UK>>
   売上日
   受注ID <<FK>>
-  出荷指示ID <<FK>>
+  出荷ID <<FK>>
   顧客コード <<FK>>
+  顧客枝番 <<FK>>
   担当者コード
   売上金額
   消費税額
   売上合計
   ステータス
-  納品書番号
+  請求ID
   備考
   作成日時
   更新日時
@@ -1523,6 +1564,7 @@ entity 売上明細 {
   売上ID <<FK>>
   行番号
   受注明細ID <<FK>>
+  出荷明細ID <<FK>>
   商品コード <<FK>>
   商品名
   売上数量
@@ -1532,8 +1574,6 @@ entity 売上明細 {
   税区分
   消費税率
   消費税額
-  原価
-  粗利
   備考
 }
 
@@ -1572,7 +1612,7 @@ entity 返品明細 {
   備考
 }
 
-出荷指示データ ||--o| 売上データ
+出荷データ ||--o| 売上データ
 売上データ ||--o{ 売上明細
 売上データ ||--o{ 返品データ
 返品データ ||--o{ 返品明細
@@ -1635,28 +1675,29 @@ stop
 ### マイグレーション：売上関連テーブルの作成
 
 <details>
-<summary>V008__create_sales_tables.sql</summary>
+<summary>V009__create_sales_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V008__create_sales_tables.sql
+-- src/main/resources/db/migration/V009__create_sales_tables.sql
 
 -- 売上ステータス
-CREATE TYPE 売上ステータス AS ENUM ('計上済', '請求済', '入金済', '取消');
+CREATE TYPE 売上ステータス AS ENUM ('計上済', '請求済', '入金済', 'キャンセル');
 
--- 売上ヘッダ
+-- 売上データ（ヘッダ）
 CREATE TABLE "売上データ" (
     "ID" SERIAL PRIMARY KEY,
     "売上番号" VARCHAR(20) UNIQUE NOT NULL,
     "売上日" DATE NOT NULL,
     "受注ID" INTEGER NOT NULL,
-    "出荷指示ID" INTEGER,
+    "出荷ID" INTEGER,
     "顧客コード" VARCHAR(20) NOT NULL,
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
     "担当者コード" VARCHAR(20),
     "売上金額" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
     "消費税額" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
     "売上合計" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
     "ステータス" 売上ステータス DEFAULT '計上済' NOT NULL,
-    "納品書番号" VARCHAR(20),
+    "請求ID" INTEGER,
     "備考" TEXT,
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "作成者" VARCHAR(50),
@@ -1664,10 +1705,10 @@ CREATE TABLE "売上データ" (
     "更新者" VARCHAR(50),
     CONSTRAINT "fk_売上データ_受注"
         FOREIGN KEY ("受注ID") REFERENCES "受注データ"("ID"),
-    CONSTRAINT "fk_売上データ_出荷指示"
-        FOREIGN KEY ("出荷指示ID") REFERENCES "出荷指示データ"("ID"),
+    CONSTRAINT "fk_売上データ_出荷"
+        FOREIGN KEY ("出荷ID") REFERENCES "出荷データ"("ID"),
     CONSTRAINT "fk_売上データ_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード")
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番")
 );
 
 -- 売上明細
@@ -1676,6 +1717,7 @@ CREATE TABLE "売上明細" (
     "売上ID" INTEGER NOT NULL,
     "行番号" INTEGER NOT NULL,
     "受注明細ID" INTEGER NOT NULL,
+    "出荷明細ID" INTEGER,
     "商品コード" VARCHAR(20) NOT NULL,
     "商品名" VARCHAR(100) NOT NULL,
     "売上数量" DECIMAL(15, 2) NOT NULL,
@@ -1685,13 +1727,13 @@ CREATE TABLE "売上明細" (
     "税区分" 税区分 DEFAULT '外税' NOT NULL,
     "消費税率" DECIMAL(5, 2) DEFAULT 10.00 NOT NULL,
     "消費税額" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
-    "原価" DECIMAL(15, 2),
-    "粗利" DECIMAL(15, 2),
     "備考" TEXT,
     CONSTRAINT "fk_売上明細_売上"
         FOREIGN KEY ("売上ID") REFERENCES "売上データ"("ID") ON DELETE CASCADE,
     CONSTRAINT "fk_売上明細_受注明細"
         FOREIGN KEY ("受注明細ID") REFERENCES "受注明細"("ID"),
+    CONSTRAINT "fk_売上明細_出荷明細"
+        FOREIGN KEY ("出荷明細ID") REFERENCES "出荷明細"("ID"),
     CONSTRAINT "fk_売上明細_商品"
         FOREIGN KEY ("商品コード") REFERENCES "商品マスタ"("商品コード"),
     CONSTRAINT "uq_売上明細_行番号" UNIQUE ("売上ID", "行番号")
@@ -1699,8 +1741,10 @@ CREATE TABLE "売上明細" (
 
 -- インデックス
 CREATE INDEX "idx_売上データ_受注ID" ON "売上データ"("受注ID");
-CREATE INDEX "idx_売上データ_売上日" ON "売上データ"("売上日");
+CREATE INDEX "idx_売上データ_出荷ID" ON "売上データ"("出荷ID");
 CREATE INDEX "idx_売上データ_顧客コード" ON "売上データ"("顧客コード");
+CREATE INDEX "idx_売上データ_売上日" ON "売上データ"("売上日");
+CREATE INDEX "idx_売上データ_ステータス" ON "売上データ"("ステータス");
 ```
 
 </details>
@@ -1723,7 +1767,7 @@ public enum SalesStatus {
     RECORDED("計上済"),
     INVOICED("請求済"),
     COLLECTED("入金済"),
-    CANCELLED("取消");
+    CANCELLED("キャンセル");
 
     private final String displayName;
 
@@ -1749,39 +1793,48 @@ public enum SalesStatus {
 // src/main/java/com/example/sms/domain/model/sales/Sales.java
 package com.example.sms.domain.model.sales;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@SuppressWarnings("PMD.RedundantFieldInitializer")
 public class Sales {
     private Integer id;
     private String salesNumber;
     private LocalDate salesDate;
     private Integer orderId;
-    private Integer shipmentInstructionId;
+    private Integer shipmentId;
     private String customerCode;
-    private String salesRepCode;
-    private BigDecimal subtotal;
-    private BigDecimal taxAmount;
-    private BigDecimal totalAmount;
-    private SalesStatus status;
-    private String deliveryNoteNumber;
+    private String customerBranchNumber;
+    private String representativeCode;
+    @Builder.Default
+    private BigDecimal salesAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private SalesStatus status = SalesStatus.RECORDED;
+    private Integer invoiceId;
     private String remarks;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;
     private String updatedBy;
 
-    // リレーション
-    private SalesOrder order;
-    private ShipmentInstruction shipmentInstruction;
-    private List<SalesDetail> details;
+    @Builder.Default
+    private List<SalesDetail> details = new ArrayList<>();
 }
 ```
 
@@ -1795,18 +1848,23 @@ public class Sales {
 package com.example.sms.domain.model.sales;
 
 import com.example.sms.domain.model.product.TaxCategory;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SalesDetail {
     private Integer id;
     private Integer salesId;
     private Integer lineNumber;
     private Integer orderDetailId;
+    private Integer shipmentDetailId;
     private String productCode;
     private String productName;
     private BigDecimal salesQuantity;
@@ -1816,8 +1874,6 @@ public class SalesDetail {
     private TaxCategory taxCategory;
     private BigDecimal taxRate;
     private BigDecimal taxAmount;
-    private BigDecimal costPrice;
-    private BigDecimal grossProfit;
     private String remarks;
 }
 ```
@@ -2152,7 +2208,7 @@ entity 返品明細 {
 
 ---
 
-## 6.4 リレーションと楽観ロックの設計
+## 6.5 リレーションと楽観ロックの設計
 
 ### MyBatis ネストした ResultMap によるリレーション設定
 
@@ -2185,7 +2241,7 @@ entity 返品明細 {
         <result property="taxAmount" column="o_消費税額"/>
         <result property="totalAmount" column="o_受注合計"/>
         <result property="status" column="o_ステータス"
-                typeHandler="com.example.sms.infrastructure.persistence.mybatis.typehandler.OrderStatusTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler"/>
         <result property="version" column="o_バージョン"/>
         <result property="createdAt" column="o_作成日時"/>
         <result property="updatedAt" column="o_更新日時"/>
@@ -2209,7 +2265,7 @@ entity 返品明細 {
         <result property="unitPrice" column="d_単価"/>
         <result property="amount" column="d_金額"/>
         <result property="taxCategory" column="d_税区分"
-                typeHandler="com.example.sms.infrastructure.persistence.mybatis.typehandler.TaxCategoryTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler"/>
         <result property="taxRate" column="d_消費税率"/>
         <result property="taxAmount" column="d_消費税額"/>
         <result property="version" column="d_バージョン"/>
@@ -2396,7 +2452,7 @@ public class SalesOrder {
         "受注金額" = #{subtotal},
         "消費税額" = #{taxAmount},
         "受注合計" = #{totalAmount},
-        "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.persistence.mybatis.typehandler.OrderStatusTypeHandler},
+        "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler},
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
     WHERE "ID" = #{id}
