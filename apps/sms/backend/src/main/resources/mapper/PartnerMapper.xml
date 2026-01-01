@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.PartnerMapper">
+
+    <resultMap id="PartnerResultMap" type="com.example.sms.domain.model.partner.Partner">
+        <result property="partnerCode" column="取引先コード"/>
+        <result property="partnerName" column="取引先名"/>
+        <result property="partnerNameKana" column="取引先カナ"/>
+        <result property="isCustomer" column="顧客区分"/>
+        <result property="isSupplier" column="仕入先区分"/>
+        <result property="postalCode" column="郵便番号"/>
+        <result property="address1" column="住所1"/>
+        <result property="address2" column="住所2"/>
+        <result property="classificationCode" column="取引先分類コード"/>
+        <result property="isTradingProhibited" column="取引禁止フラグ"/>
+        <result property="isMiscellaneous" column="雑区分"/>
+        <result property="groupCode" column="取引先グループコード"/>
+        <result property="creditLimit" column="与信限度額"/>
+        <result property="temporaryCreditIncrease" column="与信一時増加枠"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者名"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.partner.Partner">
+        INSERT INTO "取引先マスタ" (
+            "取引先コード", "取引先名", "取引先カナ", "顧客区分", "仕入先区分",
+            "郵便番号", "住所1", "住所2", "取引先分類コード", "取引禁止フラグ",
+            "雑区分", "取引先グループコード", "与信限度額", "与信一時増加枠",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{partnerCode}, #{partnerName}, #{partnerNameKana}, #{isCustomer}, #{isSupplier},
+            #{postalCode}, #{address1}, #{address2}, #{classificationCode}, #{isTradingProhibited},
+            #{isMiscellaneous}, #{groupCode}, #{creditLimit}, #{temporaryCreditIncrease},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByCode" resultMap="PartnerResultMap">
+        SELECT * FROM "取引先マスタ"
+        WHERE "取引先コード" = #{partnerCode}
+    </select>
+
+    <select id="findAll" resultMap="PartnerResultMap">
+        SELECT * FROM "取引先マスタ"
+        ORDER BY "取引先コード"
+    </select>
+
+    <select id="findCustomers" resultMap="PartnerResultMap">
+        SELECT * FROM "取引先マスタ"
+        WHERE "顧客区分" = TRUE
+        ORDER BY "取引先コード"
+    </select>
+
+    <select id="findSuppliers" resultMap="PartnerResultMap">
+        SELECT * FROM "取引先マスタ"
+        WHERE "仕入先区分" = TRUE
+        ORDER BY "取引先コード"
+    </select>
+
+    <update id="update" parameterType="com.example.sms.domain.model.partner.Partner">
+        UPDATE "取引先マスタ" SET
+            "取引先名" = #{partnerName},
+            "取引先カナ" = #{partnerNameKana},
+            "顧客区分" = #{isCustomer},
+            "仕入先区分" = #{isSupplier},
+            "郵便番号" = #{postalCode},
+            "住所1" = #{address1},
+            "住所2" = #{address2},
+            "取引先分類コード" = #{classificationCode},
+            "取引禁止フラグ" = #{isTradingProhibited},
+            "雑区分" = #{isMiscellaneous},
+            "取引先グループコード" = #{groupCode},
+            "与信限度額" = #{creditLimit},
+            "与信一時増加枠" = #{temporaryCreditIncrease},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "取引先コード" = #{partnerCode}
+    </update>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "取引先マスタ" CASCADE
+    </delete>
+</mapper>
