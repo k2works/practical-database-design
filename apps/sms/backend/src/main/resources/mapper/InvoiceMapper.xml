@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.InvoiceMapper">
+
+    <resultMap id="InvoiceResultMap" type="com.example.sms.domain.model.invoice.Invoice">
+        <id property="id" column="ID"/>
+        <result property="invoiceNumber" column="請求番号"/>
+        <result property="invoiceDate" column="請求日"/>
+        <result property="billingCode" column="請求先コード"/>
+        <result property="customerCode" column="顧客コード"/>
+        <result property="customerBranchNumber" column="顧客枝番"/>
+        <result property="closingDate" column="締日"/>
+        <result property="invoiceType" column="請求区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InvoiceTypeTypeHandler"/>
+        <result property="previousBalance" column="前回請求残高"/>
+        <result property="receiptAmount" column="入金額"/>
+        <result property="carriedBalance" column="繰越残高"/>
+        <result property="currentSalesAmount" column="今回売上額"/>
+        <result property="currentTaxAmount" column="今回消費税額"/>
+        <result property="currentInvoiceAmount" column="今回請求額"/>
+        <result property="invoiceBalance" column="請求残高"/>
+        <result property="dueDate" column="回収予定日"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <collection property="details" ofType="com.example.sms.domain.model.invoice.InvoiceDetail"
+                    select="findDetailsByInvoiceId" column="ID"/>
+    </resultMap>
+
+    <resultMap id="InvoiceDetailResultMap" type="com.example.sms.domain.model.invoice.InvoiceDetail">
+        <id property="id" column="ID"/>
+        <result property="invoiceId" column="請求ID"/>
+        <result property="lineNumber" column="行番号"/>
+        <result property="salesId" column="売上ID"/>
+        <result property="salesNumber" column="売上番号"/>
+        <result property="salesDate" column="売上日"/>
+        <result property="salesAmount" column="売上金額"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="totalAmount" column="合計金額"/>
+    </resultMap>
+
+    <!-- 請求（ヘッダ）+ 請求明細のネスト ResultMap（JOINによる一括取得用） -->
+    <resultMap id="invoiceWithDetailsResultMap" type="com.example.sms.domain.model.invoice.Invoice">
+        <id property="id" column="i_id"/>
+        <result property="invoiceNumber" column="i_請求番号"/>
+        <result property="invoiceDate" column="i_請求日"/>
+        <result property="billingCode" column="i_請求先コード"/>
+        <result property="customerCode" column="i_顧客コード"/>
+        <result property="customerBranchNumber" column="i_顧客枝番"/>
+        <result property="closingDate" column="i_締日"/>
+        <result property="invoiceType" column="i_請求区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InvoiceTypeTypeHandler"/>
+        <result property="previousBalance" column="i_前回請求残高"/>
+        <result property="receiptAmount" column="i_入金額"/>
+        <result property="carriedBalance" column="i_繰越残高"/>
+        <result property="currentSalesAmount" column="i_今回売上額"/>
+        <result property="currentTaxAmount" column="i_今回消費税額"/>
+        <result property="currentInvoiceAmount" column="i_今回請求額"/>
+        <result property="invoiceBalance" column="i_請求残高"/>
+        <result property="dueDate" column="i_回収予定日"/>
+        <result property="status" column="i_ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler"/>
+        <result property="remarks" column="i_備考"/>
+        <result property="version" column="i_バージョン"/>
+        <result property="createdAt" column="i_作成日時"/>
+        <result property="createdBy" column="i_作成者"/>
+        <result property="updatedAt" column="i_更新日時"/>
+        <result property="updatedBy" column="i_更新者"/>
+        <!-- 請求明細との1:N関連 -->
+        <collection property="details" ofType="com.example.sms.domain.model.invoice.InvoiceDetail"
+                    resultMap="invoiceDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 請求明細のネスト ResultMap -->
+    <resultMap id="invoiceDetailNestedResultMap" type="com.example.sms.domain.model.invoice.InvoiceDetail">
+        <id property="id" column="d_id"/>
+        <result property="invoiceId" column="d_請求ID"/>
+        <result property="lineNumber" column="d_行番号"/>
+        <result property="salesId" column="d_売上ID"/>
+        <result property="salesNumber" column="d_売上番号"/>
+        <result property="salesDate" column="d_売上日"/>
+        <result property="salesAmount" column="d_売上金額"/>
+        <result property="taxAmount" column="d_消費税額"/>
+        <result property="totalAmount" column="d_合計金額"/>
+    </resultMap>
+
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.invoice.Invoice"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "請求データ" (
+            "請求番号", "請求日", "請求先コード", "顧客コード", "顧客枝番",
+            "締日", "請求区分", "前回請求残高", "入金額", "繰越残高",
+            "今回売上額", "今回消費税額", "今回請求額", "請求残高", "回収予定日",
+            "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{invoiceNumber}, #{invoiceDate}, #{billingCode}, #{customerCode}, #{customerBranchNumber},
+            #{closingDate},
+            #{invoiceType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceTypeTypeHandler}::請求区分,
+            #{previousBalance}, #{receiptAmount}, #{carriedBalance},
+            #{currentSalesAmount}, #{currentTaxAmount}, #{currentInvoiceAmount}, #{invoiceBalance}, #{dueDate},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス,
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.invoice.InvoiceDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "請求明細" (
+            "請求ID", "行番号", "売上ID", "売上番号", "売上日",
+            "売上金額", "消費税額", "合計金額"
+        ) VALUES (
+            #{invoiceId}, #{lineNumber}, #{salesId}, #{salesNumber}, #{salesDate},
+            #{salesAmount}, #{taxAmount}, #{totalAmount}
+        )
+    </insert>
+
+    <select id="findById" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByInvoiceNumber" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ" WHERE "請求番号" = #{invoiceNumber}
+    </select>
+
+    <select id="findByCustomerCode" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ"
+        WHERE "顧客コード" = #{customerCode}
+        ORDER BY "請求日" DESC, "請求番号"
+    </select>
+
+    <select id="findByStatus" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス
+        ORDER BY "請求日" DESC, "請求番号"
+    </select>
+
+    <select id="findByInvoiceDateBetween" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ"
+        WHERE "請求日" BETWEEN #{from} AND #{to}
+        ORDER BY "請求日" DESC, "請求番号"
+    </select>
+
+    <select id="findUnpaidByCustomerCode" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ"
+        WHERE "顧客コード" = #{customerCode}
+        AND "ステータス" IN ('発行済', '一部入金')
+        ORDER BY "請求日", "請求番号"
+    </select>
+
+    <select id="findLatestByCustomerCode" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ"
+        WHERE "顧客コード" = #{customerCode}
+        ORDER BY "請求日" DESC, "請求番号" DESC
+        LIMIT 1
+    </select>
+
+    <select id="findAll" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ" ORDER BY "請求日" DESC, "請求番号"
+    </select>
+
+    <select id="findDetailsByInvoiceId" resultMap="InvoiceDetailResultMap">
+        SELECT * FROM "請求明細"
+        WHERE "請求ID" = #{invoiceId}
+        ORDER BY "行番号"
+    </select>
+
+    <!-- JOIN による一括取得クエリ（請求番号指定） -->
+    <select id="findWithDetailsByInvoiceNumber" resultMap="invoiceWithDetailsResultMap">
+        SELECT
+            i."ID" AS i_id,
+            i."請求番号" AS i_請求番号,
+            i."請求日" AS i_請求日,
+            i."請求先コード" AS i_請求先コード,
+            i."顧客コード" AS i_顧客コード,
+            i."顧客枝番" AS i_顧客枝番,
+            i."締日" AS i_締日,
+            i."請求区分" AS i_請求区分,
+            i."前回請求残高" AS i_前回請求残高,
+            i."入金額" AS i_入金額,
+            i."繰越残高" AS i_繰越残高,
+            i."今回売上額" AS i_今回売上額,
+            i."今回消費税額" AS i_今回消費税額,
+            i."今回請求額" AS i_今回請求額,
+            i."請求残高" AS i_請求残高,
+            i."回収予定日" AS i_回収予定日,
+            i."ステータス" AS i_ステータス,
+            i."備考" AS i_備考,
+            i."バージョン" AS i_バージョン,
+            i."作成日時" AS i_作成日時,
+            i."作成者" AS i_作成者,
+            i."更新日時" AS i_更新日時,
+            i."更新者" AS i_更新者,
+            d."ID" AS d_id,
+            d."請求ID" AS d_請求ID,
+            d."行番号" AS d_行番号,
+            d."売上ID" AS d_売上ID,
+            d."売上番号" AS d_売上番号,
+            d."売上日" AS d_売上日,
+            d."売上金額" AS d_売上金額,
+            d."消費税額" AS d_消費税額,
+            d."合計金額" AS d_合計金額
+        FROM "請求データ" i
+        LEFT JOIN "請求明細" d
+            ON i."ID" = d."請求ID"
+        WHERE i."請求番号" = #{invoiceNumber}
+        ORDER BY d."行番号"
+    </select>
+
+    <!-- JOIN による一括取得クエリ（ID指定） -->
+    <select id="findByIdWithDetails" resultMap="invoiceWithDetailsResultMap">
+        SELECT
+            i."ID" AS i_id,
+            i."請求番号" AS i_請求番号,
+            i."請求日" AS i_請求日,
+            i."請求先コード" AS i_請求先コード,
+            i."顧客コード" AS i_顧客コード,
+            i."顧客枝番" AS i_顧客枝番,
+            i."締日" AS i_締日,
+            i."請求区分" AS i_請求区分,
+            i."前回請求残高" AS i_前回請求残高,
+            i."入金額" AS i_入金額,
+            i."繰越残高" AS i_繰越残高,
+            i."今回売上額" AS i_今回売上額,
+            i."今回消費税額" AS i_今回消費税額,
+            i."今回請求額" AS i_今回請求額,
+            i."請求残高" AS i_請求残高,
+            i."回収予定日" AS i_回収予定日,
+            i."ステータス" AS i_ステータス,
+            i."備考" AS i_備考,
+            i."バージョン" AS i_バージョン,
+            i."作成日時" AS i_作成日時,
+            i."作成者" AS i_作成者,
+            i."更新日時" AS i_更新日時,
+            i."更新者" AS i_更新者,
+            d."ID" AS d_id,
+            d."請求ID" AS d_請求ID,
+            d."行番号" AS d_行番号,
+            d."売上ID" AS d_売上ID,
+            d."売上番号" AS d_売上番号,
+            d."売上日" AS d_売上日,
+            d."売上金額" AS d_売上金額,
+            d."消費税額" AS d_消費税額,
+            d."合計金額" AS d_合計金額
+        FROM "請求データ" i
+        LEFT JOIN "請求明細" d
+            ON i."ID" = d."請求ID"
+        WHERE i."ID" = #{id}
+        ORDER BY d."行番号"
+    </select>
+
+    <!-- バージョン取得（楽観ロック用） -->
+    <select id="findVersionById" resultType="java.lang.Integer">
+        SELECT "バージョン" FROM "請求データ" WHERE "ID" = #{id}
+    </select>
+
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.invoice.Invoice">
+        UPDATE "請求データ" SET
+            "請求日" = #{invoiceDate},
+            "請求先コード" = #{billingCode},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "締日" = #{closingDate},
+            "請求区分" = #{invoiceType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceTypeTypeHandler}::請求区分,
+            "前回請求残高" = #{previousBalance},
+            "入金額" = #{receiptAmount},
+            "繰越残高" = #{carriedBalance},
+            "今回売上額" = #{currentSalesAmount},
+            "今回消費税額" = #{currentTaxAmount},
+            "今回請求額" = #{currentInvoiceAmount},
+            "請求残高" = #{invoiceBalance},
+            "回収予定日" = #{dueDate},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.invoice.Invoice">
+        UPDATE "請求データ" SET
+            "請求日" = #{invoiceDate},
+            "請求先コード" = #{billingCode},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "締日" = #{closingDate},
+            "請求区分" = #{invoiceType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceTypeTypeHandler}::請求区分,
+            "前回請求残高" = #{previousBalance},
+            "入金額" = #{receiptAmount},
+            "繰越残高" = #{carriedBalance},
+            "今回売上額" = #{currentSalesAmount},
+            "今回消費税額" = #{currentTaxAmount},
+            "今回請求額" = #{currentInvoiceAmount},
+            "請求残高" = #{invoiceBalance},
+            "回収予定日" = #{dueDate},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <update id="updateReceiptAmount">
+        UPDATE "請求データ" SET
+            "入金額" = "入金額" + #{amount},
+            "請求残高" = "請求残高" - #{amount},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{invoiceId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE "請求データ" SET
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス,
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{invoiceId}
+    </update>
+
+    <delete id="deleteDetailsByInvoiceId">
+        DELETE FROM "請求明細" WHERE "請求ID" = #{invoiceId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "請求データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAllDetails">
+        TRUNCATE TABLE "請求明細" CASCADE
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "請求データ" CASCADE
+    </delete>
+</mapper>
