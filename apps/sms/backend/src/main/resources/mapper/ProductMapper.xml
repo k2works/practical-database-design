@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ProductMapper">
+
+    <resultMap id="ProductResultMap" type="com.example.sms.domain.model.product.Product">
+        <result property="productCode" column="商品コード"/>
+        <result property="productFullName" column="商品正式名"/>
+        <result property="productName" column="商品名"/>
+        <result property="productNameKana" column="商品名カナ"/>
+        <result property="productCategory" column="商品区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler"/>
+        <result property="modelNumber" column="製品型番"/>
+        <result property="sellingPrice" column="販売単価"/>
+        <result property="purchasePrice" column="仕入単価"/>
+        <result property="taxCategory" column="税区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler"/>
+        <result property="classificationCode" column="商品分類コード"/>
+        <result property="isMiscellaneous" column="雑区分"/>
+        <result property="isInventoryManaged" column="在庫管理対象区分"/>
+        <result property="isInventoryAllocated" column="在庫引当区分"/>
+        <result property="supplierCode" column="仕入先コード"/>
+        <result property="supplierBranchNumber" column="仕入先枝番"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者名"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.product.Product">
+        INSERT INTO "商品マスタ" (
+            "商品コード", "商品正式名", "商品名", "商品名カナ", "商品区分",
+            "製品型番", "販売単価", "仕入単価", "税区分", "商品分類コード",
+            "雑区分", "在庫管理対象区分", "在庫引当区分", "仕入先コード", "仕入先枝番",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{productCode}, #{productFullName}, #{productName}, #{productNameKana},
+            #{productCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler}::商品区分,
+            #{modelNumber}, #{sellingPrice}, #{purchasePrice},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{classificationCode},
+            #{isMiscellaneous}, #{isInventoryManaged}, #{isInventoryAllocated},
+            #{supplierCode}, #{supplierBranchNumber},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByCode" resultMap="ProductResultMap">
+        SELECT * FROM "商品マスタ"
+        WHERE "商品コード" = #{productCode}
+    </select>
+
+    <select id="findAll" resultMap="ProductResultMap">
+        SELECT * FROM "商品マスタ"
+        ORDER BY "商品コード"
+    </select>
+
+    <select id="findByCategory" resultMap="ProductResultMap">
+        SELECT * FROM "商品マスタ"
+        WHERE "商品区分" = #{category}::商品区分
+        ORDER BY "商品コード"
+    </select>
+
+    <select id="findByClassificationCode" resultMap="ProductResultMap">
+        SELECT * FROM "商品マスタ"
+        WHERE "商品分類コード" = #{classificationCode}
+        ORDER BY "商品コード"
+    </select>
+
+    <update id="update" parameterType="com.example.sms.domain.model.product.Product">
+        UPDATE "商品マスタ" SET
+            "商品正式名" = #{productFullName},
+            "商品名" = #{productName},
+            "商品名カナ" = #{productNameKana},
+            "商品区分" = #{productCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler}::商品区分,
+            "製品型番" = #{modelNumber},
+            "販売単価" = #{sellingPrice},
+            "仕入単価" = #{purchasePrice},
+            "税区分" = #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            "商品分類コード" = #{classificationCode},
+            "雑区分" = #{isMiscellaneous},
+            "在庫管理対象区分" = #{isInventoryManaged},
+            "在庫引当区分" = #{isInventoryAllocated},
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "商品コード" = #{productCode}
+    </update>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "商品マスタ" CASCADE
+    </delete>
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ProductClassificationMapper">
+
+    <resultMap id="ProductClassificationResultMap" type="com.example.sms.domain.model.product.ProductClassification">
+        <result property="classificationCode" column="商品分類コード"/>
+        <result property="classificationName" column="商品分類名"/>
+        <result property="hierarchyLevel" column="商品分類階層"/>
+        <result property="classificationPath" column="商品分類パス"/>
+        <result property="isLeaf" column="最下層区分"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者名"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.product.ProductClassification">
+        INSERT INTO "商品分類マスタ" (
+            "商品分類コード", "商品分類名", "商品分類階層", "商品分類パス", "最下層区分",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{classificationCode}, #{classificationName}, #{hierarchyLevel}, #{classificationPath}, #{isLeaf},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByCode" resultMap="ProductClassificationResultMap">
+        SELECT * FROM "商品分類マスタ"
+        WHERE "商品分類コード" = #{classificationCode}
+    </select>
+
+    <select id="findAll" resultMap="ProductClassificationResultMap">
+        SELECT * FROM "商品分類マスタ"
+        ORDER BY "商品分類パス"
+    </select>
+
+    <select id="findByPathPrefix" resultMap="ProductClassificationResultMap">
+        SELECT * FROM "商品分類マスタ"
+        WHERE "商品分類パス" LIKE #{pathPrefix} || '~%'
+        ORDER BY "商品分類パス"
+    </select>
+
+    <update id="update" parameterType="com.example.sms.domain.model.product.ProductClassification">
+        UPDATE "商品分類マスタ" SET
+            "商品分類名" = #{classificationName},
+            "商品分類階層" = #{hierarchyLevel},
+            "商品分類パス" = #{classificationPath},
+            "最下層区分" = #{isLeaf},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "商品分類コード" = #{classificationCode}
+    </update>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "商品分類マスタ" CASCADE
+    </delete>
+</mapper>
