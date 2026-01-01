@@ -251,6 +251,10 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+    // TestContainers の共有を有効化
+    jvmArgs("-Dtestcontainers.reuse.enable=true")
+    // テストを順次実行（並列実行しない）
+    maxParallelForks = 1
 }
 
 // JaCoCo
@@ -407,16 +411,45 @@ CREATE TYPE 支払方法 AS ENUM ('現金', '振込', '手形', '小切手', '�
 
 テスト用のデータベースコンテナを管理する基盤クラスを作成します。
 
+まず、TestContainers の設定クラスを作成します。
+
+`src/test/java/com/example/sms/TestcontainersConfiguration.java`:
+
+```java
+package com.example.sms;
+
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
+
+/**
+ * TestContainers 設定クラス.
+ * PostgreSQL コンテナを Spring Bean として定義し、
+ * ServiceConnection で自動的にデータソースを設定する。
+ */
+@TestConfiguration(proxyBeanMethods = false)
+public class TestcontainersConfiguration {
+
+    @Bean
+    @ServiceConnection
+    PostgreSQLContainer<?> postgresContainer() {
+        return new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"));
+    }
+}
+```
+
+次に、統合テストの基底クラスを作成します。
+
 `src/test/java/com/example/sms/testsetup/BaseIntegrationTest.java`:
 
 ```java
 package com.example.sms.testsetup;
 
+import com.example.sms.TestcontainersConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.context.annotation.Import;
 
 /**
  * 統合テストの基底クラス。
@@ -424,18 +457,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * Spring Boot の @ServiceConnection で自動的にデータソースを設定する。
  * Flyway マイグレーションが自動実行される。
  */
-@Testcontainers
 @SpringBootTest
+@Import(TestcontainersConfiguration.class)
 @org.springframework.test.context.ActiveProfiles("test")
-@SuppressWarnings({"PMD.AbstractClassWithoutAbstractMethod", "PMD.MutableStaticState"})
+@SuppressWarnings({"PMD.AbstractClassWithoutAbstractMethod"})
 public abstract class BaseIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("testdb")
-            .withUsername("testuser")
-            .withPassword("testpass");
 
     /**
      * 継承のみを許可するための protected コンストラクタ。
@@ -649,8 +675,12 @@ PMD は、Java のコード品質を分析するツールです。
         <exclude name="ShortVariable"/>
         <!-- final パラメータは強制しない -->
         <exclude name="MethodArgumentCouldBeFinal"/>
+        <!-- ローカル変数の final は強制しない -->
+        <exclude name="LocalVariableCouldBeFinal"/>
         <!-- デフォルトアクセス修飾子のコメントは強制しない -->
         <exclude name="CommentDefaultAccessModifier"/>
+        <!-- var の使用を許可 -->
+        <exclude name="UseExplicitTypes"/>
     </rule>
 
     <!-- 設計 -->
@@ -659,13 +689,20 @@ PMD は、Java のコード品質を分析するツールです。
         <exclude name="LoosePackageCoupling"/>
         <!-- Spring Boot Application クラスは例外 -->
         <exclude name="UseUtilityClass"/>
+        <!-- データモデルはフィールド数が多くなることがある -->
+        <exclude name="TooManyFields"/>
     </rule>
 
     <!-- マルチスレッド -->
     <rule ref="category/java/multithreading.xml"/>
 
     <!-- エラープローン -->
-    <rule ref="category/java/errorprone.xml"/>
+    <rule ref="category/java/errorprone.xml">
+        <!-- テストで文字列リテラルの重複は許可 -->
+        <exclude name="AvoidDuplicateLiterals"/>
+        <!-- @TestConfiguration クラスはテストケースを持たない -->
+        <exclude name="TestClassWithoutTestCases"/>
+    </rule>
 
     <!-- パフォーマンス -->
     <rule ref="category/java/performance.xml"/>
@@ -769,12 +806,33 @@ dependencies {
 
 Spring Boot 4.0.0 では `@ServiceConnection` を使用した自動設定が推奨されます。
 
-**解決策**: `@ServiceConnection` を使用する
+**解決策**: `@TestConfiguration` + `@Import` パターンを使用する
 
 ```java
-@Container
-@ServiceConnection
-static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+// TestcontainersConfiguration.java
+@TestConfiguration(proxyBeanMethods = false)
+public class TestcontainersConfiguration {
+    @Bean
+    @ServiceConnection
+    PostgreSQLContainer<?> postgresContainer() {
+        return new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"));
+    }
+}
+
+// BaseIntegrationTest.java
+@SpringBootTest
+@Import(TestcontainersConfiguration.class)
+public abstract class BaseIntegrationTest {
+    // ...
+}
+```
+
+このパターンを使用すると、複数のテストクラス間でコンテナを共有でき、接続の問題を回避できます。
+
+**注意**: `~/.testcontainers.properties` に以下の設定を追加すると、コンテナの再利用が有効になります。
+
+```properties
+testcontainers.reuse.enable=true
 ```
 
 ### PMD 7.x のルール変更
@@ -783,11 +841,36 @@ static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-
 
 PMD 7.x では一部のルールがカテゴリ間で移動されています。
 
-**解決策**: `@SuppressWarnings` で個別に抑制するか、正しいカテゴリを指定する
+**解決策1**: ruleset.xml で正しいカテゴリから除外する
+
+```xml
+<!-- コードスタイル -->
+<rule ref="category/java/codestyle.xml">
+    <exclude name="LocalVariableCouldBeFinal"/>
+    <exclude name="UseExplicitTypes"/>
+</rule>
+
+<!-- 設計 -->
+<rule ref="category/java/design.xml">
+    <exclude name="TooManyFields"/>
+</rule>
+
+<!-- エラープローン -->
+<rule ref="category/java/errorprone.xml">
+    <exclude name="AvoidDuplicateLiterals"/>
+    <exclude name="TestClassWithoutTestCases"/>
+</rule>
+```
+
+**解決策2**: `@SuppressWarnings` で個別に抑制する
 
 ```java
-@SuppressWarnings({"PMD.AbstractClassWithoutAbstractMethod", "PMD.MutableStaticState"})
-public abstract class BaseIntegrationTest {
+// Lombok @Builder.Default を使う場合はデフォルト値を明示する必要があるため
+@SuppressWarnings("PMD.RedundantFieldInitializer")
+public class Partner {
+    @Builder.Default
+    private boolean isCustomer = false;
+}
 ```
 
 ### .gitignore での `out` ディレクトリ
