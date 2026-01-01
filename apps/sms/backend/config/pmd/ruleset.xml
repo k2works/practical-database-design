@@ -13,6 +13,8 @@
         <exclude name="UnitTestContainsTooManyAsserts"/>
         <!-- ResultSet のチェックはテストコードでは必須ではない -->
         <exclude name="CheckResultSet"/>
+        <!-- @SuppressWarnings アノテーションの不要チェックは無効化 -->
+        <exclude name="UnnecessaryWarningSuppression"/>
     </rule>
 
     <!-- コードスタイル -->
@@ -39,6 +41,8 @@
         <exclude name="UseUtilityClass"/>
         <!-- データモデルはフィールド数が多くなることがある -->
         <exclude name="TooManyFields"/>
+        <!-- リポジトリインターフェースはメソッド数が多くなることがある -->
+        <exclude name="TooManyMethods"/>
     </rule>
 
     <!-- マルチスレッド -->
