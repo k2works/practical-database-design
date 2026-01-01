@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.SalesOrderMapper">
+
+    <resultMap id="SalesOrderResultMap" type="com.example.sms.domain.model.sales.SalesOrder">
+        <id property="id" column="ID"/>
+        <result property="orderNumber" column="受注番号"/>
+        <result property="orderDate" column="受注日"/>
+        <result property="customerCode" column="顧客コード"/>
+        <result property="customerBranchNumber" column="顧客枝番"/>
+        <result property="shippingDestinationNumber" column="出荷先番号"/>
+        <result property="representativeCode" column="担当者コード"/>
+        <result property="requestedDeliveryDate" column="希望納期"/>
+        <result property="scheduledShippingDate" column="出荷予定日"/>
+        <result property="orderAmount" column="受注金額"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="totalAmount" column="受注合計"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler"/>
+        <result property="quotationId" column="見積ID"/>
+        <result property="customerOrderNumber" column="顧客注文番号"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <collection property="details" ofType="com.example.sms.domain.model.sales.SalesOrderDetail"
+                    select="findDetailsByOrderId" column="ID"/>
+    </resultMap>
+
+    <resultMap id="SalesOrderDetailResultMap" type="com.example.sms.domain.model.sales.SalesOrderDetail">
+        <id property="id" column="ID"/>
+        <result property="orderId" column="受注ID"/>
+        <result property="lineNumber" column="行番号"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="productName" column="商品名"/>
+        <result property="orderQuantity" column="受注数量"/>
+        <result property="allocatedQuantity" column="引当数量"/>
+        <result property="shippedQuantity" column="出荷数量"/>
+        <result property="remainingQuantity" column="残数量"/>
+        <result property="unit" column="単位"/>
+        <result property="unitPrice" column="単価"/>
+        <result property="amount" column="金額"/>
+        <result property="taxCategory" column="税区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler"/>
+        <result property="taxRate" column="消費税率"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="requestedDeliveryDate" column="希望納期"/>
+        <result property="remarks" column="備考"/>
+    </resultMap>
+
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.SalesOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "受注データ" (
+            "受注番号", "受注日", "顧客コード", "顧客枝番", "出荷先番号",
+            "担当者コード", "希望納期", "出荷予定日", "受注金額", "消費税額",
+            "受注合計", "ステータス", "見積ID", "顧客注文番号", "備考",
+            "作成日時", "作成者", "更新日時", "更新者"
+        ) VALUES (
+            #{orderNumber}, #{orderDate}, #{customerCode}, #{customerBranchNumber}, #{shippingDestinationNumber},
+            #{representativeCode}, #{requestedDeliveryDate}, #{scheduledShippingDate}, #{orderAmount}, #{taxAmount},
+            #{totalAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler}::受注ステータス,
+            #{quotationId}, #{customerOrderNumber}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.SalesOrderDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "受注明細" (
+            "受注ID", "行番号", "商品コード", "商品名", "受注数量",
+            "引当数量", "出荷数量", "残数量", "単位", "単価",
+            "金額", "税区分", "消費税率", "消費税額", "倉庫コード", "希望納期", "備考"
+        ) VALUES (
+            #{orderId}, #{lineNumber}, #{productCode}, #{productName}, #{orderQuantity},
+            #{allocatedQuantity}, #{shippedQuantity}, #{remainingQuantity}, #{unit}, #{unitPrice},
+            #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{taxRate}, #{taxAmount}, #{warehouseCode}, #{requestedDeliveryDate}, #{remarks}
+        )
+    </insert>
+
+    <select id="findById" resultMap="SalesOrderResultMap">
+        SELECT * FROM "受注データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByOrderNumber" resultMap="SalesOrderResultMap">
+        SELECT * FROM "受注データ" WHERE "受注番号" = #{orderNumber}
+    </select>
+
+    <select id="findByCustomerCode" resultMap="SalesOrderResultMap">
+        SELECT * FROM "受注データ"
+        WHERE "顧客コード" = #{customerCode}
+        ORDER BY "受注日" DESC, "受注番号"
+    </select>
+
+    <select id="findByStatus" resultMap="SalesOrderResultMap">
+        SELECT * FROM "受注データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler}::受注ステータス
+        ORDER BY "受注日" DESC, "受注番号"
+    </select>
+
+    <select id="findByOrderDateBetween" resultMap="SalesOrderResultMap">
+        SELECT * FROM "受注データ"
+        WHERE "受注日" BETWEEN #{from} AND #{to}
+        ORDER BY "受注日" DESC, "受注番号"
+    </select>
+
+    <select id="findByRequestedDeliveryDateBetween" resultMap="SalesOrderResultMap">
+        SELECT * FROM "受注データ"
+        WHERE "希望納期" BETWEEN #{from} AND #{to}
+        ORDER BY "希望納期", "受注番号"
+    </select>
+
+    <select id="findAll" resultMap="SalesOrderResultMap">
+        SELECT * FROM "受注データ" ORDER BY "受注日" DESC, "受注番号"
+    </select>
+
+    <select id="findDetailsByOrderId" resultMap="SalesOrderDetailResultMap">
+        SELECT * FROM "受注明細"
+        WHERE "受注ID" = #{orderId}
+        ORDER BY "行番号"
+    </select>
+
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.SalesOrder">
+        UPDATE "受注データ" SET
+            "受注日" = #{orderDate},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "出荷先番号" = #{shippingDestinationNumber},
+            "担当者コード" = #{representativeCode},
+            "希望納期" = #{requestedDeliveryDate},
+            "出荷予定日" = #{scheduledShippingDate},
+            "受注金額" = #{orderAmount},
+            "消費税額" = #{taxAmount},
+            "受注合計" = #{totalAmount},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler}::受注ステータス,
+            "見積ID" = #{quotationId},
+            "顧客注文番号" = #{customerOrderNumber},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <update id="updateDetail" parameterType="com.example.sms.domain.model.sales.SalesOrderDetail">
+        UPDATE "受注明細" SET
+            "商品コード" = #{productCode},
+            "商品名" = #{productName},
+            "受注数量" = #{orderQuantity},
+            "引当数量" = #{allocatedQuantity},
+            "出荷数量" = #{shippedQuantity},
+            "残数量" = #{remainingQuantity},
+            "単位" = #{unit},
+            "単価" = #{unitPrice},
+            "金額" = #{amount},
+            "税区分" = #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            "消費税率" = #{taxRate},
+            "消費税額" = #{taxAmount},
+            "倉庫コード" = #{warehouseCode},
+            "希望納期" = #{requestedDeliveryDate},
+            "備考" = #{remarks}
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteDetailsByOrderId">
+        DELETE FROM "受注明細" WHERE "受注ID" = #{orderId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "受注データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAllDetails">
+        TRUNCATE TABLE "受注明細" CASCADE
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "受注データ" CASCADE
+    </delete>
+</mapper>

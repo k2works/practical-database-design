@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.QuotationMapper">
+
+    <resultMap id="QuotationResultMap" type="com.example.sms.domain.model.sales.Quotation">
+        <id property="id" column="ID"/>
+        <result property="quotationNumber" column="見積番号"/>
+        <result property="quotationDate" column="見積日"/>
+        <result property="expirationDate" column="見積有効期限"/>
+        <result property="customerCode" column="顧客コード"/>
+        <result property="customerBranchNumber" column="顧客枝番"/>
+        <result property="representativeCode" column="担当者コード"/>
+        <result property="subject" column="件名"/>
+        <result property="quotationAmount" column="見積金額"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="totalAmount" column="見積合計"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <collection property="details" ofType="com.example.sms.domain.model.sales.QuotationDetail"
+                    select="findDetailsByQuotationId" column="ID"/>
+    </resultMap>
+
+    <resultMap id="QuotationDetailResultMap" type="com.example.sms.domain.model.sales.QuotationDetail">
+        <id property="id" column="ID"/>
+        <result property="quotationId" column="見積ID"/>
+        <result property="lineNumber" column="行番号"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="productName" column="商品名"/>
+        <result property="quantity" column="数量"/>
+        <result property="unit" column="単位"/>
+        <result property="unitPrice" column="単価"/>
+        <result property="amount" column="金額"/>
+        <result property="taxCategory" column="税区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler"/>
+        <result property="taxRate" column="消費税率"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="remarks" column="備考"/>
+    </resultMap>
+
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.Quotation"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "見積データ" (
+            "見積番号", "見積日", "見積有効期限", "顧客コード", "顧客枝番",
+            "担当者コード", "件名", "見積金額", "消費税額", "見積合計",
+            "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者"
+        ) VALUES (
+            #{quotationNumber}, #{quotationDate}, #{expirationDate}, #{customerCode}, #{customerBranchNumber},
+            #{representativeCode}, #{subject}, #{quotationAmount}, #{taxAmount}, #{totalAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler}::見積ステータス,
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.QuotationDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "見積明細" (
+            "見積ID", "行番号", "商品コード", "商品名", "数量",
+            "単位", "単価", "金額", "税区分", "消費税率", "消費税額", "備考"
+        ) VALUES (
+            #{quotationId}, #{lineNumber}, #{productCode}, #{productName}, #{quantity},
+            #{unit}, #{unitPrice}, #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{taxRate}, #{taxAmount}, #{remarks}
+        )
+    </insert>
+
+    <select id="findById" resultMap="QuotationResultMap">
+        SELECT * FROM "見積データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByQuotationNumber" resultMap="QuotationResultMap">
+        SELECT * FROM "見積データ" WHERE "見積番号" = #{quotationNumber}
+    </select>
+
+    <select id="findByCustomerCode" resultMap="QuotationResultMap">
+        SELECT * FROM "見積データ"
+        WHERE "顧客コード" = #{customerCode}
+        ORDER BY "見積日" DESC, "見積番号"
+    </select>
+
+    <select id="findByStatus" resultMap="QuotationResultMap">
+        SELECT * FROM "見積データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler}::見積ステータス
+        ORDER BY "見積日" DESC, "見積番号"
+    </select>
+
+    <select id="findByQuotationDateBetween" resultMap="QuotationResultMap">
+        SELECT * FROM "見積データ"
+        WHERE "見積日" BETWEEN #{from} AND #{to}
+        ORDER BY "見積日" DESC, "見積番号"
+    </select>
+
+    <select id="findAll" resultMap="QuotationResultMap">
+        SELECT * FROM "見積データ" ORDER BY "見積日" DESC, "見積番号"
+    </select>
+
+    <select id="findDetailsByQuotationId" resultMap="QuotationDetailResultMap">
+        SELECT * FROM "見積明細"
+        WHERE "見積ID" = #{quotationId}
+        ORDER BY "行番号"
+    </select>
+
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Quotation">
+        UPDATE "見積データ" SET
+            "見積日" = #{quotationDate},
+            "見積有効期限" = #{expirationDate},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "担当者コード" = #{representativeCode},
+            "件名" = #{subject},
+            "見積金額" = #{quotationAmount},
+            "消費税額" = #{taxAmount},
+            "見積合計" = #{totalAmount},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler}::見積ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteDetailsByQuotationId">
+        DELETE FROM "見積明細" WHERE "見積ID" = #{quotationId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "見積データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAllDetails">
+        TRUNCATE TABLE "見積明細" CASCADE
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "見積データ" CASCADE
+    </delete>
+</mapper>

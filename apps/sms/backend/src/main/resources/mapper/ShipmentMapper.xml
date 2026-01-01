@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ShipmentMapper">
+
+    <resultMap id="ShipmentResultMap" type="com.example.sms.domain.model.shipping.Shipment">
+        <id property="id" column="ID"/>
+        <result property="shipmentNumber" column="出荷番号"/>
+        <result property="shipmentDate" column="出荷日"/>
+        <result property="orderId" column="受注ID"/>
+        <result property="customerCode" column="顧客コード"/>
+        <result property="customerBranchNumber" column="顧客枝番"/>
+        <result property="shippingDestinationNumber" column="出荷先番号"/>
+        <result property="shippingDestinationName" column="出荷先名"/>
+        <result property="shippingDestinationPostalCode" column="出荷先郵便番号"/>
+        <result property="shippingDestinationAddress1" column="出荷先住所1"/>
+        <result property="shippingDestinationAddress2" column="出荷先住所2"/>
+        <result property="representativeCode" column="担当者コード"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.ShipmentStatusTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <collection property="details" ofType="com.example.sms.domain.model.shipping.ShipmentDetail"
+                    select="findDetailsByShipmentId" column="ID"/>
+    </resultMap>
+
+    <resultMap id="ShipmentDetailResultMap" type="com.example.sms.domain.model.shipping.ShipmentDetail">
+        <id property="id" column="ID"/>
+        <result property="shipmentId" column="出荷ID"/>
+        <result property="lineNumber" column="行番号"/>
+        <result property="orderDetailId" column="受注明細ID"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="productName" column="商品名"/>
+        <result property="shippedQuantity" column="出荷数量"/>
+        <result property="unit" column="単位"/>
+        <result property="unitPrice" column="単価"/>
+        <result property="amount" column="金額"/>
+        <result property="taxCategory" column="税区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler"/>
+        <result property="taxRate" column="消費税率"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="remarks" column="備考"/>
+    </resultMap>
+
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.shipping.Shipment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "出荷データ" (
+            "出荷番号", "出荷日", "受注ID", "顧客コード", "顧客枝番",
+            "出荷先番号", "出荷先名", "出荷先郵便番号", "出荷先住所1", "出荷先住所2",
+            "担当者コード", "倉庫コード", "ステータス", "備考",
+            "作成日時", "作成者", "更新日時", "更新者"
+        ) VALUES (
+            #{shipmentNumber}, #{shipmentDate}, #{orderId}, #{customerCode}, #{customerBranchNumber},
+            #{shippingDestinationNumber}, #{shippingDestinationName}, #{shippingDestinationPostalCode},
+            #{shippingDestinationAddress1}, #{shippingDestinationAddress2},
+            #{representativeCode}, #{warehouseCode},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ShipmentStatusTypeHandler}::出荷ステータス,
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.shipping.ShipmentDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "出荷明細" (
+            "出荷ID", "行番号", "受注明細ID", "商品コード", "商品名",
+            "出荷数量", "単位", "単価", "金額", "税区分",
+            "消費税率", "消費税額", "倉庫コード", "備考"
+        ) VALUES (
+            #{shipmentId}, #{lineNumber}, #{orderDetailId}, #{productCode}, #{productName},
+            #{shippedQuantity}, #{unit}, #{unitPrice}, #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{taxRate}, #{taxAmount}, #{warehouseCode}, #{remarks}
+        )
+    </insert>
+
+    <select id="findById" resultMap="ShipmentResultMap">
+        SELECT * FROM "出荷データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByShipmentNumber" resultMap="ShipmentResultMap">
+        SELECT * FROM "出荷データ" WHERE "出荷番号" = #{shipmentNumber}
+    </select>
+
+    <select id="findByOrderId" resultMap="ShipmentResultMap">
+        SELECT * FROM "出荷データ"
+        WHERE "受注ID" = #{orderId}
+        ORDER BY "出荷日" DESC, "出荷番号"
+    </select>
+
+    <select id="findByCustomerCode" resultMap="ShipmentResultMap">
+        SELECT * FROM "出荷データ"
+        WHERE "顧客コード" = #{customerCode}
+        ORDER BY "出荷日" DESC, "出荷番号"
+    </select>
+
+    <select id="findByStatus" resultMap="ShipmentResultMap">
+        SELECT * FROM "出荷データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ShipmentStatusTypeHandler}::出荷ステータス
+        ORDER BY "出荷日" DESC, "出荷番号"
+    </select>
+
+    <select id="findByShipmentDateBetween" resultMap="ShipmentResultMap">
+        SELECT * FROM "出荷データ"
+        WHERE "出荷日" BETWEEN #{from} AND #{to}
+        ORDER BY "出荷日" DESC, "出荷番号"
+    </select>
+
+    <select id="findAll" resultMap="ShipmentResultMap">
+        SELECT * FROM "出荷データ" ORDER BY "出荷日" DESC, "出荷番号"
+    </select>
+
+    <select id="findDetailsByShipmentId" resultMap="ShipmentDetailResultMap">
+        SELECT * FROM "出荷明細"
+        WHERE "出荷ID" = #{shipmentId}
+        ORDER BY "行番号"
+    </select>
+
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.shipping.Shipment">
+        UPDATE "出荷データ" SET
+            "出荷日" = #{shipmentDate},
+            "受注ID" = #{orderId},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "出荷先番号" = #{shippingDestinationNumber},
+            "出荷先名" = #{shippingDestinationName},
+            "出荷先郵便番号" = #{shippingDestinationPostalCode},
+            "出荷先住所1" = #{shippingDestinationAddress1},
+            "出荷先住所2" = #{shippingDestinationAddress2},
+            "担当者コード" = #{representativeCode},
+            "倉庫コード" = #{warehouseCode},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ShipmentStatusTypeHandler}::出荷ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteDetailsByShipmentId">
+        DELETE FROM "出荷明細" WHERE "出荷ID" = #{shipmentId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "出荷データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAllDetails">
+        TRUNCATE TABLE "出荷明細" CASCADE
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "出荷データ" CASCADE
+    </delete>
+</mapper>
