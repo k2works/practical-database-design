@@ -1,8 +1,8 @@
-site_name: Site Name
-site_description: Site Description
-site_author: Project Team
-repo_url: https://github.com/k2works/claude-code-booster
-repo_name: claude-code-booster
+site_name: 実践データベース設計：基幹業務システム編
+site_description: 基幹業務システム（販売管理・財務会計・生産管理）のデータベース設計を体系的に解説
+site_author: k2works
+repo_url: https://github.com/k2works/practical-database-design
+repo_name: practical-database-design
 
 theme:
   name: material
@@ -49,8 +49,8 @@ extra:
   plantuml_url: http://www.plantuml.com/plantuml
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/k2works
-      name: GitHub Repository/claude-code-booster
+      link: https://github.com/k2works/practical-database-design
+      name: GitHub Repository
 
 plugins:
   - search
