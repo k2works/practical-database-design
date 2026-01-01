@@ -36,7 +36,15 @@ public interface SalesOrderMapper {
 
     List<SalesOrderDetail> findDetailsByOrderId(Integer orderId);
 
+    SalesOrder findWithDetailsByOrderNumber(String orderNumber);
+
+    SalesOrder findByIdWithDetails(Integer id);
+
+    Integer findVersionById(Integer id);
+
     void updateHeader(SalesOrder salesOrder);
+
+    int updateWithOptimisticLock(SalesOrder salesOrder);
 
     void updateDetail(SalesOrderDetail detail);
 

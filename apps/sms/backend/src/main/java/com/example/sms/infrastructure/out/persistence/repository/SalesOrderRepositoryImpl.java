@@ -1,12 +1,14 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.SalesOrderRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
 import com.example.sms.domain.model.sales.OrderStatus;
 import com.example.sms.domain.model.sales.SalesOrder;
 import com.example.sms.domain.model.sales.SalesOrderDetail;
 import com.example.sms.infrastructure.out.persistence.mapper.SalesOrderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -38,8 +40,18 @@ public class SalesOrderRepositoryImpl implements SalesOrderRepository {
     }
 
     @Override
+    public Optional<SalesOrder> findByIdWithDetails(Integer id) {
+        return Optional.ofNullable(salesOrderMapper.findByIdWithDetails(id));
+    }
+
+    @Override
     public Optional<SalesOrder> findByOrderNumber(String orderNumber) {
         return salesOrderMapper.findByOrderNumber(orderNumber);
+    }
+
+    @Override
+    public Optional<SalesOrder> findWithDetailsByOrderNumber(String orderNumber) {
+        return Optional.ofNullable(salesOrderMapper.findWithDetailsByOrderNumber(orderNumber));
     }
 
     @Override
@@ -68,8 +80,21 @@ public class SalesOrderRepositoryImpl implements SalesOrderRepository {
     }
 
     @Override
+    @Transactional
     public void update(SalesOrder salesOrder) {
-        salesOrderMapper.updateHeader(salesOrder);
+        int updatedCount = salesOrderMapper.updateWithOptimisticLock(salesOrder);
+
+        if (updatedCount == 0) {
+            // バージョン不一致または削除済み
+            Integer currentVersion = salesOrderMapper.findVersionById(salesOrder.getId());
+            if (currentVersion == null) {
+                throw new OptimisticLockException("受注", salesOrder.getId());
+            } else {
+                throw new OptimisticLockException("受注", salesOrder.getId(),
+                        salesOrder.getVersion(), currentVersion);
+            }
+        }
+
         salesOrderMapper.deleteDetailsByOrderId(salesOrder.getId());
         if (salesOrder.getDetails() != null) {
             for (SalesOrderDetail detail : salesOrder.getDetails()) {

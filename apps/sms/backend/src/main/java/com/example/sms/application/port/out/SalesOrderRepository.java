@@ -16,7 +16,11 @@ public interface SalesOrderRepository {
 
     Optional<SalesOrder> findById(Integer id);
 
+    Optional<SalesOrder> findByIdWithDetails(Integer id);
+
     Optional<SalesOrder> findByOrderNumber(String orderNumber);
+
+    Optional<SalesOrder> findWithDetailsByOrderNumber(String orderNumber);
 
     List<SalesOrder> findByCustomerCode(String customerCode);
 

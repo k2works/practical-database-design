@@ -41,4 +41,8 @@ public class SalesOrderDetail {
     private String warehouseCode;
     private LocalDate requestedDeliveryDate;
     private String remarks;
+
+    /** 楽観ロック用バージョン. */
+    @Builder.Default
+    private Integer version = 1;
 }
