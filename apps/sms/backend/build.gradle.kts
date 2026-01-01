@@ -67,6 +67,10 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+    // TestContainers の共有を有効化
+    jvmArgs("-Dtestcontainers.reuse.enable=true")
+    // テストを順次実行（並列実行しない）
+    maxParallelForks = 1
 }
 
 // JaCoCo

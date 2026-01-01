@@ -23,8 +23,12 @@
         <exclude name="ShortVariable"/>
         <!-- final パラメータは強制しない -->
         <exclude name="MethodArgumentCouldBeFinal"/>
+        <!-- ローカル変数の final は強制しない -->
+        <exclude name="LocalVariableCouldBeFinal"/>
         <!-- デフォルトアクセス修飾子のコメントは強制しない -->
         <exclude name="CommentDefaultAccessModifier"/>
+        <!-- var の使用を許可 -->
+        <exclude name="UseExplicitTypes"/>
     </rule>
 
     <!-- 設計 -->
@@ -33,13 +37,20 @@
         <exclude name="LoosePackageCoupling"/>
         <!-- Spring Boot Application クラスは例外 -->
         <exclude name="UseUtilityClass"/>
+        <!-- データモデルはフィールド数が多くなることがある -->
+        <exclude name="TooManyFields"/>
     </rule>
 
     <!-- マルチスレッド -->
     <rule ref="category/java/multithreading.xml"/>
 
     <!-- エラープローン -->
-    <rule ref="category/java/errorprone.xml"/>
+    <rule ref="category/java/errorprone.xml">
+        <!-- テストで文字列リテラルの重複は許可 -->
+        <exclude name="AvoidDuplicateLiterals"/>
+        <!-- @TestConfiguration クラスはテストケースを持たない -->
+        <exclude name="TestClassWithoutTestCases"/>
+    </rule>
 
     <!-- パフォーマンス -->
     <rule ref="category/java/performance.xml"/>

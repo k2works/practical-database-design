@@ -6,7 +6,17 @@
       "mcp__byterover-mcp__byterover-store-knowledge",
       "Bash(tree:*)",
       "Bash(find:*)",
-      "mcp__byterover-mcp__byterover-retrieve-knowledge"
+      "mcp__byterover-mcp__byterover-retrieve-knowledge",
+      "Bash(./gradlew test:*)",
+      "Bash(chmod:*)",
+      "Bash(./gradlew clean test:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)",
+      "Bash(~/.testcontainers.properties)",
+      "Bash(cat:*)",
+      "Bash(./gradlew qualityCheck:*)",
+      "Bash(./gradlew pmdMain:*)",
+      "Bash(./gradlew fullCheck:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,10 +1,8 @@
 package com.example.sms.testsetup;
 
+import com.example.sms.TestcontainersConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.context.annotation.Import;
 
 /**
  * 統合テストの基底クラス。
@@ -12,18 +10,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * Spring Boot の @ServiceConnection で自動的にデータソースを設定する。
  * Flyway マイグレーションが自動実行される。
  */
-@Testcontainers
 @SpringBootTest
+@Import(TestcontainersConfiguration.class)
 @org.springframework.test.context.ActiveProfiles("test")
-@SuppressWarnings({"PMD.AbstractClassWithoutAbstractMethod", "PMD.MutableStaticState"})
+@SuppressWarnings({"PMD.AbstractClassWithoutAbstractMethod"})
 public abstract class BaseIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("testdb")
-            .withUsername("testuser")
-            .withPassword("testpass");
 
     /**
      * 継承のみを許可するための protected コンストラクタ。
