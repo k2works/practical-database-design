@@ -81,6 +81,11 @@
         WHERE "取引先コード" = #{partnerCode}
     </update>
 
+    <delete id="deleteByCode">
+        DELETE FROM "取引先マスタ"
+        WHERE "取引先コード" = #{partnerCode}
+    </delete>
+
     <delete id="deleteAll">
         TRUNCATE TABLE "取引先マスタ" CASCADE
     </delete>

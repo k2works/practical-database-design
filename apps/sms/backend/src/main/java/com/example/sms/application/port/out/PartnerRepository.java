@@ -22,5 +22,7 @@ public interface PartnerRepository {
 
     void update(Partner partner);
 
+    void deleteByCode(String partnerCode);
+
     void deleteAll();
 }

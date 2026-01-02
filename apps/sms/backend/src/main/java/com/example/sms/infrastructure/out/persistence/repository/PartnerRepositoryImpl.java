@@ -49,6 +49,11 @@ public class PartnerRepositoryImpl implements PartnerRepository {
     }
 
     @Override
+    public void deleteByCode(String partnerCode) {
+        partnerMapper.deleteByCode(partnerCode);
+    }
+
+    @Override
     public void deleteAll() {
         partnerMapper.deleteAll();
     }
