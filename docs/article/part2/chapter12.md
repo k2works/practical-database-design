@@ -550,8 +550,9 @@ src/
 │           │   └── model/
 │           │       └── ...                     # ドメインモデル
 │           └── infrastructure/
-│               ├── datasource/
-│               │   └── seed/
+│               ├── in/
+│               │   ├── rest/                   # REST API アダプタ
+│               │   └── seed/                   # Seed データ投入
 │               │       ├── SeedDataService.java
 │               │       ├── MasterDataSeeder.java
 │               │       ├── TransactionDataSeeder.java
@@ -564,7 +565,7 @@ src/
     └── java/
         └── com/example/sms/
             └── infrastructure/
-                └── datasource/
+                └── in/
                     └── seed/
                         └── SeedDataServiceTest.java
 ```
@@ -575,7 +576,7 @@ src/
 <summary>SeedDataService.java</summary>
 
 ```java
-package com.example.sms.infrastructure.datasource.seed;
+package com.example.sms.infrastructure.in.seed;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -650,7 +651,7 @@ public class SeedDataService {
 <summary>MasterDataSeeder.java</summary>
 
 ```java
-package com.example.sms.infrastructure.datasource.seed;
+package com.example.sms.infrastructure.in.seed;
 
 import com.example.sms.application.port.out.*;
 import com.example.sms.domain.model.department.Department;
@@ -877,7 +878,7 @@ public class MasterDataSeeder {
 <summary>TransactionDataSeeder.java</summary>
 
 ```java
-package com.example.sms.infrastructure.datasource.seed;
+package com.example.sms.infrastructure.in.seed;
 
 import com.example.sms.application.port.out.*;
 import com.example.sms.domain.model.inventory.Inventory;
@@ -1113,7 +1114,7 @@ java -jar build/libs/sms-backend.jar
 <summary>SeedDataServiceTest.java</summary>
 
 ```java
-package com.example.sms.infrastructure.datasource.seed;
+package com.example.sms.infrastructure.in.seed;
 
 import com.example.sms.application.port.out.*;
 import com.example.sms.domain.model.department.Department;

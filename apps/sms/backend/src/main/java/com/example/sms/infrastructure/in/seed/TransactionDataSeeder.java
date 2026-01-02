@@ -1,4 +1,4 @@
-package com.example.sms.infrastructure.datasource.seed;
+package com.example.sms.infrastructure.in.seed;
 
 import com.example.sms.application.port.out.InventoryRepository;
 import com.example.sms.application.port.out.SalesOrderRepository;
