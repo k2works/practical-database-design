@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>取引先詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">取引先詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/partners}" class="btn btn-outline-secondary">戻る</a>
+        <a th:href="@{/partners/{code}/edit(code=${partner.partnerCode})}"
+           class="btn btn-primary">編集</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">取引先コード</div>
+                <div class="col-md-9" th:text="${partner.partnerCode}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">取引先名</div>
+                <div class="col-md-9" th:text="${partner.partnerName}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">取引先名カナ</div>
+                <div class="col-md-9" th:text="${partner.partnerNameKana}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">種別</div>
+                <div class="col-md-9">
+                    <span th:if="${partner.customer}" class="badge bg-primary me-1">顧客</span>
+                    <span th:if="${partner.supplier}" class="badge bg-success me-1">仕入先</span>
+                    <span th:if="${partner.tradingProhibited}" class="badge bg-danger">取引停止</span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">郵便番号</div>
+                <div class="col-md-9" th:text="${partner.postalCode}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">住所1</div>
+                <div class="col-md-9" th:text="${partner.address1}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">住所2</div>
+                <div class="col-md-9" th:text="${partner.address2}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">与信限度額</div>
+                <div class="col-md-9 amount"
+                     th:text="${#numbers.formatDecimal(partner.creditLimit, 1, 'COMMA', 0, 'POINT')} + ' 円'"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">一時与信増額</div>
+                <div class="col-md-9 amount"
+                     th:text="${#numbers.formatDecimal(partner.temporaryCreditIncrease, 1, 'COMMA', 0, 'POINT')} + ' 円'"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

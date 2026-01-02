@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>ホーム</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">販売管理システム</h1>
+
+    <div class="row g-4">
+        <!-- マスタ管理 -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">マスタ管理</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/products}" class="text-decoration-none">商品マスタ</a>
+                            <span class="badge bg-secondary" th:text="${productCount}">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/partners}" class="text-decoration-none">取引先マスタ</a>
+                            <span class="badge bg-secondary" th:text="${partnerCount}">0</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 販売管理 -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">販売管理</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/orders}" class="text-decoration-none">受注</a>
+                            <span class="badge bg-warning text-dark" th:text="${pendingOrderCount}">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/shipments}" class="text-decoration-none">出荷</a>
+                            <span class="badge bg-info" th:text="${pendingShipmentCount}">0</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 債権管理 -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">債権管理</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/invoices}" class="text-decoration-none">請求</a>
+                            <span class="badge bg-danger" th:text="${unpaidInvoiceCount}">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/receipts}" class="text-decoration-none">入金</a>
+                            <span class="badge bg-secondary" th:text="${todayReceiptCount}">0</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
