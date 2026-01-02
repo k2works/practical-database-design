@@ -192,8 +192,8 @@ entity 支払データ {
 entity 支払明細データ {
   ID <<PK>>
   --
-  支払番号 <<FK>>
-  明細番号
+  支払ID <<FK>>
+  支払行番号
   仕入番号 <<FK>>
   仕入日
   仕入金額
@@ -221,7 +221,7 @@ entity 支払予定データ {
   支払予定額
   支払方法
   支払済フラグ
-  支払番号 <<FK>>
+  支払ID <<FK>>
 }
 
 取引先マスタ ||--o{ 仕入データ
@@ -238,16 +238,17 @@ entity 支払予定データ {
 ### マイグレーション：支払関連テーブルの作成
 
 <details>
-<summary>V018__create_payment_tables.sql</summary>
+<summary>V017__create_payment_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V018__create_payment_tables.sql
+-- src/main/resources/db/migration/V017__create_payment_tables.sql
 
 -- 支払ステータス
 CREATE TYPE 支払ステータス AS ENUM ('作成中', '承認待ち', '承認済', '支払済', '取消');
 
--- 支払方法
-CREATE TYPE 支払方法 AS ENUM ('振込', '手形', '現金', '相殺', '電子記録債権');
+-- 支払方法に不足している値を追加（既存のENUMはV001で定義済み）
+ALTER TYPE 支払方法 ADD VALUE IF NOT EXISTS '相殺';
+ALTER TYPE 支払方法 ADD VALUE IF NOT EXISTS '電子記録債権';
 
 -- 支払データ（ヘッダ）
 CREATE TABLE "支払データ" (
@@ -281,8 +282,8 @@ CREATE TABLE "支払データ" (
 -- 支払明細データ
 CREATE TABLE "支払明細データ" (
     "ID" SERIAL PRIMARY KEY,
-    "支払番号" VARCHAR(20) NOT NULL,
-    "明細番号" INTEGER NOT NULL,
+    "支払ID" INTEGER NOT NULL,
+    "支払行番号" INTEGER NOT NULL,
     "仕入番号" VARCHAR(20) NOT NULL,
     "仕入日" DATE NOT NULL,
     "仕入金額" DECIMAL(15, 2) NOT NULL,
@@ -291,10 +292,10 @@ CREATE TABLE "支払明細データ" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_支払明細_支払"
-        FOREIGN KEY ("支払番号") REFERENCES "支払データ"("支払番号"),
+        FOREIGN KEY ("支払ID") REFERENCES "支払データ"("ID") ON DELETE CASCADE,
     CONSTRAINT "fk_支払明細_仕入"
         FOREIGN KEY ("仕入番号") REFERENCES "仕入データ"("仕入番号"),
-    UNIQUE ("支払番号", "明細番号")
+    CONSTRAINT "uk_支払明細_支払_行" UNIQUE ("支払ID", "支払行番号")
 );
 
 -- 買掛金残高データ
@@ -321,14 +322,14 @@ CREATE TABLE "支払予定データ" (
     "支払予定日" DATE NOT NULL,
     "支払予定額" DECIMAL(15, 2) NOT NULL,
     "支払方法" 支払方法 NOT NULL,
-    "支払済フラグ" BOOLEAN DEFAULT false NOT NULL,
-    "支払番号" VARCHAR(20),
+    "支払済フラグ" BOOLEAN DEFAULT FALSE NOT NULL,
+    "支払ID" INTEGER,
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_支払予定_仕入先"
         FOREIGN KEY ("仕入先コード") REFERENCES "取引先マスタ"("取引先コード"),
     CONSTRAINT "fk_支払予定_支払"
-        FOREIGN KEY ("支払番号") REFERENCES "支払データ"("支払番号")
+        FOREIGN KEY ("支払ID") REFERENCES "支払データ"("ID")
 );
 
 -- 当月残高を自動計算するトリガー
@@ -372,8 +373,8 @@ COMMENT ON COLUMN "買掛金残高データ"."バージョン" IS '楽観ロッ�
 <summary>支払ステータス ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/payment/PaymentStatus.java
-package com.example.sales.domain.model.payment;
+// src/main/java/com/example/sms/domain/model/payment/PaymentStatus.java
+package com.example.sms.domain.model.payment;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -427,8 +428,8 @@ public enum PaymentStatus {
 <summary>支払方法 ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/payment/PaymentMethod.java
-package com.example.sales.domain.model.payment;
+// src/main/java/com/example/sms/domain/model/payment/PaymentMethod.java
+package com.example.sms.domain.model.payment;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -468,10 +469,10 @@ public enum PaymentMethod {
 <summary>支払データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/payment/Payment.java
-package com.example.sales.domain.model.payment;
+// src/main/java/com/example/sms/domain/model/payment/Payment.java
+package com.example.sms.domain.model.payment;
 
-import com.example.sales.domain.model.partner.Partner;
+import com.example.sms.domain.model.partner.Partner;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -593,12 +594,13 @@ public class Payment {
 <summary>支払明細データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/payment/PaymentDetail.java
-package com.example.sales.domain.model.payment;
+// src/main/java/com/example/sms/domain/model/payment/PaymentDetail.java
+package com.example.sms.domain.model.payment;
 
-import com.example.sales.domain.model.purchase.Purchase;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -606,10 +608,12 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentDetail {
     private Integer id;
-    private String paymentNumber;
-    private Integer detailNumber;
+    private Integer paymentId;
+    private Integer lineNumber;
     private String purchaseNumber;
     private LocalDate purchaseDate;
     private BigDecimal purchaseAmount;
@@ -617,10 +621,6 @@ public class PaymentDetail {
     private BigDecimal paymentTargetAmount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    // リレーション
-    private Payment payment;
-    private Purchase purchase;
 }
 ```
 
@@ -630,10 +630,10 @@ public class PaymentDetail {
 <summary>買掛金残高データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/payment/PayableBalance.java
-package com.example.sales.domain.model.payment;
+// src/main/java/com/example/sms/domain/model/payment/PayableBalance.java
+package com.example.sms.domain.model.payment;
 
-import com.example.sales.domain.model.partner.Partner;
+import com.example.sms.domain.model.partner.Partner;
 import lombok.Builder;
 import lombok.Data;
 
@@ -692,10 +692,10 @@ public class PayableBalance {
 <summary>支払予定データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/payment/PaymentSchedule.java
-package com.example.sales.domain.model.payment;
+// src/main/java/com/example/sms/domain/model/payment/PaymentSchedule.java
+package com.example.sms.domain.model.payment;
 
-import com.example.sales.domain.model.partner.Partner;
+import com.example.sms.domain.model.partner.Partner;
 import lombok.Builder;
 import lombok.Data;
 
@@ -745,13 +745,13 @@ public class PaymentSchedule {
 <summary>支払サービス</summary>
 
 ```java
-// src/main/java/com/example/sales/application/service/PaymentService.java
-package com.example.sales.application.service;
+// src/main/java/com/example/sms/application/service/PaymentService.java
+package com.example.sms.application.service;
 
-import com.example.sales.domain.model.partner.Partner;
-import com.example.sales.domain.model.payment.*;
-import com.example.sales.domain.model.purchase.Purchase;
-import com.example.sales.infrastructure.persistence.mapper.*;
+import com.example.sms.domain.model.partner.Partner;
+import com.example.sms.domain.model.payment.*;
+import com.example.sms.domain.model.purchase.Purchase;
+import com.example.sms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1013,10 +1013,10 @@ public class PaymentService {
 <summary>支払締処理の入力クラス</summary>
 
 ```java
-// src/main/java/com/example/sales/application/service/PaymentClosingInput.java
-package com.example.sales.application.service;
+// src/main/java/com/example/sms/application/service/PaymentClosingInput.java
+package com.example.sms.application.service;
 
-import com.example.sales.domain.model.payment.PaymentMethod;
+import com.example.sms.domain.model.payment.PaymentMethod;
 import lombok.Builder;
 import lombok.Data;
 
@@ -1075,40 +1075,40 @@ end note
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sales.infrastructure.persistence.mapper.PaymentMapper">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.PaymentMapper">
 
     <!-- 支払（ヘッダ）の ResultMap -->
     <resultMap id="PaymentWithDetailsResultMap"
-               type="com.example.sales.domain.model.payment.Payment">
+               type="com.example.sms.domain.model.payment.Payment">
         <id property="id" column="p_id"/>
         <result property="paymentNumber" column="p_支払番号"/>
         <result property="supplierCode" column="p_仕入先コード"/>
         <result property="paymentClosingDate" column="p_支払締日"/>
         <result property="paymentDueDate" column="p_支払予定日"/>
         <result property="paymentMethod" column="p_支払方法"
-                typeHandler="com.example.sales.infrastructure.persistence.typehandler.PaymentMethodTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PaymentMethodTypeHandler"/>
         <result property="paymentAmount" column="p_支払金額"/>
         <result property="taxAmount" column="p_消費税額"/>
         <result property="withholdingAmount" column="p_源泉徴収額"/>
         <result property="netPaymentAmount" column="p_差引支払額"/>
         <result property="paymentExecutionDate" column="p_支払実行日"/>
         <result property="status" column="p_ステータス"
-                typeHandler="com.example.sales.infrastructure.persistence.typehandler.PaymentStatusTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler"/>
         <result property="version" column="p_バージョン"/>
         <result property="createdAt" column="p_作成日時"/>
         <result property="updatedAt" column="p_更新日時"/>
         <!-- 支払明細との1:N関連 -->
         <collection property="details"
-                    ofType="com.example.sales.domain.model.payment.PaymentDetail"
+                    ofType="com.example.sms.domain.model.payment.PaymentDetail"
                     resultMap="PaymentDetailNestedResultMap"/>
     </resultMap>
 
     <!-- 支払明細のネスト ResultMap -->
     <resultMap id="PaymentDetailNestedResultMap"
-               type="com.example.sales.domain.model.payment.PaymentDetail">
+               type="com.example.sms.domain.model.payment.PaymentDetail">
         <id property="id" column="pd_id"/>
-        <result property="paymentNumber" column="pd_支払番号"/>
-        <result property="detailNumber" column="pd_明細番号"/>
+        <result property="paymentId" column="pd_支払ID"/>
+        <result property="lineNumber" column="pd_支払行番号"/>
         <result property="purchaseNumber" column="pd_仕入番号"/>
         <result property="purchaseDate" column="pd_仕入日"/>
         <result property="purchaseAmount" column="pd_仕入金額"/>
@@ -1136,8 +1136,8 @@ end note
             p."作成日時" AS p_作成日時,
             p."更新日時" AS p_更新日時,
             pd."ID" AS pd_id,
-            pd."支払番号" AS pd_支払番号,
-            pd."明細番号" AS pd_明細番号,
+            pd."支払ID" AS pd_支払ID,
+            pd."支払行番号" AS pd_支払行番号,
             pd."仕入番号" AS pd_仕入番号,
             pd."仕入日" AS pd_仕入日,
             pd."仕入金額" AS pd_仕入金額,
@@ -1145,9 +1145,9 @@ end note
             pd."支払対象金額" AS pd_支払対象金額
         FROM "支払データ" p
         LEFT JOIN "支払明細データ" pd
-            ON p."支払番号" = pd."支払番号"
+            ON p."ID" = pd."支払ID"
         WHERE p."支払番号" = #{paymentNumber}
-        ORDER BY pd."明細番号"
+        ORDER BY pd."支払行番号"
     </select>
 
 </mapper>
@@ -1199,19 +1199,19 @@ userB -> userB : 再読み込みを促す
 ```xml
 <!-- 楽観ロック対応の支払更新 -->
 <update id="updateWithOptimisticLock"
-        parameterType="com.example.sales.domain.model.payment.Payment">
+        parameterType="com.example.sms.domain.model.payment.Payment">
     UPDATE "支払データ"
     SET
         "支払締日" = #{paymentClosingDate},
         "支払予定日" = #{paymentDueDate},
         "支払方法" = #{paymentMethod,
-            typeHandler=com.example.sales.infrastructure.persistence.typehandler.PaymentMethodTypeHandler}::支払方法,
+            typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentMethodTypeHandler}::支払方法,
         "支払金額" = #{paymentAmount},
         "消費税額" = #{taxAmount},
         "源泉徴収額" = #{withholdingAmount},
         "差引支払額" = #{netPaymentAmount},
         "ステータス" = #{status,
-            typeHandler=com.example.sales.infrastructure.persistence.typehandler.PaymentStatusTypeHandler}::支払ステータス,
+            typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}::支払ステータス,
         "備考" = #{remarks},
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
@@ -1226,13 +1226,13 @@ userB -> userB : 再読み込みを促す
 <summary>Repository 実装：楽観ロック対応</summary>
 
 ```java
-// src/main/java/com/example/sales/infrastructure/persistence/repository/PaymentRepositoryImpl.java
-package com.example.sales.infrastructure.persistence.repository;
+// src/main/java/com/example/sms/infrastructure/persistence/repository/PaymentRepositoryImpl.java
+package com.example.sms.infrastructure.out.persistence.repository;
 
-import com.example.sales.application.port.out.PaymentRepository;
-import com.example.sales.domain.exception.OptimisticLockException;
-import com.example.sales.domain.model.payment.*;
-import com.example.sales.infrastructure.persistence.mapper.PaymentMapper;
+import com.example.sms.application.port.out.PaymentRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.payment.*;
+import com.example.sms.infrastructure.out.persistence.mapper.PaymentMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
