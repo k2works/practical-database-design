@@ -243,28 +243,17 @@ end note
 ### マイグレーション：倉庫・在庫関連テーブルの作成
 
 <details>
-<summary>V013__create_inventory_tables.sql</summary>
+<summary>V015__create_inventory_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V013__create_inventory_tables.sql
+-- src/main/resources/db/migration/V015__create_inventory_tables.sql
 
 -- 倉庫区分
 CREATE TYPE 倉庫区分 AS ENUM ('自社', '外部', '仮想');
 
--- 倉庫マスタ
-CREATE TABLE "倉庫マスタ" (
-    "倉庫コード" VARCHAR(20) PRIMARY KEY,
-    "倉庫名" VARCHAR(100) NOT NULL,
-    "倉庫区分" 倉庫区分 DEFAULT '自社' NOT NULL,
-    "郵便番号" VARCHAR(10),
-    "住所" VARCHAR(200),
-    "電話番号" VARCHAR(20),
-    "有効フラグ" BOOLEAN DEFAULT true NOT NULL,
-    "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "作成者" VARCHAR(50),
-    "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "更新者" VARCHAR(50)
-);
+-- 倉庫マスタに倉庫区分カラムを追加
+-- （V013で作成済みの倉庫マスタにカラム追加）
+ALTER TABLE "倉庫マスタ" ADD COLUMN "倉庫区分" 倉庫区分 DEFAULT '自社' NOT NULL;
 
 -- ロケーションマスタ
 CREATE TABLE "ロケーションマスタ" (
@@ -351,7 +340,7 @@ COMMENT ON COLUMN "在庫データ"."バージョン" IS '楽観ロック用バ�
 
 ```java
 // src/main/java/com/example/sales/domain/model/inventory/WarehouseType.java
-package com.example.sales.domain.model.inventory;
+package com.example.sms.domain.model.inventory;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -383,7 +372,7 @@ public enum WarehouseType {
 
 ```java
 // src/main/java/com/example/sales/domain/model/inventory/Warehouse.java
-package com.example.sales.domain.model.inventory;
+package com.example.sms.domain.model.inventory;
 
 import lombok.Builder;
 import lombok.Data;
@@ -428,7 +417,7 @@ public class Warehouse {
 
 ```java
 // src/main/java/com/example/sales/domain/model/inventory/Location.java
-package com.example.sales.domain.model.inventory;
+package com.example.sms.domain.model.inventory;
 
 import lombok.Builder;
 import lombok.Data;
@@ -478,9 +467,9 @@ public class Location {
 
 ```java
 // src/main/java/com/example/sales/domain/model/inventory/Inventory.java
-package com.example.sales.domain.model.inventory;
+package com.example.sms.domain.model.inventory;
 
-import com.example.sales.domain.model.product.Product;
+import com.example.sms.domain.model.product.Product;
 import lombok.Builder;
 import lombok.Data;
 
@@ -604,10 +593,10 @@ public class Inventory {
 
 ```java
 // src/main/java/com/example/sales/application/service/InventoryService.java
-package com.example.sales.application.service;
+package com.example.sms.application.service;
 
-import com.example.sales.application.port.out.InventoryRepository;
-import com.example.sales.domain.model.inventory.*;
+import com.example.sms.application.port.out.InventoryRepository;
+import com.example.sms.domain.model.inventory.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -769,9 +758,9 @@ public class InventoryService {
 
 ```java
 // src/main/java/com/example/sales/application/service/InventorySummary.java
-package com.example.sales.application.service;
+package com.example.sms.application.service;
 
-import com.example.sales.domain.model.inventory.Inventory;
+import com.example.sms.domain.model.inventory.Inventory;
 import lombok.Builder;
 import lombok.Data;
 
@@ -792,7 +781,7 @@ public class InventorySummary {
 
 ```java
 // src/main/java/com/example/sales/application/service/AllocationResult.java
-package com.example.sales.application.service;
+package com.example.sms.application.service;
 
 import lombok.Builder;
 import lombok.Data;
@@ -895,10 +884,8 @@ title 棚卸業務フロー
 [*] --> 作成中
 
 作成中 --> 実施中 : 棚卸開始
-note right: 棚卸表発行\n実棚カウント開始
 
 実施中 --> 確定 : 棚卸完了
-note right: 差異確認\n在庫調整実行
 
 確定 --> [*]
 
@@ -934,7 +921,8 @@ entity 棚卸データ {
 entity 棚卸明細データ {
   ID <<PK>>
   --
-  棚卸番号 <<FK>>
+  棚卸ID <<FK>>
+  棚卸行番号
   商品コード <<FK>>
   ロケーションコード
   ロット番号
@@ -960,7 +948,7 @@ entity 商品マスタ {
 }
 
 倉庫マスタ ||--o{ 棚卸データ : 倉庫コード
-棚卸データ ||--o{ 棚卸明細データ : 棚卸番号
+棚卸データ ||--o{ 棚卸明細データ : 棚卸ID
 商品マスタ ||--o{ 棚卸明細データ : 商品コード
 
 @enduml
@@ -969,10 +957,10 @@ entity 商品マスタ {
 ### マイグレーション：入出庫履歴・棚卸テーブルの作成
 
 <details>
-<summary>V014__create_stock_movement_tables.sql</summary>
+<summary>V016__create_stock_movement_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V014__create_stock_movement_tables.sql
+-- src/main/resources/db/migration/V016__create_stock_movement_tables.sql
 
 -- 移動区分
 CREATE TYPE 移動区分 AS ENUM (
@@ -1034,7 +1022,8 @@ CREATE TABLE "棚卸データ" (
 -- 棚卸明細データ
 CREATE TABLE "棚卸明細データ" (
     "ID" SERIAL PRIMARY KEY,
-    "棚卸番号" VARCHAR(20) NOT NULL,
+    "棚卸ID" INTEGER NOT NULL,
+    "棚卸行番号" INTEGER NOT NULL,
     "商品コード" VARCHAR(20) NOT NULL,
     "ロケーションコード" VARCHAR(20),
     "ロット番号" VARCHAR(50),
@@ -1042,14 +1031,14 @@ CREATE TABLE "棚卸明細データ" (
     "実棚数" DECIMAL(15, 2),
     "差異数" DECIMAL(15, 2),
     "差異理由" TEXT,
-    "調整済フラグ" BOOLEAN DEFAULT false NOT NULL,
+    "調整済フラグ" BOOLEAN DEFAULT FALSE NOT NULL,
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_棚卸明細_棚卸"
-        FOREIGN KEY ("棚卸番号") REFERENCES "棚卸データ"("棚卸番号"),
+        FOREIGN KEY ("棚卸ID") REFERENCES "棚卸データ"("ID") ON DELETE CASCADE,
     CONSTRAINT "fk_棚卸明細_商品"
         FOREIGN KEY ("商品コード") REFERENCES "商品マスタ"("商品コード"),
-    UNIQUE ("棚卸番号", "商品コード", "ロケーションコード", "ロット番号")
+    CONSTRAINT "uk_棚卸明細_棚卸_行" UNIQUE ("棚卸ID", "棚卸行番号")
 );
 
 -- 差異数を自動計算するトリガー
@@ -1094,7 +1083,7 @@ COMMENT ON COLUMN "棚卸データ"."バージョン" IS '楽観ロック用バ�
 
 ```java
 // src/main/java/com/example/sales/domain/model/inventory/MovementType.java
-package com.example.sales.domain.model.inventory;
+package com.example.sms.domain.model.inventory;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -1147,7 +1136,7 @@ public enum MovementType {
 
 ```java
 // src/main/java/com/example/sales/domain/model/inventory/StocktakingStatus.java
-package com.example.sales.domain.model.inventory;
+package com.example.sms.domain.model.inventory;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -1201,7 +1190,7 @@ public enum StocktakingStatus {
 
 ```java
 // src/main/java/com/example/sales/domain/model/inventory/StockMovement.java
-package com.example.sales.domain.model.inventory;
+package com.example.sms.domain.model.inventory;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1241,7 +1230,7 @@ public class StockMovement {
 
 ```java
 // src/main/java/com/example/sales/domain/model/inventory/Stocktaking.java
-package com.example.sales.domain.model.inventory;
+package com.example.sms.domain.model.inventory;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -1299,20 +1288,25 @@ public class Stocktaking {
 ```
 
 ```java
-// src/main/java/com/example/sales/domain/model/inventory/StocktakingDetail.java
-package com.example.sales.domain.model.inventory;
+// src/main/java/com/example/sms/domain/model/inventory/StocktakingDetail.java
+package com.example.sms.domain.model.inventory;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class StocktakingDetail {
     private Integer id;
-    private String stocktakingNumber;
+    private Integer stocktakingId;
+    private Integer lineNumber;
     private String productCode;
     private String locationCode;
     private String lotNumber;
@@ -1320,7 +1314,8 @@ public class StocktakingDetail {
     private BigDecimal actualQuantity;
     private BigDecimal differenceQuantity;
     private String differenceReason;
-    private Boolean adjustedFlag;
+    @Builder.Default
+    private Boolean adjustedFlag = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -1350,10 +1345,10 @@ public class StocktakingDetail {
 
 ```java
 // src/main/java/com/example/sales/application/service/StocktakingService.java
-package com.example.sales.application.service;
+package com.example.sms.application.service;
 
-import com.example.sales.application.port.out.*;
-import com.example.sales.domain.model.inventory.*;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.inventory.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1578,11 +1573,11 @@ end note
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sales.infrastructure.persistence.mapper.StocktakingMapper">
+<mapper namespace="com.example.sms.infrastructure.persistence.mapper.StocktakingMapper">
 
     <!-- 棚卸（ヘッダ）の ResultMap -->
     <resultMap id="StocktakingWithDetailsResultMap"
-               type="com.example.sales.domain.model.inventory.Stocktaking">
+               type="com.example.sms.domain.model.inventory.Stocktaking">
         <id property="id" column="st_id"/>
         <result property="stocktakingNumber" column="st_棚卸番号"/>
         <result property="warehouseCode" column="st_倉庫コード"/>
@@ -1590,22 +1585,23 @@ end note
         <result property="startDateTime" column="st_棚卸開始日時"/>
         <result property="endDateTime" column="st_棚卸終了日時"/>
         <result property="status" column="st_ステータス"
-                typeHandler="com.example.sales.infrastructure.persistence.typehandler.StocktakingStatusTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.persistence.typehandler.StocktakingStatusTypeHandler"/>
         <result property="remarks" column="st_備考"/>
         <result property="version" column="st_バージョン"/>
         <result property="createdAt" column="st_作成日時"/>
         <result property="updatedAt" column="st_更新日時"/>
         <!-- 棚卸明細との1:N関連 -->
         <collection property="details"
-                    ofType="com.example.sales.domain.model.inventory.StocktakingDetail"
+                    ofType="com.example.sms.domain.model.inventory.StocktakingDetail"
                     resultMap="StocktakingDetailNestedResultMap"/>
     </resultMap>
 
     <!-- 棚卸明細のネスト ResultMap -->
     <resultMap id="StocktakingDetailNestedResultMap"
-               type="com.example.sales.domain.model.inventory.StocktakingDetail">
+               type="com.example.sms.domain.model.inventory.StocktakingDetail">
         <id property="id" column="std_id"/>
-        <result property="stocktakingNumber" column="std_棚卸番号"/>
+        <result property="stocktakingId" column="std_棚卸ID"/>
+        <result property="lineNumber" column="std_棚卸行番号"/>
         <result property="productCode" column="std_商品コード"/>
         <result property="locationCode" column="std_ロケーションコード"/>
         <result property="lotNumber" column="std_ロット番号"/>
@@ -1632,7 +1628,8 @@ end note
             st."作成日時" AS st_作成日時,
             st."更新日時" AS st_更新日時,
             std."ID" AS std_id,
-            std."棚卸番号" AS std_棚卸番号,
+            std."棚卸ID" AS std_棚卸ID,
+            std."棚卸行番号" AS std_棚卸行番号,
             std."商品コード" AS std_商品コード,
             std."ロケーションコード" AS std_ロケーションコード,
             std."ロット番号" AS std_ロット番号,
@@ -1643,9 +1640,9 @@ end note
             std."調整済フラグ" AS std_調整済フラグ
         FROM "棚卸データ" st
         LEFT JOIN "棚卸明細データ" std
-            ON st."棚卸番号" = std."棚卸番号"
+            ON st."ID" = std."棚卸ID"
         WHERE st."棚卸番号" = #{stocktakingNumber}
-        ORDER BY std."商品コード"
+        ORDER BY std."棚卸行番号"
     </select>
 
 </mapper>
@@ -1697,7 +1694,7 @@ userB -> userB : 再読み込みを促す
 ```xml
 <!-- 楽観ロック対応の在庫更新 -->
 <update id="updateWithOptimisticLock"
-        parameterType="com.example.sales.domain.model.inventory.Inventory">
+        parameterType="com.example.sms.domain.model.inventory.Inventory">
     UPDATE "在庫データ"
     SET
         "現在庫数" = #{currentQuantity},
@@ -1713,11 +1710,11 @@ userB -> userB : 再読み込みを促す
 
 <!-- 楽観ロック対応の棚卸更新 -->
 <update id="updateStocktakingWithOptimisticLock"
-        parameterType="com.example.sales.domain.model.inventory.Stocktaking">
+        parameterType="com.example.sms.domain.model.inventory.Stocktaking">
     UPDATE "棚卸データ"
     SET
         "ステータス" = #{status,
-            typeHandler=com.example.sales.infrastructure.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
+            typeHandler=com.example.sms.infrastructure.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
         "棚卸終了日時" = #{endDateTime},
         "備考" = #{remarks},
         "更新日時" = CURRENT_TIMESTAMP,
@@ -1734,12 +1731,12 @@ userB -> userB : 再読み込みを促す
 
 ```java
 // src/main/java/com/example/sales/infrastructure/persistence/repository/InventoryRepositoryImpl.java
-package com.example.sales.infrastructure.persistence.repository;
+package com.example.sms.infrastructure.persistence.repository;
 
-import com.example.sales.application.port.out.InventoryRepository;
-import com.example.sales.domain.exception.OptimisticLockException;
-import com.example.sales.domain.model.inventory.*;
-import com.example.sales.infrastructure.persistence.mapper.InventoryMapper;
+import com.example.sms.application.port.out.InventoryRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.inventory.*;
+import com.example.sms.infrastructure.persistence.mapper.InventoryMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -2003,7 +2000,8 @@ entity 棚卸データ {
 entity 棚卸明細データ {
   ID <<PK>>
   --
-  棚卸番号 <<FK>>
+  棚卸ID <<FK>>
+  棚卸行番号
   商品コード <<FK>>
   帳簿在庫数
   実棚数

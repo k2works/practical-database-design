@@ -278,16 +278,15 @@ title 請求ステータス遷移図
 ### マイグレーション：請求関連テーブルの作成
 
 <details>
-<summary>V009__create_invoice_tables.sql</summary>
+<summary>V011__create_invoice_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V009__create_invoice_tables.sql
+-- src/main/resources/db/migration/V011__create_invoice_tables.sql
 
 -- 請求ステータス
 CREATE TYPE 請求ステータス AS ENUM ('未発行', '発行済', '一部入金', '入金済', '回収遅延');
 
--- 請求区分
-CREATE TYPE 請求区分 AS ENUM ('都度請求', '締め請求');
+-- 請求区分は V001 で既に定義済み（'都度', '締め'）
 
 -- 請求データ（ヘッダ）
 CREATE TABLE "請求データ" (
@@ -296,6 +295,7 @@ CREATE TABLE "請求データ" (
     "請求日" DATE NOT NULL,
     "請求先コード" VARCHAR(20) NOT NULL,
     "顧客コード" VARCHAR(20) NOT NULL,
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
     "締日" DATE,
     "請求区分" 請求区分 NOT NULL,
     "前回請求残高" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
@@ -314,7 +314,7 @@ CREATE TABLE "請求データ" (
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
     CONSTRAINT "fk_請求データ_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード")
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番")
 );
 
 -- 請求明細
@@ -322,9 +322,9 @@ CREATE TABLE "請求明細" (
     "ID" SERIAL PRIMARY KEY,
     "請求ID" INTEGER NOT NULL,
     "行番号" INTEGER NOT NULL,
-    "売上ID" INTEGER NOT NULL,
-    "売上番号" VARCHAR(20) NOT NULL,
-    "売上日" DATE NOT NULL,
+    "売上ID" INTEGER,
+    "売上番号" VARCHAR(20),
+    "売上日" DATE,
     "売上金額" DECIMAL(15, 2) NOT NULL,
     "消費税額" DECIMAL(15, 2) NOT NULL,
     "合計金額" DECIMAL(15, 2) NOT NULL,
@@ -339,6 +339,7 @@ CREATE TABLE "請求明細" (
 CREATE TABLE "請求締履歴" (
     "ID" SERIAL PRIMARY KEY,
     "顧客コード" VARCHAR(20) NOT NULL,
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
     "締年月" VARCHAR(7) NOT NULL,
     "締日" DATE NOT NULL,
     "売上件数" INTEGER NOT NULL,
@@ -347,16 +348,17 @@ CREATE TABLE "請求締履歴" (
     "請求ID" INTEGER,
     "処理日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_請求締履歴_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード"),
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番"),
     CONSTRAINT "fk_請求締履歴_請求"
         FOREIGN KEY ("請求ID") REFERENCES "請求データ"("ID"),
-    CONSTRAINT "uk_請求締履歴_顧客_年月" UNIQUE ("顧客コード", "締年月")
+    CONSTRAINT "uk_請求締履歴_顧客_年月" UNIQUE ("顧客コード", "顧客枝番", "締年月")
 );
 
 -- 売掛金残高
 CREATE TABLE "売掛金残高" (
     "ID" SERIAL PRIMARY KEY,
     "顧客コード" VARCHAR(20) NOT NULL,
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
     "基準日" DATE NOT NULL,
     "前月残高" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
     "当月売上" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
@@ -365,8 +367,8 @@ CREATE TABLE "売掛金残高" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_売掛金残高_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード"),
-    CONSTRAINT "uk_売掛金残高_顧客_基準日" UNIQUE ("顧客コード", "基準日")
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番"),
+    CONSTRAINT "uk_売掛金残高_顧客_基準日" UNIQUE ("顧客コード", "顧客枝番", "基準日")
 );
 
 -- インデックス
@@ -381,6 +383,9 @@ COMMENT ON TABLE "請求データ" IS '請求ヘッダ情報を管理するテ�
 COMMENT ON TABLE "請求明細" IS '請求に含まれる売上明細を管理するテーブル';
 COMMENT ON TABLE "請求締履歴" IS '月次締処理の履歴を管理するテーブル';
 COMMENT ON TABLE "売掛金残高" IS '顧客別月次売掛金残高を管理するテーブル';
+
+-- カラムコメント
+COMMENT ON COLUMN "請求データ"."バージョン" IS '楽観ロック用バージョン番号';
 ```
 
 </details>
@@ -391,12 +396,15 @@ COMMENT ON TABLE "売掛金残高" IS '顧客別月次売掛金残高を管理�
 <summary>請求ステータス ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/invoice/InvoiceStatus.java
-package com.example.sales.domain.model.invoice;
+// src/main/java/com/example/sms/domain/model/invoice/InvoiceStatus.java
+package com.example.sms.domain.model.invoice;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 請求ステータス.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum InvoiceStatus {
@@ -408,13 +416,19 @@ public enum InvoiceStatus {
 
     private final String displayName;
 
+    /**
+     * 表示名から請求ステータスを取得する.
+     *
+     * @param displayName 表示名
+     * @return 請求ステータス
+     */
     public static InvoiceStatus fromDisplayName(String displayName) {
         for (InvoiceStatus status : values()) {
             if (status.displayName.equals(displayName)) {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Unknown status: " + displayName);
+        throw new IllegalArgumentException("不正な請求ステータス: " + displayName);
     }
 }
 ```
@@ -425,27 +439,36 @@ public enum InvoiceStatus {
 <summary>請求区分 ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/invoice/InvoiceType.java
-package com.example.sales.domain.model.invoice;
+// src/main/java/com/example/sms/domain/model/invoice/InvoiceType.java
+package com.example.sms.domain.model.invoice;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 請求区分.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum InvoiceType {
-    IMMEDIATE("都度請求"),
-    CLOSING("締め請求");
+    IMMEDIATE("都度"),
+    CLOSING("締め");
 
     private final String displayName;
 
+    /**
+     * 表示名から請求区分を取得する.
+     *
+     * @param displayName 表示名
+     * @return 請求区分
+     */
     public static InvoiceType fromDisplayName(String displayName) {
         for (InvoiceType type : values()) {
             if (type.displayName.equals(displayName)) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown type: " + displayName);
+        throw new IllegalArgumentException("不正な請求区分: " + displayName);
     }
 }
 ```
@@ -456,8 +479,8 @@ public enum InvoiceType {
 <summary>請求エンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/invoice/Invoice.java
-package com.example.sales.domain.model.invoice;
+// src/main/java/com/example/sms/domain/model/invoice/Invoice.java
+package com.example.sms.domain.model.invoice;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -470,50 +493,67 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 請求エンティティ.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@SuppressWarnings("PMD.RedundantFieldInitializer")
 public class Invoice {
     private Integer id;
     private String invoiceNumber;
     private LocalDate invoiceDate;
     private String billingCode;
     private String customerCode;
+    private String customerBranchNumber;
     private LocalDate closingDate;
-    private InvoiceType invoiceType;
-    private BigDecimal previousBalance;
-    private BigDecimal receiptAmount;
-    private BigDecimal carriedBalance;
-    private BigDecimal currentSalesAmount;
-    private BigDecimal currentTaxAmount;
-    private BigDecimal currentInvoiceAmount;
-    private BigDecimal invoiceBalance;
+    @Builder.Default
+    private InvoiceType invoiceType = InvoiceType.CLOSING;
+    @Builder.Default
+    private BigDecimal previousBalance = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal receiptAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal carriedBalance = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal currentSalesAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal currentTaxAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal currentInvoiceAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal invoiceBalance = BigDecimal.ZERO;
     private LocalDate dueDate;
-    private InvoiceStatus status;
+    @Builder.Default
+    private InvoiceStatus status = InvoiceStatus.DRAFT;
     private String remarks;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;
     private String updatedBy;
 
-    // 楽観ロック用バージョン
+    /** 楽観ロック用バージョン. */
     @Builder.Default
     private Integer version = 1;
 
-    // リレーション
     @Builder.Default
     private List<InvoiceDetail> details = new ArrayList<>();
 
     /**
-     * 請求残高を計算する
+     * 請求残高を計算する.
+     *
+     * @return 請求残高
      */
     public BigDecimal calculateInvoiceBalance() {
         return carriedBalance.add(currentInvoiceAmount).subtract(receiptAmount);
     }
 
     /**
-     * 繰越残高を計算する
+     * 繰越残高を計算する.
+     *
+     * @return 繰越残高
      */
     public BigDecimal calculateCarriedBalance() {
         return previousBalance.subtract(receiptAmount);
@@ -527,17 +567,24 @@ public class Invoice {
 <summary>請求明細エンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/invoice/InvoiceDetail.java
-package com.example.sales.domain.model.invoice;
+// src/main/java/com/example/sms/domain/model/invoice/InvoiceDetail.java
+package com.example.sms.domain.model.invoice;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * 請求明細エンティティ.
+ */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class InvoiceDetail {
     private Integer id;
     private Integer invoiceId;
@@ -559,12 +606,12 @@ public class InvoiceDetail {
 <summary>締処理サービス</summary>
 
 ```java
-// src/main/java/com/example/sales/application/service/ClosingService.java
-package com.example.sales.application.service;
+// src/main/java/com/example/sms/application/service/ClosingService.java
+package com.example.sms.application.service;
 
-import com.example.sales.application.port.out.*;
-import com.example.sales.domain.model.invoice.*;
-import com.example.sales.domain.model.sales.Sales;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.invoice.*;
+import com.example.sms.domain.model.sales.Sales;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -940,15 +987,15 @@ title 入金ステータス遷移図
 ### マイグレーション：入金関連テーブルの作成
 
 <details>
-<summary>V010__create_receipt_tables.sql</summary>
+<summary>V012__create_receipt_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V010__create_receipt_tables.sql
+-- src/main/resources/db/migration/V012__create_receipt_tables.sql
 
 -- 入金ステータス
 CREATE TYPE 入金ステータス AS ENUM ('入金済', '一部消込', '消込済', '過入金');
 
--- 入金方法
+-- 入金方法（取引先の支払方法とは別）
 CREATE TYPE 入金方法 AS ENUM ('現金', '銀行振込', 'クレジットカード', '手形', '電子記録債権');
 
 -- 入金データ
@@ -957,6 +1004,7 @@ CREATE TABLE "入金データ" (
     "入金番号" VARCHAR(20) UNIQUE NOT NULL,
     "入金日" DATE NOT NULL,
     "顧客コード" VARCHAR(20) NOT NULL,
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
     "入金方法" 入金方法 NOT NULL,
     "入金金額" DECIMAL(15, 2) NOT NULL,
     "消込済金額" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
@@ -973,7 +1021,7 @@ CREATE TABLE "入金データ" (
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
     CONSTRAINT "fk_入金データ_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード")
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番")
 );
 
 -- 入金消込明細
@@ -981,7 +1029,7 @@ CREATE TABLE "入金消込明細" (
     "ID" SERIAL PRIMARY KEY,
     "入金ID" INTEGER NOT NULL,
     "行番号" INTEGER NOT NULL,
-    "請求ID" INTEGER NOT NULL,
+    "請求ID" INTEGER,
     "消込日" DATE NOT NULL,
     "消込金額" DECIMAL(15, 2) NOT NULL,
     "備考" TEXT,
@@ -1000,6 +1048,7 @@ CREATE TABLE "前受金データ" (
     "前受金番号" VARCHAR(20) UNIQUE NOT NULL,
     "発生日" DATE NOT NULL,
     "顧客コード" VARCHAR(20) NOT NULL,
+    "顧客枝番" VARCHAR(10) DEFAULT '00',
     "入金ID" INTEGER,
     "前受金額" DECIMAL(15, 2) NOT NULL,
     "使用済金額" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
@@ -1008,7 +1057,7 @@ CREATE TABLE "前受金データ" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_前受金データ_顧客"
-        FOREIGN KEY ("顧客コード") REFERENCES "顧客マスタ"("顧客コード"),
+        FOREIGN KEY ("顧客コード", "顧客枝番") REFERENCES "顧客マスタ"("顧客コード", "顧客枝番"),
     CONSTRAINT "fk_前受金データ_入金"
         FOREIGN KEY ("入金ID") REFERENCES "入金データ"("ID")
 );
@@ -1025,7 +1074,10 @@ CREATE INDEX "idx_前受金データ_顧客コード" ON "前受金データ"("�
 COMMENT ON TABLE "入金データ" IS '入金情報を管理するテーブル';
 COMMENT ON TABLE "入金消込明細" IS '入金と請求の消込明細を管理するテーブル';
 COMMENT ON TABLE "前受金データ" IS '過入金による前受金を管理するテーブル';
+
+-- カラムコメント
 COMMENT ON COLUMN "入金データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "入金消込明細"."バージョン" IS '楽観ロック用バージョン番号';
 ```
 
 </details>
@@ -1036,12 +1088,15 @@ COMMENT ON COLUMN "入金データ"."バージョン" IS '楽観ロック用バ�
 <summary>入金ステータス ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/receipt/ReceiptStatus.java
-package com.example.sales.domain.model.receipt;
+// src/main/java/com/example/sms/domain/model/receipt/ReceiptStatus.java
+package com.example.sms.domain.model.receipt;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 入金ステータス.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum ReceiptStatus {
@@ -1052,13 +1107,19 @@ public enum ReceiptStatus {
 
     private final String displayName;
 
+    /**
+     * 表示名から入金ステータスを取得する.
+     *
+     * @param displayName 表示名
+     * @return 入金ステータス
+     */
     public static ReceiptStatus fromDisplayName(String displayName) {
         for (ReceiptStatus status : values()) {
             if (status.displayName.equals(displayName)) {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Unknown status: " + displayName);
+        throw new IllegalArgumentException("不正な入金ステータス: " + displayName);
     }
 }
 ```
@@ -1069,15 +1130,18 @@ public enum ReceiptStatus {
 <summary>入金方法 ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/receipt/PaymentMethod.java
-package com.example.sales.domain.model.receipt;
+// src/main/java/com/example/sms/domain/model/receipt/ReceiptMethod.java
+package com.example.sms.domain.model.receipt;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 入金方法.
+ */
 @Getter
 @RequiredArgsConstructor
-public enum PaymentMethod {
+public enum ReceiptMethod {
     CASH("現金"),
     BANK_TRANSFER("銀行振込"),
     CREDIT_CARD("クレジットカード"),
@@ -1086,13 +1150,19 @@ public enum PaymentMethod {
 
     private final String displayName;
 
-    public static PaymentMethod fromDisplayName(String displayName) {
-        for (PaymentMethod method : values()) {
+    /**
+     * 表示名から入金方法を取得する.
+     *
+     * @param displayName 表示名
+     * @return 入金方法
+     */
+    public static ReceiptMethod fromDisplayName(String displayName) {
+        for (ReceiptMethod method : values()) {
             if (method.displayName.equals(displayName)) {
                 return method;
             }
         }
-        throw new IllegalArgumentException("Unknown method: " + displayName);
+        throw new IllegalArgumentException("不正な入金方法: " + displayName);
     }
 }
 ```
@@ -1103,52 +1173,74 @@ public enum PaymentMethod {
 <summary>入金エンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/receipt/Receipt.java
-package com.example.sales.domain.model.receipt;
+// src/main/java/com/example/sms/domain/model/receipt/Receipt.java
+package com.example.sms.domain.model.receipt;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 入金エンティティ.
+ */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@SuppressWarnings("PMD.RedundantFieldInitializer")
 public class Receipt {
     private Integer id;
     private String receiptNumber;
     private LocalDate receiptDate;
     private String customerCode;
-    private PaymentMethod paymentMethod;
+    private String customerBranchNumber;
+    private ReceiptMethod receiptMethod;
     private BigDecimal receiptAmount;
-    private BigDecimal appliedAmount;
-    private BigDecimal unappliedAmount;
-    private BigDecimal bankFee;
+    @Builder.Default
+    private BigDecimal appliedAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal unappliedAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal bankFee = BigDecimal.ZERO;
     private String payerName;
     private String bankName;
     private String accountNumber;
-    private ReceiptStatus status;
+    @Builder.Default
+    private ReceiptStatus status = ReceiptStatus.RECEIVED;
     private String remarks;
-    private Integer version;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;
     private String updatedBy;
 
-    // リレーション
-    private List<ReceiptApplication> applications;
+    /** 楽観ロック用バージョン. */
+    @Builder.Default
+    private Integer version = 1;
+
+    @Builder.Default
+    private List<ReceiptApplication> applications = new ArrayList<>();
 
     /**
-     * 未消込金額を計算する
+     * 未消込金額を計算する.
+     *
+     * @return 未消込金額
      */
     public BigDecimal calculateUnappliedAmount() {
         return receiptAmount.subtract(appliedAmount).subtract(bankFee);
     }
 
     /**
-     * 消込可能かどうかを判定する
+     * 消込可能かどうかを判定する.
+     *
+     * @param amount 消込金額
+     * @return 消込可能な場合は true
      */
     public boolean canApply(BigDecimal amount) {
         return unappliedAmount.compareTo(amount) >= 0;
@@ -1162,18 +1254,26 @@ public class Receipt {
 <summary>入金消込明細エンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/receipt/ReceiptApplication.java
-package com.example.sales.domain.model.receipt;
+// src/main/java/com/example/sms/domain/model/receipt/ReceiptApplication.java
+package com.example.sms.domain.model.receipt;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * 入金消込明細エンティティ.
+ */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@SuppressWarnings("PMD.RedundantFieldInitializer")
 public class ReceiptApplication {
     private Integer id;
     private Integer receiptId;
@@ -1182,7 +1282,8 @@ public class ReceiptApplication {
     private LocalDate applicationDate;
     private BigDecimal appliedAmount;
     private String remarks;
-    private Integer version;
+    @Builder.Default
+    private Integer version = 1;
     private LocalDateTime createdAt;
 }
 ```
@@ -1195,13 +1296,13 @@ public class ReceiptApplication {
 <summary>入金消込サービス</summary>
 
 ```java
-// src/main/java/com/example/sales/application/service/ReceiptService.java
-package com.example.sales.application.service;
+// src/main/java/com/example/sms/application/service/ReceiptService.java
+package com.example.sms.application.service;
 
-import com.example.sales.application.port.out.*;
-import com.example.sales.domain.model.invoice.Invoice;
-import com.example.sales.domain.model.invoice.InvoiceStatus;
-import com.example.sales.domain.model.receipt.*;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.invoice.Invoice;
+import com.example.sms.domain.model.invoice.InvoiceStatus;
+import com.example.sms.domain.model.receipt.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1360,11 +1461,11 @@ public class ReceiptService {
 <summary>売掛金残高サービス</summary>
 
 ```java
-// src/main/java/com/example/sales/application/service/AccountsReceivableService.java
-package com.example.sales.application.service;
+// src/main/java/com/example/sms/application/service/AccountsReceivableService.java
+package com.example.sms.application.service;
 
-import com.example.sales.application.port.out.*;
-import com.example.sales.domain.model.invoice.AccountsReceivable;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.invoice.AccountsReceivable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1497,11 +1598,11 @@ end note
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sales.infrastructure.persistence.mapper.InvoiceMapper">
+<mapper namespace="com.example.sms.infrastructure.persistence.mapper.InvoiceMapper">
 
     <!-- 請求（ヘッダ）の ResultMap -->
     <resultMap id="InvoiceWithDetailsResultMap"
-               type="com.example.sales.domain.model.invoice.Invoice">
+               type="com.example.sms.domain.model.invoice.Invoice">
         <id property="id" column="i_id"/>
         <result property="invoiceNumber" column="i_請求番号"/>
         <result property="invoiceDate" column="i_請求日"/>
@@ -1509,7 +1610,7 @@ end note
         <result property="customerCode" column="i_顧客コード"/>
         <result property="closingDate" column="i_締日"/>
         <result property="invoiceType" column="i_請求区分"
-                typeHandler="com.example.sales.infrastructure.persistence.typehandler.InvoiceTypeTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.persistence.typehandler.InvoiceTypeTypeHandler"/>
         <result property="previousBalance" column="i_前回請求残高"/>
         <result property="receiptAmount" column="i_入金額"/>
         <result property="carriedBalance" column="i_繰越残高"/>
@@ -1519,19 +1620,19 @@ end note
         <result property="invoiceBalance" column="i_請求残高"/>
         <result property="dueDate" column="i_回収予定日"/>
         <result property="status" column="i_ステータス"
-                typeHandler="com.example.sales.infrastructure.persistence.typehandler.InvoiceStatusTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.persistence.typehandler.InvoiceStatusTypeHandler"/>
         <result property="version" column="i_バージョン"/>
         <result property="createdAt" column="i_作成日時"/>
         <result property="updatedAt" column="i_更新日時"/>
         <!-- 請求明細との1:N関連 -->
         <collection property="details"
-                    ofType="com.example.sales.domain.model.invoice.InvoiceDetail"
+                    ofType="com.example.sms.domain.model.invoice.InvoiceDetail"
                     resultMap="InvoiceDetailNestedResultMap"/>
     </resultMap>
 
     <!-- 請求明細のネスト ResultMap -->
     <resultMap id="InvoiceDetailNestedResultMap"
-               type="com.example.sales.domain.model.invoice.InvoiceDetail">
+               type="com.example.sms.domain.model.invoice.InvoiceDetail">
         <id property="id" column="id_id"/>
         <result property="invoiceId" column="id_請求ID"/>
         <result property="lineNumber" column="id_行番号"/>
@@ -1635,7 +1736,7 @@ end note
 ```xml
 <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
 <update id="updateWithOptimisticLock"
-        parameterType="com.example.sales.domain.model.invoice.Invoice">
+        parameterType="com.example.sms.domain.model.invoice.Invoice">
     UPDATE "請求データ"
     SET
         "請求日" = #{invoiceDate},
@@ -1643,7 +1744,7 @@ end note
         "顧客コード" = #{customerCode},
         "締日" = #{closingDate},
         "請求区分" = #{invoiceType,
-            typeHandler=com.example.sales.infrastructure.persistence.typehandler.InvoiceTypeTypeHandler}::請求区分,
+            typeHandler=com.example.sms.infrastructure.persistence.typehandler.InvoiceTypeTypeHandler}::請求区分,
         "前回請求残高" = #{previousBalance},
         "入金額" = #{receiptAmount},
         "繰越残高" = #{carriedBalance},
@@ -1653,7 +1754,7 @@ end note
         "請求残高" = #{invoiceBalance},
         "回収予定日" = #{dueDate},
         "ステータス" = #{status,
-            typeHandler=com.example.sales.infrastructure.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス,
+            typeHandler=com.example.sms.infrastructure.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス,
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
     WHERE "ID" = #{id}
@@ -1674,8 +1775,8 @@ end note
 <summary>楽観ロック例外クラス</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/exception/OptimisticLockException.java
-package com.example.sales.domain.exception;
+// src/main/java/com/example/sms/domain/exception/OptimisticLockException.java
+package com.example.sms.domain.exception;
 
 public class OptimisticLockException extends RuntimeException {
 
@@ -1704,13 +1805,13 @@ public class OptimisticLockException extends RuntimeException {
 <summary>Repository 実装：楽観ロック対応</summary>
 
 ```java
-// src/main/java/com/example/sales/infrastructure/persistence/repository/InvoiceRepositoryImpl.java
-package com.example.sales.infrastructure.persistence.repository;
+// src/main/java/com/example/sms/infrastructure/persistence/repository/InvoiceRepositoryImpl.java
+package com.example.sms.infrastructure.persistence.repository;
 
-import com.example.sales.application.port.out.InvoiceRepository;
-import com.example.sales.domain.exception.OptimisticLockException;
-import com.example.sales.domain.model.invoice.*;
-import com.example.sales.infrastructure.persistence.mapper.InvoiceMapper;
+import com.example.sms.application.port.out.InvoiceRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.invoice.*;
+import com.example.sms.infrastructure.persistence.mapper.InvoiceMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;

@@ -272,33 +272,27 @@ entity 商品マスタ {
 ### マイグレーション：発注関連テーブルの作成
 
 <details>
-<summary>V011__create_purchase_order_tables.sql</summary>
+<summary>V013__create_purchase_order_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V011__create_purchase_order_tables.sql
+-- src/main/resources/db/migration/V013__create_purchase_order_tables.sql
 
 -- 発注ステータス
 CREATE TYPE 発注ステータス AS ENUM ('作成中', '確定', '一部入荷', '入荷完了', '取消');
 
--- 仕入先マスタ（取引先マスタの一部として作成済みの場合はスキップ）
-CREATE TABLE IF NOT EXISTS "仕入先マスタ" (
-    "取引先コード" VARCHAR(20) PRIMARY KEY,
-    "仕入先名" VARCHAR(100) NOT NULL,
-    "仕入先名カナ" VARCHAR(100),
+-- 倉庫マスタ
+CREATE TABLE "倉庫マスタ" (
+    "倉庫コード" VARCHAR(20) PRIMARY KEY,
+    "倉庫名" VARCHAR(100) NOT NULL,
+    "倉庫名カナ" VARCHAR(200),
     "郵便番号" VARCHAR(10),
     "住所" VARCHAR(200),
     "電話番号" VARCHAR(20),
-    "FAX番号" VARCHAR(20),
-    "担当者名" VARCHAR(50),
-    "メールアドレス" VARCHAR(100),
-    "支払条件コード" VARCHAR(20),
-    "締日" INTEGER DEFAULT 31,
-    "支払サイト" INTEGER DEFAULT 30,
-    "取引開始日" DATE,
-    "取引状態" VARCHAR(10) DEFAULT '有効',
-    "備考" TEXT,
+    "有効フラグ" BOOLEAN DEFAULT TRUE,
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    "作成者名" VARCHAR(50),
+    "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "更新者名" VARCHAR(50)
 );
 
 -- 発注データ
@@ -306,6 +300,7 @@ CREATE TABLE "発注データ" (
     "ID" SERIAL PRIMARY KEY,
     "発注番号" VARCHAR(20) UNIQUE NOT NULL,
     "仕入先コード" VARCHAR(20) NOT NULL,
+    "仕入先枝番" VARCHAR(10) DEFAULT '00',
     "発注日" DATE NOT NULL,
     "希望納期" DATE,
     "発注ステータス" 発注ステータス DEFAULT '作成中' NOT NULL,
@@ -319,13 +314,13 @@ CREATE TABLE "発注データ" (
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
     CONSTRAINT "fk_発注_仕入先"
-        FOREIGN KEY ("仕入先コード") REFERENCES "仕入先マスタ"("取引先コード")
+        FOREIGN KEY ("仕入先コード", "仕入先枝番") REFERENCES "仕入先マスタ"("仕入先コード", "仕入先枝番")
 );
 
 -- 発注明細データ
 CREATE TABLE "発注明細データ" (
     "ID" SERIAL PRIMARY KEY,
-    "発注番号" VARCHAR(20) NOT NULL,
+    "発注ID" INTEGER NOT NULL,
     "発注行番号" INTEGER NOT NULL,
     "商品コード" VARCHAR(20) NOT NULL,
     "発注数量" DECIMAL(15, 2) NOT NULL,
@@ -338,10 +333,10 @@ CREATE TABLE "発注明細データ" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_発注明細_発注"
-        FOREIGN KEY ("発注番号") REFERENCES "発注データ"("発注番号"),
+        FOREIGN KEY ("発注ID") REFERENCES "発注データ"("ID") ON DELETE CASCADE,
     CONSTRAINT "fk_発注明細_商品"
         FOREIGN KEY ("商品コード") REFERENCES "商品マスタ"("商品コード"),
-    CONSTRAINT "uk_発注明細_発注_行" UNIQUE ("発注番号", "発注行番号")
+    CONSTRAINT "uk_発注明細_発注_行" UNIQUE ("発注ID", "発注行番号")
 );
 
 -- 残数量の自動計算トリガー
@@ -365,6 +360,7 @@ CREATE INDEX "idx_発注データ_ステータス" ON "発注データ"("発注�
 CREATE INDEX "idx_発注明細_商品コード" ON "発注明細データ"("商品コード");
 
 -- テーブルコメント
+COMMENT ON TABLE "倉庫マスタ" IS '倉庫情報を管理するテーブル';
 COMMENT ON TABLE "発注データ" IS '発注ヘッダ情報を管理するテーブル';
 COMMENT ON TABLE "発注明細データ" IS '発注明細情報を管理するテーブル';
 COMMENT ON COLUMN "発注データ"."バージョン" IS '楽観ロック用バージョン番号';
@@ -378,8 +374,8 @@ COMMENT ON COLUMN "発注データ"."バージョン" IS '楽観ロック用バ�
 <summary>発注ステータス ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/purchase/PurchaseOrderStatus.java
-package com.example.sales.domain.model.purchase;
+// src/main/java/com/example/sms/domain/model/purchase/PurchaseOrderStatus.java
+package com.example.sms.domain.model.purchase;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -395,31 +391,43 @@ public enum PurchaseOrderStatus {
 
     private final String displayName;
 
+    /**
+     * 表示名から発注ステータスを取得する.
+     *
+     * @param displayName 表示名
+     * @return 発注ステータス
+     */
     public static PurchaseOrderStatus fromDisplayName(String displayName) {
         for (PurchaseOrderStatus status : values()) {
             if (status.displayName.equals(displayName)) {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Unknown status: " + displayName);
+        throw new IllegalArgumentException("不正な発注ステータス: " + displayName);
     }
 
     /**
-     * 確定可能かどうか
+     * 確定可能かどうか.
+     *
+     * @return 確定可能な場合true
      */
     public boolean canConfirm() {
         return this == DRAFT;
     }
 
     /**
-     * 入荷登録可能かどうか
+     * 入荷登録可能かどうか.
+     *
+     * @return 入荷登録可能な場合true
      */
     public boolean canReceive() {
         return this == CONFIRMED || this == PARTIALLY_RECEIVED;
     }
 
     /**
-     * 取消可能かどうか
+     * 取消可能かどうか.
+     *
+     * @return 取消可能な場合true
      */
     public boolean canCancel() {
         return this == DRAFT || this == CONFIRMED;
@@ -433,8 +441,8 @@ public enum PurchaseOrderStatus {
 <summary>発注エンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/purchase/PurchaseOrder.java
-package com.example.sales.domain.model.purchase;
+// src/main/java/com/example/sms/domain/model/purchase/PurchaseOrder.java
+package com.example.sms.domain.model.purchase;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -451,27 +459,32 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@SuppressWarnings("PMD.RedundantFieldInitializer")
 public class PurchaseOrder {
     private Integer id;
     private String purchaseOrderNumber;
     private String supplierCode;
+    @Builder.Default
+    private String supplierBranchNumber = "00";
     private LocalDate orderDate;
     private LocalDate desiredDeliveryDate;
-    private PurchaseOrderStatus status;
+    @Builder.Default
+    private PurchaseOrderStatus status = PurchaseOrderStatus.DRAFT;
     private String purchaserCode;
-    private BigDecimal totalAmount;
-    private BigDecimal taxAmount;
+    @Builder.Default
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal taxAmount = BigDecimal.ZERO;
     private String remarks;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;
     private String updatedBy;
 
-    // 楽観ロック用バージョン
+    /** 楽観ロック用バージョン. */
     @Builder.Default
     private Integer version = 1;
 
-    // リレーション
     @Builder.Default
     private List<PurchaseOrderDetail> details = new ArrayList<>();
 
@@ -520,7 +533,7 @@ public class PurchaseOrder {
 
 ```java
 // src/main/java/com/example/sales/domain/model/purchase/PurchaseOrderDetail.java
-package com.example.sales.domain.model.purchase;
+package com.example.sms.domain.model.purchase;
 
 import lombok.Builder;
 import lombok.Data;
@@ -580,10 +593,10 @@ public class PurchaseOrderDetail {
 
 ```java
 // src/main/java/com/example/sales/application/service/PurchaseOrderService.java
-package com.example.sales.application.service;
+package com.example.sms.application.service;
 
-import com.example.sales.application.port.out.*;
-import com.example.sales.domain.model.purchase.*;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.purchase.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -995,10 +1008,10 @@ end note
 ### マイグレーション：入荷・仕入関連テーブルの作成
 
 <details>
-<summary>V012__create_receiving_tables.sql</summary>
+<summary>V014__create_receiving_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V012__create_receiving_tables.sql
+-- src/main/resources/db/migration/V014__create_receiving_tables.sql
 
 -- 入荷ステータス
 CREATE TYPE 入荷ステータス AS ENUM ('入荷待ち', '検品中', '検品完了', '仕入計上済', '返品');
@@ -1007,8 +1020,9 @@ CREATE TYPE 入荷ステータス AS ENUM ('入荷待ち', '検品中', '検品�
 CREATE TABLE "入荷データ" (
     "ID" SERIAL PRIMARY KEY,
     "入荷番号" VARCHAR(20) UNIQUE NOT NULL,
-    "発注番号" VARCHAR(20) NOT NULL,
+    "発注ID" INTEGER NOT NULL,
     "仕入先コード" VARCHAR(20) NOT NULL,
+    "仕入先枝番" VARCHAR(10) DEFAULT '00',
     "入荷日" DATE NOT NULL,
     "入荷ステータス" 入荷ステータス DEFAULT '入荷待ち' NOT NULL,
     "入荷担当者コード" VARCHAR(20),
@@ -1020,9 +1034,9 @@ CREATE TABLE "入荷データ" (
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
     CONSTRAINT "fk_入荷_発注"
-        FOREIGN KEY ("発注番号") REFERENCES "発注データ"("発注番号"),
+        FOREIGN KEY ("発注ID") REFERENCES "発注データ"("ID"),
     CONSTRAINT "fk_入荷_仕入先"
-        FOREIGN KEY ("仕入先コード") REFERENCES "仕入先マスタ"("取引先コード"),
+        FOREIGN KEY ("仕入先コード", "仕入先枝番") REFERENCES "仕入先マスタ"("仕入先コード", "仕入先枝番"),
     CONSTRAINT "fk_入荷_倉庫"
         FOREIGN KEY ("倉庫コード") REFERENCES "倉庫マスタ"("倉庫コード")
 );
@@ -1030,9 +1044,9 @@ CREATE TABLE "入荷データ" (
 -- 入荷明細データ
 CREATE TABLE "入荷明細データ" (
     "ID" SERIAL PRIMARY KEY,
-    "入荷番号" VARCHAR(20) NOT NULL,
+    "入荷ID" INTEGER NOT NULL,
     "入荷行番号" INTEGER NOT NULL,
-    "発注行番号" INTEGER NOT NULL,
+    "発注明細ID" INTEGER NOT NULL,
     "商品コード" VARCHAR(20) NOT NULL,
     "入荷数量" DECIMAL(15, 2) NOT NULL,
     "検品数量" DECIMAL(15, 2) DEFAULT 0,
@@ -1044,18 +1058,21 @@ CREATE TABLE "入荷明細データ" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_入荷明細_入荷"
-        FOREIGN KEY ("入荷番号") REFERENCES "入荷データ"("入荷番号") ON DELETE CASCADE,
+        FOREIGN KEY ("入荷ID") REFERENCES "入荷データ"("ID") ON DELETE CASCADE,
+    CONSTRAINT "fk_入荷明細_発注明細"
+        FOREIGN KEY ("発注明細ID") REFERENCES "発注明細データ"("ID"),
     CONSTRAINT "fk_入荷明細_商品"
         FOREIGN KEY ("商品コード") REFERENCES "商品マスタ"("商品コード"),
-    CONSTRAINT "uk_入荷明細_入荷_行" UNIQUE ("入荷番号", "入荷行番号")
+    CONSTRAINT "uk_入荷明細_入荷_行" UNIQUE ("入荷ID", "入荷行番号")
 );
 
 -- 仕入データ（検収確定後に作成）
 CREATE TABLE "仕入データ" (
     "ID" SERIAL PRIMARY KEY,
     "仕入番号" VARCHAR(20) UNIQUE NOT NULL,
-    "入荷番号" VARCHAR(20) NOT NULL,
+    "入荷ID" INTEGER NOT NULL,
     "仕入先コード" VARCHAR(20) NOT NULL,
+    "仕入先枝番" VARCHAR(10) DEFAULT '00',
     "仕入日" DATE NOT NULL,
     "仕入合計金額" DECIMAL(15, 2) NOT NULL,
     "税額" DECIMAL(15, 2) NOT NULL,
@@ -1066,15 +1083,15 @@ CREATE TABLE "仕入データ" (
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
     CONSTRAINT "fk_仕入_入荷"
-        FOREIGN KEY ("入荷番号") REFERENCES "入荷データ"("入荷番号"),
+        FOREIGN KEY ("入荷ID") REFERENCES "入荷データ"("ID"),
     CONSTRAINT "fk_仕入_仕入先"
-        FOREIGN KEY ("仕入先コード") REFERENCES "仕入先マスタ"("取引先コード")
+        FOREIGN KEY ("仕入先コード", "仕入先枝番") REFERENCES "仕入先マスタ"("仕入先コード", "仕入先枝番")
 );
 
 -- 仕入明細データ
 CREATE TABLE "仕入明細データ" (
     "ID" SERIAL PRIMARY KEY,
-    "仕入番号" VARCHAR(20) NOT NULL,
+    "仕入ID" INTEGER NOT NULL,
     "仕入行番号" INTEGER NOT NULL,
     "商品コード" VARCHAR(20) NOT NULL,
     "仕入数量" DECIMAL(15, 2) NOT NULL,
@@ -1084,16 +1101,17 @@ CREATE TABLE "仕入明細データ" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT "fk_仕入明細_仕入"
-        FOREIGN KEY ("仕入番号") REFERENCES "仕入データ"("仕入番号") ON DELETE CASCADE,
+        FOREIGN KEY ("仕入ID") REFERENCES "仕入データ"("ID") ON DELETE CASCADE,
     CONSTRAINT "fk_仕入明細_商品"
         FOREIGN KEY ("商品コード") REFERENCES "商品マスタ"("商品コード"),
-    CONSTRAINT "uk_仕入明細_仕入_行" UNIQUE ("仕入番号", "仕入行番号")
+    CONSTRAINT "uk_仕入明細_仕入_行" UNIQUE ("仕入ID", "仕入行番号")
 );
 
 -- インデックス
-CREATE INDEX "idx_入荷データ_発注番号" ON "入荷データ"("発注番号");
+CREATE INDEX "idx_入荷データ_発注ID" ON "入荷データ"("発注ID");
 CREATE INDEX "idx_入荷データ_入荷日" ON "入荷データ"("入荷日");
 CREATE INDEX "idx_入荷データ_ステータス" ON "入荷データ"("入荷ステータス");
+CREATE INDEX "idx_入荷明細_発注明細ID" ON "入荷明細データ"("発注明細ID");
 CREATE INDEX "idx_仕入データ_仕入先コード" ON "仕入データ"("仕入先コード");
 CREATE INDEX "idx_仕入データ_仕入日" ON "仕入データ"("仕入日");
 
@@ -1115,7 +1133,7 @@ COMMENT ON COLUMN "仕入データ"."バージョン" IS '楽観ロック用バ�
 
 ```java
 // src/main/java/com/example/sales/domain/model/purchase/ReceivingStatus.java
-package com.example.sales.domain.model.purchase;
+package com.example.sms.domain.model.purchase;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -1131,17 +1149,34 @@ public enum ReceivingStatus {
 
     private final String displayName;
 
+    /**
+     * 表示名から入荷ステータスを取得する.
+     *
+     * @param displayName 表示名
+     * @return 入荷ステータス
+     */
     public static ReceivingStatus fromDisplayName(String displayName) {
         for (ReceivingStatus status : values()) {
             if (status.displayName.equals(displayName)) {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Unknown status: " + displayName);
+        throw new IllegalArgumentException("不正な入荷ステータス: " + displayName);
     }
 
     /**
-     * 仕入計上可能かどうか
+     * 検品開始可能かどうか.
+     *
+     * @return 検品開始可能な場合true
+     */
+    public boolean canStartInspection() {
+        return this == WAITING;
+    }
+
+    /**
+     * 仕入計上可能かどうか.
+     *
+     * @return 仕入計上可能な場合true
      */
     public boolean canRecordPurchase() {
         return this == INSPECTION_COMPLETED;
@@ -1156,7 +1191,7 @@ public enum ReceivingStatus {
 
 ```java
 // src/main/java/com/example/sales/domain/model/purchase/Receiving.java
-package com.example.sales.domain.model.purchase;
+package com.example.sms.domain.model.purchase;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -1204,7 +1239,7 @@ public class Receiving {
 
 ```java
 // src/main/java/com/example/sales/domain/model/purchase/ReceivingDetail.java
-package com.example.sales.domain.model.purchase;
+package com.example.sms.domain.model.purchase;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1248,7 +1283,7 @@ public class ReceivingDetail {
 
 ```java
 // src/main/java/com/example/sales/domain/model/purchase/Purchase.java
-package com.example.sales.domain.model.purchase;
+package com.example.sms.domain.model.purchase;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -1310,10 +1345,10 @@ public class Purchase {
 
 ```java
 // src/main/java/com/example/sales/application/service/ReceivingService.java
-package com.example.sales.application.service;
+package com.example.sms.application.service;
 
-import com.example.sales.application.port.out.*;
-import com.example.sales.domain.model.purchase.*;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.purchase.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1603,18 +1638,18 @@ end note
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sales.infrastructure.persistence.mapper.PurchaseOrderMapper">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.PurchaseOrderMapper">
 
     <!-- 発注（ヘッダ）の ResultMap -->
     <resultMap id="PurchaseOrderWithDetailsResultMap"
-               type="com.example.sales.domain.model.purchase.PurchaseOrder">
+               type="com.example.sms.domain.model.purchase.PurchaseOrder">
         <id property="id" column="po_id"/>
         <result property="purchaseOrderNumber" column="po_発注番号"/>
         <result property="supplierCode" column="po_仕入先コード"/>
         <result property="orderDate" column="po_発注日"/>
         <result property="desiredDeliveryDate" column="po_希望納期"/>
         <result property="status" column="po_発注ステータス"
-                typeHandler="com.example.sales.infrastructure.persistence.typehandler.PurchaseOrderStatusTypeHandler"/>
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler"/>
         <result property="purchaserCode" column="po_発注担当者コード"/>
         <result property="totalAmount" column="po_発注合計金額"/>
         <result property="taxAmount" column="po_税額"/>
@@ -1624,13 +1659,13 @@ end note
         <result property="updatedAt" column="po_更新日時"/>
         <!-- 発注明細との1:N関連 -->
         <collection property="details"
-                    ofType="com.example.sales.domain.model.purchase.PurchaseOrderDetail"
+                    ofType="com.example.sms.domain.model.purchase.PurchaseOrderDetail"
                     resultMap="PurchaseOrderDetailNestedResultMap"/>
     </resultMap>
 
     <!-- 発注明細のネスト ResultMap -->
     <resultMap id="PurchaseOrderDetailNestedResultMap"
-               type="com.example.sales.domain.model.purchase.PurchaseOrderDetail">
+               type="com.example.sms.domain.model.purchase.PurchaseOrderDetail">
         <id property="id" column="pod_id"/>
         <result property="purchaseOrderNumber" column="pod_発注番号"/>
         <result property="lineNumber" column="pod_発注行番号"/>
@@ -1732,14 +1767,14 @@ end note
 ```xml
 <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
 <update id="updateWithOptimisticLock"
-        parameterType="com.example.sales.domain.model.purchase.PurchaseOrder">
+        parameterType="com.example.sms.domain.model.purchase.PurchaseOrder">
     UPDATE "発注データ"
     SET
         "仕入先コード" = #{supplierCode},
         "発注日" = #{orderDate},
         "希望納期" = #{desiredDeliveryDate},
         "発注ステータス" = #{status,
-            typeHandler=com.example.sales.infrastructure.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
         "発注担当者コード" = #{purchaserCode},
         "発注合計金額" = #{totalAmount},
         "税額" = #{taxAmount},
@@ -1764,27 +1799,52 @@ end note
 <summary>Repository 実装：楽観ロック対応</summary>
 
 ```java
-// src/main/java/com/example/sales/infrastructure/persistence/repository/PurchaseOrderRepositoryImpl.java
-package com.example.sales.infrastructure.persistence.repository;
+// src/main/java/com/example/sms/infrastructure/out/persistence/repository/PurchaseOrderRepositoryImpl.java
+package com.example.sms.infrastructure.out.persistence.repository;
 
-import com.example.sales.application.port.out.PurchaseOrderRepository;
-import com.example.sales.domain.exception.OptimisticLockException;
-import com.example.sales.domain.model.purchase.*;
-import com.example.sales.infrastructure.persistence.mapper.PurchaseOrderMapper;
-import com.example.sales.infrastructure.persistence.mapper.PurchaseOrderDetailMapper;
+import com.example.sms.application.port.out.PurchaseOrderRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.purchase.PurchaseOrder;
+import com.example.sms.domain.model.purchase.PurchaseOrderDetail;
+import com.example.sms.infrastructure.out.persistence.mapper.PurchaseOrderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
+/**
+ * 発注リポジトリ実装.
+ */
 @Repository
 @RequiredArgsConstructor
 public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
 
     private final PurchaseOrderMapper purchaseOrderMapper;
-    private final PurchaseOrderDetailMapper purchaseOrderDetailMapper;
+
+    @Override
+    public void save(PurchaseOrder purchaseOrder) {
+        purchaseOrderMapper.insertHeader(purchaseOrder);
+        if (purchaseOrder.getDetails() != null) {
+            for (PurchaseOrderDetail detail : purchaseOrder.getDetails()) {
+                detail.setPurchaseOrderId(purchaseOrder.getId());
+                purchaseOrderMapper.insertDetail(detail);
+            }
+        }
+    }
+
+    @Override
+    public Optional<PurchaseOrder> findByPurchaseOrderNumber(String purchaseOrderNumber) {
+        return purchaseOrderMapper.findByPurchaseOrderNumber(purchaseOrderNumber);
+    }
+
+    @Override
+    public Optional<PurchaseOrder> findWithDetailsByPurchaseOrderNumber(String purchaseOrderNumber) {
+        return Optional.ofNullable(purchaseOrderMapper.findWithDetailsByPurchaseOrderNumber(purchaseOrderNumber));
+    }
 
     /**
-     * 楽観ロック対応の更新
+     * 楽観ロック対応の更新.
      * @throws OptimisticLockException 他のユーザーによって更新された場合
      */
     @Override
@@ -1793,36 +1853,33 @@ public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
         int updatedCount = purchaseOrderMapper.updateWithOptimisticLock(purchaseOrder);
 
         if (updatedCount == 0) {
-            Integer currentVersion = purchaseOrderMapper.findVersionByPurchaseOrderNumber(
-                    purchaseOrder.getPurchaseOrderNumber());
-
+            // バージョン不一致または削除済み
+            Integer currentVersion = purchaseOrderMapper.findVersionById(purchaseOrder.getId());
             if (currentVersion == null) {
-                throw new OptimisticLockException(
-                        "発注", purchaseOrder.getPurchaseOrderNumber());
+                throw new OptimisticLockException("発注", purchaseOrder.getId());
             } else {
-                throw new OptimisticLockException(
-                        "発注",
-                        purchaseOrder.getPurchaseOrderNumber(),
-                        purchaseOrder.getVersion(),
-                        currentVersion
-                );
+                throw new OptimisticLockException("発注", purchaseOrder.getId(),
+                        purchaseOrder.getVersion(), currentVersion);
+            }
+        }
+
+        purchaseOrderMapper.deleteDetailsByPurchaseOrderId(purchaseOrder.getId());
+        if (purchaseOrder.getDetails() != null) {
+            for (PurchaseOrderDetail detail : purchaseOrder.getDetails()) {
+                detail.setPurchaseOrderId(purchaseOrder.getId());
+                purchaseOrderMapper.insertDetail(detail);
             }
         }
     }
 
-    /**
-     * 楽観ロック対応の削除
-     * @throws OptimisticLockException 他のユーザーによって更新された場合
-     */
     @Override
-    @Transactional
-    public void delete(String purchaseOrderNumber, Integer version) {
-        int deletedCount = purchaseOrderMapper.deleteWithOptimisticLock(
-                purchaseOrderNumber, version);
+    public void deleteById(Integer id) {
+        purchaseOrderMapper.deleteById(id);
+    }
 
-        if (deletedCount == 0) {
-            throw new OptimisticLockException("発注", purchaseOrderNumber);
-        }
+    @Override
+    public void deleteAll() {
+        purchaseOrderMapper.deleteAll();
     }
 }
 ```
@@ -1836,50 +1893,55 @@ public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
 
 ```java
 @Nested
-@DisplayName("楽観ロックの更新テスト")
-class OptimisticLockUpdateTest {
+@DisplayName("楽観ロック")
+class OptimisticLocking {
 
     @Test
-    @DisplayName("正しいバージョンで更新できる")
-    void shouldUpdateWithCorrectVersion() {
-        // Given: 発注を登録
-        var purchaseOrder = createTestPurchaseOrder("PO-202501-0001");
+    @DisplayName("同じバージョンで更新できる")
+    void canUpdateWithSameVersion() {
+        var purchaseOrder = createPurchaseOrder("PO-2025-0001", LocalDate.of(2025, 1, 15));
         purchaseOrderRepository.save(purchaseOrder);
 
-        // When: バージョン1で更新
-        var saved = purchaseOrderRepository
-                .findByPurchaseOrderNumber("PO-202501-0001").orElseThrow();
-        assertThat(saved.getVersion()).isEqualTo(1);
-        saved.setRemarks("更新テスト");
-        purchaseOrderRepository.update(saved);
+        var fetched = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0001").get();
+        fetched.setStatus(PurchaseOrderStatus.CONFIRMED);
+        purchaseOrderRepository.update(fetched);
 
-        // Then: バージョンが2に増加
-        var updated = purchaseOrderRepository
-                .findByPurchaseOrderNumber("PO-202501-0001").orElseThrow();
+        var updated = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0001").get();
+        assertThat(updated.getStatus()).isEqualTo(PurchaseOrderStatus.CONFIRMED);
         assertThat(updated.getVersion()).isEqualTo(2);
     }
 
     @Test
-    @DisplayName("古いバージョンで更新すると楽観ロック例外がスローされる")
-    void shouldThrowOptimisticLockExceptionWithOldVersion() {
-        // Given: 発注を登録して、別のセッションで更新
-        var purchaseOrder = createTestPurchaseOrder("PO-202501-0002");
+    @DisplayName("異なるバージョンで更新すると楽観ロック例外が発生する")
+    void throwsExceptionWhenVersionMismatch() {
+        var purchaseOrder = createPurchaseOrder("PO-2025-0002", LocalDate.of(2025, 1, 15));
         purchaseOrderRepository.save(purchaseOrder);
 
-        var sessionA = purchaseOrderRepository
-                .findByPurchaseOrderNumber("PO-202501-0002").orElseThrow();
-        var sessionB = purchaseOrderRepository
-                .findByPurchaseOrderNumber("PO-202501-0002").orElseThrow();
+        var poA = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0002").get();
+        var poB = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0002").get();
 
-        // セッションAで更新
-        sessionA.setRemarks("セッションAの更新");
-        purchaseOrderRepository.update(sessionA);
+        poA.setStatus(PurchaseOrderStatus.CONFIRMED);
+        purchaseOrderRepository.update(poA);
 
-        // When/Then: セッションBで更新すると例外
-        sessionB.setRemarks("セッションBの更新");
-        assertThatThrownBy(() -> purchaseOrderRepository.update(sessionB))
+        poB.setStatus(PurchaseOrderStatus.CANCELLED);
+        assertThatThrownBy(() -> purchaseOrderRepository.update(poB))
                 .isInstanceOf(OptimisticLockException.class)
-                .hasMessageContaining("他のユーザーによって更新されました");
+                .hasMessageContaining("他のユーザーによって更新されています");
+    }
+
+    @Test
+    @DisplayName("削除されたエンティティを更新すると楽観ロック例外が発生する")
+    void throwsExceptionWhenEntityDeleted() {
+        var purchaseOrder = createPurchaseOrder("PO-2025-0003", LocalDate.of(2025, 1, 15));
+        purchaseOrderRepository.save(purchaseOrder);
+
+        var fetched = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0003").get();
+        purchaseOrderRepository.deleteById(fetched.getId());
+
+        fetched.setStatus(PurchaseOrderStatus.CONFIRMED);
+        assertThatThrownBy(() -> purchaseOrderRepository.update(fetched))
+                .isInstanceOf(OptimisticLockException.class)
+                .hasMessageContaining("既に削除されています");
     }
 }
 ```
