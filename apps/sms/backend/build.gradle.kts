@@ -153,3 +153,11 @@ tasks.register("fullCheck") {
     group = "verification"
     dependsOn("test", "qualityCheck", "jacocoTestReport")
 }
+
+// カスタムタスク: Seed データを投入（default プロファイルで実行）
+tasks.register<JavaExec>("seedData") {
+    group = "application"
+    description = "Seed データを投入する（default プロファイル）"
+    mainClass.set("com.example.sms.Application")
+    classpath = sourceSets["main"].runtimeClasspath
+}

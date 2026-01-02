@@ -313,12 +313,11 @@ left side
 | データ種別 | 件数 | 内容 |
 |-----------|------|------|
 | 部門マスタ | 21 件 | 4 階層の組織構造 |
-| 社員マスタ | 45 件 | 正社員 24 名、パート 21 名 |
-| 取引先グループ | 7 件 | 百貨店、スーパー、ホテル・旅館、飲食店、観光施設、食肉卸、畜産業者 |
+| 社員マスタ | 24 件 | 正社員 24 名 |
 | 取引先マスタ | 14 件 | 得意先 10 件、仕入先 4 件 |
 | 商品分類マスタ | 4 件 | 牛肉、豚肉、鶏肉、加工品 |
 | 商品マスタ | 20 件 | 各分類 5 件ずつ |
-| 倉庫マスタ | 2 件 | 本社倉庫、工場倉庫 |
+| 倉庫マスタ | 3 件 | 本社倉庫、工場倉庫、外部委託倉庫 |
 
 ### コード体系
 
@@ -384,10 +383,10 @@ left side
 
 | 日本語 DB 値 | 英語 Java 値 |
 |-------------|-------------|
-| "受付" | RECEIVED |
-| "確定" | CONFIRMED |
+| "受付済" | RECEIVED |
+| "引当済" | ALLOCATED |
+| "出荷指示済" | SHIPMENT_INSTRUCTED |
 | "出荷済" | SHIPPED |
-| "完了" | COMPLETED |
 | "キャンセル" | CANCELLED |
 
 #### 出荷ステータス（ShipmentStatus）
@@ -411,9 +410,9 @@ left side
 
 | 日本語 DB 値 | 英語 Java 値 |
 |-------------|-------------|
-| "自社倉庫" | COMPANY_OWNED |
-| "外部倉庫" | EXTERNAL |
-| "委託倉庫" | CONSIGNMENT |
+| "自社" | OWN |
+| "外部" | EXTERNAL |
+| "仮想" | VIRTUAL |
 
 ### データモデル ER 図
 
@@ -1161,13 +1160,12 @@ public class TransactionDataSeeder {
 #### Gradle タスクの設定
 
 ```kotlin
-// build.gradle.kts
+// build.gradle.kts（default プロファイルで実行）
 tasks.register<JavaExec>("seedData") {
     group = "application"
-    description = "Seed データを投入する"
-    mainClass.set("com.example.sales.infrastructure.datasource.seed.SeedRunner")
+    description = "Seed データを投入する（default プロファイル）"
+    mainClass.set("com.example.sms.Application")
     classpath = sourceSets["main"].runtimeClasspath
-    args("--spring.profiles.active=seed")
 }
 ```
 
@@ -1177,8 +1175,8 @@ tasks.register<JavaExec>("seedData") {
 # Gradle タスクで実行
 ./gradlew seedData
 
-# または直接 Java で実行
-java -jar build/libs/sales-management.jar --spring.profiles.active=seed
+# または直接 Java で実行（default プロファイル）
+java -jar build/libs/sms-backend.jar
 ```
 
 #### 実行結果の例
@@ -1403,9 +1401,9 @@ B 社の事例を通じて、販売管理システムのデータ設計と Seed 
 
 | カテゴリ | 内容 |
 |---------|------|
-| **マスタデータ** | 部門 21 件、取引先 14 件、商品 20 件、社員 24 件、倉庫 2 件 |
-| **トランザクション** | 受注 3 件、出荷 1 件、売上 1 件、発注 2 件 |
-| **在庫情報** | 12 品目の初期在庫 |
+| **マスタデータ** | 部門 21 件、取引先 14 件、商品 20 件、社員 24 件、倉庫 3 件 |
+| **トランザクション** | 受注 3 件、在庫 20 件 |
+| **備考** | 出荷・売上データは受注明細への依存関係が複雑なため、初期シードでは投入しない |
 
 ### B 社の事業特徴とデータ設計への反映
 
