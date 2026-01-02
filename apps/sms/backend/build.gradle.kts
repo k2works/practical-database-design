@@ -24,6 +24,7 @@ repositories {
 // バージョン管理
 val mybatisVersion = "4.0.0"
 val testcontainersVersion = "1.20.4"
+val springdocVersion = "2.8.3"
 
 dependencies {
     // === implementation ===
@@ -31,6 +32,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+
+    // OpenAPI/Swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")
 
     // Database
     implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:$mybatisVersion")
@@ -48,6 +52,7 @@ dependencies {
 
     // === testImplementation ===
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:$mybatisVersion")
     testImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
