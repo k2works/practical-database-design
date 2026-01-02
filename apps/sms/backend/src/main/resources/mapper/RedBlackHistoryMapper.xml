@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.RedBlackHistoryMapper">
+
+    <resultMap id="RedBlackHistoryResultMap" type="com.example.sms.domain.model.common.RedBlackHistory">
+        <id property="id" column="ID"/>
+        <result property="processNumber" column="処理番号"/>
+        <result property="processDateTime" column="処理日時"/>
+        <result property="slipCategory" column="伝票種別"/>
+        <result property="originalSlipNumber" column="元伝票番号"/>
+        <result property="redSlipNumber" column="赤伝票番号"/>
+        <result property="blackSlipNumber" column="黒伝票番号"/>
+        <result property="processReason" column="処理理由"/>
+        <result property="processedBy" column="処理者"/>
+        <result property="createdAt" column="作成日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.common.RedBlackHistory"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "赤黒処理履歴データ" (
+            "処理番号", "処理日時", "伝票種別", "元伝票番号",
+            "赤伝票番号", "黒伝票番号", "処理理由", "処理者", "作成日時"
+        ) VALUES (
+            #{processNumber}, #{processDateTime}, #{slipCategory}, #{originalSlipNumber},
+            #{redSlipNumber}, #{blackSlipNumber}, #{processReason}, #{processedBy},
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="RedBlackHistoryResultMap">
+        SELECT * FROM "赤黒処理履歴データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByProcessNumber" resultMap="RedBlackHistoryResultMap">
+        SELECT * FROM "赤黒処理履歴データ" WHERE "処理番号" = #{processNumber}
+    </select>
+
+    <select id="findByOriginalSlipNumber" resultMap="RedBlackHistoryResultMap">
+        SELECT * FROM "赤黒処理履歴データ"
+        WHERE "元伝票番号" = #{originalSlipNumber}
+        ORDER BY "処理日時" DESC
+    </select>
+
+    <select id="findBySlipCategory" resultMap="RedBlackHistoryResultMap">
+        SELECT * FROM "赤黒処理履歴データ"
+        WHERE "伝票種別" = #{slipCategory}
+        ORDER BY "処理日時" DESC
+    </select>
+
+    <select id="findByProcessDateTimeBetween" resultMap="RedBlackHistoryResultMap">
+        SELECT * FROM "赤黒処理履歴データ"
+        WHERE "処理日時" BETWEEN #{from} AND #{to}
+        ORDER BY "処理日時" DESC
+    </select>
+
+    <select id="findAll" resultMap="RedBlackHistoryResultMap">
+        SELECT * FROM "赤黒処理履歴データ" ORDER BY "処理日時" DESC
+    </select>
+
+    <select id="findLatestProcessNumber" resultType="java.lang.String">
+        SELECT "処理番号" FROM "赤黒処理履歴データ"
+        WHERE "処理番号" LIKE #{prefix}
+        ORDER BY "処理番号" DESC
+        LIMIT 1
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM "赤黒処理履歴データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "赤黒処理履歴データ" CASCADE
+    </delete>
+</mapper>

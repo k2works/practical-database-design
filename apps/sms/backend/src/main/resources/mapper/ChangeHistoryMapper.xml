@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ChangeHistoryMapper">
+
+    <resultMap id="ChangeHistoryResultMap" type="com.example.sms.domain.model.common.ChangeHistory">
+        <id property="id" column="ID"/>
+        <result property="tableName" column="テーブル名"/>
+        <result property="recordId" column="レコードID"/>
+        <result property="operationType" column="操作種別"/>
+        <result property="changedAt" column="変更日時"/>
+        <result property="changedBy" column="変更者"/>
+        <result property="beforeData" column="変更前データ"/>
+        <result property="afterData" column="変更後データ"/>
+        <result property="changeReason" column="変更理由"/>
+        <result property="createdAt" column="作成日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.common.ChangeHistory"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "変更履歴データ" (
+            "テーブル名", "レコードID", "操作種別", "変更日時",
+            "変更者", "変更前データ", "変更後データ", "変更理由", "作成日時"
+        ) VALUES (
+            #{tableName}, #{recordId}, #{operationType}, #{changedAt},
+            #{changedBy}, #{beforeData}::jsonb, #{afterData}::jsonb,
+            #{changeReason}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="ChangeHistoryResultMap">
+        SELECT * FROM "変更履歴データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByTableName" resultMap="ChangeHistoryResultMap">
+        SELECT * FROM "変更履歴データ"
+        WHERE "テーブル名" = #{tableName}
+        ORDER BY "変更日時" DESC
+    </select>
+
+    <select id="findByTableAndRecordId" resultMap="ChangeHistoryResultMap">
+        SELECT * FROM "変更履歴データ"
+        WHERE "テーブル名" = #{tableName}
+        AND "レコードID" = #{recordId}
+        ORDER BY "変更日時" DESC
+    </select>
+
+    <select id="findByDateRange" resultMap="ChangeHistoryResultMap">
+        SELECT * FROM "変更履歴データ"
+        WHERE "変更日時" BETWEEN #{fromDateTime} AND #{toDateTime}
+        ORDER BY "変更日時" DESC
+    </select>
+
+    <select id="findAll" resultMap="ChangeHistoryResultMap">
+        SELECT * FROM "変更履歴データ" ORDER BY "変更日時" DESC
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM "変更履歴データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "変更履歴データ" CASCADE
+    </delete>
+</mapper>
