@@ -20,5 +20,7 @@ public interface CustomerRepository {
 
     void update(Customer customer);
 
+    void deleteByCodeAndBranch(String customerCode, String branchNumber);
+
     void deleteAll();
 }

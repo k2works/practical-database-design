@@ -24,5 +24,8 @@ public interface CustomerMapper {
 
     void update(Customer customer);
 
+    void deleteByCodeAndBranch(@Param("customerCode") String customerCode,
+                               @Param("branchNumber") String branchNumber);
+
     void deleteAll();
 }

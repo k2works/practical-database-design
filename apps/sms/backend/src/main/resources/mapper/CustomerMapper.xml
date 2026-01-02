@@ -116,6 +116,12 @@
           AND "顧客枝番" = #{customerBranchNumber}
     </update>
 
+    <delete id="deleteByCodeAndBranch">
+        DELETE FROM "顧客マスタ"
+        WHERE "顧客コード" = #{customerCode}
+          AND "顧客枝番" = #{branchNumber}
+    </delete>
+
     <delete id="deleteAll">
         TRUNCATE TABLE "顧客マスタ" CASCADE
     </delete>

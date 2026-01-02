@@ -44,6 +44,11 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     }
 
     @Override
+    public void deleteByCodeAndBranch(String customerCode, String branchNumber) {
+        customerMapper.deleteByCodeAndBranch(customerCode, branchNumber);
+    }
+
+    @Override
     public void deleteAll() {
         customerMapper.deleteAll();
     }
