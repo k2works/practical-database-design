@@ -50,6 +50,11 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public void deleteByCode(String productCode) {
+        productMapper.deleteByCode(productCode);
+    }
+
+    @Override
     public void deleteAll() {
         productMapper.deleteAll();
     }

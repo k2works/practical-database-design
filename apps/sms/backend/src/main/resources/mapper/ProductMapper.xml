@@ -89,6 +89,11 @@
         WHERE "商品コード" = #{productCode}
     </update>
 
+    <delete id="deleteByCode">
+        DELETE FROM "商品マスタ"
+        WHERE "商品コード" = #{productCode}
+    </delete>
+
     <delete id="deleteAll">
         TRUNCATE TABLE "商品マスタ" CASCADE
     </delete>

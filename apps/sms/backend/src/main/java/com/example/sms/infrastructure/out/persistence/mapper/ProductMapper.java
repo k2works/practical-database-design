@@ -24,5 +24,7 @@ public interface ProductMapper {
 
     void update(Product product);
 
+    void deleteByCode(String productCode);
+
     void deleteAll();
 }
