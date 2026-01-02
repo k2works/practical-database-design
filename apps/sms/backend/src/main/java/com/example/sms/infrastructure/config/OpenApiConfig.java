@@ -1,4 +1,4 @@
-package com.example.sms.config;
+package com.example.sms.infrastructure.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
