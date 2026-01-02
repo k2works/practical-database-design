@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ReceivingMapper">
+
+    <resultMap id="ReceivingResultMap" type="com.example.sms.domain.model.purchase.Receiving">
+        <id property="id" column="ID"/>
+        <result property="receivingNumber" column="入荷番号"/>
+        <result property="purchaseOrderId" column="発注ID"/>
+        <result property="supplierCode" column="仕入先コード"/>
+        <result property="supplierBranchNumber" column="仕入先枝番"/>
+        <result property="receivingDate" column="入荷日"/>
+        <result property="status" column="入荷ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler"/>
+        <result property="receiverCode" column="入荷担当者コード"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+        <collection property="details" ofType="com.example.sms.domain.model.purchase.ReceivingDetail"
+                    select="findDetailsByReceivingId" column="ID"/>
+    </resultMap>
+
+    <resultMap id="ReceivingDetailResultMap" type="com.example.sms.domain.model.purchase.ReceivingDetail">
+        <id property="id" column="ID"/>
+        <result property="receivingId" column="入荷ID"/>
+        <result property="lineNumber" column="入荷行番号"/>
+        <result property="purchaseOrderDetailId" column="発注明細ID"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="receivingQuantity" column="入荷数量"/>
+        <result property="inspectedQuantity" column="検品数量"/>
+        <result property="acceptedQuantity" column="合格数量"/>
+        <result property="rejectedQuantity" column="不合格数量"/>
+        <result property="unitPrice" column="入荷単価"/>
+        <result property="amount" column="入荷金額"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 入荷（ヘッダ）+ 入荷明細のネスト ResultMap（JOINによる一括取得用） -->
+    <resultMap id="receivingWithDetailsResultMap" type="com.example.sms.domain.model.purchase.Receiving">
+        <id property="id" column="r_id"/>
+        <result property="receivingNumber" column="r_入荷番号"/>
+        <result property="purchaseOrderId" column="r_発注ID"/>
+        <result property="supplierCode" column="r_仕入先コード"/>
+        <result property="supplierBranchNumber" column="r_仕入先枝番"/>
+        <result property="receivingDate" column="r_入荷日"/>
+        <result property="status" column="r_入荷ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler"/>
+        <result property="receiverCode" column="r_入荷担当者コード"/>
+        <result property="warehouseCode" column="r_倉庫コード"/>
+        <result property="remarks" column="r_備考"/>
+        <result property="version" column="r_バージョン"/>
+        <result property="createdAt" column="r_作成日時"/>
+        <result property="createdBy" column="r_作成者"/>
+        <result property="updatedAt" column="r_更新日時"/>
+        <result property="updatedBy" column="r_更新者"/>
+        <!-- 入荷明細との1:N関連 -->
+        <collection property="details" ofType="com.example.sms.domain.model.purchase.ReceivingDetail"
+                    resultMap="receivingDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 入荷明細のネスト ResultMap -->
+    <resultMap id="receivingDetailNestedResultMap" type="com.example.sms.domain.model.purchase.ReceivingDetail">
+        <id property="id" column="rd_id"/>
+        <result property="receivingId" column="rd_入荷ID"/>
+        <result property="lineNumber" column="rd_入荷行番号"/>
+        <result property="purchaseOrderDetailId" column="rd_発注明細ID"/>
+        <result property="productCode" column="rd_商品コード"/>
+        <result property="receivingQuantity" column="rd_入荷数量"/>
+        <result property="inspectedQuantity" column="rd_検品数量"/>
+        <result property="acceptedQuantity" column="rd_合格数量"/>
+        <result property="rejectedQuantity" column="rd_不合格数量"/>
+        <result property="unitPrice" column="rd_入荷単価"/>
+        <result property="amount" column="rd_入荷金額"/>
+        <result property="remarks" column="rd_備考"/>
+        <result property="createdAt" column="rd_作成日時"/>
+        <result property="updatedAt" column="rd_更新日時"/>
+    </resultMap>
+
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.purchase.Receiving"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "入荷データ" (
+            "入荷番号", "発注ID", "仕入先コード", "仕入先枝番", "入荷日",
+            "入荷ステータス", "入荷担当者コード", "倉庫コード", "備考",
+            "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{receivingNumber}, #{purchaseOrderId}, #{supplierCode}, #{supplierBranchNumber}, #{receivingDate},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler}::入荷ステータス,
+            #{receiverCode}, #{warehouseCode}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.purchase.ReceivingDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "入荷明細データ" (
+            "入荷ID", "入荷行番号", "発注明細ID", "商品コード", "入荷数量",
+            "検品数量", "合格数量", "不合格数量", "入荷単価", "入荷金額", "備考",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{receivingId}, #{lineNumber}, #{purchaseOrderDetailId}, #{productCode}, #{receivingQuantity},
+            #{inspectedQuantity}, #{acceptedQuantity}, #{rejectedQuantity}, #{unitPrice}, #{amount}, #{remarks},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByReceivingNumber" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷データ" WHERE "入荷番号" = #{receivingNumber}
+    </select>
+
+    <select id="findByPurchaseOrderId" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷データ"
+        WHERE "発注ID" = #{purchaseOrderId}
+        ORDER BY "入荷日" DESC, "入荷番号"
+    </select>
+
+    <select id="findBySupplierCode" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷データ"
+        WHERE "仕入先コード" = #{supplierCode}
+        ORDER BY "入荷日" DESC, "入荷番号"
+    </select>
+
+    <select id="findByStatus" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷データ"
+        WHERE "入荷ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler}::入荷ステータス
+        ORDER BY "入荷日" DESC, "入荷番号"
+    </select>
+
+    <select id="findByReceivingDateBetween" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷データ"
+        WHERE "入荷日" BETWEEN #{from} AND #{to}
+        ORDER BY "入荷日" DESC, "入荷番号"
+    </select>
+
+    <select id="findAll" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷データ" ORDER BY "入荷日" DESC, "入荷番号"
+    </select>
+
+    <select id="findDetailsByReceivingId" resultMap="ReceivingDetailResultMap">
+        SELECT * FROM "入荷明細データ"
+        WHERE "入荷ID" = #{receivingId}
+        ORDER BY "入荷行番号"
+    </select>
+
+    <!-- JOIN による一括取得クエリ（入荷番号指定） -->
+    <select id="findWithDetailsByReceivingNumber" resultMap="receivingWithDetailsResultMap">
+        SELECT
+            r."ID" AS r_id,
+            r."入荷番号" AS r_入荷番号,
+            r."発注ID" AS r_発注ID,
+            r."仕入先コード" AS r_仕入先コード,
+            r."仕入先枝番" AS r_仕入先枝番,
+            r."入荷日" AS r_入荷日,
+            r."入荷ステータス" AS r_入荷ステータス,
+            r."入荷担当者コード" AS r_入荷担当者コード,
+            r."倉庫コード" AS r_倉庫コード,
+            r."備考" AS r_備考,
+            r."バージョン" AS r_バージョン,
+            r."作成日時" AS r_作成日時,
+            r."作成者" AS r_作成者,
+            r."更新日時" AS r_更新日時,
+            r."更新者" AS r_更新者,
+            rd."ID" AS rd_id,
+            rd."入荷ID" AS rd_入荷ID,
+            rd."入荷行番号" AS rd_入荷行番号,
+            rd."発注明細ID" AS rd_発注明細ID,
+            rd."商品コード" AS rd_商品コード,
+            rd."入荷数量" AS rd_入荷数量,
+            rd."検品数量" AS rd_検品数量,
+            rd."合格数量" AS rd_合格数量,
+            rd."不合格数量" AS rd_不合格数量,
+            rd."入荷単価" AS rd_入荷単価,
+            rd."入荷金額" AS rd_入荷金額,
+            rd."備考" AS rd_備考,
+            rd."作成日時" AS rd_作成日時,
+            rd."更新日時" AS rd_更新日時
+        FROM "入荷データ" r
+        LEFT JOIN "入荷明細データ" rd
+            ON r."ID" = rd."入荷ID"
+        WHERE r."入荷番号" = #{receivingNumber}
+        ORDER BY rd."入荷行番号"
+    </select>
+
+    <!-- JOIN による一括取得クエリ（ID指定） -->
+    <select id="findByIdWithDetails" resultMap="receivingWithDetailsResultMap">
+        SELECT
+            r."ID" AS r_id,
+            r."入荷番号" AS r_入荷番号,
+            r."発注ID" AS r_発注ID,
+            r."仕入先コード" AS r_仕入先コード,
+            r."仕入先枝番" AS r_仕入先枝番,
+            r."入荷日" AS r_入荷日,
+            r."入荷ステータス" AS r_入荷ステータス,
+            r."入荷担当者コード" AS r_入荷担当者コード,
+            r."倉庫コード" AS r_倉庫コード,
+            r."備考" AS r_備考,
+            r."バージョン" AS r_バージョン,
+            r."作成日時" AS r_作成日時,
+            r."作成者" AS r_作成者,
+            r."更新日時" AS r_更新日時,
+            r."更新者" AS r_更新者,
+            rd."ID" AS rd_id,
+            rd."入荷ID" AS rd_入荷ID,
+            rd."入荷行番号" AS rd_入荷行番号,
+            rd."発注明細ID" AS rd_発注明細ID,
+            rd."商品コード" AS rd_商品コード,
+            rd."入荷数量" AS rd_入荷数量,
+            rd."検品数量" AS rd_検品数量,
+            rd."合格数量" AS rd_合格数量,
+            rd."不合格数量" AS rd_不合格数量,
+            rd."入荷単価" AS rd_入荷単価,
+            rd."入荷金額" AS rd_入荷金額,
+            rd."備考" AS rd_備考,
+            rd."作成日時" AS rd_作成日時,
+            rd."更新日時" AS rd_更新日時
+        FROM "入荷データ" r
+        LEFT JOIN "入荷明細データ" rd
+            ON r."ID" = rd."入荷ID"
+        WHERE r."ID" = #{id}
+        ORDER BY rd."入荷行番号"
+    </select>
+
+    <!-- バージョン取得（楽観ロック用） -->
+    <select id="findVersionById" resultType="java.lang.Integer">
+        SELECT "バージョン" FROM "入荷データ" WHERE "ID" = #{id}
+    </select>
+
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.Receiving">
+        UPDATE "入荷データ" SET
+            "発注ID" = #{purchaseOrderId},
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "入荷日" = #{receivingDate},
+            "入荷ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler}::入荷ステータス,
+            "入荷担当者コード" = #{receiverCode},
+            "倉庫コード" = #{warehouseCode},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.Receiving">
+        UPDATE "入荷データ" SET
+            "発注ID" = #{purchaseOrderId},
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "入荷日" = #{receivingDate},
+            "入荷ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler}::入荷ステータス,
+            "入荷担当者コード" = #{receiverCode},
+            "倉庫コード" = #{warehouseCode},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <update id="updateDetail" parameterType="com.example.sms.domain.model.purchase.ReceivingDetail">
+        UPDATE "入荷明細データ" SET
+            "発注明細ID" = #{purchaseOrderDetailId},
+            "商品コード" = #{productCode},
+            "入荷数量" = #{receivingQuantity},
+            "検品数量" = #{inspectedQuantity},
+            "合格数量" = #{acceptedQuantity},
+            "不合格数量" = #{rejectedQuantity},
+            "入荷単価" = #{unitPrice},
+            "入荷金額" = #{amount},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteDetailsByReceivingId">
+        DELETE FROM "入荷明細データ" WHERE "入荷ID" = #{receivingId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "入荷データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAllDetails">
+        TRUNCATE TABLE "入荷明細データ" CASCADE
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "入荷データ" CASCADE
+    </delete>
+</mapper>
