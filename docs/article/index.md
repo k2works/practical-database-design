@@ -77,6 +77,15 @@ BOM、MRP、工程管理など製造業の基幹となるデータベース設�
 - [第39章：API 設計とサービス連携](part5/chapter39.md)
 - [第40章：データ連携の実装パターン](part5/chapter40.md)
 
+### 研究：販売管理システム実装編
+
+販売管理システムの各種プレゼンテーション層実装パターンを研究します。
+
+- [研究 1：モノリスサービスの実装](study/study2-1.md)
+- [研究 2：JavaFX デスクトップアプリケーションの実装](study/study2-2.md)
+- [研究 3：gRPC サービスの実装](study/study2-3.md)
+- [研究 4：GraphQL サービスの実装](study/study2-4.md)
+
 ### 付録
 
 - [A：全体 ER 図](appendix/er-diagrams.md)
