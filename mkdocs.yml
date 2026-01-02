@@ -118,3 +118,5 @@ nav:
           - A 全体ER図: article/appendix/er-diagrams.md
           - B テーブル定義一覧: article/appendix/table-definitions.md
           - C 用語集: article/appendix/glossary.md
+      - データベース:
+          - SchemaSpy ER図: assets/schemaspy-output/index.html

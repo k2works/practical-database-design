@@ -92,6 +92,10 @@ BOM、MRP、工程管理など製造業の基幹となるデータベース設�
 - [B：テーブル定義一覧](appendix/table-definitions.md)
 - [C：用語集](appendix/glossary.md)
 
+### データベース
+
+- [SchemaSpy ER 図](../assets/schemaspy-output/index.html) - データベースの ER 図。テーブル構造やリレーションを可視化。
+
 ## 執筆方針
 
 - ダイアグラムには PlantUML を使用
