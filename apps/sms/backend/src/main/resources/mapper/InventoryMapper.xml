@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.InventoryMapper">
+
+    <resultMap id="InventoryResultMap" type="com.example.sms.domain.model.inventory.Inventory">
+        <id property="id" column="ID"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="locationCode" column="ロケーションコード"/>
+        <result property="currentQuantity" column="現在庫数"/>
+        <result property="allocatedQuantity" column="引当数"/>
+        <result property="orderedQuantity" column="発注残数"/>
+        <result property="lastReceiptDate" column="最終入庫日"/>
+        <result property="lastShipmentDate" column="最終出庫日"/>
+        <result property="lotNumber" column="ロット番号"/>
+        <result property="serialNumber" column="シリアル番号"/>
+        <result property="expirationDate" column="有効期限"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.inventory.Inventory"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "在庫データ" (
+            "倉庫コード", "商品コード", "ロケーションコード", "現在庫数", "引当数",
+            "発注残数", "最終入庫日", "最終出庫日", "ロット番号", "シリアル番号",
+            "有効期限", "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{warehouseCode}, #{productCode}, #{locationCode}, #{currentQuantity}, #{allocatedQuantity},
+            #{orderedQuantity}, #{lastReceiptDate}, #{lastShipmentDate}, #{lotNumber}, #{serialNumber},
+            #{expirationDate}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <select id="findById" resultMap="InventoryResultMap">
+        SELECT * FROM "在庫データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByWarehouseAndProduct" resultMap="InventoryResultMap">
+        SELECT * FROM "在庫データ"
+        WHERE "倉庫コード" = #{warehouseCode}
+        AND "商品コード" = #{productCode}
+    </select>
+
+    <select id="findByWarehouseProductAndLocation" resultMap="InventoryResultMap">
+        SELECT * FROM "在庫データ"
+        WHERE "倉庫コード" = #{warehouseCode}
+        AND "商品コード" = #{productCode}
+        AND "ロケーションコード" = #{locationCode}
+    </select>
+
+    <select id="findByWarehouseCode" resultMap="InventoryResultMap">
+        SELECT * FROM "在庫データ"
+        WHERE "倉庫コード" = #{warehouseCode}
+        ORDER BY "商品コード"
+    </select>
+
+    <select id="findByProductCode" resultMap="InventoryResultMap">
+        SELECT * FROM "在庫データ"
+        WHERE "商品コード" = #{productCode}
+        ORDER BY "倉庫コード"
+    </select>
+
+    <select id="findByExpirationDateBefore" resultMap="InventoryResultMap">
+        SELECT * FROM "在庫データ"
+        WHERE "有効期限" IS NOT NULL
+        AND "有効期限" &lt; #{date}
+        ORDER BY "有効期限"
+    </select>
+
+    <select id="findAll" resultMap="InventoryResultMap">
+        SELECT * FROM "在庫データ" ORDER BY "倉庫コード", "商品コード"
+    </select>
+
+    <select id="findVersionById" resultType="java.lang.Integer">
+        SELECT "バージョン" FROM "在庫データ" WHERE "ID" = #{id}
+    </select>
+
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.inventory.Inventory">
+        UPDATE "在庫データ" SET
+            "ロケーションコード" = #{locationCode},
+            "現在庫数" = #{currentQuantity},
+            "引当数" = #{allocatedQuantity},
+            "発注残数" = #{orderedQuantity},
+            "最終入庫日" = #{lastReceiptDate},
+            "最終出庫日" = #{lastShipmentDate},
+            "ロット番号" = #{lotNumber},
+            "シリアル番号" = #{serialNumber},
+            "有効期限" = #{expirationDate},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <update id="allocate">
+        UPDATE "在庫データ" SET
+            "引当数" = "引当数" + #{quantity},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND ("現在庫数" - "引当数") >= #{quantity}
+    </update>
+
+    <update id="deallocate">
+        UPDATE "在庫データ" SET
+            "引当数" = "引当数" - #{quantity},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "引当数" >= #{quantity}
+    </update>
+
+    <update id="receive">
+        UPDATE "在庫データ" SET
+            "現在庫数" = "現在庫数" + #{quantity},
+            "最終入庫日" = #{receiptDate},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <update id="ship">
+        UPDATE "在庫データ" SET
+            "現在庫数" = "現在庫数" - #{quantity},
+            "最終出庫日" = #{shipmentDate},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "現在庫数" >= #{quantity}
+    </update>
+
+    <update id="updateCurrentQuantity">
+        UPDATE "在庫データ" SET
+            "現在庫数" = #{newQuantity},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "在庫データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "在庫データ" CASCADE
+    </delete>
+</mapper>
