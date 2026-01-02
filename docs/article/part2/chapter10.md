@@ -400,21 +400,21 @@ public enum PaymentStatus {
     }
 
     /**
-     * 承認可能なステータスかどうか
+     * 承認可能なステータスかどうか.
      */
     public boolean canApprove() {
         return this == PENDING_APPROVAL;
     }
 
     /**
-     * 支払実行可能なステータスかどうか
+     * 支払実行可能なステータスかどうか.
      */
     public boolean canExecute() {
         return this == APPROVED;
     }
 
     /**
-     * 取消可能なステータスかどうか
+     * 取消可能なステータスかどうか.
      */
     public boolean canCancel() {
         return this == DRAFT || this == PENDING_APPROVAL;
@@ -455,7 +455,7 @@ public enum PaymentMethod {
     }
 
     /**
-     * 振込先情報が必要かどうか
+     * 振込先情報が必要かどうか.
      */
     public boolean requiresBankInfo() {
         return this == BANK_TRANSFER;
@@ -472,7 +472,6 @@ public enum PaymentMethod {
 // src/main/java/com/example/sms/domain/model/payment/Payment.java
 package com.example.sms.domain.model.payment;
 
-import com.example.sms.domain.model.partner.Partner;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -512,18 +511,14 @@ public class Payment {
     private LocalDateTime updatedAt;
     private String updatedBy;
 
-    // 楽観ロック用バージョン
     @Builder.Default
     private Integer version = 1;
-
-    // リレーション
-    private Partner supplier;
 
     @Builder.Default
     private List<PaymentDetail> details = new ArrayList<>();
 
     /**
-     * 明細の合計金額を計算
+     * 明細の合計金額を計算.
      */
     public BigDecimal calculateTotalAmount() {
         if (details == null || details.isEmpty()) {
@@ -535,53 +530,53 @@ public class Payment {
     }
 
     /**
-     * 差引支払額を計算
+     * 差引支払額を計算.
      */
     public BigDecimal calculateNetAmount() {
-        return paymentAmount.add(taxAmount).subtract(withholdingAmount);
+        BigDecimal wh = withholdingAmount != null ? withholdingAmount : BigDecimal.ZERO;
+        return paymentAmount.add(taxAmount).subtract(wh);
     }
 
     /**
-     * 承認申請
+     * 承認申請.
      */
     public void submitForApproval() {
         if (this.status != PaymentStatus.DRAFT) {
-            throw new IllegalStateException(
-                "作成中ステータスのみ承認申請が可能です");
+            throw new IllegalStateException("作成中ステータスのみ承認申請が可能です");
         }
         this.status = PaymentStatus.PENDING_APPROVAL;
     }
 
     /**
-     * 承認
+     * 承認.
      */
     public void approve() {
         if (!this.status.canApprove()) {
             throw new IllegalStateException(
-                "このステータスでは承認できません: " + this.status.getDisplayName());
+                    "このステータスでは承認できません: " + this.status.getDisplayName());
         }
         this.status = PaymentStatus.APPROVED;
     }
 
     /**
-     * 支払実行
+     * 支払実行.
      */
     public void execute(LocalDate executionDate) {
         if (!this.status.canExecute()) {
             throw new IllegalStateException(
-                "このステータスでは支払実行できません: " + this.status.getDisplayName());
+                    "このステータスでは支払実行できません: " + this.status.getDisplayName());
         }
         this.paymentExecutionDate = executionDate;
         this.status = PaymentStatus.PAID;
     }
 
     /**
-     * 取消
+     * 取消.
      */
     public void cancel() {
         if (!this.status.canCancel()) {
             throw new IllegalStateException(
-                "このステータスでは取消できません: " + this.status.getDisplayName());
+                    "このステータスでは取消できません: " + this.status.getDisplayName());
         }
         this.status = PaymentStatus.CANCELLED;
     }
@@ -633,9 +628,10 @@ public class PaymentDetail {
 // src/main/java/com/example/sms/domain/model/payment/PayableBalance.java
 package com.example.sms.domain.model.payment;
 
-import com.example.sms.domain.model.partner.Partner;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -643,6 +639,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PayableBalance {
     private Integer id;
     private String supplierCode;
@@ -654,32 +652,37 @@ public class PayableBalance {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // 楽観ロック用バージョン
     @Builder.Default
     private Integer version = 1;
 
-    // リレーション
-    private Partner supplier;
-
     /**
-     * 残高を計算
+     * 残高を計算.
      */
     public BigDecimal calculateBalance() {
-        return previousBalance.add(currentPurchaseAmount).subtract(currentPaymentAmount);
+        BigDecimal prev = previousBalance != null ? previousBalance : BigDecimal.ZERO;
+        BigDecimal purchase = currentPurchaseAmount != null ? currentPurchaseAmount : BigDecimal.ZERO;
+        BigDecimal payment = currentPaymentAmount != null ? currentPaymentAmount : BigDecimal.ZERO;
+        return prev.add(purchase).subtract(payment);
     }
 
     /**
-     * 仕入を加算
+     * 仕入を加算.
      */
     public void addPurchase(BigDecimal amount) {
+        if (this.currentPurchaseAmount == null) {
+            this.currentPurchaseAmount = BigDecimal.ZERO;
+        }
         this.currentPurchaseAmount = this.currentPurchaseAmount.add(amount);
         this.currentBalance = calculateBalance();
     }
 
     /**
-     * 支払を加算
+     * 支払を加算.
      */
     public void addPayment(BigDecimal amount) {
+        if (this.currentPaymentAmount == null) {
+            this.currentPaymentAmount = BigDecimal.ZERO;
+        }
         this.currentPaymentAmount = this.currentPaymentAmount.add(amount);
         this.currentBalance = calculateBalance();
     }
@@ -695,9 +698,10 @@ public class PayableBalance {
 // src/main/java/com/example/sms/domain/model/payment/PaymentSchedule.java
 package com.example.sms.domain.model.payment;
 
-import com.example.sms.domain.model.partner.Partner;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -705,31 +709,30 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentSchedule {
     private Integer id;
     private String supplierCode;
     private LocalDate paymentDueDate;
     private BigDecimal scheduledAmount;
     private PaymentMethod paymentMethod;
-    private Boolean paidFlag;
-    private String paymentNumber;
+    @Builder.Default
+    private Boolean paidFlag = false;
+    private Integer paymentId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // リレーション
-    private Partner supplier;
-    private Payment payment;
-
     /**
-     * 支払済みとしてマーク
+     * 支払済みとしてマーク.
      */
-    public void markAsPaid(String paymentNumber) {
+    public void markAsPaid(Integer paymentId) {
         this.paidFlag = true;
-        this.paymentNumber = paymentNumber;
+        this.paymentId = paymentId;
     }
 
     /**
-     * 支払期限が過ぎているかどうか
+     * 支払期限が過ぎているかどうか.
      */
     public boolean isOverdue() {
         return !paidFlag && LocalDate.now().isAfter(paymentDueDate);
@@ -739,7 +742,9 @@ public class PaymentSchedule {
 
 </details>
 
-### 支払サービスの実装
+### 支払サービスの実装（参考実装例）
+
+> **Note**: 以下のサービス層のコードは参考実装例です。現在はリポジトリ層（永続化層）が実装済みで、アプリケーションサービス層は別途実装が必要です。
 
 <details>
 <summary>支払サービス</summary>
