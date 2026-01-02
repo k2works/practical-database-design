@@ -9,6 +9,7 @@ public class OptimisticLockException extends RuntimeException {
 
     private final String entityName;
     private final Integer entityId;
+    private final String entityIdentifier;
     private final Integer expectedVersion;
     private final Integer actualVersion;
 
@@ -22,6 +23,22 @@ public class OptimisticLockException extends RuntimeException {
         super(String.format("%s (ID: %d) は既に削除されています", entityName, entityId));
         this.entityName = entityName;
         this.entityId = entityId;
+        this.entityIdentifier = null;
+        this.expectedVersion = null;
+        this.actualVersion = null;
+    }
+
+    /**
+     * 文字列識別子を使用する場合のコンストラクタ.
+     *
+     * @param entityName エンティティ名
+     * @param identifier エンティティ識別子（番号など）
+     */
+    public OptimisticLockException(String entityName, String identifier) {
+        super(String.format("%s (%s) は他のユーザーによって更新されています", entityName, identifier));
+        this.entityName = entityName;
+        this.entityId = null;
+        this.entityIdentifier = identifier;
         this.expectedVersion = null;
         this.actualVersion = null;
     }
@@ -41,6 +58,7 @@ public class OptimisticLockException extends RuntimeException {
                 entityName, entityId, expectedVersion, actualVersion));
         this.entityName = entityName;
         this.entityId = entityId;
+        this.entityIdentifier = null;
         this.expectedVersion = expectedVersion;
         this.actualVersion = actualVersion;
     }
@@ -51,6 +69,10 @@ public class OptimisticLockException extends RuntimeException {
 
     public Integer getEntityId() {
         return entityId;
+    }
+
+    public String getEntityIdentifier() {
+        return entityIdentifier;
     }
 
     public Integer getExpectedVersion() {
