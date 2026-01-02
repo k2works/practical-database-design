@@ -111,9 +111,6 @@ public class Inventory {
      * 有効期限切れかどうか.
      */
     public boolean isExpired() {
-        if (expirationDate == null) {
-            return false;
-        }
-        return expirationDate.isBefore(LocalDate.now());
+        return expirationDate != null && expirationDate.isBefore(LocalDate.now());
     }
 }

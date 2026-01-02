@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Profile("default")
 public class SeedRunner implements ApplicationRunner {
 
-    private static final Logger log = LoggerFactory.getLogger(SeedRunner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeedRunner.class);
 
     private final SeedDataService seedDataService;
 
@@ -25,8 +25,8 @@ public class SeedRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        log.info("default プロファイルが有効です。Seed データを投入します...");
+        LOG.info("default プロファイルが有効です。Seed データを投入します...");
         seedDataService.seedAll();
-        log.info("Seed データの投入が完了しました。");
+        LOG.info("Seed データの投入が完了しました。");
     }
 }

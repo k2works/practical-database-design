@@ -36,16 +36,16 @@ public class Location {
     public String getFullAddress() {
         StringBuilder sb = new StringBuilder();
         if (zone != null) {
-            sb.append(zone).append("-");
+            sb.append(zone).append('-');
         }
         if (aisle != null) {
-            sb.append(aisle).append("-");
+            sb.append(aisle).append('-');
         }
         if (rack != null) {
-            sb.append(rack).append("-");
+            sb.append(rack).append('-');
         }
         if (level != null) {
-            sb.append(level).append("-");
+            sb.append(level).append('-');
         }
         if (bay != null) {
             sb.append(bay);

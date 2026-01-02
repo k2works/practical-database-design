@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @Service
 public class SeedDataService {
 
-    private static final Logger log = LoggerFactory.getLogger(SeedDataService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeedDataService.class);
 
     private final MasterDataSeeder masterDataSeeder;
     private final TransactionDataSeeder transactionDataSeeder;
@@ -31,9 +31,9 @@ public class SeedDataService {
      */
     @Transactional
     public void seedAll() {
-        log.info("========================================");
-        log.info("販売管理システム Seed データ投入開始");
-        log.info("========================================");
+        LOG.info("========================================");
+        LOG.info("販売管理システム Seed データ投入開始");
+        LOG.info("========================================");
 
         LocalDate effectiveDate = LocalDate.of(2025, 1, 1);
 
@@ -46,9 +46,9 @@ public class SeedDataService {
         // トランザクションデータの投入
         transactionDataSeeder.seedAll(effectiveDate);
 
-        log.info("========================================");
-        log.info("販売管理システム Seed データ投入完了!");
-        log.info("========================================");
+        LOG.info("========================================");
+        LOG.info("販売管理システム Seed データ投入完了!");
+        LOG.info("========================================");
     }
 
     /**
@@ -56,17 +56,17 @@ public class SeedDataService {
      */
     @Transactional
     public void seedMasterDataOnly() {
-        log.info("マスタデータのみ投入開始");
+        LOG.info("マスタデータのみ投入開始");
 
         LocalDate effectiveDate = LocalDate.of(2025, 1, 1);
         cleanAllData();
         masterDataSeeder.seedAll(effectiveDate);
 
-        log.info("マスタデータ投入完了");
+        LOG.info("マスタデータ投入完了");
     }
 
     private void cleanAllData() {
-        log.info("既存データを削除中...");
+        LOG.info("既存データを削除中...");
 
         // トランザクションデータから削除（外部キー制約のため逆順）
         transactionDataSeeder.cleanAll();
@@ -74,6 +74,6 @@ public class SeedDataService {
         // マスタデータを削除
         masterDataSeeder.cleanAll();
 
-        log.info("既存データ削除完了");
+        LOG.info("既存データ削除完了");
     }
 }

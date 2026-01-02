@@ -24,7 +24,7 @@ import java.util.List;
 @Component
 public class TransactionDataSeeder {
 
-    private static final Logger log = LoggerFactory.getLogger(TransactionDataSeeder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransactionDataSeeder.class);
 
     private final InventoryRepository inventoryRepository;
     private final SalesOrderRepository salesOrderRepository;
@@ -45,9 +45,10 @@ public class TransactionDataSeeder {
     /**
      * すべてのトランザクションデータを投入.
      */
+    @SuppressWarnings("java:S1172")
     public void seedAll(LocalDate effectiveDate) {
         seedInventories();
-        seedOrders(effectiveDate);
+        seedOrders();
     }
 
     /**
@@ -61,7 +62,7 @@ public class TransactionDataSeeder {
     }
 
     private void seedInventories() {
-        log.info("在庫情報を投入中...");
+        LOG.info("在庫情報を投入中...");
 
         List<Inventory> inventories = List.of(
             // 本社倉庫の在庫（牛肉）
@@ -94,7 +95,9 @@ public class TransactionDataSeeder {
         );
 
         inventories.forEach(inventoryRepository::save);
-        log.info("在庫情報 {}件 投入完了", inventories.size());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("在庫情報 {}件 投入完了", inventories.size());
+        }
     }
 
     private Inventory createInventory(String warehouseCode, String productCode,
@@ -108,8 +111,8 @@ public class TransactionDataSeeder {
             .build();
     }
 
-    private void seedOrders(LocalDate effectiveDate) {
-        log.info("受注データを投入中...");
+    private void seedOrders() {
+        LOG.info("受注データを投入中...");
 
         // 受注1（百貨店向け）- 引当済み
         SalesOrder order1 = SalesOrder.builder()
@@ -162,7 +165,7 @@ public class TransactionDataSeeder {
         calculateOrderTotals(order3);
         salesOrderRepository.save(order3);
 
-        log.info("受注データ 3件 投入完了");
+        LOG.info("受注データ 3件 投入完了");
         // 出荷・売上データは複雑な依存関係があるため、別途投入する
     }
 

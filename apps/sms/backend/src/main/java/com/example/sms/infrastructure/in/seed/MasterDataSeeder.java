@@ -30,7 +30,7 @@ import java.util.List;
 @Component
 public class MasterDataSeeder {
 
-    private static final Logger log = LoggerFactory.getLogger(MasterDataSeeder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MasterDataSeeder.class);
 
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
@@ -79,7 +79,7 @@ public class MasterDataSeeder {
     }
 
     private void seedDepartments(LocalDate effectiveDate) {
-        log.info("部門マスタを投入中...");
+        LOG.info("部門マスタを投入中...");
 
         List<Department> departments = List.of(
             // 本社
@@ -155,11 +155,13 @@ public class MasterDataSeeder {
         );
 
         departments.forEach(departmentRepository::save);
-        log.info("部門マスタ {}件 投入完了", departments.size());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("部門マスタ {}件 投入完了", departments.size());
+        }
     }
 
     private void seedWarehouses() {
-        log.info("倉庫マスタを投入中...");
+        LOG.info("倉庫マスタを投入中...");
 
         List<Warehouse> warehouses = List.of(
             Warehouse.builder()
@@ -195,11 +197,13 @@ public class MasterDataSeeder {
         );
 
         warehouses.forEach(warehouseRepository::save);
-        log.info("倉庫マスタ {}件 投入完了", warehouses.size());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("倉庫マスタ {}件 投入完了", warehouses.size());
+        }
     }
 
     private void seedProductClassifications() {
-        log.info("商品分類マスタを投入中...");
+        LOG.info("商品分類マスタを投入中...");
 
         List<ProductClassification> categories = List.of(
             ProductClassification.builder()
@@ -217,18 +221,20 @@ public class MasterDataSeeder {
         );
 
         categories.forEach(productClassificationRepository::save);
-        log.info("商品分類マスタ {}件 投入完了", categories.size());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("商品分類マスタ {}件 投入完了", categories.size());
+        }
     }
 
     private void seedProducts() {
-        log.info("商品マスタを投入中...");
+        LOG.info("商品マスタを投入中...");
 
         List<Product> products = List.of(
             // 牛肉
             createProduct("BEEF-001", "黒毛和牛サーロイン", "CAT-BEEF", 8000, 5000),
             createProduct("BEEF-002", "黒毛和牛ロース", "CAT-BEEF", 6000, 3800),
             createProduct("BEEF-003", "黒毛和牛カルビ", "CAT-BEEF", 5500, 3500),
-            createProduct("BEEF-004", "黒毛和牛ヒレ", "CAT-BEEF", 10000, 6500),
+            createProduct("BEEF-004", "黒毛和牛ヒレ", "CAT-BEEF", 10_000, 6500),
             createProduct("BEEF-005", "黒毛和牛切り落とし", "CAT-BEEF", 2500, 1500),
 
             // 豚肉
@@ -254,7 +260,9 @@ public class MasterDataSeeder {
         );
 
         products.forEach(productRepository::save);
-        log.info("商品マスタ {}件 投入完了", products.size());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("商品マスタ {}件 投入完了", products.size());
+        }
     }
 
     private Product createProduct(String code, String name, String classificationCode,
@@ -274,7 +282,7 @@ public class MasterDataSeeder {
     }
 
     private void seedPartners() {
-        log.info("取引先マスタを投入中...");
+        LOG.info("取引先マスタを投入中...");
 
         List<Partner> partners = List.of(
             // 得意先（百貨店）
@@ -301,7 +309,9 @@ public class MasterDataSeeder {
         );
 
         partners.forEach(partnerRepository::save);
-        log.info("取引先マスタ {}件 投入完了", partners.size());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("取引先マスタ {}件 投入完了", partners.size());
+        }
     }
 
     private Partner createCustomer(String code, String name) {
@@ -324,7 +334,7 @@ public class MasterDataSeeder {
     }
 
     private void seedEmployees(LocalDate effectiveDate) {
-        log.info("社員マスタを投入中...");
+        LOG.info("社員マスタを投入中...");
 
         List<Employee> employees = List.of(
             // 経営層
@@ -363,7 +373,9 @@ public class MasterDataSeeder {
         );
 
         employees.forEach(employeeRepository::save);
-        log.info("社員マスタ {}件 投入完了", employees.size());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("社員マスタ {}件 投入完了", employees.size());
+        }
     }
 
     private Employee createEmployee(String code, String name, String departmentCode,

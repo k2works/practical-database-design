@@ -166,7 +166,7 @@ class InventoryRepositoryTest extends BaseIntegrationTest {
             inventoryRepository.save(inventory);
 
             var saved = inventoryRepository.findByWarehouseAndProduct("WH001", "P001").get();
-            inventoryRepository.deallocate(saved.getId(), new BigDecimal("10"));
+            inventoryRepository.deallocate(saved.getId(), BigDecimal.TEN);
 
             var result = inventoryRepository.findByWarehouseAndProduct("WH001", "P001").get();
             assertThat(result.getAllocatedQuantity()).isEqualByComparingTo(new BigDecimal("20"));
