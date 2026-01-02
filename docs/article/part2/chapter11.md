@@ -177,10 +177,10 @@ end note
 ### マイグレーション：赤黒処理関連テーブルの作成
 
 <details>
-<summary>V019__create_redblack_tables.sql</summary>
+<summary>V018__create_redblack_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V019__create_redblack_tables.sql
+-- src/main/resources/db/migration/V018__create_redblack_tables.sql
 
 -- 伝票区分
 CREATE TYPE 伝票区分 AS ENUM ('通常', '赤伝', '黒伝');
@@ -220,12 +220,15 @@ COMMENT ON COLUMN "赤黒処理履歴データ"."伝票種別" IS '対象伝票�
 <summary>伝票区分 ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/common/SlipType.java
-package com.example.sales.domain.model.common;
+// src/main/java/com/example/sms/domain/model/common/SlipType.java
+package com.example.sms.domain.model.common;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 伝票区分.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum SlipType {
@@ -235,6 +238,12 @@ public enum SlipType {
 
     private final String displayName;
 
+    /**
+     * 表示名から伝票区分を取得.
+     *
+     * @param displayName 表示名
+     * @return 伝票区分
+     */
     public static SlipType fromDisplayName(String displayName) {
         for (SlipType type : values()) {
             if (type.displayName.equals(displayName)) {
@@ -245,14 +254,18 @@ public enum SlipType {
     }
 
     /**
-     * 赤伝かどうか
+     * 赤伝かどうか.
+     *
+     * @return 赤伝の場合true
      */
     public boolean isRed() {
         return this == RED;
     }
 
     /**
-     * 符号を取得（赤伝はマイナス）
+     * 符号を取得（赤伝はマイナス）.
+     *
+     * @return 赤伝は-1、それ以外は1
      */
     public int getSign() {
         return this == RED ? -1 : 1;
@@ -266,26 +279,43 @@ public enum SlipType {
 <summary>赤黒処理履歴エンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/common/RedBlackHistory.java
-package com.example.sales.domain.model.common;
+// src/main/java/com/example/sms/domain/model/common/RedBlackHistory.java
+package com.example.sms.domain.model.common;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 赤黒処理履歴.
+ */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RedBlackHistory {
+    /** ID. */
     private Integer id;
+    /** 処理番号. */
     private String processNumber;
+    /** 処理日時. */
     private LocalDateTime processDateTime;
+    /** 伝票種別. */
     private String slipCategory;
+    /** 元伝票番号. */
     private String originalSlipNumber;
+    /** 赤伝票番号. */
     private String redSlipNumber;
+    /** 黒伝票番号. */
     private String blackSlipNumber;
+    /** 処理理由. */
     private String processReason;
+    /** 処理者. */
     private String processedBy;
+    /** 作成日時. */
     private LocalDateTime createdAt;
 }
 ```
@@ -294,16 +324,18 @@ public class RedBlackHistory {
 
 ### 赤黒処理サービスの実装
 
+> **Note:** 以下のサービス層コードは参考実装例です。実際のシステムでは要件に応じてカスタマイズしてください。
+
 <details>
 <summary>赤黒処理サービス</summary>
 
 ```java
-// src/main/java/com/example/sales/application/service/RedBlackService.java
-package com.example.sales.application.service;
+// src/main/java/com/example/sms/application/service/RedBlackService.java
+package com.example.sms.application.service;
 
-import com.example.sales.domain.model.common.*;
-import com.example.sales.domain.model.sales.*;
-import com.example.sales.infrastructure.persistence.mapper.*;
+import com.example.sms.domain.model.common.*;
+import com.example.sms.domain.model.sales.*;
+import com.example.sms.infrastructure.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -583,10 +615,10 @@ end note
 ### マイグレーション：採番テーブルの作成
 
 <details>
-<summary>V020__create_numbering_tables.sql</summary>
+<summary>V019__create_numbering_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V020__create_numbering_tables.sql
+-- src/main/resources/db/migration/V019__create_numbering_tables.sql
 
 -- 採番マスタ
 CREATE TABLE "採番マスタ" (
@@ -639,12 +671,14 @@ COMMENT ON TABLE "採番履歴データ" IS '年月別の採番状況を記録�
 
 ### 採番サービスの実装
 
+> **Note:** 以下のサービス層コードは参考実装例です。実際のシステムでは要件に応じてカスタマイズしてください。
+
 <details>
 <summary>採番形式 ENUM</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/common/NumberingFormat.java
-package com.example.sales.domain.model.common;
+// src/main/java/com/example/sms/domain/model/common/NumberingFormat.java
+package com.example.sms.domain.model.common;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -677,27 +711,83 @@ public enum NumberingFormat {
 <summary>採番マスタエンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/common/NumberingMaster.java
-package com.example.sales.domain.model.common;
+// src/main/java/com/example/sms/domain/model/common/NumberingMaster.java
+package com.example.sms.domain.model.common;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * 採番マスタ.
+ */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class NumberingMaster {
+    /** 採番コード. */
     private String numberingCode;
+    /** 採番名. */
     private String numberingName;
+    /** プレフィックス. */
     private String prefix;
-    private NumberingFormat format;
+    /** 採番形式. */
+    private String format;
+    /** 桁数. */
     private Integer digits;
+    /** 現在値. */
     private Long currentValue;
+    /** 最終採番日. */
     private LocalDate lastNumberingDate;
+    /** リセット対象. */
     private Boolean resetTarget;
+    /** 作成日時. */
     private LocalDateTime createdAt;
+    /** 更新日時. */
+    private LocalDateTime updatedAt;
+}
+```
+
+</details>
+
+<details>
+<summary>採番履歴エンティティ</summary>
+
+```java
+// src/main/java/com/example/sms/domain/model/common/NumberingHistory.java
+package com.example.sms.domain.model.common;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+/**
+ * 採番履歴.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class NumberingHistory {
+    /** ID. */
+    private Integer id;
+    /** 採番コード. */
+    private String numberingCode;
+    /** 採番年月. */
+    private String yearMonth;
+    /** 最終番号. */
+    private Long lastNumber;
+    /** 作成日時. */
+    private LocalDateTime createdAt;
+    /** 更新日時. */
     private LocalDateTime updatedAt;
 }
 ```
@@ -708,11 +798,11 @@ public class NumberingMaster {
 <summary>採番サービス</summary>
 
 ```java
-// src/main/java/com/example/sales/application/service/NumberingService.java
-package com.example.sales.application.service;
+// src/main/java/com/example/sms/application/service/NumberingService.java
+package com.example.sms.application.service;
 
-import com.example.sales.domain.model.common.*;
-import com.example.sales.infrastructure.persistence.mapper.*;
+import com.example.sms.domain.model.common.*;
+import com.example.sms.infrastructure.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -922,8 +1012,8 @@ end note
 <summary>Auditable 基底クラス</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/common/Auditable.java
-package com.example.sales.domain.model.common;
+// src/main/java/com/example/sms/domain/model/common/Auditable.java
+package com.example.sms.domain.model.common;
 
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
@@ -976,10 +1066,10 @@ public abstract class Auditable {
 <summary>監査インターセプター</summary>
 
 ```java
-// src/main/java/com/example/sales/infrastructure/persistence/AuditInterceptor.java
-package com.example.sales.infrastructure.persistence;
+// src/main/java/com/example/sms/infrastructure/persistence/AuditInterceptor.java
+package com.example.sms.infrastructure.persistence;
 
-import com.example.sales.domain.model.common.Auditable;
+import com.example.sms.domain.model.common.Auditable;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
@@ -1151,10 +1241,10 @@ end note
 ### マイグレーション：履歴テーブルの作成
 
 <details>
-<summary>V021__create_history_tables.sql</summary>
+<summary>V020__create_history_tables.sql</summary>
 
 ```sql
--- src/main/resources/db/migration/V021__create_history_tables.sql
+-- src/main/resources/db/migration/V020__create_history_tables.sql
 
 -- 変更履歴データ
 CREATE TABLE "変更履歴データ" (
@@ -1202,31 +1292,114 @@ COMMENT ON TABLE "商品マスタ履歴" IS '商品マスタのスナップシ�
 
 ### 履歴サービスの実装
 
+> **Note:** 以下のサービス層コードは参考実装例です。実際のシステムでは要件に応じてカスタマイズしてください。
+
 <details>
 <summary>変更履歴エンティティ</summary>
 
 ```java
-// src/main/java/com/example/sales/domain/model/common/ChangeHistory.java
-package com.example.sales.domain.model.common;
+// src/main/java/com/example/sms/domain/model/common/ChangeHistory.java
+package com.example.sms.domain.model.common;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 変更履歴.
+ */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ChangeHistory {
+    /** ID. */
     private Integer id;
+    /** テーブル名. */
     private String tableName;
+    /** レコードID. */
     private String recordId;
+    /** 操作種別. */
     private String operationType;
+    /** 変更日時. */
     private LocalDateTime changedAt;
+    /** 変更者. */
     private String changedBy;
+    /** 変更前データ（JSON）. */
     private String beforeData;
+    /** 変更後データ（JSON）. */
     private String afterData;
+    /** 変更理由. */
     private String changeReason;
+    /** 作成日時. */
     private LocalDateTime createdAt;
+}
+```
+
+</details>
+
+<details>
+<summary>商品マスタ履歴エンティティ</summary>
+
+```java
+// src/main/java/com/example/sms/domain/model/common/ProductHistory.java
+package com.example.sms.domain.model.common;
+
+import com.example.sms.domain.model.product.ProductCategory;
+import com.example.sms.domain.model.product.TaxCategory;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+/**
+ * 商品マスタ履歴.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductHistory {
+    /** ID. */
+    private Integer id;
+    /** 商品コード. */
+    private String productCode;
+    /** 有効開始日. */
+    private LocalDate validFromDate;
+    /** 有効終了日. */
+    private LocalDate validToDate;
+    /** 商品名. */
+    private String productName;
+    /** 商品区分. */
+    private ProductCategory productCategory;
+    /** 単価. */
+    private BigDecimal unitPrice;
+    /** 税区分. */
+    private TaxCategory taxCategory;
+    /** 作成日時. */
+    private LocalDateTime createdAt;
+    /** 作成者. */
+    private String createdBy;
+
+    /**
+     * 指定日時点で有効かどうか.
+     *
+     * @param targetDate 対象日
+     * @return 有効な場合true
+     */
+    public boolean isValidOn(LocalDate targetDate) {
+        if (targetDate.isBefore(validFromDate)) {
+            return false;
+        }
+        return validToDate == null || !targetDate.isAfter(validToDate);
+    }
 }
 ```
 
@@ -1236,11 +1409,11 @@ public class ChangeHistory {
 <summary>履歴サービス</summary>
 
 ```java
-// src/main/java/com/example/sales/application/service/HistoryService.java
-package com.example.sales.application.service;
+// src/main/java/com/example/sms/application/service/HistoryService.java
+package com.example.sms.application.service;
 
-import com.example.sales.domain.model.common.ChangeHistory;
-import com.example.sales.infrastructure.persistence.mapper.ChangeHistoryMapper;
+import com.example.sms.domain.model.common.ChangeHistory;
+import com.example.sms.infrastructure.persistence.mapper.ChangeHistoryMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
