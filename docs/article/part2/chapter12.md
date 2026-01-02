@@ -532,7 +532,8 @@ Seed データの投入にあたり、以下のポイントを考慮します。
 | **外部キー制約の考慮** | データ投入順序を依存関係に基づいて設計 |
 | **複合キーの扱い** | 適用開始日を含む複合主キーへの対応 |
 | **日本語テーブル名・カラム名** | MyBatis の resultMap でマッピング |
-| **Spring Profile の活用** | `seed` プロファイルで実行環境を分離 |
+| **ヘキサゴナルアーキテクチャ** | Repository（出力ポート）経由でデータ投入 |
+| **Spring Profile の活用** | `default` プロファイルでアプリ起動時に自動投入 |
 
 ### プロジェクト構造
 
@@ -540,22 +541,32 @@ Seed データの投入にあたり、以下のポイントを考慮します。
 src/
 ├── main/
 │   └── java/
-│       └── com/example/sales/
+│       └── com/example/sms/
+│           ├── application/
+│           │   └── port/
+│           │       └── out/
+│           │           └── *Repository.java    # 出力ポート
 │           ├── domain/
 │           │   └── model/
-│           │       └── seed/
+│           │       └── ...                     # ドメインモデル
 │           └── infrastructure/
-│               └── datasource/
-│                   └── seed/
-│                       ├── SeedDataService.java
-│                       ├── MasterDataSeeder.java
-│                       ├── TransactionDataSeeder.java
-│                       └── SeedRunner.java
+│               ├── datasource/
+│               │   └── seed/
+│               │       ├── SeedDataService.java
+│               │       ├── MasterDataSeeder.java
+│               │       ├── TransactionDataSeeder.java
+│               │       └── SeedRunner.java
+│               └── out/
+│                   └── persistence/
+│                       ├── mapper/             # MyBatis Mapper
+│                       └── repository/         # Repository 実装
 └── test/
     └── java/
-        └── com/example/sales/
-            └── integration/
-                └── SeedDataIntegrationTest.java
+        └── com/example/sms/
+            └── infrastructure/
+                └── datasource/
+                    └── seed/
+                        └── SeedDataServiceTest.java
 ```
 
 ### SeedDataService の実装
@@ -564,10 +575,8 @@ src/
 <summary>SeedDataService.java</summary>
 
 ```java
-package com.example.sales.infrastructure.datasource.seed;
+package com.example.sms.infrastructure.datasource.seed;
 
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -575,24 +584,28 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
+/**
+ * Seed データ投入サービス.
+ * B社事例に基づく販売管理システムの初期データを投入する。
+ */
 @Service
 public class SeedDataService {
 
     private static final Logger log = LoggerFactory.getLogger(SeedDataService.class);
 
-    private final SqlSessionFactory sqlSessionFactory;
     private final MasterDataSeeder masterDataSeeder;
     private final TransactionDataSeeder transactionDataSeeder;
 
     public SeedDataService(
-            SqlSessionFactory sqlSessionFactory,
             MasterDataSeeder masterDataSeeder,
             TransactionDataSeeder transactionDataSeeder) {
-        this.sqlSessionFactory = sqlSessionFactory;
         this.masterDataSeeder = masterDataSeeder;
         this.transactionDataSeeder = transactionDataSeeder;
     }
 
+    /**
+     * すべての Seed データを投入.
+     */
     @Transactional
     public void seedAll() {
         log.info("========================================");
@@ -618,40 +631,11 @@ public class SeedDataService {
     private void cleanAllData() {
         log.info("既存データを削除中...");
 
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            // トランザクションデータから削除（外部キー制約のため逆順）
-            session.delete("seed.deleteAllPaymentDetails");
-            session.delete("seed.deleteAllPayments");
-            session.delete("seed.deleteAllReceiptDetails");
-            session.delete("seed.deleteAllReceipts");
-            session.delete("seed.deleteAllInvoiceDetails");
-            session.delete("seed.deleteAllInvoices");
-            session.delete("seed.deleteAllSalesDetails");
-            session.delete("seed.deleteAllSales");
-            session.delete("seed.deleteAllShipmentDetails");
-            session.delete("seed.deleteAllShipments");
-            session.delete("seed.deleteAllOrderDetails");
-            session.delete("seed.deleteAllOrders");
-            session.delete("seed.deleteAllPurchaseDetails");
-            session.delete("seed.deleteAllPurchases");
-            session.delete("seed.deleteAllStockMovements");
-            session.delete("seed.deleteAllInventories");
+        // トランザクションデータから削除（外部キー制約のため逆順）
+        transactionDataSeeder.cleanAll();
 
-            // マスタデータを削除
-            session.delete("seed.deleteAllEmployees");
-            session.delete("seed.deleteAllProducts");
-            session.delete("seed.deleteAllProductCategories");
-            session.delete("seed.deleteAllCustomerPrices");
-            session.delete("seed.deleteAllCustomers");
-            session.delete("seed.deleteAllSuppliers");
-            session.delete("seed.deleteAllPartners");
-            session.delete("seed.deleteAllPartnerGroups");
-            session.delete("seed.deleteAllLocations");
-            session.delete("seed.deleteAllWarehouses");
-            session.delete("seed.deleteAllDepartments");
-
-            session.commit();
-        }
+        // マスタデータを削除
+        masterDataSeeder.cleanAll();
 
         log.info("既存データ削除完了");
     }
@@ -663,13 +647,18 @@ public class SeedDataService {
 ### MasterDataSeeder の実装
 
 <details>
-<summary>MasterDataSeeder.java（部門・倉庫・取引先）</summary>
+<summary>MasterDataSeeder.java</summary>
 
 ```java
-package com.example.sales.infrastructure.datasource.seed;
+package com.example.sms.infrastructure.datasource.seed;
 
-import com.example.sales.domain.model.master.*;
-import com.example.sales.infrastructure.mapper.*;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.department.Department;
+import com.example.sms.domain.model.employee.Employee;
+import com.example.sms.domain.model.inventory.Warehouse;
+import com.example.sms.domain.model.inventory.WarehouseType;
+import com.example.sms.domain.model.partner.Partner;
+import com.example.sms.domain.model.product.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -678,35 +667,46 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * マスタデータ Seeder.
+ * B社事例に基づくマスタデータを投入する。
+ */
 @Component
 public class MasterDataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(MasterDataSeeder.class);
 
-    private final DepartmentMapper departmentMapper;
-    private final WarehouseMapper warehouseMapper;
-    private final LocationMapper locationMapper;
-    private final PartnerGroupMapper partnerGroupMapper;
-    private final PartnerMapper partnerMapper;
-    private final CustomerMapper customerMapper;
-    private final SupplierMapper supplierMapper;
-    private final ProductCategoryMapper productCategoryMapper;
-    private final ProductMapper productMapper;
-    private final EmployeeMapper employeeMapper;
+    private final DepartmentRepository departmentRepository;
+    private final EmployeeRepository employeeRepository;
+    private final PartnerRepository partnerRepository;
+    private final ProductClassificationRepository productClassificationRepository;
+    private final ProductRepository productRepository;
+    private final WarehouseRepository warehouseRepository;
 
     // コンストラクタ省略
 
+    /**
+     * すべてのマスタデータを投入.
+     */
     public void seedAll(LocalDate effectiveDate) {
         seedDepartments(effectiveDate);
-        seedWarehouses(effectiveDate);
-        seedLocations(effectiveDate);
-        seedPartnerGroups(effectiveDate);
-        seedPartners(effectiveDate);
-        seedCustomers(effectiveDate);
-        seedSuppliers(effectiveDate);
-        seedProductCategories(effectiveDate);
-        seedProducts(effectiveDate);
+        seedWarehouses();
+        seedProductClassifications();
+        seedProducts();
+        seedPartners();
         seedEmployees(effectiveDate);
+    }
+
+    /**
+     * すべてのマスタデータを削除.
+     */
+    public void cleanAll() {
+        employeeRepository.deleteAll();
+        productRepository.deleteAll();
+        productClassificationRepository.deleteAll();
+        partnerRepository.deleteAll();
+        warehouseRepository.deleteAll();
+        departmentRepository.deleteAll();
     }
 
     private void seedDepartments(LocalDate effectiveDate) {
@@ -714,176 +714,133 @@ public class MasterDataSeeder {
 
         List<Department> departments = List.of(
             // 本社
-            new Department("000000", effectiveDate, "本社", "/000000", 1),
+            Department.builder()
+                .departmentCode("000000").startDate(effectiveDate)
+                .departmentName("本社").departmentPath("/000000").hierarchyLevel(1).build(),
 
             // 食肉製造・販売事業
-            new Department("100000", effectiveDate, "食肉製造・販売事業", "/000000/100000", 2),
-            new Department("110000", effectiveDate, "食肉加工部門", "/000000/100000/110000", 3),
-            new Department("111000", effectiveDate, "牛肉・豚肉・鶏肉課", "/000000/100000/110000/111000", 4),
-            new Department("112000", effectiveDate, "食肉加工品課", "/000000/100000/110000/112000", 4),
-            new Department("120000", effectiveDate, "小売販売部門", "/000000/100000/120000", 3),
-            new Department("121000", effectiveDate, "直営小売店課", "/000000/100000/120000/121000", 4),
-            new Department("122000", effectiveDate, "百貨店・スーパー向け販売課", "/000000/100000/120000/122000", 4),
-            new Department("130000", effectiveDate, "新規取引先開拓部門", "/000000/100000/130000", 3),
-            new Department("131000", effectiveDate, "ホテル・旅館向け課", "/000000/100000/130000/131000", 4),
-            new Department("132000", effectiveDate, "飲食店向け課", "/000000/100000/130000/132000", 4),
-
-            // 食肉加工品事業
-            new Department("200000", effectiveDate, "食肉加工品事業", "/000000/200000", 2),
-            new Department("210000", effectiveDate, "自社ブランド部門", "/000000/200000/210000", 3),
-            new Department("211000", effectiveDate, "贈答用製品製造課", "/000000/200000/210000/211000", 4),
-            new Department("212000", effectiveDate, "道の駅・土産物製品販売課", "/000000/200000/210000/212000", 4),
-            new Department("220000", effectiveDate, "相手先ブランド製造(OEM)部門", "/000000/200000/220000", 3),
-            new Department("221000", effectiveDate, "客先要望対応課", "/000000/200000/220000/221000", 4),
-
-            // コンサルティング事業
-            new Department("300000", effectiveDate, "コンサルティング事業", "/000000/300000", 2),
-            new Department("310000", effectiveDate, "顧客対応部門", "/000000/300000/310000", 3),
-            new Department("311000", effectiveDate, "メニュー提案課", "/000000/300000/310000/311000", 4),
-            new Department("312000", effectiveDate, "半加工商品提供課", "/000000/300000/310000/312000", 4)
+            Department.builder()
+                .departmentCode("100000").startDate(effectiveDate)
+                .departmentName("食肉製造・販売事業").departmentPath("/000000/100000").hierarchyLevel(2).build(),
+            // ... 以下省略
         );
 
-        departments.forEach(departmentMapper::insert);
+        departments.forEach(departmentRepository::save);
         log.info("部門マスタ {}件 投入完了", departments.size());
     }
 
-    private void seedWarehouses(LocalDate effectiveDate) {
+    private void seedWarehouses() {
         log.info("倉庫マスタを投入中...");
 
         List<Warehouse> warehouses = List.of(
-            new Warehouse("WH-HQ", effectiveDate, "本社倉庫", "本社1F", WarehouseType.COMPANY_OWNED),
-            new Warehouse("WH-FAC", effectiveDate, "工場倉庫", "工場1F", WarehouseType.COMPANY_OWNED)
+            Warehouse.builder()
+                .warehouseCode("WH-HQ")
+                .warehouseName("本社倉庫")
+                .warehouseType(WarehouseType.OWN)
+                .address("東京都千代田区1-1-1")
+                .activeFlag(true)
+                .build(),
+            Warehouse.builder()
+                .warehouseCode("WH-FAC")
+                .warehouseName("工場倉庫")
+                .warehouseType(WarehouseType.OWN)
+                .address("埼玉県さいたま市2-2-2")
+                .activeFlag(true)
+                .build(),
+            Warehouse.builder()
+                .warehouseCode("WH-EXT")
+                .warehouseName("外部委託倉庫")
+                .warehouseType(WarehouseType.EXTERNAL)
+                .address("神奈川県横浜市3-3-3")
+                .activeFlag(true)
+                .build()
         );
 
-        warehouses.forEach(warehouseMapper::insert);
+        warehouses.forEach(warehouseRepository::save);
         log.info("倉庫マスタ {}件 投入完了", warehouses.size());
     }
 
-    private void seedPartnerGroups(LocalDate effectiveDate) {
-        log.info("取引先グループマスタを投入中...");
-
-        List<PartnerGroup> groups = List.of(
-            new PartnerGroup("GRP-DEPT", effectiveDate, "百貨店グループ"),
-            new PartnerGroup("GRP-SUPER", effectiveDate, "スーパーグループ"),
-            new PartnerGroup("GRP-HOTEL", effectiveDate, "ホテル・旅館グループ"),
-            new PartnerGroup("GRP-REST", effectiveDate, "飲食店グループ"),
-            new PartnerGroup("GRP-TOUR", effectiveDate, "観光施設グループ"),
-            new PartnerGroup("GRP-MEAT", effectiveDate, "食肉卸グループ"),
-            new PartnerGroup("GRP-FARM", effectiveDate, "畜産業者グループ")
-        );
-
-        groups.forEach(partnerGroupMapper::insert);
-        log.info("取引先グループマスタ {}件 投入完了", groups.size());
-    }
-
-    private void seedPartners(LocalDate effectiveDate) {
-        log.info("取引先マスタを投入中...");
-
-        List<Partner> partners = List.of(
-            // 得意先（百貨店）
-            new Partner("CUS-001", effectiveDate, "地域百貨店", PartnerType.CUSTOMER, "GRP-DEPT", effectiveDate),
-            new Partner("CUS-002", effectiveDate, "X県有名百貨店", PartnerType.CUSTOMER, "GRP-DEPT", effectiveDate),
-            // 得意先（スーパー）
-            new Partner("CUS-003", effectiveDate, "地域スーパーチェーン", PartnerType.CUSTOMER, "GRP-SUPER", effectiveDate),
-            new Partner("CUS-004", effectiveDate, "広域スーパーチェーン", PartnerType.CUSTOMER, "GRP-SUPER", effectiveDate),
-            // 得意先（ホテル・旅館）
-            new Partner("CUS-005", effectiveDate, "シティホテル", PartnerType.CUSTOMER, "GRP-HOTEL", effectiveDate),
-            new Partner("CUS-006", effectiveDate, "温泉旅館", PartnerType.CUSTOMER, "GRP-HOTEL", effectiveDate),
-            // 得意先（飲食店）
-            new Partner("CUS-007", effectiveDate, "焼肉レストラン", PartnerType.CUSTOMER, "GRP-REST", effectiveDate),
-            new Partner("CUS-008", effectiveDate, "イタリアンレストラン", PartnerType.CUSTOMER, "GRP-REST", effectiveDate),
-            // 得意先（観光施設）
-            new Partner("CUS-009", effectiveDate, "道の駅", PartnerType.CUSTOMER, "GRP-TOUR", effectiveDate),
-            new Partner("CUS-010", effectiveDate, "観光センター", PartnerType.CUSTOMER, "GRP-TOUR", effectiveDate),
-            // 仕入先（食肉卸）
-            new Partner("SUP-001", effectiveDate, "地域食肉卸A社", PartnerType.SUPPLIER, "GRP-MEAT", effectiveDate),
-            new Partner("SUP-002", effectiveDate, "地域食肉卸B社", PartnerType.SUPPLIER, "GRP-MEAT", effectiveDate),
-            // 仕入先（畜産業者）
-            new Partner("SUP-003", effectiveDate, "地域畜産農家", PartnerType.SUPPLIER, "GRP-FARM", effectiveDate),
-            new Partner("SUP-004", effectiveDate, "県内畜産組合", PartnerType.SUPPLIER, "GRP-FARM", effectiveDate)
-        );
-
-        partners.forEach(partnerMapper::insert);
-        log.info("取引先マスタ {}件 投入完了", partners.size());
-    }
-}
-```
-
-</details>
-
-<details>
-<summary>MasterDataSeeder.java（商品・社員）</summary>
-
-```java
-    private void seedProductCategories(LocalDate effectiveDate) {
+    private void seedProductClassifications() {
         log.info("商品分類マスタを投入中...");
 
-        List<ProductCategory> categories = List.of(
-            new ProductCategory("CAT-BEEF", effectiveDate, "牛肉", "/CAT-BEEF", 1),
-            new ProductCategory("CAT-PORK", effectiveDate, "豚肉", "/CAT-PORK", 1),
-            new ProductCategory("CAT-CHKN", effectiveDate, "鶏肉", "/CAT-CHKN", 1),
-            new ProductCategory("CAT-PROC", effectiveDate, "加工品", "/CAT-PROC", 1)
+        List<ProductClassification> categories = List.of(
+            ProductClassification.builder()
+                .classificationCode("CAT-BEEF").classificationName("牛肉")
+                .classificationPath("/CAT-BEEF").hierarchyLevel(1).build(),
+            ProductClassification.builder()
+                .classificationCode("CAT-PORK").classificationName("豚肉")
+                .classificationPath("/CAT-PORK").hierarchyLevel(1).build(),
+            ProductClassification.builder()
+                .classificationCode("CAT-CHKN").classificationName("鶏肉")
+                .classificationPath("/CAT-CHKN").hierarchyLevel(1).build(),
+            ProductClassification.builder()
+                .classificationCode("CAT-PROC").classificationName("加工品")
+                .classificationPath("/CAT-PROC").hierarchyLevel(1).build()
         );
 
-        categories.forEach(productCategoryMapper::insert);
+        categories.forEach(productClassificationRepository::save);
         log.info("商品分類マスタ {}件 投入完了", categories.size());
     }
 
-    private void seedProducts(LocalDate effectiveDate) {
+    private void seedProducts() {
         log.info("商品マスタを投入中...");
 
         List<Product> products = List.of(
             // 牛肉
-            new Product("BEEF-001", effectiveDate, "黒毛和牛サーロイン", "CAT-BEEF", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("8000"), new BigDecimal("5000")),
-            new Product("BEEF-002", effectiveDate, "黒毛和牛ロース", "CAT-BEEF", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("6000"), new BigDecimal("3800")),
-            new Product("BEEF-003", effectiveDate, "黒毛和牛カルビ", "CAT-BEEF", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("5500"), new BigDecimal("3500")),
-            new Product("BEEF-004", effectiveDate, "黒毛和牛ヒレ", "CAT-BEEF", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("10000"), new BigDecimal("6500")),
-            new Product("BEEF-005", effectiveDate, "黒毛和牛切り落とし", "CAT-BEEF", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("2500"), new BigDecimal("1500")),
-
-            // 豚肉
-            new Product("PORK-001", effectiveDate, "豚ロース", "CAT-PORK", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("1200"), new BigDecimal("750")),
-            new Product("PORK-002", effectiveDate, "豚バラ", "CAT-PORK", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("980"), new BigDecimal("600")),
-            new Product("PORK-003", effectiveDate, "豚ヒレ", "CAT-PORK", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("1500"), new BigDecimal("950")),
-            new Product("PORK-004", effectiveDate, "豚コマ", "CAT-PORK", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("680"), new BigDecimal("400")),
-            new Product("PORK-005", effectiveDate, "豚肩ロース", "CAT-PORK", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("1100"), new BigDecimal("700")),
-
-            // 鶏肉
-            new Product("CHKN-001", effectiveDate, "鶏もも", "CAT-CHKN", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("480"), new BigDecimal("280")),
-            new Product("CHKN-002", effectiveDate, "鶏むね", "CAT-CHKN", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("380"), new BigDecimal("220")),
-            new Product("CHKN-003", effectiveDate, "手羽先", "CAT-CHKN", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("350"), new BigDecimal("200")),
-            new Product("CHKN-004", effectiveDate, "手羽元", "CAT-CHKN", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("320"), new BigDecimal("180")),
-            new Product("CHKN-005", effectiveDate, "鶏ささみ", "CAT-CHKN", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("520"), new BigDecimal("320")),
-
-            // 加工品
-            new Product("PROC-001", effectiveDate, "ローストビーフ", "CAT-PROC", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("3500"), new BigDecimal("2000")),
-            new Product("PROC-002", effectiveDate, "ロースハム", "CAT-PROC", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("1800"), new BigDecimal("1000")),
-            new Product("PROC-003", effectiveDate, "あらびきソーセージ", "CAT-PROC", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("680"), new BigDecimal("400")),
-            new Product("PROC-004", effectiveDate, "ベーコン", "CAT-PROC", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("980"), new BigDecimal("580")),
-            new Product("PROC-005", effectiveDate, "手作りコロッケ", "CAT-PROC", effectiveDate,
-                       ProductType.PRODUCT, TaxType.STANDARD, new BigDecimal("250"), new BigDecimal("120"))
+            createProduct("BEEF-001", "黒毛和牛サーロイン", "CAT-BEEF", 8000, 5000),
+            createProduct("BEEF-002", "黒毛和牛ロース", "CAT-BEEF", 6000, 3800),
+            // ... 以下省略（全20件）
         );
 
-        products.forEach(productMapper::insert);
+        products.forEach(productRepository::save);
         log.info("商品マスタ {}件 投入完了", products.size());
+    }
+
+    private Product createProduct(String code, String name, String classificationCode,
+                                   int sellingPrice, int purchasePrice) {
+        return Product.builder()
+            .productCode(code)
+            .productName(name)
+            .productCategory(ProductCategory.PRODUCT)
+            .taxCategory(TaxCategory.EXCLUSIVE)
+            .classificationCode(classificationCode)
+            .sellingPrice(new BigDecimal(sellingPrice))
+            .purchasePrice(new BigDecimal(purchasePrice))
+            .isInventoryManaged(true)
+            .build();
+    }
+
+    private void seedPartners() {
+        log.info("取引先マスタを投入中...");
+
+        List<Partner> partners = List.of(
+            // 得意先（百貨店）
+            createCustomer("CUS-001", "地域百貨店"),
+            createCustomer("CUS-002", "X県有名百貨店"),
+            // ... 以下省略（全14件：得意先10件、仕入先4件）
+        );
+
+        partners.forEach(partnerRepository::save);
+        log.info("取引先マスタ {}件 投入完了", partners.size());
+    }
+
+    private Partner createCustomer(String code, String name) {
+        return Partner.builder()
+            .partnerCode(code)
+            .partnerName(name)
+            .isCustomer(true)
+            .isSupplier(false)
+            .creditLimit(new BigDecimal("10000000"))
+            .build();
+    }
+
+    private Partner createSupplier(String code, String name) {
+        return Partner.builder()
+            .partnerCode(code)
+            .partnerName(name)
+            .isCustomer(false)
+            .isSupplier(true)
+            .build();
     }
 
     private void seedEmployees(LocalDate effectiveDate) {
@@ -891,43 +848,25 @@ public class MasterDataSeeder {
 
         List<Employee> employees = List.of(
             // 経営層
-            new Employee("EMP-001", effectiveDate, "山田", "太郎", "000000", effectiveDate, "EXEC"),
-            new Employee("EMP-002", effectiveDate, "佐藤", "次郎", "000000", effectiveDate, "EXEC"),
-
-            // 食肉製造・販売事業（正社員8名）
-            new Employee("EMP-003", effectiveDate, "鈴木", "三郎", "111000", effectiveDate, "MANAGER"),
-            new Employee("EMP-004", effectiveDate, "高橋", "四郎", "111000", effectiveDate, "REGULAR"),
-            new Employee("EMP-005", effectiveDate, "田中", "五郎", "112000", effectiveDate, "MANAGER"),
-            new Employee("EMP-006", effectiveDate, "伊藤", "六郎", "112000", effectiveDate, "REGULAR"),
-            new Employee("EMP-007", effectiveDate, "渡辺", "七郎", "121000", effectiveDate, "MANAGER"),
-            new Employee("EMP-008", effectiveDate, "山本", "八郎", "121000", effectiveDate, "REGULAR"),
-            new Employee("EMP-009", effectiveDate, "中村", "九郎", "122000", effectiveDate, "REGULAR"),
-            new Employee("EMP-010", effectiveDate, "小林", "十郎", "122000", effectiveDate, "REGULAR"),
-
-            // 食肉加工品事業（正社員6名）
-            new Employee("EMP-011", effectiveDate, "加藤", "一男", "211000", effectiveDate, "MANAGER"),
-            new Employee("EMP-012", effectiveDate, "吉田", "二男", "211000", effectiveDate, "REGULAR"),
-            new Employee("EMP-013", effectiveDate, "山口", "三男", "212000", effectiveDate, "MANAGER"),
-            new Employee("EMP-014", effectiveDate, "松本", "四男", "212000", effectiveDate, "REGULAR"),
-            new Employee("EMP-015", effectiveDate, "井上", "五男", "221000", effectiveDate, "MANAGER"),
-            new Employee("EMP-016", effectiveDate, "木村", "六男", "221000", effectiveDate, "REGULAR"),
-
-            // コンサルティング事業（正社員6名）
-            new Employee("EMP-017", effectiveDate, "林", "一子", "311000", effectiveDate, "MANAGER"),
-            new Employee("EMP-018", effectiveDate, "斎藤", "二子", "311000", effectiveDate, "REGULAR"),
-            new Employee("EMP-019", effectiveDate, "清水", "三子", "311000", effectiveDate, "REGULAR"),
-            new Employee("EMP-020", effectiveDate, "森", "四子", "312000", effectiveDate, "MANAGER"),
-            new Employee("EMP-021", effectiveDate, "池田", "五子", "312000", effectiveDate, "REGULAR"),
-            new Employee("EMP-022", effectiveDate, "橋本", "六子", "312000", effectiveDate, "REGULAR"),
-
-            // 経理・総務（正社員2名）
-            new Employee("EMP-023", effectiveDate, "阿部", "一郎", "000000", effectiveDate, "REGULAR"),
-            new Employee("EMP-024", effectiveDate, "石川", "二郎", "000000", effectiveDate, "REGULAR")
+            createEmployee("EMP-001", "山田 太郎", "000000", effectiveDate),
+            createEmployee("EMP-002", "佐藤 次郎", "000000", effectiveDate),
+            // ... 以下省略（全24件）
         );
 
-        employees.forEach(employeeMapper::insert);
+        employees.forEach(employeeRepository::save);
         log.info("社員マスタ {}件 投入完了", employees.size());
     }
+
+    private Employee createEmployee(String code, String name, String departmentCode,
+                                     LocalDate departmentStartDate) {
+        return Employee.builder()
+            .employeeCode(code)
+            .employeeName(name)
+            .departmentCode(departmentCode)
+            .departmentStartDate(departmentStartDate)
+            .build();
+    }
+}
 ```
 
 </details>
@@ -938,12 +877,14 @@ public class MasterDataSeeder {
 <summary>TransactionDataSeeder.java</summary>
 
 ```java
-package com.example.sales.infrastructure.datasource.seed;
+package com.example.sms.infrastructure.datasource.seed;
 
-import com.example.sales.domain.model.inventory.*;
-import com.example.sales.domain.model.sales.*;
-import com.example.sales.domain.model.purchase.*;
-import com.example.sales.infrastructure.mapper.*;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.inventory.Inventory;
+import com.example.sms.domain.model.product.TaxCategory;
+import com.example.sms.domain.model.sales.OrderStatus;
+import com.example.sms.domain.model.sales.SalesOrder;
+import com.example.sms.domain.model.sales.SalesOrderDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -952,206 +893,164 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * トランザクションデータ Seeder.
+ * B社事例に基づくトランザクションデータを投入する。
+ */
 @Component
 public class TransactionDataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionDataSeeder.class);
 
-    private final InventoryMapper inventoryMapper;
-    private final OrderMapper orderMapper;
-    private final OrderDetailMapper orderDetailMapper;
-    private final ShipmentMapper shipmentMapper;
-    private final ShipmentDetailMapper shipmentDetailMapper;
-    private final SalesMapper salesMapper;
-    private final SalesDetailMapper salesDetailMapper;
-    private final PurchaseMapper purchaseMapper;
-    private final PurchaseDetailMapper purchaseDetailMapper;
+    private final InventoryRepository inventoryRepository;
+    private final SalesOrderRepository salesOrderRepository;
+    private final ShipmentRepository shipmentRepository;
+    private final SalesRepository salesRepository;
 
     // コンストラクタ省略
 
+    /**
+     * すべてのトランザクションデータを投入.
+     */
     public void seedAll(LocalDate effectiveDate) {
-        seedInventories(effectiveDate);
+        seedInventories();
         seedOrders(effectiveDate);
-        seedShipments(effectiveDate);
-        seedSales(effectiveDate);
-        seedPurchases(effectiveDate);
     }
 
-    private void seedInventories(LocalDate effectiveDate) {
+    /**
+     * すべてのトランザクションデータを削除.
+     */
+    public void cleanAll() {
+        salesRepository.deleteAll();
+        shipmentRepository.deleteAll();
+        salesOrderRepository.deleteAll();
+        inventoryRepository.deleteAll();
+    }
+
+    private void seedInventories() {
         log.info("在庫情報を投入中...");
 
         List<Inventory> inventories = List.of(
-            // 本社倉庫の在庫
-            new Inventory("WH-HQ", "BEEF-001", effectiveDate,
-                         new BigDecimal("50"), new BigDecimal("10")),
-            new Inventory("WH-HQ", "BEEF-002", effectiveDate,
-                         new BigDecimal("80"), new BigDecimal("15")),
-            new Inventory("WH-HQ", "BEEF-003", effectiveDate,
-                         new BigDecimal("100"), new BigDecimal("20")),
-            new Inventory("WH-HQ", "PORK-001", effectiveDate,
-                         new BigDecimal("200"), new BigDecimal("30")),
-            new Inventory("WH-HQ", "PORK-002", effectiveDate,
-                         new BigDecimal("250"), new BigDecimal("40")),
-            new Inventory("WH-HQ", "CHKN-001", effectiveDate,
-                         new BigDecimal("300"), new BigDecimal("50")),
-            new Inventory("WH-HQ", "CHKN-002", effectiveDate,
-                         new BigDecimal("350"), new BigDecimal("60")),
+            // 本社倉庫の在庫（牛肉）
+            createInventory("WH-HQ", "BEEF-001", 50, 10),
+            createInventory("WH-HQ", "BEEF-002", 80, 15),
+            createInventory("WH-HQ", "BEEF-003", 100, 20),
+            createInventory("WH-HQ", "BEEF-004", 30, 5),
+            createInventory("WH-HQ", "BEEF-005", 150, 30),
+
+            // 本社倉庫の在庫（豚肉）
+            createInventory("WH-HQ", "PORK-001", 200, 30),
+            createInventory("WH-HQ", "PORK-002", 250, 40),
+            createInventory("WH-HQ", "PORK-003", 100, 15),
+            createInventory("WH-HQ", "PORK-004", 300, 50),
+            createInventory("WH-HQ", "PORK-005", 180, 25),
+
+            // 本社倉庫の在庫（鶏肉）
+            createInventory("WH-HQ", "CHKN-001", 300, 50),
+            createInventory("WH-HQ", "CHKN-002", 350, 60),
+            createInventory("WH-HQ", "CHKN-003", 200, 30),
+            createInventory("WH-HQ", "CHKN-004", 180, 25),
+            createInventory("WH-HQ", "CHKN-005", 150, 20),
 
             // 工場倉庫の在庫（加工品）
-            new Inventory("WH-FAC", "PROC-001", effectiveDate,
-                         new BigDecimal("100"), new BigDecimal("20")),
-            new Inventory("WH-FAC", "PROC-002", effectiveDate,
-                         new BigDecimal("150"), new BigDecimal("30")),
-            new Inventory("WH-FAC", "PROC-003", effectiveDate,
-                         new BigDecimal("200"), new BigDecimal("40")),
-            new Inventory("WH-FAC", "PROC-004", effectiveDate,
-                         new BigDecimal("180"), new BigDecimal("35")),
-            new Inventory("WH-FAC", "PROC-005", effectiveDate,
-                         new BigDecimal("300"), new BigDecimal("50"))
+            createInventory("WH-FAC", "PROC-001", 100, 20),
+            createInventory("WH-FAC", "PROC-002", 150, 30),
+            createInventory("WH-FAC", "PROC-003", 200, 40),
+            createInventory("WH-FAC", "PROC-004", 180, 35),
+            createInventory("WH-FAC", "PROC-005", 300, 50)
         );
 
-        inventories.forEach(inventoryMapper::insert);
+        inventories.forEach(inventoryRepository::save);
         log.info("在庫情報 {}件 投入完了", inventories.size());
+    }
+
+    private Inventory createInventory(String warehouseCode, String productCode,
+                                        int quantity, int allocatedQuantity) {
+        return Inventory.builder()
+            .warehouseCode(warehouseCode)
+            .productCode(productCode)
+            .currentQuantity(new BigDecimal(quantity))
+            .allocatedQuantity(new BigDecimal(allocatedQuantity))
+            .orderedQuantity(BigDecimal.ZERO)
+            .build();
     }
 
     private void seedOrders(LocalDate effectiveDate) {
         log.info("受注データを投入中...");
 
-        // 受注1（百貨店向け）
-        Order order1 = new Order(
-            "ORD-2025-001", LocalDate.of(2025, 1, 10),
-            "CUS-001", effectiveDate, OrderStatus.CONFIRMED,
-            "EMP-009", effectiveDate
-        );
-        orderMapper.insert(order1);
-        orderDetailMapper.insert(new OrderDetail(
-            "ORD-2025-001", 1, "BEEF-001", effectiveDate,
-            new BigDecimal("10"), new BigDecimal("8000"), new BigDecimal("80000")
-        ));
-        orderDetailMapper.insert(new OrderDetail(
-            "ORD-2025-001", 2, "PROC-001", effectiveDate,
-            new BigDecimal("20"), new BigDecimal("3500"), new BigDecimal("70000")
-        ));
+        // 受注1（百貨店向け）- 引当済み
+        SalesOrder order1 = SalesOrder.builder()
+            .orderNumber("ORD-2025-001")
+            .orderDate(LocalDate.of(2025, 1, 10))
+            .customerCode("CUS-001")
+            .representativeCode("EMP-009")
+            .requestedDeliveryDate(LocalDate.of(2025, 1, 15))
+            .status(OrderStatus.ALLOCATED)
+            .details(List.of(
+                createOrderDetail(1, "BEEF-001", "黒毛和牛サーロイン", 10, 8000),
+                createOrderDetail(2, "PROC-001", "ローストビーフ", 20, 3500)
+            ))
+            .build();
+        salesOrderRepository.save(order1);
 
-        // 受注2（スーパー向け）
-        Order order2 = new Order(
-            "ORD-2025-002", LocalDate.of(2025, 1, 12),
-            "CUS-003", effectiveDate, OrderStatus.CONFIRMED,
-            "EMP-009", effectiveDate
-        );
-        orderMapper.insert(order2);
-        orderDetailMapper.insert(new OrderDetail(
-            "ORD-2025-002", 1, "PORK-001", effectiveDate,
-            new BigDecimal("50"), new BigDecimal("1200"), new BigDecimal("60000")
-        ));
-        orderDetailMapper.insert(new OrderDetail(
-            "ORD-2025-002", 2, "CHKN-001", effectiveDate,
-            new BigDecimal("100"), new BigDecimal("480"), new BigDecimal("48000")
-        ));
+        // 受注2（スーパー向け）- 引当済み
+        SalesOrder order2 = SalesOrder.builder()
+            .orderNumber("ORD-2025-002")
+            .orderDate(LocalDate.of(2025, 1, 12))
+            .customerCode("CUS-003")
+            .representativeCode("EMP-009")
+            .requestedDeliveryDate(LocalDate.of(2025, 1, 18))
+            .status(OrderStatus.ALLOCATED)
+            .details(List.of(
+                createOrderDetail(1, "PORK-001", "豚ロース", 50, 1200),
+                createOrderDetail(2, "CHKN-001", "鶏もも", 100, 480)
+            ))
+            .build();
+        salesOrderRepository.save(order2);
 
-        // 受注3（ホテル向け）
-        Order order3 = new Order(
-            "ORD-2025-003", LocalDate.of(2025, 1, 15),
-            "CUS-005", effectiveDate, OrderStatus.SHIPPED,
-            "EMP-010", effectiveDate
-        );
-        orderMapper.insert(order3);
-        orderDetailMapper.insert(new OrderDetail(
-            "ORD-2025-003", 1, "BEEF-002", effectiveDate,
-            new BigDecimal("30"), new BigDecimal("6000"), new BigDecimal("180000")
-        ));
-        orderDetailMapper.insert(new OrderDetail(
-            "ORD-2025-003", 2, "BEEF-003", effectiveDate,
-            new BigDecimal("25"), new BigDecimal("5500"), new BigDecimal("137500")
-        ));
+        // 受注3（ホテル向け）- 出荷済み
+        SalesOrder order3 = SalesOrder.builder()
+            .orderNumber("ORD-2025-003")
+            .orderDate(LocalDate.of(2025, 1, 15))
+            .customerCode("CUS-005")
+            .representativeCode("EMP-010")
+            .requestedDeliveryDate(LocalDate.of(2025, 1, 17))
+            .status(OrderStatus.SHIPPED)
+            .details(List.of(
+                createOrderDetail(1, "BEEF-002", "黒毛和牛ロース", 30, 6000),
+                createOrderDetail(2, "BEEF-003", "黒毛和牛カルビ", 25, 5500)
+            ))
+            .build();
+        salesOrderRepository.save(order3);
 
         log.info("受注データ 3件 投入完了");
     }
 
-    private void seedShipments(LocalDate effectiveDate) {
-        log.info("出荷データを投入中...");
+    private SalesOrderDetail createOrderDetail(int lineNumber, String productCode,
+                                                 String productName, int quantity, int unitPrice) {
+        BigDecimal qty = new BigDecimal(quantity);
+        BigDecimal price = new BigDecimal(unitPrice);
+        BigDecimal amount = qty.multiply(price);
+        BigDecimal taxRate = new BigDecimal("10.00");
+        BigDecimal taxAmount = amount.multiply(taxRate).divide(new BigDecimal("100"));
 
-        // 出荷1（受注3に対応）
-        Shipment shipment1 = new Shipment(
-            "SHP-2025-001", LocalDate.of(2025, 1, 16),
-            "ORD-2025-003", "CUS-005", effectiveDate,
-            ShipmentStatus.SHIPPED, "WH-HQ", effectiveDate
-        );
-        shipmentMapper.insert(shipment1);
-        shipmentDetailMapper.insert(new ShipmentDetail(
-            "SHP-2025-001", 1, "BEEF-002", effectiveDate,
-            new BigDecimal("30")
-        ));
-        shipmentDetailMapper.insert(new ShipmentDetail(
-            "SHP-2025-001", 2, "BEEF-003", effectiveDate,
-            new BigDecimal("25")
-        ));
-
-        log.info("出荷データ 1件 投入完了");
-    }
-
-    private void seedSales(LocalDate effectiveDate) {
-        log.info("売上データを投入中...");
-
-        // 売上1（出荷1に対応）
-        Sales sales1 = new Sales(
-            "SAL-2025-001", LocalDate.of(2025, 1, 16),
-            "SHP-2025-001", "CUS-005", effectiveDate,
-            new BigDecimal("317500"), new BigDecimal("31750"),
-            new BigDecimal("349250")
-        );
-        salesMapper.insert(sales1);
-        salesDetailMapper.insert(new SalesDetail(
-            "SAL-2025-001", 1, "BEEF-002", effectiveDate,
-            new BigDecimal("30"), new BigDecimal("6000"), new BigDecimal("180000")
-        ));
-        salesDetailMapper.insert(new SalesDetail(
-            "SAL-2025-001", 2, "BEEF-003", effectiveDate,
-            new BigDecimal("25"), new BigDecimal("5500"), new BigDecimal("137500")
-        ));
-
-        log.info("売上データ 1件 投入完了");
-    }
-
-    private void seedPurchases(LocalDate effectiveDate) {
-        log.info("発注データを投入中...");
-
-        // 発注1（食肉卸A社から）
-        Purchase purchase1 = new Purchase(
-            "PUR-2025-001", LocalDate.of(2025, 1, 8),
-            "SUP-001", effectiveDate, PurchaseStatus.RECEIVED,
-            LocalDate.of(2025, 1, 12)
-        );
-        purchaseMapper.insert(purchase1);
-        purchaseDetailMapper.insert(new PurchaseDetail(
-            "PUR-2025-001", 1, "BEEF-001", effectiveDate,
-            new BigDecimal("30"), new BigDecimal("5000"), new BigDecimal("150000")
-        ));
-        purchaseDetailMapper.insert(new PurchaseDetail(
-            "PUR-2025-001", 2, "BEEF-002", effectiveDate,
-            new BigDecimal("50"), new BigDecimal("3800"), new BigDecimal("190000")
-        ));
-
-        // 発注2（畜産農家から）
-        Purchase purchase2 = new Purchase(
-            "PUR-2025-002", LocalDate.of(2025, 1, 10),
-            "SUP-003", effectiveDate, PurchaseStatus.ORDERED,
-            LocalDate.of(2025, 1, 20)
-        );
-        purchaseMapper.insert(purchase2);
-        purchaseDetailMapper.insert(new PurchaseDetail(
-            "PUR-2025-002", 1, "PORK-001", effectiveDate,
-            new BigDecimal("100"), new BigDecimal("750"), new BigDecimal("75000")
-        ));
-        purchaseDetailMapper.insert(new PurchaseDetail(
-            "PUR-2025-002", 2, "CHKN-001", effectiveDate,
-            new BigDecimal("200"), new BigDecimal("280"), new BigDecimal("56000")
-        ));
-
-        log.info("発注データ 2件 投入完了");
+        return SalesOrderDetail.builder()
+            .lineNumber(lineNumber)
+            .productCode(productCode)
+            .productName(productName)
+            .orderQuantity(qty)
+            .unitPrice(price)
+            .amount(amount)
+            .taxCategory(TaxCategory.EXCLUSIVE)
+            .taxRate(taxRate)
+            .taxAmount(taxAmount)
+            .warehouseCode("WH-HQ")
+            .build();
     }
 }
 ```
+
+**注**: 出荷・売上データは受注明細への依存関係が複雑なため、初期シードでは投入しません。これらは別途のユースケースで実装します。
 
 </details>
 
@@ -1190,33 +1089,19 @@ java -jar build/libs/sms-backend.jar
 部門マスタを投入中...
 部門マスタ 21件 投入完了
 倉庫マスタを投入中...
-倉庫マスタ 2件 投入完了
-ロケーションマスタを投入中...
-ロケーションマスタ 9件 投入完了
-取引先グループマスタを投入中...
-取引先グループマスタ 7件 投入完了
-取引先マスタを投入中...
-取引先マスタ 14件 投入完了
-顧客マスタを投入中...
-顧客マスタ 10件 投入完了
-仕入先マスタを投入中...
-仕入先マスタ 4件 投入完了
+倉庫マスタ 3件 投入完了
 商品分類マスタを投入中...
 商品分類マスタ 4件 投入完了
 商品マスタを投入中...
 商品マスタ 20件 投入完了
+取引先マスタを投入中...
+取引先マスタ 14件 投入完了
 社員マスタを投入中...
 社員マスタ 24件 投入完了
 在庫情報を投入中...
-在庫情報 12件 投入完了
+在庫情報 20件 投入完了
 受注データを投入中...
 受注データ 3件 投入完了
-出荷データを投入中...
-出荷データ 1件 投入完了
-売上データを投入中...
-売上データ 1件 投入完了
-発注データを投入中...
-発注データ 2件 投入完了
 ========================================
 販売管理システム Seed データ投入完了!
 ========================================
@@ -1225,67 +1110,52 @@ java -jar build/libs/sms-backend.jar
 ### データの検証と活用
 
 <details>
-<summary>SeedDataIntegrationTest.java</summary>
+<summary>SeedDataServiceTest.java</summary>
 
 ```java
-package com.example.sales.integration;
+package com.example.sms.infrastructure.datasource.seed;
 
-import com.example.sales.domain.model.master.*;
-import com.example.sales.domain.model.sales.*;
-import com.example.sales.infrastructure.datasource.seed.SeedDataService;
-import com.example.sales.infrastructure.mapper.*;
+import com.example.sms.application.port.out.*;
+import com.example.sms.domain.model.department.Department;
+import com.example.sms.domain.model.inventory.Inventory;
+import com.example.sms.domain.model.partner.Partner;
+import com.example.sms.domain.model.product.Product;
+import com.example.sms.domain.model.sales.SalesOrder;
+import com.example.sms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@Testcontainers
-@DisplayName("Seed データ整合性チェック")
-class SeedDataIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
-            .withDatabaseName("sales_test")
-            .withUsername("test")
-            .withPassword("test");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+/**
+ * Seed データ投入サービス統合テスト.
+ */
+@DisplayName("Seed データ投入サービス")
+class SeedDataServiceTest extends BaseIntegrationTest {
 
     @Autowired
     private SeedDataService seedDataService;
 
     @Autowired
-    private DepartmentMapper departmentMapper;
+    private DepartmentRepository departmentRepository;
 
     @Autowired
-    private ProductMapper productMapper;
+    private PartnerRepository partnerRepository;
 
     @Autowired
-    private PartnerMapper partnerMapper;
+    private ProductRepository productRepository;
 
     @Autowired
-    private InventoryMapper inventoryMapper;
+    private InventoryRepository inventoryRepository;
 
     @Autowired
-    private OrderMapper orderMapper;
+    private SalesOrderRepository salesOrderRepository;
 
     @BeforeEach
-    void seedData() {
+    void setUp() {
         seedDataService.seedAll();
     }
 
@@ -1294,33 +1164,38 @@ class SeedDataIntegrationTest {
     class MasterDataValidation {
 
         @Test
+        @DisplayName("部門マスタが21件投入される")
+        void seedsDepartments() {
+            List<Department> departments = departmentRepository.findAll();
+            assertThat(departments).hasSize(21);
+        }
+
+        @Test
         @DisplayName("すべての部門が階層構造を持つ")
         void allDepartmentsHaveHierarchy() {
-            List<Department> departments = departmentMapper.findAll();
+            List<Department> departments = departmentRepository.findAll();
 
-            assertThat(departments).hasSize(21);
             for (Department dept : departments) {
-                assertThat(dept.getPath()).isNotBlank();
-                assertThat(dept.getLayer()).isPositive();
+                assertThat(dept.getDepartmentPath()).isNotBlank();
+                assertThat(dept.getHierarchyLevel()).isPositive();
             }
         }
 
         @Test
-        @DisplayName("すべての商品が分類に所属している")
-        void allProductsBelongToCategory() {
-            List<Product> products = productMapper.findAll();
-
+        @DisplayName("商品マスタが20件投入される")
+        void seedsProducts() {
+            List<Product> products = productRepository.findAll();
             assertThat(products).hasSize(20);
-            for (Product product : products) {
-                assertThat(product.getCategoryCode()).isNotBlank();
-            }
         }
 
         @Test
-        @DisplayName("得意先と仕入先が正しく区分されている")
-        void customersAndSuppliersAreCorrectlyClassified() {
-            List<Partner> customers = partnerMapper.findByType(PartnerType.CUSTOMER);
-            List<Partner> suppliers = partnerMapper.findByType(PartnerType.SUPPLIER);
+        @DisplayName("取引先マスタが14件投入される（得意先10件、仕入先4件）")
+        void seedsPartners() {
+            List<Partner> partners = partnerRepository.findAll();
+            assertThat(partners).hasSize(14);
+
+            List<Partner> customers = partnerRepository.findCustomers();
+            List<Partner> suppliers = partnerRepository.findSuppliers();
 
             assertThat(customers).hasSize(10);
             assertThat(suppliers).hasSize(4);
@@ -1328,62 +1203,69 @@ class SeedDataIntegrationTest {
     }
 
     @Nested
-    @DisplayName("在庫数量の正確性検証")
+    @DisplayName("在庫データの妥当性検証")
     class InventoryValidation {
+
+        @Test
+        @DisplayName("在庫データが20件投入される")
+        void seedsInventories() {
+            List<Inventory> inventories = inventoryRepository.findAll();
+            assertThat(inventories).hasSize(20);
+        }
 
         @Test
         @DisplayName("在庫数量が0以上である")
         void inventoryQuantityIsNonNegative() {
-            List<Inventory> inventories = inventoryMapper.findAll();
-
-            assertThat(inventories).isNotEmpty();
-            for (Inventory inventory : inventories) {
-                assertThat(inventory.getQuantity()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-                assertThat(inventory.getAllocatedQuantity()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
-            }
-        }
-
-        @Test
-        @DisplayName("引当数量が在庫数量を超えていない")
-        void allocatedQuantityDoesNotExceedInventory() {
-            List<Inventory> inventories = inventoryMapper.findAll();
+            List<Inventory> inventories = inventoryRepository.findAll();
 
             for (Inventory inventory : inventories) {
-                assertThat(inventory.getAllocatedQuantity())
-                    .isLessThanOrEqualTo(inventory.getQuantity());
+                assertThat(inventory.getCurrentQuantity())
+                    .isGreaterThanOrEqualTo(BigDecimal.ZERO);
             }
         }
     }
 
     @Nested
-    @DisplayName("受注データの整合性確認")
-    class OrderIntegrity {
+    @DisplayName("受注データの妥当性検証")
+    class OrderValidation {
+
+        @Test
+        @DisplayName("受注データが3件投入される")
+        void seedsOrders() {
+            List<SalesOrder> orders = salesOrderRepository.findAll();
+            assertThat(orders).hasSize(3);
+        }
 
         @Test
         @DisplayName("受注に対応する顧客が存在する")
         void orderHasValidCustomer() {
-            List<Order> orders = orderMapper.findAll();
+            List<SalesOrder> orders = salesOrderRepository.findAll();
 
-            assertThat(orders).isNotEmpty();
-            for (Order order : orders) {
-                Partner customer = partnerMapper.findByCode(order.getCustomerCode());
-                assertThat(customer).isNotNull();
-                assertThat(customer.getPartnerType()).isEqualTo(PartnerType.CUSTOMER);
+            for (SalesOrder order : orders) {
+                var customer = partnerRepository.findByCode(order.getCustomerCode());
+                assertThat(customer).isPresent();
+                assertThat(customer.get().isCustomer()).isTrue();
             }
         }
+    }
+
+    @Nested
+    @DisplayName("再投入時の挙動")
+    class ReseededBehavior {
 
         @Test
-        @DisplayName("受注明細の金額が正しく計算されている")
-        void orderDetailAmountIsCorrectlyCalculated() {
-            List<Order> orders = orderMapper.findAll();
+        @DisplayName("seedAll を複数回実行してもデータ件数が一定")
+        void seedAllIsIdempotent() {
+            // 2回目の投入
+            seedDataService.seedAll();
 
-            for (Order order : orders) {
-                for (OrderDetail detail : order.getDetails()) {
-                    BigDecimal expectedAmount = detail.getUnitPrice()
-                        .multiply(detail.getQuantity());
-                    assertThat(detail.getAmount()).isEqualByComparingTo(expectedAmount);
-                }
-            }
+            List<Department> departments = departmentRepository.findAll();
+            List<Product> products = productRepository.findAll();
+            List<Partner> partners = partnerRepository.findAll();
+
+            assertThat(departments).hasSize(21);
+            assertThat(products).hasSize(20);
+            assertThat(partners).hasSize(14);
         }
     }
 }
@@ -1401,7 +1283,7 @@ B 社の事例を通じて、販売管理システムのデータ設計と Seed 
 
 | カテゴリ | 内容 |
 |---------|------|
-| **マスタデータ** | 部門 21 件、取引先 14 件、商品 20 件、社員 24 件、倉庫 3 件 |
+| **マスタデータ** | 部門 21 件、取引先 14 件、商品 20 件、社員 24 件、倉庫 3 件、商品分類 4 件 |
 | **トランザクション** | 受注 3 件、在庫 20 件 |
 | **備考** | 出荷・売上データは受注明細への依存関係が複雑なため、初期シードでは投入しない |
 
@@ -1409,20 +1291,21 @@ B 社の事例を通じて、販売管理システムのデータ設計と Seed 
 
 | 特徴 | データ設計への反映 |
 |------|-------------------|
-| 多様な販路 | 取引先グループによる分類管理（7 グループ） |
-| 自社製造能力 | 工場倉庫と加工品カテゴリの分離 |
-| 高品質へのこだわり | 商品マスタでの標準売価・原価管理 |
-| 地域密着 | 食肉卸・畜産業者の仕入先分類 |
+| 多様な販路 | 得意先 10 件（百貨店、スーパー、ホテル等）の管理 |
+| 自社製造能力 | 工場倉庫（WH-FAC）と加工品カテゴリの分離 |
+| 高品質へのこだわり | 商品マスタでの標準売価・仕入価格管理 |
+| 地域密着 | 食肉卸・畜産業者の仕入先 4 件 |
 
 ### 技術的なポイント
 
 | ポイント | 内容 |
 |---------|------|
+| **ヘキサゴナルアーキテクチャ** | Repository（出力ポート）経由でデータ投入 |
 | **外部キー制約** | マスタ → トランザクションの順で投入 |
-| **複合キー** | 適用開始日を含む複合主キーへの対応 |
 | **日本語テーブル名** | MyBatis でダブルクォートで囲む |
 | **ENUM マッピング** | 日本語 DB 値 ↔ 英語 Java 値の変換 |
-| **Spring Profile** | `seed` プロファイルで本番誤実行を防止 |
+| **Spring Profile** | `default` プロファイルでアプリ起動時に自動投入 |
+| **Builder パターン** | ドメインモデルの生成に Builder パターンを使用 |
 
 ### ER 図（本章で扱ったテーブル）
 
