@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title th:text="${isNew} ? '部門登録' : '部門編集'">部門登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title" th:text="${isNew} ? '部門登録' : '部門編集'">部門登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/departments}" class="btn btn-secondary">
+            一覧に戻る
+        </a>
+    </div>
+
+    <!-- 登録/編集フォーム -->
+    <div class="card">
+        <div class="card-body">
+            <form th:action="${isNew} ? @{/departments} : @{/departments/{code}(code=${department.departmentCode})}"
+                  th:object="${department}" method="post">
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="departmentCode" class="form-label">部門コード <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="departmentCode"
+                               th:field="*{departmentCode}"
+                               th:readonly="${!isNew}"
+                               required maxlength="10"
+                               placeholder="例: DEPT001">
+                        <div class="form-text">半角英数字10文字以内</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="departmentName" class="form-label">部門名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="departmentName"
+                               th:field="*{departmentName}"
+                               required maxlength="100"
+                               placeholder="例: 営業部">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="startDate" class="form-label">開始日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="startDate"
+                               th:field="*{startDate}"
+                               required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="endDate" class="form-label">終了日</label>
+                        <input type="date" class="form-control" id="endDate"
+                               th:field="*{endDate}">
+                        <div class="form-text">未設定の場合は無期限</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="hierarchyLevel" class="form-label">階層レベル</label>
+                        <select class="form-select" id="hierarchyLevel" th:field="*{hierarchyLevel}">
+                            <option value="0">レベル0（最上位）</option>
+                            <option value="1">レベル1</option>
+                            <option value="2">レベル2</option>
+                            <option value="3">レベル3</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="departmentPath" class="form-label">部門パス</label>
+                        <input type="text" class="form-control" id="departmentPath"
+                               th:field="*{departmentPath}"
+                               maxlength="500"
+                               placeholder="例: /DEPT001/DEPT002">
+                        <div class="form-text">階層構造を表すパス</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="isLeaf"
+                                   th:field="*{leaf}">
+                            <label class="form-check-label" for="isLeaf">末端部門</label>
+                        </div>
+                        <div class="form-text">配下に部門を持たない場合はチェック</div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary" th:text="${isNew} ? '登録' : '更新'">登録</button>
+                    <a th:href="@{/departments}" class="btn btn-outline-secondary ms-2">キャンセル</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

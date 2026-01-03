@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>部門マスタ一覧</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">部門マスタ</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons mb-3">
+        <a th:href="@{/departments/new}" class="btn btn-primary">新規登録</a>
+    </div>
+
+    <!-- 検索フォーム -->
+    <div class="search-form">
+        <form th:action="@{/departments}" method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">階層レベル</label>
+                <select name="level" class="form-select">
+                    <option value="">すべて</option>
+                    <option value="0" th:selected="${selectedLevel != null and selectedLevel == 0}">レベル0</option>
+                    <option value="1" th:selected="${selectedLevel != null and selectedLevel == 1}">レベル1</option>
+                    <option value="2" th:selected="${selectedLevel != null and selectedLevel == 2}">レベル2</option>
+                    <option value="3" th:selected="${selectedLevel != null and selectedLevel == 3}">レベル3</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">キーワード</label>
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="部門コード、部門名">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">検索</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 部門一覧テーブル -->
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>部門コード</th>
+                <th>部門名</th>
+                <th>開始日</th>
+                <th>終了日</th>
+                <th>階層レベル</th>
+                <th>パス</th>
+                <th class="table-actions">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="department : ${departments}">
+                <td>
+                    <a th:href="@{/departments/{code}(code=${department.departmentCode})}"
+                       th:text="${department.departmentCode}"></a>
+                </td>
+                <td th:text="${department.departmentName}"></td>
+                <td th:text="${department.startDate != null ? #temporals.format(department.startDate, 'yyyy/MM/dd') : '-'}"></td>
+                <td th:text="${department.endDate != null ? #temporals.format(department.endDate, 'yyyy/MM/dd') : '-'}"></td>
+                <td>
+                    <span class="badge bg-secondary" th:text="${department.hierarchyLevel}"></span>
+                </td>
+                <td th:text="${department.departmentPath ?: '-'}"></td>
+                <td class="table-actions">
+                    <div class="btn-group btn-group-sm">
+                        <a th:href="@{/departments/{code}(code=${department.departmentCode})}"
+                           class="btn btn-outline-primary">詳細</a>
+                        <a th:href="@{/departments/{code}/edit(code=${department.departmentCode})}"
+                           class="btn btn-outline-secondary">編集</a>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(departments)}">
+                <td colspan="7" class="text-center text-muted">部門データがありません</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 件数表示 -->
+    <div class="text-muted">
+        <span th:text="${#lists.size(departments)}">0</span> 件
+    </div>
+</div>
+</body>
+</html>
