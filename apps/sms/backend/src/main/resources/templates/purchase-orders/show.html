@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>発注詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">発注詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/purchase-orders}" class="btn btn-secondary">
+            一覧に戻る
+        </a>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">基本情報</h5>
+            <span class="badge"
+                  th:classappend="${purchaseOrder.status.name() == 'CANCELLED' ? 'bg-danger' :
+                                   purchaseOrder.status.name() == 'COMPLETED' ? 'bg-success' :
+                                   purchaseOrder.status.name() == 'PARTIALLY_RECEIVED' ? 'bg-info' :
+                                   purchaseOrder.status.name() == 'CONFIRMED' ? 'bg-primary' : 'bg-secondary'}"
+                  th:text="${purchaseOrder.status.displayName}"></span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>発注番号</dt>
+                        <dd th:text="${purchaseOrder.purchaseOrderNumber}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>仕入先コード</dt>
+                        <dd th:text="${purchaseOrder.supplierCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>発注日</dt>
+                        <dd th:text="${purchaseOrder.orderDate != null ? #temporals.format(purchaseOrder.orderDate, 'yyyy/MM/dd') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>希望納期</dt>
+                        <dd th:text="${purchaseOrder.desiredDeliveryDate != null ? #temporals.format(purchaseOrder.desiredDeliveryDate, 'yyyy/MM/dd') : '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row" th:if="${purchaseOrder.remarks != null and !purchaseOrder.remarks.isBlank()}">
+                <div class="col-12">
+                    <dl>
+                        <dt>備考</dt>
+                        <dd th:text="${purchaseOrder.remarks}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 金額情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">金額情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <dl>
+                        <dt>発注金額（税抜）</dt>
+                        <dd class="fs-5" th:text="${#numbers.formatDecimal(purchaseOrder.totalAmount, 1, 0) + ' 円'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-4">
+                    <dl>
+                        <dt>消費税</dt>
+                        <dd class="fs-5" th:text="${#numbers.formatDecimal(purchaseOrder.taxAmount, 1, 0) + ' 円'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-4">
+                    <dl>
+                        <dt>発注金額（税込）</dt>
+                        <dd class="fs-4 fw-bold" th:text="${#numbers.formatDecimal(purchaseOrder.totalAmount + purchaseOrder.taxAmount, 1, 0) + ' 円'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 明細一覧 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">発注明細</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>行番号</th>
+                        <th>商品コード</th>
+                        <th class="text-end">発注数量</th>
+                        <th class="text-end">単価</th>
+                        <th class="text-end">金額</th>
+                        <th>希望納期</th>
+                        <th class="text-end">入荷数</th>
+                        <th class="text-end">残数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detail : ${purchaseOrder.details}">
+                        <td th:text="${detail.lineNumber}"></td>
+                        <td th:text="${detail.productCode}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.orderQuantity, 1, 0)}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.unitPrice, 1, 0) + ' 円'}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.orderAmount, 1, 0) + ' 円'}"></td>
+                        <td th:text="${detail.expectedDeliveryDate != null ? #temporals.format(detail.expectedDeliveryDate, 'yyyy/MM/dd') : '-'}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.receivedQuantity, 1, 0)}"></td>
+                        <td class="text-end">
+                            <span th:class="${detail.remainingQuantity.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'text-warning fw-bold' : 'text-success'}"
+                                  th:text="${#numbers.formatDecimal(detail.remainingQuantity, 1, 0)}"></span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(purchaseOrder.details)}">
+                        <td colspan="8" class="text-center text-muted">明細がありません</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">システム情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成日時</dt>
+                        <dd th:text="${purchaseOrder.createdAt != null ? #temporals.format(purchaseOrder.createdAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成者</dt>
+                        <dd th:text="${purchaseOrder.createdBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新日時</dt>
+                        <dd th:text="${purchaseOrder.updatedAt != null ? #temporals.format(purchaseOrder.updatedAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新者</dt>
+                        <dd th:text="${purchaseOrder.updatedBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
