@@ -43,6 +43,16 @@ public class QuotationRepositoryImpl implements QuotationRepository {
     }
 
     @Override
+    public Optional<Quotation> findWithDetailsByQuotationNumber(String quotationNumber) {
+        return quotationMapper.findByQuotationNumber(quotationNumber)
+            .map(quotation -> {
+                List<QuotationDetail> details = quotationMapper.findDetailsByQuotationId(quotation.getId());
+                quotation.setDetails(details);
+                return quotation;
+            });
+    }
+
+    @Override
     public List<Quotation> findByCustomerCode(String customerCode) {
         return quotationMapper.findByCustomerCode(customerCode);
     }

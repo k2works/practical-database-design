@@ -18,6 +18,8 @@ public interface QuotationRepository {
 
     Optional<Quotation> findByQuotationNumber(String quotationNumber);
 
+    Optional<Quotation> findWithDetailsByQuotationNumber(String quotationNumber);
+
     List<Quotation> findByCustomerCode(String customerCode);
 
     List<Quotation> findByStatus(QuotationStatus status);
