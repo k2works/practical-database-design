@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>請求詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">請求詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/invoices}" class="btn btn-outline-secondary">戻る</a>
+        <a th:if="${invoice.status.name() == 'DRAFT'}"
+           th:href="@{/invoices/{num}/edit(num=${invoice.invoiceNumber})}"
+           class="btn btn-primary">編集</a>
+        <form th:if="${invoice.status.name() == 'DRAFT'}"
+              th:action="@{/invoices/{num}/issue(num=${invoice.invoiceNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この請求を発行しますか？');">
+            <input type="hidden" name="version" th:value="${invoice.version}">
+            <button type="submit" class="btn btn-success">発行</button>
+        </form>
+        <form th:if="${invoice.status.name() == 'DRAFT'}"
+              th:action="@{/invoices/{num}/delete(num=${invoice.invoiceNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この請求を削除しますか？');">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 請求ヘッダー情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">請求情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">請求番号</div>
+                        <div class="col-8" th:text="${invoice.invoiceNumber}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">請求日</div>
+                        <div class="col-8" th:text="${#temporals.format(invoice.invoiceDate, 'yyyy/MM/dd')}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">顧客</div>
+                        <div class="col-8">
+                            <span th:text="${invoice.customerCode}"></span>
+                            <span th:if="${invoice.customerBranchNumber}" th:text="' - ' + ${invoice.customerBranchNumber}"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">締日</div>
+                        <div class="col-8" th:text="${invoice.closingDate != null ? #temporals.format(invoice.closingDate, 'yyyy/MM/dd') : '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">ステータス</div>
+                        <div class="col-8">
+                            <span class="badge"
+                                  th:classappend="${invoice.status.name() == 'OVERDUE' ? 'bg-danger' :
+                                                   invoice.status.name() == 'PAID' ? 'bg-success' :
+                                                   invoice.status.name() == 'DRAFT' ? 'bg-secondary' : 'bg-primary'}"
+                                  th:text="${invoice.status.displayName}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">支払期日</div>
+                        <div class="col-8" th:text="${invoice.dueDate != null ? #temporals.format(invoice.dueDate, 'yyyy/MM/dd') : '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">備考</div>
+                        <div class="col-8" th:text="${invoice.remarks ?: '-'}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 請求金額詳細 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">請求金額</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <tbody>
+                    <tr>
+                        <td class="fw-bold">前回請求残高</td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(invoice.previousBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">入金額</td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(invoice.receiptAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">繰越残高</td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(invoice.carriedBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-light">
+                        <td class="fw-bold">今回売上</td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(invoice.currentSalesAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-light">
+                        <td class="fw-bold">今回消費税</td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(invoice.currentTaxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-light">
+                        <td class="fw-bold">今回請求額</td>
+                        <td class="text-end amount fw-bold" th:text="${#numbers.formatDecimal(invoice.currentInvoiceAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-primary">
+                        <td class="fw-bold">請求残高</td>
+                        <td class="text-end amount fw-bold" th:text="${#numbers.formatDecimal(invoice.invoiceBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
