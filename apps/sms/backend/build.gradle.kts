@@ -57,6 +57,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.flywaydb:flyway-database-postgresql")
 
+    // === developmentOnly ===
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+
     // === runtimeOnly ===
     runtimeOnly("org.postgresql:postgresql")
 
