@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>受注一覧</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">受注</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/orders/new}" class="btn btn-primary">
+            新規登録
+        </a>
+    </div>
+
+    <!-- 検索フォーム -->
+    <div class="search-form">
+        <form th:action="@{/orders}" method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">ステータス</label>
+                <select name="status" class="form-select">
+                    <option value="">すべて</option>
+                    <option th:each="st : ${statuses}"
+                            th:value="${st.name()}"
+                            th:text="${st.displayName}"
+                            th:selected="${selectedStatus != null and selectedStatus.name() == st.name()}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">顧客</label>
+                <select name="customerCode" class="form-select">
+                    <option value="">すべて</option>
+                    <option th:each="cust : ${customers}"
+                            th:value="${cust.partnerCode}"
+                            th:text="${cust.partnerCode + ' - ' + cust.partnerName}"
+                            th:selected="${selectedCustomerCode == cust.partnerCode}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">キーワード</label>
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="受注番号、顧客注文番号">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">検索</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 受注一覧テーブル -->
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>受注番号</th>
+                <th>受注日</th>
+                <th>顧客</th>
+                <th>納品希望日</th>
+                <th class="text-end">受注金額</th>
+                <th>ステータス</th>
+                <th class="table-actions">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="order : ${orders}">
+                <td>
+                    <a th:href="@{/orders/{num}(num=${order.orderNumber})}"
+                       th:text="${order.orderNumber}"></a>
+                </td>
+                <td th:text="${#temporals.format(order.orderDate, 'yyyy/MM/dd')}"></td>
+                <td th:text="${order.customerCode}"></td>
+                <td th:text="${order.requestedDeliveryDate != null ? #temporals.format(order.requestedDeliveryDate, 'yyyy/MM/dd') : '-'}"></td>
+                <td class="text-end amount"
+                    th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${order.status.name() == 'CANCELLED' ? 'bg-danger' :
+                                           order.status.name() == 'SHIPPED' ? 'bg-success' :
+                                           order.status.name() == 'RECEIVED' ? 'bg-secondary' : 'bg-primary'}"
+                          th:text="${order.status.displayName}"></span>
+                </td>
+                <td class="table-actions">
+                    <div class="btn-group btn-group-sm">
+                        <a th:href="@{/orders/{num}(num=${order.orderNumber})}"
+                           class="btn btn-outline-primary">詳細</a>
+                        <a th:if="${order.status.name() == 'RECEIVED'}"
+                           th:href="@{/orders/{num}/edit(num=${order.orderNumber})}"
+                           class="btn btn-outline-secondary">編集</a>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(orders)}">
+                <td colspan="7" class="text-center text-muted">受注がありません</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 件数表示 -->
+    <div class="text-muted">
+        <span th:text="${#lists.size(orders)}">0</span> 件
+    </div>
+</div>
+</body>
+</html>
