@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>仕入先詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">仕入先詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/suppliers}" class="btn btn-secondary">一覧に戻る</a>
+        <a th:href="@{/suppliers/{code}/{branch}/edit(code=${supplier.supplierCode}, branch=${supplier.supplierBranchNumber})}"
+           class="btn btn-primary">編集</a>
+        <form th:action="@{/suppliers/{code}/{branch}/delete(code=${supplier.supplierCode}, branch=${supplier.supplierBranchNumber})}"
+              method="post" style="display:inline;"
+              onsubmit="return confirm('この仕入先を削除しますか？');">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 取引先情報 -->
+    <div class="card mb-4" th:if="${partner != null}">
+        <div class="card-header">
+            <h5 class="mb-0">取引先情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>取引先コード</dt>
+                        <dd th:text="${partner.partnerCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl>
+                        <dt>取引先名</dt>
+                        <dd th:text="${partner.partnerName}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>取引先名カナ</dt>
+                        <dd th:text="${partner.partnerNameKana ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>住所</dt>
+                        <dd>
+                            <span th:if="${partner.postalCode}">〒<span th:text="${partner.postalCode}"></span></span><br/>
+                            <span th:text="${partner.address1}"></span>
+                            <span th:text="${partner.address2}"></span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 仕入先情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">仕入先情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>仕入先コード</dt>
+                        <dd th:text="${supplier.supplierCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>枝番</dt>
+                        <dd th:text="${supplier.supplierBranchNumber}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>担当者名</dt>
+                        <dd th:text="${supplier.representativeName ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl>
+                        <dt>部門名</dt>
+                        <dd th:text="${supplier.departmentName ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 連絡先情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">連絡先情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <dl>
+                        <dt>電話番号</dt>
+                        <dd th:text="${supplier.phone ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-4">
+                    <dl>
+                        <dt>FAX番号</dt>
+                        <dd th:text="${supplier.fax ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-4">
+                    <dl>
+                        <dt>メールアドレス</dt>
+                        <dd th:text="${supplier.email ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">システム情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成日時</dt>
+                        <dd th:text="${supplier.createdAt != null ? #temporals.format(supplier.createdAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成者</dt>
+                        <dd th:text="${supplier.createdBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新日時</dt>
+                        <dd th:text="${supplier.updatedAt != null ? #temporals.format(supplier.updatedAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新者</dt>
+                        <dd th:text="${supplier.updatedBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
