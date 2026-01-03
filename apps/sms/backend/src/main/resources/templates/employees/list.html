@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>社員マスタ一覧</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">社員マスタ</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons mb-3">
+        <a th:href="@{/employees/new}" class="btn btn-primary">新規登録</a>
+    </div>
+
+    <!-- 検索フォーム -->
+    <div class="search-form">
+        <form th:action="@{/employees}" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">部門</label>
+                <select name="departmentCode" class="form-select">
+                    <option value="">すべて</option>
+                    <option th:each="dept : ${departments}"
+                            th:value="${dept.departmentCode}"
+                            th:text="${dept.departmentCode + ' - ' + dept.departmentName}"
+                            th:selected="${selectedDepartmentCode != null and selectedDepartmentCode == dept.departmentCode}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">キーワード</label>
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="社員コード、氏名、カナ">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">検索</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 社員一覧テーブル -->
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>社員コード</th>
+                <th>氏名</th>
+                <th>カナ</th>
+                <th>所属部門</th>
+                <th>部門開始日</th>
+                <th class="table-actions">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="employee : ${employees}">
+                <td>
+                    <a th:href="@{/employees/{code}(code=${employee.employeeCode})}"
+                       th:text="${employee.employeeCode}"></a>
+                </td>
+                <td th:text="${employee.employeeName}"></td>
+                <td th:text="${employee.employeeNameKana ?: '-'}"></td>
+                <td th:text="${employee.departmentCode ?: '-'}"></td>
+                <td th:text="${employee.departmentStartDate != null ? #temporals.format(employee.departmentStartDate, 'yyyy/MM/dd') : '-'}"></td>
+                <td class="table-actions">
+                    <div class="btn-group btn-group-sm">
+                        <a th:href="@{/employees/{code}(code=${employee.employeeCode})}"
+                           class="btn btn-outline-primary">詳細</a>
+                        <a th:href="@{/employees/{code}/edit(code=${employee.employeeCode})}"
+                           class="btn btn-outline-secondary">編集</a>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(employees)}">
+                <td colspan="6" class="text-center text-muted">社員データがありません</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 件数表示 -->
+    <div class="text-muted">
+        <span th:text="${#lists.size(employees)}">0</span> 件
+    </div>
+</div>
+</body>
+</html>
