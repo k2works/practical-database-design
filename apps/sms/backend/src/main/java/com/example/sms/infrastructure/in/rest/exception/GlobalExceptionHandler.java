@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * グローバル例外ハンドラー.
  */
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "com.example.sms.infrastructure.in.rest")
 @SuppressWarnings("PMD.GuardLogStatement")
 public class GlobalExceptionHandler {
 
