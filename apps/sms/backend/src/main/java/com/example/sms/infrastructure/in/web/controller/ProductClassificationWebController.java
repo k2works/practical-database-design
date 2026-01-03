@@ -1,6 +1,8 @@
 package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.ProductClassificationUseCase;
+import com.example.sms.application.port.in.ProductUseCase;
+import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductClassification;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,9 +25,13 @@ import java.util.Locale;
 public class ProductClassificationWebController {
 
     private final ProductClassificationUseCase classificationUseCase;
+    private final ProductUseCase productUseCase;
 
-    public ProductClassificationWebController(ProductClassificationUseCase classificationUseCase) {
+    public ProductClassificationWebController(
+            ProductClassificationUseCase classificationUseCase,
+            ProductUseCase productUseCase) {
         this.classificationUseCase = classificationUseCase;
+        this.productUseCase = productUseCase;
     }
 
     /**
@@ -57,7 +63,9 @@ public class ProductClassificationWebController {
     @GetMapping("/{classificationCode}")
     public String show(@PathVariable String classificationCode, Model model) {
         ProductClassification classification = classificationUseCase.getClassificationByCode(classificationCode);
+        List<Product> products = productUseCase.getProductsByClassification(classificationCode);
         model.addAttribute("classification", classification);
+        model.addAttribute("products", products);
         return "product-classifications/show";
     }
 

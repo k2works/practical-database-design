@@ -1,8 +1,12 @@
 package com.example.sms.infrastructure.in.web.controller;
 
+import com.example.sms.application.port.in.CustomerProductPriceUseCase;
+import com.example.sms.application.port.in.PartnerUseCase;
+import com.example.sms.application.port.in.ProductClassificationUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
+import com.example.sms.domain.model.product.ProductClassification;
 import com.example.sms.domain.model.product.TaxCategory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,6 +20,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -38,6 +43,15 @@ class ProductWebControllerTest {
 
     @MockitoBean
     private ProductUseCase productUseCase;
+
+    @MockitoBean
+    private ProductClassificationUseCase classificationUseCase;
+
+    @MockitoBean
+    private CustomerProductPriceUseCase customerProductPriceUseCase;
+
+    @MockitoBean
+    private PartnerUseCase partnerUseCase;
 
     @Nested
     @DisplayName("GET /products")
@@ -92,11 +106,14 @@ class ProductWebControllerTest {
         void shouldDisplayProductDetail() throws Exception {
             Product product = createTestProduct("WEB-004", "詳細商品");
             when(productUseCase.getProductByCode("WEB-004")).thenReturn(product);
+            when(customerProductPriceUseCase.getPricesByProduct("WEB-004"))
+                .thenReturn(Collections.emptyList());
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products/WEB-004"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("products/show"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("product"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("product"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("customerPrices"));
         }
     }
 
@@ -107,12 +124,16 @@ class ProductWebControllerTest {
         @Test
         @DisplayName("商品登録フォームを表示できる")
         void shouldDisplayNewProductForm() throws Exception {
+            when(classificationUseCase.getAllClassifications())
+                .thenReturn(List.of(createTestClassification()));
+
             mockMvc.perform(MockMvcRequestBuilders.get("/products/new"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("products/new"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("form"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("categories"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("taxCategories"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("taxCategories"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("classifications"));
         }
     }
 
@@ -145,6 +166,9 @@ class ProductWebControllerTest {
         @Test
         @DisplayName("バリデーションエラー時は登録フォームに戻る")
         void shouldReturnToFormOnValidationError() throws Exception {
+            when(classificationUseCase.getAllClassifications())
+                .thenReturn(List.of(createTestClassification()));
+
             mockMvc.perform(MockMvcRequestBuilders.post("/products")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .param("productCode", "")
@@ -164,13 +188,16 @@ class ProductWebControllerTest {
         void shouldDisplayEditProductForm() throws Exception {
             Product product = createTestProduct("WEB-EDIT-001", "編集商品");
             when(productUseCase.getProductByCode("WEB-EDIT-001")).thenReturn(product);
+            when(classificationUseCase.getAllClassifications())
+                .thenReturn(List.of(createTestClassification()));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products/WEB-EDIT-001/edit"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("products/edit"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("form"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("categories"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("taxCategories"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("taxCategories"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("classifications"));
         }
     }
 
@@ -232,6 +259,16 @@ class ProductWebControllerTest {
             .isMiscellaneous(false)
             .isInventoryManaged(true)
             .isInventoryAllocated(true)
+            .build();
+    }
+
+    private ProductClassification createTestClassification() {
+        return ProductClassification.builder()
+            .classificationCode(TEST_CLASSIFICATION_CODE)
+            .classificationName("テスト分類")
+            .classificationPath("/" + TEST_CLASSIFICATION_CODE)
+            .hierarchyLevel(1)
+            .isLeaf(true)
             .build();
     }
 }

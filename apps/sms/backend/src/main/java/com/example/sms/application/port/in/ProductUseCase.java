@@ -49,4 +49,12 @@ public interface ProductUseCase {
      * @param productCode 商品コード
      */
     void deleteProduct(String productCode);
+
+    /**
+     * 分類コードで商品を取得する.
+     *
+     * @param classificationCode 分類コード
+     * @return 商品リスト
+     */
+    List<Product> getProductsByClassification(String classificationCode);
 }

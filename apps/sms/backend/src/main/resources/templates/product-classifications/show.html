@@ -18,6 +18,10 @@
         <a th:href="@{/product-classifications/{code}/edit(code=${classification.classificationCode})}" class="btn btn-primary">
             編集
         </a>
+        <a th:href="@{/products/new(classificationCode=${classification.classificationCode})}"
+           class="btn btn-success">
+            この分類に商品を追加
+        </a>
     </div>
 
     <!-- 基本情報 -->
@@ -57,6 +61,48 @@
                     </dl>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 所属商品一覧 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">所属商品</h5>
+            <span class="badge bg-primary" th:text="${#lists.size(products)} + '件'"></span>
+        </div>
+        <div class="card-body">
+            <div th:if="${#lists.isEmpty(products)}" class="text-muted">
+                この分類に所属する商品はありません。
+            </div>
+            <table th:unless="${#lists.isEmpty(products)}" class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>商品コード</th>
+                        <th>商品名</th>
+                        <th>区分</th>
+                        <th class="text-end">販売単価</th>
+                        <th class="text-end">仕入単価</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="product : ${products}">
+                        <td th:text="${product.productCode}"></td>
+                        <td th:text="${product.productName}"></td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${product.productCategory?.name() == 'PRODUCT' ? 'bg-primary' : (product.productCategory?.name() == 'SERVICE' ? 'bg-success' : 'bg-secondary')}"
+                                  th:text="${product.productCategory?.displayName}"></span>
+                        </td>
+                        <td class="text-end" th:text="${product.sellingPrice != null ? #numbers.formatDecimal(product.sellingPrice, 1, 'COMMA', 0, 'POINT') + ' 円' : '-'}"></td>
+                        <td class="text-end" th:text="${product.purchasePrice != null ? #numbers.formatDecimal(product.purchasePrice, 1, 'COMMA', 0, 'POINT') + ' 円' : '-'}"></td>
+                        <td>
+                            <a th:href="@{/products/{code}(code=${product.productCode})}"
+                               class="btn btn-sm btn-outline-primary">詳細</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 

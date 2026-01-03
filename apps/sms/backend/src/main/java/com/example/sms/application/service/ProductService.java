@@ -104,4 +104,10 @@ public class ProductService implements ProductUseCase {
 
         productRepository.deleteByCode(productCode);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Product> getProductsByClassification(String classificationCode) {
+        return productRepository.findByClassificationCode(classificationCode);
+    }
 }
