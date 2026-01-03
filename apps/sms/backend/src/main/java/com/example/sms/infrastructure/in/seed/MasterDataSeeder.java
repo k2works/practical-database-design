@@ -6,6 +6,7 @@ import com.example.sms.application.port.out.EmployeeRepository;
 import com.example.sms.application.port.out.PartnerRepository;
 import com.example.sms.application.port.out.ProductClassificationRepository;
 import com.example.sms.application.port.out.ProductRepository;
+import com.example.sms.application.port.out.SupplierRepository;
 import com.example.sms.application.port.out.WarehouseRepository;
 import com.example.sms.domain.model.department.Department;
 import com.example.sms.domain.model.employee.Employee;
@@ -15,6 +16,7 @@ import com.example.sms.domain.model.partner.BillingType;
 import com.example.sms.domain.model.partner.Customer;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.partner.PaymentMethod;
+import com.example.sms.domain.model.partner.Supplier;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
 import com.example.sms.domain.model.product.ProductClassification;
@@ -43,8 +45,10 @@ public class MasterDataSeeder {
     private final PartnerRepository partnerRepository;
     private final ProductClassificationRepository productClassificationRepository;
     private final ProductRepository productRepository;
+    private final SupplierRepository supplierRepository;
     private final WarehouseRepository warehouseRepository;
 
+    @SuppressWarnings("PMD.ExcessiveParameterList")
     public MasterDataSeeder(
             CustomerRepository customerRepository,
             DepartmentRepository departmentRepository,
@@ -52,6 +56,7 @@ public class MasterDataSeeder {
             PartnerRepository partnerRepository,
             ProductClassificationRepository productClassificationRepository,
             ProductRepository productRepository,
+            SupplierRepository supplierRepository,
             WarehouseRepository warehouseRepository) {
         this.customerRepository = customerRepository;
         this.departmentRepository = departmentRepository;
@@ -59,6 +64,7 @@ public class MasterDataSeeder {
         this.partnerRepository = partnerRepository;
         this.productClassificationRepository = productClassificationRepository;
         this.productRepository = productRepository;
+        this.supplierRepository = supplierRepository;
         this.warehouseRepository = warehouseRepository;
     }
 
@@ -72,6 +78,7 @@ public class MasterDataSeeder {
         seedProducts();
         seedPartners();
         seedCustomers();
+        seedSuppliers();
         seedEmployees(effectiveDate);
     }
 
@@ -80,6 +87,7 @@ public class MasterDataSeeder {
      */
     public void cleanAll() {
         employeeRepository.deleteAll();
+        supplierRepository.deleteAll();
         customerRepository.deleteAll();
         productRepository.deleteAll();
         productClassificationRepository.deleteAll();
@@ -402,6 +410,41 @@ public class MasterDataSeeder {
             .paymentMonth1(paymentMonth)
             .paymentDay1(paymentDay)
             .paymentMethod1(paymentMethod)
+            .build();
+    }
+
+    private void seedSuppliers() {
+        LOG.info("仕入先マスタを投入中...");
+
+        List<Supplier> suppliers = List.of(
+            // 仕入先（食肉卸）
+            createSupplierMaster("SUP-001", "00", "仕入担当 太郎", "仕入部", "03-1111-2222",
+                "03-1111-2223", "sup001@example.com"),
+            createSupplierMaster("SUP-002", "00", "仕入担当 次郎", "購買部", "03-2222-3333",
+                "03-2222-3334", "sup002@example.com"),
+            // 仕入先（畜産業者）
+            createSupplierMaster("SUP-003", "00", "農場担当 三郎", "営業部", "03-3333-4444",
+                "03-3333-4445", "sup003@example.com"),
+            createSupplierMaster("SUP-004", "00", "組合担当 四郎", "出荷部", "03-4444-5555",
+                "03-4444-5556", "sup004@example.com")
+        );
+
+        suppliers.forEach(supplierRepository::save);
+        if (LOG.isInfoEnabled()) {
+            LOG.info("仕入先マスタ {}件 投入完了", suppliers.size());
+        }
+    }
+
+    private Supplier createSupplierMaster(String code, String branchNumber, String representativeName,
+                                           String departmentName, String phone, String fax, String email) {
+        return Supplier.builder()
+            .supplierCode(code)
+            .supplierBranchNumber(branchNumber)
+            .representativeName(representativeName)
+            .departmentName(departmentName)
+            .phone(phone)
+            .fax(fax)
+            .email(email)
             .build();
     }
 

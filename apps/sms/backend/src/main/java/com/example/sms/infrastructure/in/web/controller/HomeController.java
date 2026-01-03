@@ -18,6 +18,9 @@ public class HomeController {
         model.addAttribute("productClassificationCount", 0);
         model.addAttribute("productCount", 0);
         model.addAttribute("partnerCount", 0);
+        model.addAttribute("customerCount", 0);
+        model.addAttribute("supplierCount", 0);
+        model.addAttribute("warehouseCount", 0);
         model.addAttribute("estimateCount", 0);
         model.addAttribute("pendingOrderCount", 0);
         model.addAttribute("pendingShipmentCount", 0);
