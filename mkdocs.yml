@@ -114,6 +114,20 @@ nav:
           - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study2-2.md
           - 研究3 gRPCサービスの実装: article/study/study2-3.md
           - 研究4 GraphQLサービスの実装: article/study/study2-4.md
+      - 研究 財務会計システム実装編:
+          - 研究1 モノリスサービスの実装: article/study/study3-1.md
+          - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study3-2.md
+          - 研究3 gRPCサービスの実装: article/study/study3-3.md
+          - 研究4 GraphQLサービスの実装: article/study/study3-4.md
+      - 研究 財務会計システムORM実装編:
+          - 第14章 財務会計システムの全体像【ORM版】: article/part3-orm/chapter14-orm.md
+          - 第15章 勘定科目の設計【ORM版】: article/part3-orm/chapter15-orm.md
+          - 第16章 仕訳の設計【ORM版】: article/part3-orm/chapter16-orm.md
+          - 第17章 自動仕訳の設計【ORM版】: article/part3-orm/chapter17-orm.md
+          - 第18章 勘定科目残高の設計【ORM版】: article/part3-orm/chapter18-orm.md
+          - 第19章 赤黒とログの設計【ORM版】: article/part3-orm/chapter19-orm.md
+          - 第20章 財務会計データ設計（D社事例）【ORM版】: article/part3-orm/chapter20-orm.md
+          - 第21章 APIサービスの実装【ORM版】: article/part3-orm/chapter21-orm.md
       - 付録:
           - A 全体ER図: article/appendix/er-diagrams.md
           - B テーブル定義一覧: article/appendix/table-definitions.md
