@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>入金一覧</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">入金</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/receipts/new}" class="btn btn-primary">
+            新規登録
+        </a>
+    </div>
+
+    <!-- 検索フォーム -->
+    <div class="search-form">
+        <form th:action="@{/receipts}" method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">ステータス</label>
+                <select name="status" class="form-select">
+                    <option value="">すべて</option>
+                    <option th:each="st : ${statuses}"
+                            th:value="${st.name()}"
+                            th:text="${st.displayName}"
+                            th:selected="${selectedStatus != null and selectedStatus.name() == st.name()}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">顧客</label>
+                <select name="customerCode" class="form-select">
+                    <option value="">すべて</option>
+                    <option th:each="cust : ${customers}"
+                            th:value="${cust.partnerCode}"
+                            th:text="${cust.partnerCode + ' - ' + cust.partnerName}"
+                            th:selected="${selectedCustomerCode == cust.partnerCode}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">キーワード</label>
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="入金番号、振込人名">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">検索</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 入金一覧テーブル -->
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>入金番号</th>
+                <th>入金日</th>
+                <th>顧客</th>
+                <th>入金方法</th>
+                <th class="text-end">入金額</th>
+                <th class="text-end">未消込額</th>
+                <th>ステータス</th>
+                <th class="table-actions">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="receipt : ${receipts}">
+                <td>
+                    <a th:href="@{/receipts/{num}(num=${receipt.receiptNumber})}"
+                       th:text="${receipt.receiptNumber}"></a>
+                </td>
+                <td th:text="${#temporals.format(receipt.receiptDate, 'yyyy/MM/dd')}"></td>
+                <td th:text="${receipt.customerCode}"></td>
+                <td th:text="${receipt.receiptMethod.displayName}"></td>
+                <td class="text-end amount"
+                    th:text="${#numbers.formatDecimal(receipt.receiptAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="text-end amount"
+                    th:text="${#numbers.formatDecimal(receipt.unappliedAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${receipt.status.name() == 'APPLIED' ? 'bg-success' :
+                                           receipt.status.name() == 'OVERPAID' ? 'bg-danger' :
+                                           receipt.status.name() == 'RECEIVED' ? 'bg-primary' : 'bg-warning'}"
+                          th:text="${receipt.status.displayName}"></span>
+                </td>
+                <td class="table-actions">
+                    <div class="btn-group btn-group-sm">
+                        <a th:href="@{/receipts/{num}(num=${receipt.receiptNumber})}"
+                           class="btn btn-outline-primary">詳細</a>
+                        <a th:if="${receipt.status.name() == 'RECEIVED'}"
+                           th:href="@{/receipts/{num}/edit(num=${receipt.receiptNumber})}"
+                           class="btn btn-outline-secondary">編集</a>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(receipts)}">
+                <td colspan="8" class="text-center text-muted">入金がありません</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 件数表示 -->
+    <div class="text-muted">
+        <span th:text="${#lists.size(receipts)}">0</span> 件
+    </div>
+</div>
+</body>
+</html>

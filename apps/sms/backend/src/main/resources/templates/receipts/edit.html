@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>入金編集</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">入金編集</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/receipts/{num}(num=${form.receiptNumber})}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <form th:action="@{/receipts/{num}(num=${form.receiptNumber})}" th:object="${form}" method="post">
+        <input type="hidden" th:field="*{receiptNumber}">
+        <input type="hidden" th:field="*{version}">
+
+        <!-- 入金ヘッダー -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">入金情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- 入金番号（表示のみ） -->
+                    <div class="col-md-3">
+                        <label class="form-label">入金番号</label>
+                        <input type="text" th:value="${form.receiptNumber}"
+                               class="form-control" readonly>
+                    </div>
+
+                    <!-- 入金日（表示のみ） -->
+                    <div class="col-md-3">
+                        <label class="form-label">入金日</label>
+                        <input type="date" th:field="*{receiptDate}"
+                               class="form-control" readonly>
+                    </div>
+
+                    <!-- 顧客（表示のみ） -->
+                    <div class="col-md-4">
+                        <label class="form-label">顧客</label>
+                        <input type="text" th:value="${form.customerCode}"
+                               class="form-control" readonly>
+                        <input type="hidden" th:field="*{customerCode}">
+                    </div>
+
+                    <!-- 入金方法（表示のみ） -->
+                    <div class="col-md-3">
+                        <label class="form-label">入金方法</label>
+                        <input type="text" th:value="${form.receiptMethod.displayName}"
+                               class="form-control" readonly>
+                        <input type="hidden" th:field="*{receiptMethod}">
+                    </div>
+
+                    <!-- ステータス -->
+                    <div class="col-md-3">
+                        <label class="form-label">ステータス</label>
+                        <select th:field="*{status}" class="form-select">
+                            <option th:each="st : ${statuses}"
+                                    th:value="${st.name()}"
+                                    th:text="${st.displayName}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- 備考 -->
+                    <div class="col-md-12">
+                        <label class="form-label">備考</label>
+                        <textarea th:field="*{remarks}" class="form-control" rows="2"
+                                  th:classappend="${#fields.hasErrors('remarks')} ? 'is-invalid'"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('remarks')}"
+                             th:errors="*{remarks}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 入金金額（表示のみ） -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">入金金額</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">入金額</td>
+                            <td class="text-end amount" th:text="${#numbers.formatDecimal(form.receiptAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">振込手数料</td>
+                            <td class="text-end amount" th:text="${#numbers.formatDecimal(form.bankFee, 1, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                        <tr class="table-light">
+                            <td class="fw-bold">消込済額</td>
+                            <td class="text-end amount" th:text="${#numbers.formatDecimal(form.appliedAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                        <tr class="table-primary">
+                            <td class="fw-bold">未消込額</td>
+                            <td class="text-end amount fw-bold" th:text="${#numbers.formatDecimal(form.unappliedAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ボタン -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg">更新</button>
+            <a th:href="@{/receipts/{num}(num=${form.receiptNumber})}" class="btn btn-outline-secondary btn-lg">キャンセル</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>
