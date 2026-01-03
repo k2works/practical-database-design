@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>出荷詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">出荷詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/shipments}" class="btn btn-outline-secondary">戻る</a>
+        <a th:if="${shipment.status.name() == 'INSTRUCTED' or shipment.status.name() == 'PREPARING'}"
+           th:href="@{/shipments/{num}/edit(num=${shipment.shipmentNumber})}"
+           class="btn btn-primary">編集</a>
+        <form th:if="${shipment.status.name() == 'PREPARING'}"
+              th:action="@{/shipments/{num}/confirm(num=${shipment.shipmentNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この出荷を確定しますか？');">
+            <button type="submit" class="btn btn-success">出荷確定</button>
+        </form>
+        <form th:if="${shipment.status.name() == 'INSTRUCTED'}"
+              th:action="@{/shipments/{num}/delete(num=${shipment.shipmentNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この出荷を削除しますか？');">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 出荷ヘッダー情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">出荷情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">出荷番号</div>
+                        <div class="col-8" th:text="${shipment.shipmentNumber}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">出荷日</div>
+                        <div class="col-8" th:text="${#temporals.format(shipment.shipmentDate, 'yyyy/MM/dd')}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">顧客</div>
+                        <div class="col-8">
+                            <span th:text="${shipment.customerCode}"></span>
+                            <span th:if="${shipment.customerBranchNumber}" th:text="' - ' + ${shipment.customerBranchNumber}"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">ステータス</div>
+                        <div class="col-8">
+                            <span class="badge"
+                                  th:classappend="${shipment.status.name() == 'CANCELLED' ? 'bg-danger' :
+                                                   shipment.status.name() == 'SHIPPED' ? 'bg-success' :
+                                                   shipment.status.name() == 'INSTRUCTED' ? 'bg-secondary' : 'bg-primary'}"
+                                  th:text="${shipment.status.displayName}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">届け先名</div>
+                        <div class="col-8" th:text="${shipment.shippingDestinationName ?: '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">届け先住所</div>
+                        <div class="col-8">
+                            <span th:if="${shipment.shippingDestinationPostalCode}" th:text="'〒' + ${shipment.shippingDestinationPostalCode}"></span><br th:if="${shipment.shippingDestinationPostalCode}">
+                            <span th:text="${shipment.shippingDestinationAddress1 ?: ''}"></span>
+                            <span th:text="${shipment.shippingDestinationAddress2 ?: ''}"></span>
+                            <span th:if="${shipment.shippingDestinationAddress1 == null and shipment.shippingDestinationAddress2 == null}">-</span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">倉庫コード</div>
+                        <div class="col-8" th:text="${shipment.warehouseCode ?: '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">備考</div>
+                        <div class="col-8" th:text="${shipment.remarks ?: '-'}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 出荷明細 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">出荷明細</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>商品コード</th>
+                        <th>商品名</th>
+                        <th class="text-end">出荷数量</th>
+                        <th>単位</th>
+                        <th class="text-end">単価</th>
+                        <th class="text-end">金額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detail, stat : ${shipment.details}">
+                        <td th:text="${stat.count}"></td>
+                        <td th:text="${detail.productCode}"></td>
+                        <td th:text="${detail.productName}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.shippedQuantity, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td th:text="${detail.unit}"></td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(detail.unitPrice, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(detail.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
