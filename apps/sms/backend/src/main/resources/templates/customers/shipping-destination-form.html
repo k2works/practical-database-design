@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title th:text="${isNew} ? '出荷先登録' : '出荷先編集'">出荷先登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title" th:text="${isNew} ? '出荷先登録' : '出荷先編集'">出荷先登録</h1>
+
+    <!-- 顧客情報 -->
+    <div class="alert alert-info">
+        <strong>顧客:</strong>
+        <span th:text="${customer.customerCode}"></span>-<span th:text="${customer.customerBranchNumber}"></span>
+        <span th:text="${customer.customerName}"></span>
+    </div>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/customers/{code}/{branch}(code=${customer.customerCode}, branch=${customer.customerBranchNumber})}"
+           class="btn btn-secondary">顧客詳細に戻る</a>
+    </div>
+
+    <!-- 登録/編集フォーム -->
+    <div class="card">
+        <div class="card-body">
+            <form th:action="${isNew} ? @{/customers/{code}/{branch}/shipping-destinations(code=${customer.customerCode}, branch=${customer.customerBranchNumber})} : @{/customers/{code}/{branch}/shipping-destinations/{num}(code=${customer.customerCode}, branch=${customer.customerBranchNumber}, num=${shippingDestination.shippingNumber})}"
+                  th:object="${shippingDestination}" method="post">
+
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="shippingNumber" class="form-label">出荷先番号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="shippingNumber"
+                               th:field="*{shippingNumber}"
+                               th:readonly="${!isNew}"
+                               required maxlength="10"
+                               placeholder="例: 001">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="shippingName" class="form-label">出荷先名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="shippingName"
+                               th:field="*{shippingName}"
+                               required maxlength="100"
+                               placeholder="例: 東京支店">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="regionCode" class="form-label">地域コード</label>
+                        <input type="text" class="form-control" id="regionCode"
+                               th:field="*{regionCode}"
+                               maxlength="10">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <label for="postalCode" class="form-label">郵便番号</label>
+                        <input type="text" class="form-control" id="postalCode"
+                               th:field="*{postalCode}"
+                               maxlength="10"
+                               placeholder="123-4567">
+                    </div>
+                    <div class="col-md-5">
+                        <label for="address1" class="form-label">住所1</label>
+                        <input type="text" class="form-control" id="address1"
+                               th:field="*{address1}"
+                               maxlength="100">
+                    </div>
+                    <div class="col-md-5">
+                        <label for="address2" class="form-label">住所2</label>
+                        <input type="text" class="form-control" id="address2"
+                               th:field="*{address2}"
+                               maxlength="100">
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary" th:text="${isNew} ? '登録' : '更新'">登録</button>
+                    <a th:href="@{/customers/{code}/{branch}(code=${customer.customerCode}, branch=${customer.customerBranchNumber})}"
+                       class="btn btn-outline-secondary ms-2">キャンセル</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
