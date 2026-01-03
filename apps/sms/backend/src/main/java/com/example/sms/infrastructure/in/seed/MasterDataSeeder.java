@@ -1,5 +1,6 @@
 package com.example.sms.infrastructure.in.seed;
 
+import com.example.sms.application.port.out.CustomerRepository;
 import com.example.sms.application.port.out.DepartmentRepository;
 import com.example.sms.application.port.out.EmployeeRepository;
 import com.example.sms.application.port.out.PartnerRepository;
@@ -10,7 +11,10 @@ import com.example.sms.domain.model.department.Department;
 import com.example.sms.domain.model.employee.Employee;
 import com.example.sms.domain.model.inventory.Warehouse;
 import com.example.sms.domain.model.inventory.WarehouseType;
+import com.example.sms.domain.model.partner.BillingType;
+import com.example.sms.domain.model.partner.Customer;
 import com.example.sms.domain.model.partner.Partner;
+import com.example.sms.domain.model.partner.PaymentMethod;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
 import com.example.sms.domain.model.product.ProductClassification;
@@ -32,6 +36,7 @@ public class MasterDataSeeder {
 
     private static final Logger LOG = LoggerFactory.getLogger(MasterDataSeeder.class);
 
+    private final CustomerRepository customerRepository;
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
     private final PartnerRepository partnerRepository;
@@ -40,12 +45,14 @@ public class MasterDataSeeder {
     private final WarehouseRepository warehouseRepository;
 
     public MasterDataSeeder(
+            CustomerRepository customerRepository,
             DepartmentRepository departmentRepository,
             EmployeeRepository employeeRepository,
             PartnerRepository partnerRepository,
             ProductClassificationRepository productClassificationRepository,
             ProductRepository productRepository,
             WarehouseRepository warehouseRepository) {
+        this.customerRepository = customerRepository;
         this.departmentRepository = departmentRepository;
         this.employeeRepository = employeeRepository;
         this.partnerRepository = partnerRepository;
@@ -63,6 +70,7 @@ public class MasterDataSeeder {
         seedProductClassifications();
         seedProducts();
         seedPartners();
+        seedCustomers();
         seedEmployees(effectiveDate);
     }
 
@@ -71,6 +79,7 @@ public class MasterDataSeeder {
      */
     public void cleanAll() {
         employeeRepository.deleteAll();
+        customerRepository.deleteAll();
         productRepository.deleteAll();
         productClassificationRepository.deleteAll();
         partnerRepository.deleteAll();
@@ -330,6 +339,68 @@ public class MasterDataSeeder {
             .partnerName(name)
             .isCustomer(false)
             .isSupplier(true)
+            .build();
+    }
+
+    private void seedCustomers() {
+        LOG.info("顧客マスタを投入中...");
+
+        List<Customer> customers = List.of(
+            // 得意先（百貨店）- 月末締め翌月末払い
+            createCustomer("CUS-001", "00", "地域百貨店", "チイキヒャッカテン",
+                BillingType.PERIODIC, 31, 1, 31, PaymentMethod.TRANSFER),
+            createCustomer("CUS-002", "00", "X県有名百貨店", "エックスケンユウメイヒャッカテン",
+                BillingType.PERIODIC, 31, 1, 31, PaymentMethod.TRANSFER),
+
+            // 得意先（スーパー）- 月末締め翌月末払い
+            createCustomer("CUS-003", "00", "地域スーパーチェーン", "チイキスーパーチェーン",
+                BillingType.PERIODIC, 31, 1, 31, PaymentMethod.TRANSFER),
+            createCustomer("CUS-004", "00", "広域スーパーチェーン", "コウイキスーパーチェーン",
+                BillingType.PERIODIC, 31, 1, 31, PaymentMethod.TRANSFER),
+
+            // 得意先（ホテル・旅館）- 月末締め翌月末払い
+            createCustomer("CUS-005", "00", "シティホテル", "シティホテル",
+                BillingType.PERIODIC, 31, 1, 31, PaymentMethod.TRANSFER),
+            createCustomer("CUS-006", "00", "温泉旅館", "オンセンリョカン",
+                BillingType.PERIODIC, 31, 1, 31, PaymentMethod.TRANSFER),
+
+            // 得意先（飲食店）- 都度請求・現金払い
+            createCustomer("CUS-007", "00", "焼肉レストラン", "ヤキニクレストラン",
+                BillingType.ON_DEMAND, null, null, null, PaymentMethod.CASH),
+            createCustomer("CUS-008", "00", "イタリアンレストラン", "イタリアンレストラン",
+                BillingType.ON_DEMAND, null, null, null, PaymentMethod.CASH),
+
+            // 得意先（観光施設）- 15日締め翌月15日払い
+            createCustomer("CUS-009", "00", "道の駅", "ミチノエキ",
+                BillingType.PERIODIC, 15, 1, 15, PaymentMethod.TRANSFER),
+            createCustomer("CUS-010", "00", "観光センター", "カンコウセンター",
+                BillingType.PERIODIC, 15, 1, 15, PaymentMethod.TRANSFER)
+        );
+
+        customers.forEach(customerRepository::save);
+        if (LOG.isInfoEnabled()) {
+            LOG.info("顧客マスタ {}件 投入完了", customers.size());
+        }
+    }
+
+    private Customer createCustomer(String code, String branchNumber, String name, String nameKana,
+                                     BillingType billingType, Integer closingDay,
+                                     Integer paymentMonth, Integer paymentDay,
+                                     PaymentMethod paymentMethod) {
+        return Customer.builder()
+            .customerCode(code)
+            .customerBranchNumber(branchNumber)
+            .customerName(name)
+            .customerNameKana(nameKana)
+            .billingCode(code)
+            .billingBranchNumber(branchNumber)
+            .collectionCode(code)
+            .collectionBranchNumber(branchNumber)
+            .billingType(billingType)
+            .closingDay1(closingDay)
+            .paymentMonth1(paymentMonth)
+            .paymentDay1(paymentDay)
+            .paymentMethod1(paymentMethod)
             .build();
     }
 
