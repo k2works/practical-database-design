@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title th:text="${isNew} ? '顧客別販売単価登録' : '顧客別販売単価編集'">顧客別販売単価登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title" th:text="${isNew} ? '顧客別販売単価登録' : '顧客別販売単価編集'">顧客別販売単価登録</h1>
+
+    <!-- 商品情報 -->
+    <div class="alert alert-info">
+        <strong>商品:</strong>
+        <span th:text="${product.productCode}"></span>
+        <span th:text="${product.productName}"></span>
+        <span class="ms-3">
+            <strong>標準単価:</strong>
+            <span th:text="${#numbers.formatDecimal(product.sellingPrice, 1, 'COMMA', 0, 'POINT')} + ' 円'"></span>
+        </span>
+    </div>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/products/{code}(code=${product.productCode})}"
+           class="btn btn-secondary">商品詳細に戻る</a>
+    </div>
+
+    <!-- 登録/編集フォーム -->
+    <div class="card">
+        <div class="card-body">
+            <form th:action="${isNew} ? @{/products/{code}/customer-prices(code=${product.productCode})} : @{/products/{code}/customer-prices/{partner}/{date}(code=${product.productCode}, partner=${price.partnerCode}, date=${#temporals.format(price.startDate, 'yyyy-MM-dd')})}"
+                  th:object="${price}" method="post">
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="partnerCode" class="form-label">取引先 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="partnerCode"
+                                th:field="*{partnerCode}"
+                                th:disabled="${!isNew}"
+                                required>
+                            <option value="">-- 選択してください --</option>
+                            <option th:each="partner : ${partners}"
+                                    th:value="${partner.partnerCode}"
+                                    th:text="${partner.partnerCode} + ' - ' + ${partner.partnerName}"></option>
+                        </select>
+                        <input th:if="${!isNew}" type="hidden" th:field="*{partnerCode}"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="startDate" class="form-label">適用開始日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="startDate"
+                               th:field="*{startDate}"
+                               th:readonly="${!isNew}"
+                               required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="endDate" class="form-label">適用終了日</label>
+                        <input type="date" class="form-control" id="endDate"
+                               th:field="*{endDate}">
+                        <small class="text-muted">未入力の場合は無期限</small>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="sellingPrice" class="form-label">販売単価 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control text-end" id="sellingPrice"
+                                   th:field="*{sellingPrice}"
+                                   required min="0" step="1"
+                                   placeholder="0">
+                            <span class="input-group-text">円</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary" th:text="${isNew} ? '登録' : '更新'">登録</button>
+                    <a th:href="@{/products/{code}(code=${product.productCode})}"
+                       class="btn btn-outline-secondary ms-2">キャンセル</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

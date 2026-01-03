@@ -76,6 +76,50 @@
             </div>
         </div>
     </div>
+
+    <!-- 顧客別販売単価 -->
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">顧客別販売単価</h5>
+            <a th:href="@{/products/{code}/customer-prices/new(code=${product.productCode})}"
+               class="btn btn-primary btn-sm">
+                <i class="bi bi-plus"></i> 追加
+            </a>
+        </div>
+        <div class="card-body">
+            <div th:if="${#lists.isEmpty(customerPrices)}" class="text-muted">
+                顧客別販売単価が登録されていません
+            </div>
+            <table th:unless="${#lists.isEmpty(customerPrices)}" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>取引先コード</th>
+                        <th>適用開始日</th>
+                        <th>適用終了日</th>
+                        <th class="text-end">販売単価</th>
+                        <th class="text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="cp : ${customerPrices}">
+                        <td th:text="${cp.partnerCode}"></td>
+                        <td th:text="${#temporals.format(cp.startDate, 'yyyy/MM/dd')}"></td>
+                        <td th:text="${cp.endDate != null} ? ${#temporals.format(cp.endDate, 'yyyy/MM/dd')} : '無期限'"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(cp.sellingPrice, 1, 'COMMA', 0, 'POINT')} + ' 円'"></td>
+                        <td class="text-center">
+                            <a th:href="@{/products/{code}/customer-prices/{partner}/{date}/edit(code=${product.productCode}, partner=${cp.partnerCode}, date=${#temporals.format(cp.startDate, 'yyyy-MM-dd')})}"
+                               class="btn btn-outline-primary btn-sm">編集</a>
+                            <form th:action="@{/products/{code}/customer-prices/{partner}/{date}/delete(code=${product.productCode}, partner=${cp.partnerCode}, date=${#temporals.format(cp.startDate, 'yyyy-MM-dd')})}"
+                                  method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                        onclick="return confirm('削除してもよろしいですか？')">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 </body>
 </html>
