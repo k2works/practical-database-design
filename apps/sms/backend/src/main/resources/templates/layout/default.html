@@ -49,6 +49,14 @@
                             <li><a class="dropdown-item" th:href="@{/receipts}">入金</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">在庫</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/inventories}">在庫</a></li>
+                            <li><a class="dropdown-item" th:href="@{/inventories/movements}">入出庫履歴</a></li>
+                            <li><a class="dropdown-item" th:href="@{/stocktakings}">棚卸</a></li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
         </div>

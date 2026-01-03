@@ -15,10 +15,15 @@ public class HomeController {
         // ダッシュボード用のカウントを設定（後で実装）
         model.addAttribute("productCount", 0);
         model.addAttribute("partnerCount", 0);
+        model.addAttribute("estimateCount", 0);
         model.addAttribute("pendingOrderCount", 0);
         model.addAttribute("pendingShipmentCount", 0);
+        model.addAttribute("salesCount", 0);
         model.addAttribute("unpaidInvoiceCount", 0);
         model.addAttribute("todayReceiptCount", 0);
+        model.addAttribute("inventoryCount", 0);
+        model.addAttribute("movementCount", 0);
+        model.addAttribute("stocktakingCount", 0);
         return "index";
     }
 }
