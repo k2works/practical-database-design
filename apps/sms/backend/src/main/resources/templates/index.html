@@ -28,6 +28,10 @@
                             <span class="badge bg-secondary" th:text="${employeeCount}">0</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/product-classifications}" class="text-decoration-none">商品分類マスタ</a>
+                            <span class="badge bg-secondary" th:text="${productClassificationCount}">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
                             <a th:href="@{/products}" class="text-decoration-none">商品マスタ</a>
                             <span class="badge bg-secondary" th:text="${productCount}">0</span>
                         </li>

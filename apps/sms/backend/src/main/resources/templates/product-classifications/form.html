@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title th:text="${isNew} ? '商品分類登録' : '商品分類編集'">商品分類登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title" th:text="${isNew} ? '商品分類登録' : '商品分類編集'">商品分類登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/product-classifications}" class="btn btn-secondary">
+            一覧に戻る
+        </a>
+    </div>
+
+    <!-- 登録/編集フォーム -->
+    <div class="card">
+        <div class="card-body">
+            <form th:action="${isNew} ? @{/product-classifications} : @{/product-classifications/{code}(code=${classification.classificationCode})}"
+                  th:object="${classification}" method="post">
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="classificationCode" class="form-label">分類コード <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="classificationCode"
+                               th:field="*{classificationCode}"
+                               th:readonly="${!isNew}"
+                               required maxlength="10"
+                               placeholder="例: CAT001">
+                        <div class="form-text">半角英数字10文字以内</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="classificationName" class="form-label">分類名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="classificationName"
+                               th:field="*{classificationName}"
+                               required maxlength="100"
+                               placeholder="例: 電子機器">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="hierarchyLevel" class="form-label">階層レベル</label>
+                        <select class="form-select" id="hierarchyLevel" th:field="*{hierarchyLevel}">
+                            <option value="0">レベル0（最上位）</option>
+                            <option value="1">レベル1</option>
+                            <option value="2">レベル2</option>
+                            <option value="3">レベル3</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="classificationPath" class="form-label">分類パス</label>
+                        <input type="text" class="form-control" id="classificationPath"
+                               th:field="*{classificationPath}"
+                               maxlength="500"
+                               placeholder="例: /CAT001/CAT002">
+                        <div class="form-text">階層構造を表すパス</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="isLeaf"
+                                   th:field="*{leaf}">
+                            <label class="form-check-label" for="isLeaf">末端分類</label>
+                        </div>
+                        <div class="form-text">配下に分類を持たない場合はチェック</div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary" th:text="${isNew} ? '登録' : '更新'">登録</button>
+                    <a th:href="@{/product-classifications}" class="btn btn-outline-secondary ms-2">キャンセル</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
