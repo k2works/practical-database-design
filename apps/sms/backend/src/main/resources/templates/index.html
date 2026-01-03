@@ -20,6 +20,14 @@
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/departments}" class="text-decoration-none">部門マスタ</a>
+                            <span class="badge bg-secondary" th:text="${departmentCount}">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a th:href="@{/employees}" class="text-decoration-none">社員マスタ</a>
+                            <span class="badge bg-secondary" th:text="${employeeCount}">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
                             <a th:href="@{/products}" class="text-decoration-none">商品マスタ</a>
                             <span class="badge bg-secondary" th:text="${productCount}">0</span>
                         </li>

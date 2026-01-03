@@ -13,6 +13,8 @@ public class HomeController {
     @GetMapping("/")
     public String index(Model model) {
         // ダッシュボード用のカウントを設定（後で実装）
+        model.addAttribute("departmentCount", 0);
+        model.addAttribute("employeeCount", 0);
         model.addAttribute("productCount", 0);
         model.addAttribute("partnerCount", 0);
         model.addAttribute("estimateCount", 0);
