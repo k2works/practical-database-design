@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title th:text="${isNew} ? '倉庫登録' : '倉庫編集'">倉庫登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title" th:text="${isNew} ? '倉庫登録' : '倉庫編集'">倉庫登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/warehouses}" class="btn btn-secondary">一覧に戻る</a>
+    </div>
+
+    <!-- 登録/編集フォーム -->
+    <form th:action="${isNew} ? @{/warehouses} : @{/warehouses/{code}(code=${warehouse.warehouseCode})}"
+          th:object="${warehouse}" method="post">
+
+        <!-- 基本情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">基本情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="warehouseCode" class="form-label">倉庫コード <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="warehouseCode"
+                               th:field="*{warehouseCode}"
+                               th:readonly="${!isNew}"
+                               required maxlength="20"
+                               placeholder="例: WH-001">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="warehouseType" class="form-label">倉庫区分 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="warehouseType" th:field="*{warehouseType}" required>
+                            <option value="">選択してください</option>
+                            <option th:each="type : ${warehouseTypes}"
+                                    th:value="${type}"
+                                    th:text="${type.displayName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="activeFlag" class="form-label">有効</label>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" id="activeFlag"
+                                   th:field="*{activeFlag}">
+                            <label class="form-check-label" for="activeFlag">有効にする</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="warehouseName" class="form-label">倉庫名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="warehouseName"
+                               th:field="*{warehouseName}"
+                               required maxlength="100"
+                               placeholder="例: 本社倉庫">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="warehouseNameKana" class="form-label">倉庫名カナ</label>
+                        <input type="text" class="form-control" id="warehouseNameKana"
+                               th:field="*{warehouseNameKana}"
+                               maxlength="200"
+                               placeholder="例: ホンシャソウコ">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 所在地情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">所在地情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <label for="postalCode" class="form-label">郵便番号</label>
+                        <input type="text" class="form-control" id="postalCode"
+                               th:field="*{postalCode}"
+                               maxlength="10"
+                               placeholder="123-4567">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="address" class="form-label">住所</label>
+                        <input type="text" class="form-control" id="address"
+                               th:field="*{address}"
+                               maxlength="200">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="phoneNumber" class="form-label">電話番号</label>
+                        <input type="text" class="form-control" id="phoneNumber"
+                               th:field="*{phoneNumber}"
+                               maxlength="20"
+                               placeholder="03-1234-5678">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary" th:text="${isNew} ? '登録' : '更新'">登録</button>
+            <a th:href="@{/warehouses}" class="btn btn-outline-secondary ms-2">キャンセル</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>倉庫マスタ一覧</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">倉庫マスタ</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons mb-3">
+        <a th:href="@{/warehouses/new}" class="btn btn-primary">新規登録</a>
+    </div>
+
+    <!-- 検索フォーム -->
+    <div class="search-form">
+        <form th:action="@{/warehouses}" method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">キーワード</label>
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="倉庫コード、倉庫名、カナ">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">検索</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 倉庫一覧テーブル -->
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>倉庫コード</th>
+                <th>倉庫名</th>
+                <th>倉庫名カナ</th>
+                <th>倉庫区分</th>
+                <th>電話番号</th>
+                <th>状態</th>
+                <th class="table-actions">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="warehouse : ${warehouses}">
+                <td>
+                    <a th:href="@{/warehouses/{code}(code=${warehouse.warehouseCode})}"
+                       th:text="${warehouse.warehouseCode}"></a>
+                </td>
+                <td th:text="${warehouse.warehouseName}"></td>
+                <td th:text="${warehouse.warehouseNameKana}"></td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${warehouse.warehouseType?.name() == 'OWN' ? 'bg-primary' : (warehouse.warehouseType?.name() == 'EXTERNAL' ? 'bg-secondary' : 'bg-info')}"
+                          th:text="${warehouse.warehouseType?.displayName}"></span>
+                </td>
+                <td th:text="${warehouse.phoneNumber}"></td>
+                <td>
+                    <span th:if="${warehouse.activeFlag}" class="badge bg-success">有効</span>
+                    <span th:unless="${warehouse.activeFlag}" class="badge bg-danger">無効</span>
+                </td>
+                <td class="table-actions">
+                    <div class="btn-group btn-group-sm">
+                        <a th:href="@{/warehouses/{code}(code=${warehouse.warehouseCode})}"
+                           class="btn btn-outline-primary">詳細</a>
+                        <a th:href="@{/warehouses/{code}/edit(code=${warehouse.warehouseCode})}"
+                           class="btn btn-outline-secondary">編集</a>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(warehouses)}">
+                <td colspan="7" class="text-center text-muted">倉庫データがありません</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 件数表示 -->
+    <div class="text-muted">
+        <span th:text="${#lists.size(warehouses)}">0</span> 件
+    </div>
+</div>
+</body>
+</html>
