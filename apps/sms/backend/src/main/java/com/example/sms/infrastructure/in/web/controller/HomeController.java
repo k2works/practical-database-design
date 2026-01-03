@@ -21,6 +21,10 @@ public class HomeController {
         model.addAttribute("salesCount", 0);
         model.addAttribute("unpaidInvoiceCount", 0);
         model.addAttribute("todayReceiptCount", 0);
+        model.addAttribute("purchaseOrderCount", 0);
+        model.addAttribute("receivingCount", 0);
+        model.addAttribute("purchaseCount", 0);
+        model.addAttribute("unpaidPaymentCount", 0);
         model.addAttribute("inventoryCount", 0);
         model.addAttribute("movementCount", 0);
         model.addAttribute("stocktakingCount", 0);

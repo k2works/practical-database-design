@@ -43,10 +43,24 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">調達</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/purchase-orders}">発注</a></li>
+                            <li><a class="dropdown-item" th:href="@{/receivings}">入荷</a></li>
+                            <li><a class="dropdown-item" th:href="@{/purchases}">仕入</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">債権</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" th:href="@{/invoices}">請求</a></li>
                             <li><a class="dropdown-item" th:href="@{/receipts}">入金</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">債務</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/payments}">支払</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
