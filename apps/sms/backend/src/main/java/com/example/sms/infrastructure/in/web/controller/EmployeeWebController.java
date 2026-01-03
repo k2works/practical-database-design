@@ -2,8 +2,11 @@ package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.DepartmentUseCase;
 import com.example.sms.application.port.in.EmployeeUseCase;
+import com.example.sms.domain.exception.DepartmentNotFoundException;
 import com.example.sms.domain.model.department.Department;
 import com.example.sms.domain.model.employee.Employee;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +26,8 @@ import java.util.Locale;
 @Controller
 @RequestMapping("/employees")
 public class EmployeeWebController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(EmployeeWebController.class);
 
     private final EmployeeUseCase employeeUseCase;
     private final DepartmentUseCase departmentUseCase;
@@ -85,8 +90,10 @@ public class EmployeeWebController {
         if (employee.getDepartmentCode() != null) {
             try {
                 department = departmentUseCase.getDepartmentByCode(employee.getDepartmentCode());
-            } catch (Exception e) {
-                // 部門が見つからない場合は無視
+            } catch (DepartmentNotFoundException e) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("部門が見つかりません: {}", employee.getDepartmentCode());
+                }
             }
         }
 

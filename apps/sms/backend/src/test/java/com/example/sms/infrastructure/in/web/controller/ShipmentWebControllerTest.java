@@ -223,7 +223,7 @@ class ShipmentWebControllerTest {
         ShipmentDetail detail = ShipmentDetail.builder()
             .productCode("PROD-001")
             .productName("テスト商品")
-            .shippedQuantity(new BigDecimal("10"))
+            .shippedQuantity(BigDecimal.TEN)
             .unit("個")
             .unitPrice(new BigDecimal("5000"))
             .amount(new BigDecimal("50000"))

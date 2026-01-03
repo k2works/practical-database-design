@@ -70,6 +70,7 @@ public class WebExceptionHandler {
     /**
      * データ整合性エラーメッセージを解析してユーザーフレンドリーなメッセージに変換.
      */
+    @SuppressWarnings("PMD.CyclomaticComplexity")
     private String parseDataIntegrityErrorMessage(DataIntegrityViolationException e) {
         String message = e.getMessage();
         if (message == null) {

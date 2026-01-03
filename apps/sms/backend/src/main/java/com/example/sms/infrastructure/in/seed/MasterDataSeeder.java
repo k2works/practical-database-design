@@ -31,6 +31,7 @@ import java.util.List;
  * マスタデータ Seeder.
  * B社事例に基づくマスタデータを投入する。
  */
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 @Component
 public class MasterDataSeeder {
 

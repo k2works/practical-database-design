@@ -3,7 +3,6 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.OrderUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
-import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
 import com.example.sms.domain.model.product.TaxCategory;
@@ -36,7 +35,7 @@ import static org.mockito.Mockito.when;
  */
 @WebMvcTest(OrderWebController.class)
 @DisplayName("受注画面コントローラーテスト")
-@SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
+@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "PMD.TooManyStaticImports"})
 class OrderWebControllerTest {
 
     @Autowired
@@ -223,7 +222,7 @@ class OrderWebControllerTest {
         SalesOrderDetail detail = SalesOrderDetail.builder()
             .productCode("PROD-001")
             .productName("テスト商品")
-            .orderQuantity(new BigDecimal("10"))
+            .orderQuantity(BigDecimal.TEN)
             .unit("個")
             .unitPrice(new BigDecimal("5000"))
             .build();
