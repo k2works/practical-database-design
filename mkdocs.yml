@@ -90,25 +90,24 @@ nav:
           - 第21章 APIサービスの実装: article/part3/chapter21.md
       - 第4部 生産管理システム:
           - 第22章 生産管理システムの全体像: article/part4/chapter22.md
-          - 第23章 生産管理のマスタ情報（モノ）: article/part4/chapter23.md
-          - 第24章 生産管理のマスタ情報（時・人・場所）: article/part4/chapter24.md
-          - 第25章 生産計画の設計: article/part4/chapter25.md
-          - 第26章 購買管理の設計（発注・入荷・検収）: article/part4/chapter26.md
-          - 第27章 購買管理の設計（外注委託）: article/part4/chapter27.md
-          - 第28章 工程管理の設計（製造指示・製造実績）: article/part4/chapter28.md
-          - 第29章 在庫管理の設計（受払・在庫状態）: article/part4/chapter29.md
-          - 第30章 品質管理の設計: article/part4/chapter30.md
-          - 第31章 製造原価管理の設計: article/part4/chapter31.md
-          - 第32章 生産管理データ設計（E社事例）: article/part4/chapter32.md
-          - 第33章 APIサービスの実装: article/part4/chapter33.md
+          - 第23章 マスタ情報の設計: article/part4/chapter23.md
+          - 第24章 生産計画の設計: article/part4/chapter24.md
+          - 第25章 購買管理の設計: article/part4/chapter25.md
+          - 第26章 外注委託管理の設計: article/part4/chapter26.md
+          - 第27章 工程管理の設計: article/part4/chapter27.md
+          - 第28章 在庫管理の設計: article/part4/chapter28.md
+          - 第29章 品質管理の設計: article/part4/chapter29.md
+          - 第30章 製造原価管理の設計: article/part4/chapter30.md
+          - 第31章 生産管理データ設計（E社事例）: article/part4/chapter31.md
+          - 第32章 APIサービスの実装: article/part4/chapter32.md
       - 第5部 エンタープライズインテグレーション:
-          - 第34章 システム統合の概要: article/part5/chapter34.md
-          - 第35章 メッセージングパターン: article/part5/chapter35.md
-          - 第36章 システム間連携パターン: article/part5/chapter36.md
-          - 第37章 マスタデータ管理（MDM）: article/part5/chapter37.md
-          - 第38章 イベント駆動アーキテクチャ: article/part5/chapter38.md
-          - 第39章 API設計とサービス連携: article/part5/chapter39.md
-          - 第40章 データ連携の実装パターン: article/part5/chapter40.md
+          - 第33章 システム統合の概要: article/part5/chapter33.md
+          - 第34章 メッセージングパターン: article/part5/chapter34.md
+          - 第35章 システム間連携パターン: article/part5/chapter35.md
+          - 第36章 マスタデータ管理（MDM）: article/part5/chapter36.md
+          - 第37章 イベント駆動アーキテクチャ: article/part5/chapter37.md
+          - 第38章 API設計とサービス連携: article/part5/chapter38.md
+          - 第39章 データ連携の実装パターン: article/part5/chapter39.md
       - 研究 販売管理システム実装編:
           - 研究1 モノリスサービスの実装: article/study/study2-1.md
           - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study2-2.md
@@ -119,6 +118,11 @@ nav:
           - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study3-2.md
           - 研究3 gRPCサービスの実装: article/study/study3-3.md
           - 研究4 GraphQLサービスの実装: article/study/study3-4.md
+      - 研究 生産管理システム実装編:
+          - 研究1 モノリスサービスの実装: article/study/study4-1.md
+          - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study4-2.md
+          - 研究3 gRPCサービスの実装: article/study/study4-3.md
+          - 研究4 GraphQLサービスの実装: article/study/study4-4.md
       - 研究 財務会計システムORM実装編:
           - 第14章 財務会計システムの全体像【ORM版】: article/part3-orm/chapter14-orm.md
           - 第15章 勘定科目の設計【ORM版】: article/part3-orm/chapter15-orm.md
