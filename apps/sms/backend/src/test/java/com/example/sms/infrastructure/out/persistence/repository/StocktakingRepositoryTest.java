@@ -42,6 +42,14 @@ class StocktakingRepositoryTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // 商品を参照するトランザクションデータを先に削除
+        jdbcTemplate.execute("TRUNCATE TABLE \"仕入明細データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"仕入データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"入荷明細データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"入荷データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"発注明細データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"発注データ\" CASCADE");
+
         stocktakingRepository.deleteAll();
         jdbcTemplate.execute("DELETE FROM \"倉庫マスタ\"");
         productRepository.deleteAll();

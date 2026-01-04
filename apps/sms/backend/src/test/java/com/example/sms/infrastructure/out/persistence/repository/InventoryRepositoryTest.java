@@ -39,6 +39,16 @@ class InventoryRepositoryTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // 商品を参照するトランザクションデータを先に削除
+        jdbcTemplate.execute("TRUNCATE TABLE \"棚卸明細データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"棚卸データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"仕入明細データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"仕入データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"入荷明細データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"入荷データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"発注明細データ\" CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE \"発注データ\" CASCADE");
+
         inventoryRepository.deleteAll();
         jdbcTemplate.execute("DELETE FROM \"ロケーションマスタ\"");
         jdbcTemplate.execute("DELETE FROM \"倉庫マスタ\"");
