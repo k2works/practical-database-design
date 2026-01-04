@@ -66,4 +66,13 @@ public interface ReceiptUseCase {
      * @param receiptNumber 入金番号
      */
     void deleteReceipt(String receiptNumber);
+
+    /**
+     * 日付範囲で入金を検索する.
+     *
+     * @param from 開始日
+     * @param to 終了日
+     * @return 入金リスト
+     */
+    List<Receipt> getReceiptsByDateRange(java.time.LocalDate from, java.time.LocalDate to);
 }

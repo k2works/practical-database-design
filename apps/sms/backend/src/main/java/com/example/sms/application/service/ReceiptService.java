@@ -127,6 +127,12 @@ public class ReceiptService implements ReceiptUseCase {
         receiptRepository.deleteById(existing.getId());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Receipt> getReceiptsByDateRange(LocalDate from, LocalDate to) {
+        return receiptRepository.findByReceiptDateBetween(from, to);
+    }
+
     private String generateReceiptNumber() {
         String datePrefix = LocalDate.now().format(RECEIPT_NUMBER_FORMAT);
         List<Receipt> todayReceipts = receiptRepository.findByReceiptDateBetween(
