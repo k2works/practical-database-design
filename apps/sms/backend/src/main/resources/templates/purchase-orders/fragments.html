@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 発注明細行フラグメント -->
+<tr th:fragment="detailRow" th:id="'row-' + ${index}">
+    <td>
+        <select th:name="'details[' + ${index} + '].productCode'"
+                class="form-select product-select">
+            <option value="">選択してください</option>
+            <option th:each="prod : ${products}"
+                    th:value="${prod.productCode}"
+                    th:text="${prod.productCode + ' - ' + prod.productName}">
+            </option>
+        </select>
+    </td>
+    <td>
+        <input type="number" th:name="'details[' + ${index} + '].orderQuantity'"
+               value="1"
+               class="form-control text-end" step="1" min="0">
+    </td>
+    <td>
+        <div class="input-group">
+            <input type="number" th:name="'details[' + ${index} + '].unitPrice'"
+                   value="0"
+                   class="form-control text-end" step="1" min="0">
+            <span class="input-group-text">円</span>
+        </div>
+    </td>
+    <td>
+        <input type="date" th:name="'details[' + ${index} + '].expectedDeliveryDate'"
+               class="form-control">
+    </td>
+    <td>
+        <input type="text" th:name="'details[' + ${index} + '].remarks'"
+               class="form-control">
+    </td>
+    <td>
+        <button type="button" class="btn btn-sm btn-outline-danger"
+                onclick="removeRow(this)">削除</button>
+    </td>
+</tr>
+</body>
+</html>
