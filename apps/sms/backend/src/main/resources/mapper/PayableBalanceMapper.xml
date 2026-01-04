@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.PayableBalanceMapper">
+
+    <resultMap id="PayableBalanceResultMap" type="com.example.sms.domain.model.payment.PayableBalance">
+        <id property="id" column="ID"/>
+        <result property="supplierCode" column="仕入先コード"/>
+        <result property="yearMonth" column="年月"/>
+        <result property="previousBalance" column="前月残高"/>
+        <result property="currentPurchaseAmount" column="当月仕入高"/>
+        <result property="currentPaymentAmount" column="当月支払高"/>
+        <result property="currentBalance" column="当月残高"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.payment.PayableBalance"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "買掛金残高データ" (
+            "仕入先コード", "年月",
+            "前月残高", "当月仕入高", "当月支払高",
+            "バージョン", "作成日時", "更新日時"
+        ) VALUES (
+            #{supplierCode}, #{yearMonth},
+            #{previousBalance}, #{currentPurchaseAmount}, #{currentPaymentAmount},
+            #{version}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="PayableBalanceResultMap">
+        SELECT * FROM "買掛金残高データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findBySupplierAndYearMonth" resultMap="PayableBalanceResultMap">
+        SELECT * FROM "買掛金残高データ"
+        WHERE "仕入先コード" = #{supplierCode}
+          AND "年月" = #{yearMonth}
+    </select>
+
+    <select id="findBySupplierCode" resultMap="PayableBalanceResultMap">
+        SELECT * FROM "買掛金残高データ"
+        WHERE "仕入先コード" = #{supplierCode}
+        ORDER BY "年月" DESC
+    </select>
+
+    <select id="findByYearMonth" resultMap="PayableBalanceResultMap">
+        SELECT * FROM "買掛金残高データ"
+        WHERE "年月" = #{yearMonth}
+        ORDER BY "仕入先コード"
+    </select>
+
+    <select id="findAll" resultMap="PayableBalanceResultMap">
+        SELECT * FROM "買掛金残高データ"
+        ORDER BY "年月" DESC, "仕入先コード"
+    </select>
+
+    <update id="update" parameterType="com.example.sms.domain.model.payment.PayableBalance">
+        UPDATE "買掛金残高データ" SET
+            "前月残高" = #{previousBalance},
+            "当月仕入高" = #{currentPurchaseAmount},
+            "当月支払高" = #{currentPaymentAmount},
+            "バージョン" = #{version} + 1,
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "買掛金残高データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "買掛金残高データ" CASCADE
+    </delete>
+</mapper>
