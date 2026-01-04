@@ -22,6 +22,19 @@ public interface SupplierMapper {
 
     List<Supplier> findAll();
 
+    /**
+     * ページネーション付きで仕入先を検索.
+     */
+    List<Supplier> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する仕入先の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     void update(Supplier supplier);
 
     void deleteByCodeAndBranch(@Param("supplierCode") String supplierCode,

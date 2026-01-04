@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.PurchaseUseCase;
 import com.example.sms.application.port.in.command.CreatePurchaseCommand;
 import com.example.sms.application.port.out.PurchaseRepository;
 import com.example.sms.domain.exception.PurchaseNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.Purchase;
 import com.example.sms.domain.model.purchase.PurchaseDetail;
 import org.springframework.stereotype.Service;
@@ -74,6 +75,12 @@ public class PurchaseService implements PurchaseUseCase {
     @Transactional(readOnly = true)
     public List<Purchase> getAllPurchases() {
         return purchaseRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Purchase> getPurchases(int page, int size, String keyword) {
+        return purchaseRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

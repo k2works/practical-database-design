@@ -6,6 +6,7 @@ import com.example.sms.application.port.in.command.UpdateInvoiceCommand;
 import com.example.sms.application.port.out.InvoiceRepository;
 import com.example.sms.domain.exception.InvoiceNotFoundException;
 import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.invoice.Invoice;
 import com.example.sms.domain.model.invoice.InvoiceStatus;
 import com.example.sms.domain.model.invoice.InvoiceType;
@@ -107,6 +108,12 @@ public class InvoiceService implements InvoiceUseCase {
     @Transactional(readOnly = true)
     public List<Invoice> getAllInvoices() {
         return invoiceRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Invoice> getInvoices(int page, int size, String keyword) {
+        return invoiceRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

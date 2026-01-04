@@ -146,6 +146,28 @@
         SELECT * FROM "発注データ" ORDER BY "発注日" DESC, "発注番号"
     </select>
 
+    <select id="findWithPagination" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("発注番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "発注日" DESC, "発注番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "発注データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("発注番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findDetailsByPurchaseOrderId" resultMap="PurchaseOrderDetailResultMap">
         SELECT * FROM "発注明細データ"
         WHERE "発注ID" = #{purchaseOrderId}

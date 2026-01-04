@@ -2,6 +2,7 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateOrderCommand;
 import com.example.sms.application.port.in.command.UpdateOrderCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.sales.OrderStatus;
 import com.example.sms.domain.model.sales.SalesOrder;
 
@@ -35,6 +36,16 @@ public interface OrderUseCase {
      * @return 受注リスト
      */
     List<SalesOrder> getAllOrders();
+
+    /**
+     * ページネーション付きで受注を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<SalesOrder> getOrders(int page, int size, String keyword);
 
     /**
      * 受注番号で受注を取得する.

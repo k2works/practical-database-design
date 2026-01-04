@@ -6,6 +6,7 @@ import com.example.sms.application.port.in.command.UpdateReceiptCommand;
 import com.example.sms.application.port.out.ReceiptRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
 import com.example.sms.domain.exception.ReceiptNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.receipt.Receipt;
 import com.example.sms.domain.model.receipt.ReceiptStatus;
 import org.springframework.stereotype.Service;
@@ -98,6 +99,12 @@ public class ReceiptService implements ReceiptUseCase {
     @Transactional(readOnly = true)
     public List<Receipt> getAllReceipts() {
         return receiptRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Receipt> getReceipts(int page, int size, String keyword) {
+        return receiptRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

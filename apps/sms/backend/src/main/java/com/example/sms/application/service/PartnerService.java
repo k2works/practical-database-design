@@ -6,6 +6,7 @@ import com.example.sms.application.port.in.command.UpdatePartnerCommand;
 import com.example.sms.application.port.out.PartnerRepository;
 import com.example.sms.domain.exception.DuplicatePartnerException;
 import com.example.sms.domain.exception.PartnerNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,6 +99,12 @@ public class PartnerService implements PartnerUseCase {
     @Transactional(readOnly = true)
     public List<Partner> getSuppliers() {
         return partnerRepository.findSuppliers();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Partner> getPartners(int page, int size, String type, String keyword) {
+        return partnerRepository.findWithPagination(page, size, type, keyword);
     }
 
     @Override

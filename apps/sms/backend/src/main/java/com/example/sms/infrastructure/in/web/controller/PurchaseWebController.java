@@ -3,6 +3,7 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.ProductUseCase;
 import com.example.sms.application.port.in.PurchaseUseCase;
 import com.example.sms.application.port.in.SupplierUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.Purchase;
 import com.example.sms.infrastructure.in.web.form.PurchaseForm;
 import jakarta.validation.Valid;
@@ -16,9 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
-import java.util.Locale;
 
 /**
  * 仕入画面コントローラー.
@@ -45,35 +43,18 @@ public class PurchaseWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) String supplierCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Purchase> purchases = getFilteredPurchases(supplierCode);
+        PageResult<Purchase> purchasePage = purchaseUseCase.getPurchases(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            purchases = purchases.stream()
-                .filter(p -> (p.getPurchaseNumber() != null
-                        && p.getPurchaseNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (p.getSupplierCode() != null
-                        && p.getSupplierCode().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("purchases", purchases);
-        model.addAttribute("selectedSupplier", supplierCode);
+        model.addAttribute("purchases", purchasePage.getContent());
+        model.addAttribute("page", purchasePage);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "purchases/list";
-    }
-
-    private List<Purchase> getFilteredPurchases(String supplierCode) {
-        if (supplierCode != null && !supplierCode.isBlank()) {
-            return purchaseUseCase.getPurchasesBySupplier(supplierCode);
-        } else {
-            return purchaseUseCase.getAllPurchases();
-        }
     }
 
     /**

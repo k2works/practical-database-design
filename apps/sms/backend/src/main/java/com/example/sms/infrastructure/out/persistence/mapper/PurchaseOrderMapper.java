@@ -34,6 +34,19 @@ public interface PurchaseOrderMapper {
 
     List<PurchaseOrder> findAll();
 
+    /**
+     * ページネーション付きで発注を検索.
+     */
+    List<PurchaseOrder> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する発注の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     List<PurchaseOrderDetail> findDetailsByPurchaseOrderId(Integer purchaseOrderId);
 
     PurchaseOrder findWithDetailsByPurchaseOrderNumber(String purchaseOrderNumber);

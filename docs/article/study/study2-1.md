@@ -1029,6 +1029,393 @@ public void exportInvoicePdf(@PathVariable String invoiceNumber, HttpServletResp
 
 ---
 
+## 第18章：ページネーション
+
+### 18.1 ページネーションの概要
+
+大量のデータを扱う一覧画面では、パフォーマンスとユーザビリティの観点から**ページネーション**（ページ分割）が必要です。本章では、商品マスタ画面を例に、ヘキサゴナルアーキテクチャに沿ったページネーション機能の実装方法を解説します。
+
+```plantuml
+@startuml pagination_flow
+title ページネーション処理フロー
+
+actor "ブラウザ" as Browser
+participant "ProductWebController" as Controller
+participant "ProductService" as Service
+participant "ProductRepositoryImpl" as Repository
+participant "ProductMapper" as Mapper
+database "PostgreSQL" as DB
+
+Browser -> Controller : GET /products?page=0&size=10
+Controller -> Service : getProducts(page, size, category, keyword)
+Service -> Repository : findWithPagination(page, size, category, keyword)
+Repository -> Mapper : findWithPagination(offset, limit, category, keyword)
+Mapper -> DB : SELECT ... LIMIT #{limit} OFFSET #{offset}
+DB --> Mapper : 商品データ（10件）
+Repository -> Mapper : count(category, keyword)
+Mapper -> DB : SELECT COUNT(*) ...
+DB --> Mapper : 総件数
+Repository --> Service : PageResult<Product>
+Service --> Controller : PageResult<Product>
+Controller -> Browser : products/list.html\n（ページネーション UI 付き）
+
+@enduml
+```
+
+### 18.2 ページネーション結果クラス
+
+ページネーション結果を表す汎用クラスを定義します。
+
+<details>
+<summary>コード例: PageResult.java</summary>
+
+```java
+package com.example.sms.domain.model.common;
+
+import java.util.List;
+
+/**
+ * ページネーション結果を表すクラス.
+ *
+ * @param <T> 要素の型
+ */
+public class PageResult<T> {
+
+    private final List<T> content;
+    private final int pageNumber;
+    private final int pageSize;
+    private final long totalElements;
+    private final int totalPages;
+
+    public PageResult(List<T> content, int pageNumber, int pageSize, long totalElements) {
+        this.content = content;
+        this.pageNumber = pageNumber;
+        this.pageSize = pageSize;
+        this.totalElements = totalElements;
+        this.totalPages = pageSize > 0 ? (int) Math.ceil((double) totalElements / pageSize) : 0;
+    }
+
+    public List<T> getContent() { return content; }
+    public int getPage() { return pageNumber; }
+    public int getSize() { return pageSize; }
+    public long getTotalElements() { return totalElements; }
+    public int getTotalPages() { return totalPages; }
+    public boolean hasNext() { return pageNumber < totalPages - 1; }
+    public boolean hasPrevious() { return pageNumber > 0; }
+    public boolean isFirst() { return pageNumber == 0; }
+    public boolean isLast() { return pageNumber >= totalPages - 1; }
+    public int getNumber() { return pageNumber + 1; }
+
+    public static <T> PageResult<T> empty() {
+        return new PageResult<>(List.of(), 0, 10, 0);
+    }
+}
+```
+
+</details>
+
+### 18.3 MyBatis マッパーの実装
+
+ページネーション用の SQL クエリを追加します。`LIMIT` と `OFFSET` を使用してデータを取得し、`COUNT` で総件数を取得します。
+
+<details>
+<summary>コード例: ProductMapper.xml（抜粋）</summary>
+
+```xml
+<select id="findWithPagination" resultMap="ProductResultMap">
+    SELECT * FROM "商品マスタ"
+    <where>
+        <if test="category != null and category != ''">
+            "商品区分" = #{category}::商品区分
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (LOWER("商品コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("商品名") LIKE LOWER('%' || #{keyword} || '%'))
+        </if>
+    </where>
+    ORDER BY "商品コード"
+    LIMIT #{limit} OFFSET #{offset}
+</select>
+
+<select id="count" resultType="long">
+    SELECT COUNT(*) FROM "商品マスタ"
+    <where>
+        <if test="category != null and category != ''">
+            "商品区分" = #{category}::商品区分
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (LOWER("商品コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("商品名") LIKE LOWER('%' || #{keyword} || '%'))
+        </if>
+    </where>
+</select>
+```
+
+</details>
+
+<details>
+<summary>コード例: ProductMapper.java</summary>
+
+```java
+@Mapper
+public interface ProductMapper {
+    // 既存のメソッド...
+
+    List<Product> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("category") String category,
+            @Param("keyword") String keyword);
+
+    long count(@Param("category") String category, @Param("keyword") String keyword);
+}
+```
+
+</details>
+
+### 18.4 リポジトリの実装
+
+Output Port にページネーション用のメソッドを追加します。
+
+<details>
+<summary>コード例: ProductRepository.java（インターフェース）</summary>
+
+```java
+public interface ProductRepository {
+    // 既存のメソッド...
+
+    /**
+     * ページネーション付きで商品を取得.
+     */
+    PageResult<Product> findWithPagination(int page, int size, ProductCategory category, String keyword);
+}
+```
+
+</details>
+
+<details>
+<summary>コード例: ProductRepositoryImpl.java（実装）</summary>
+
+```java
+@Override
+public PageResult<Product> findWithPagination(int page, int size, ProductCategory category, String keyword) {
+    int offset = page * size;
+    String categoryName = category != null ? category.getDisplayName() : null;
+
+    List<Product> products = productMapper.findWithPagination(offset, size, categoryName, keyword);
+    long totalElements = productMapper.count(categoryName, keyword);
+
+    return new PageResult<>(products, page, size, totalElements);
+}
+```
+
+</details>
+
+### 18.5 ユースケースとサービスの実装
+
+Input Port にページネーション用のメソッドを追加します。
+
+<details>
+<summary>コード例: ProductUseCase.java</summary>
+
+```java
+public interface ProductUseCase {
+    // 既存のメソッド...
+
+    /**
+     * ページネーション付きで商品を取得する.
+     */
+    PageResult<Product> getProducts(int page, int size, ProductCategory category, String keyword);
+}
+```
+
+</details>
+
+<details>
+<summary>コード例: ProductService.java</summary>
+
+```java
+@Override
+@Transactional(readOnly = true)
+public PageResult<Product> getProducts(int page, int size, ProductCategory category, String keyword) {
+    return productRepository.findWithPagination(page, size, category, keyword);
+}
+```
+
+</details>
+
+### 18.6 Controller の実装
+
+ページネーションパラメータを受け取り、ビューにページ情報を渡します。
+
+<details>
+<summary>コード例: ProductWebController.java</summary>
+
+```java
+@Controller
+@RequestMapping("/products")
+public class ProductWebController {
+
+    private static final int DEFAULT_PAGE_SIZE = 10;
+
+    private final ProductUseCase productUseCase;
+    // ...
+
+    @GetMapping
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) ProductCategory category,
+            @RequestParam(required = false) String keyword,
+            Model model) {
+
+        PageResult<Product> productPage = productUseCase.getProducts(page, size, category, keyword);
+
+        model.addAttribute("products", productPage.getContent());
+        model.addAttribute("page", productPage);
+        model.addAttribute("categories", ProductCategory.values());
+        model.addAttribute("selectedCategory", category);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
+        return "products/list";
+    }
+}
+```
+
+</details>
+
+### 18.7 Thymeleaf テンプレートの実装
+
+Bootstrap のページネーションコンポーネントを使用して UI を実装します。
+
+<details>
+<summary>コード例: products/list.html（ページネーション部分）</summary>
+
+```html
+<!-- 検索フォームに表示件数選択を追加 -->
+<div class="col-md-2">
+    <label class="form-label">表示件数</label>
+    <select name="size" class="form-select">
+        <option value="10" th:selected="${currentSize == 10}">10件</option>
+        <option value="25" th:selected="${currentSize == 25}">25件</option>
+        <option value="50" th:selected="${currentSize == 50}">50件</option>
+        <option value="100" th:selected="${currentSize == 100}">100件</option>
+    </select>
+</div>
+
+<!-- ページネーション -->
+<div class="mt-3">
+    <div class="text-muted text-center mb-2">
+        <span th:if="${page.totalElements > 0}">
+            <span th:text="${page.page * page.size + 1}">1</span> -
+            <span th:text="${page.page * page.size + #lists.size(products)}">10</span> 件
+            （全 <span th:text="${page.totalElements}">0</span> 件）
+        </span>
+        <span th:if="${page.totalElements == 0}">0 件</span>
+    </div>
+
+    <nav th:if="${page.totalPages > 1}" aria-label="ページナビゲーション">
+        <ul class="pagination justify-content-center mb-0">
+            <!-- 最初のページへ -->
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                <a class="page-link" th:href="@{/products(page=0, size=${currentSize},
+                   category=${selectedCategory?.name()}, keyword=${keyword})}">&laquo;</a>
+            </li>
+            <!-- 前のページへ -->
+            <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                <a class="page-link" th:href="@{/products(page=${page.page - 1},
+                   size=${currentSize}, category=${selectedCategory?.name()},
+                   keyword=${keyword})}">&lsaquo;</a>
+            </li>
+
+            <!-- ページ番号 -->
+            <th:block th:with="startPage=${page.page > 2 ? page.page - 2 : 0},
+                               endPage=${page.page + 2 < page.totalPages - 1 ? page.page + 2 : page.totalPages - 1}">
+                <li class="page-item" th:if="${startPage > 0}">
+                    <span class="page-link">...</span>
+                </li>
+                <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                    class="page-item"
+                    th:classappend="${i == page.page} ? 'active'">
+                    <a class="page-link"
+                       th:href="@{/products(page=${i}, size=${currentSize},
+                          category=${selectedCategory?.name()}, keyword=${keyword})}"
+                       th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:if="${endPage < page.totalPages - 1}">
+                    <span class="page-link">...</span>
+                </li>
+            </th:block>
+
+            <!-- 次のページへ -->
+            <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                <a class="page-link" th:href="@{/products(page=${page.page + 1},
+                   size=${currentSize}, category=${selectedCategory?.name()},
+                   keyword=${keyword})}">&rsaquo;</a>
+            </li>
+            <!-- 最後のページへ -->
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                <a class="page-link" th:href="@{/products(page=${page.totalPages - 1},
+                   size=${currentSize}, category=${selectedCategory?.name()},
+                   keyword=${keyword})}">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+```
+
+</details>
+
+### 18.8 ページネーションの設計ポイント
+
+| ポイント | 説明 |
+|---------|------|
+| **0始まり vs 1始まり** | 内部では0始まり、表示では1始まりを使用 |
+| **デフォルト値** | ページサイズは 10 件程度が一般的 |
+| **検索条件の保持** | ページ遷移時も検索条件（カテゴリ、キーワード）を保持 |
+| **ページ番号の省略** | 大量ページの場合は「...」で省略 |
+| **SQL 最適化** | OFFSET が大きい場合のパフォーマンスに注意 |
+
+### 18.9 パフォーマンス考慮事項
+
+```plantuml
+@startuml offset_performance
+title OFFSET のパフォーマンス問題
+
+note as N1
+**OFFSET が大きい場合の問題**
+
+SELECT * FROM products
+ORDER BY product_code
+LIMIT 10 OFFSET 100000
+
+→ 先頭から100,000件スキャンしてから
+  10件を返す（非効率）
+
+**対策**
+1. Keyset Pagination（カーソル方式）
+2. インデックス付きカラムでの絞り込み
+3. キャッシュの活用
+end note
+
+@enduml
+```
+
+大量データの場合は、OFFSET ベースではなく **Keyset Pagination**（カーソル方式）を検討します：
+
+```sql
+-- OFFSET 方式（非効率）
+SELECT * FROM products ORDER BY product_code LIMIT 10 OFFSET 100000;
+
+-- Keyset Pagination（効率的）
+SELECT * FROM products
+WHERE product_code > 'LAST_SEEN_CODE'
+ORDER BY product_code
+LIMIT 10;
+```
+
+---
+
 ## 第10部-B のまとめ
 
 ### API サーバー版との比較
@@ -1048,14 +1435,14 @@ public void exportInvoicePdf(@PathVariable String invoiceNumber, HttpServletResp
 
 | カテゴリ | 機能 |
 |---------|------|
-| **商品マスタ** | 一覧、詳細、登録、編集、削除、検索 |
+| **商品マスタ** | 一覧、詳細、登録、編集、削除、検索、ページネーション |
 | **取引先マスタ** | 一覧、詳細（取引履歴）、登録、編集、削除、検索 |
 | **受注** | 一覧、登録（動的明細）、確定、取消 |
 | **出荷** | 一覧、出荷指示、出荷実行、取消 |
 | **請求** | 一覧、締処理、請求書発行 |
 | **入金** | 一覧、入金登録、消込処理 |
 | **帳票** | Excel/PDF 出力 |
-| **共通** | レイアウト、エラーハンドリング、フラッシュメッセージ |
+| **共通** | レイアウト、エラーハンドリング、フラッシュメッセージ、ページネーション |
 
 ### 技術スタック
 

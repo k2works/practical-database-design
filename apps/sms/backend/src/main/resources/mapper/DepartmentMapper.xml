@@ -67,6 +67,36 @@
         ORDER BY "部門パス", "開始日" DESC
     </select>
 
+    <select id="findWithPagination" resultMap="DepartmentResultMap">
+        SELECT * FROM "部門マスタ"
+        <where>
+            ("終了日" IS NULL OR "終了日" > CURRENT_DATE)
+            <if test="level != null">
+                AND "組織階層" = #{level}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("部門コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("部門名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "部門パス", "開始日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "部門マスタ"
+        <where>
+            ("終了日" IS NULL OR "終了日" > CURRENT_DATE)
+            <if test="level != null">
+                AND "組織階層" = #{level}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("部門コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("部門名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.sms.domain.model.department.Department">
         UPDATE "部門マスタ" SET
             "終了日" = #{endDate},

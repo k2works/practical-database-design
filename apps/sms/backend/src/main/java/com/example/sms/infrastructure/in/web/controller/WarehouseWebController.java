@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.WarehouseUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Warehouse;
 import com.example.sms.domain.model.inventory.WarehouseType;
 import org.springframework.stereotype.Controller;
@@ -12,9 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
-import java.util.Locale;
 
 /**
  * 倉庫マスタ画面コントローラー.
@@ -33,23 +31,18 @@ public class WarehouseWebController {
      * 倉庫一覧画面を表示.
      */
     @GetMapping
-    public String list(@RequestParam(required = false) String keyword, Model model) {
-        List<Warehouse> warehouses = warehouseUseCase.getAllWarehouses();
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            Model model) {
 
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            warehouses = warehouses.stream()
-                .filter(w -> (w.getWarehouseCode() != null
-                        && w.getWarehouseCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (w.getWarehouseName() != null
-                        && w.getWarehouseName().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (w.getWarehouseNameKana() != null
-                        && w.getWarehouseNameKana().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
+        PageResult<Warehouse> warehousePage = warehouseUseCase.getWarehouses(page, size, keyword);
 
-        model.addAttribute("warehouses", warehouses);
+        model.addAttribute("warehouses", warehousePage.getContent());
+        model.addAttribute("page", warehousePage);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "warehouses/list";
     }
 

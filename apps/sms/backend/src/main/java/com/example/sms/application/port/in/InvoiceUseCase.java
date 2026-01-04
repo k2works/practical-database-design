@@ -2,6 +2,7 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateInvoiceCommand;
 import com.example.sms.application.port.in.command.UpdateInvoiceCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.invoice.Invoice;
 import com.example.sms.domain.model.invoice.InvoiceStatus;
 
@@ -35,6 +36,16 @@ public interface InvoiceUseCase {
      * @return 請求リスト
      */
     List<Invoice> getAllInvoices();
+
+    /**
+     * ページネーション付きで請求を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<Invoice> getInvoices(int page, int size, String keyword);
 
     /**
      * 請求番号で請求を取得する.

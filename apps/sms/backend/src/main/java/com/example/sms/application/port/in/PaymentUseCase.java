@@ -1,6 +1,7 @@
 package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreatePaymentCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.payment.Payment;
 import com.example.sms.domain.model.payment.PaymentStatus;
 
@@ -25,6 +26,16 @@ public interface PaymentUseCase {
      * @return 支払リスト
      */
     List<Payment> getAllPayments();
+
+    /**
+     * ページネーション付きで支払を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<Payment> getPayments(int page, int size, String keyword);
 
     /**
      * 支払番号で支払を取得する.

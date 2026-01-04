@@ -3,6 +3,7 @@ package com.example.sms.application.service;
 import com.example.sms.application.port.in.DepartmentUseCase;
 import com.example.sms.application.port.out.DepartmentRepository;
 import com.example.sms.domain.exception.DepartmentNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.department.Department;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,12 @@ public class DepartmentService implements DepartmentUseCase {
     @Transactional(readOnly = true)
     public List<Department> getAllDepartments() {
         return departmentRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Department> getDepartments(int page, int size, Integer level, String keyword) {
+        return departmentRepository.findWithPagination(page, size, level, keyword);
     }
 
     @Override

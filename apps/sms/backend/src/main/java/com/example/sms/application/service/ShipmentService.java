@@ -5,6 +5,7 @@ import com.example.sms.application.port.in.command.CreateShipmentCommand;
 import com.example.sms.application.port.in.command.UpdateShipmentCommand;
 import com.example.sms.application.port.out.ShipmentRepository;
 import com.example.sms.domain.exception.ShipmentNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.TaxCategory;
 import com.example.sms.domain.model.shipping.Shipment;
 import com.example.sms.domain.model.shipping.ShipmentDetail;
@@ -125,6 +126,12 @@ public class ShipmentService implements ShipmentUseCase {
     @Transactional(readOnly = true)
     public List<Shipment> getAllShipments() {
         return shipmentRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Shipment> getShipments(int page, int size, String keyword) {
+        return shipmentRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

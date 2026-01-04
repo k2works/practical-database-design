@@ -1,5 +1,6 @@
 package com.example.sms.application.port.in;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.department.Department;
 
 import java.time.LocalDate;
@@ -16,6 +17,17 @@ public interface DepartmentUseCase {
      * @return 部門リスト
      */
     List<Department> getAllDepartments();
+
+    /**
+     * ページネーション付きで部門を取得.
+     *
+     * @param page    ページ番号（0始まり）
+     * @param size    ページサイズ
+     * @param level   階層レベル
+     * @param keyword キーワード
+     * @return ページネーション結果
+     */
+    PageResult<Department> getDepartments(int page, int size, Integer level, String keyword);
 
     /**
      * 部門コードで部門を取得する.

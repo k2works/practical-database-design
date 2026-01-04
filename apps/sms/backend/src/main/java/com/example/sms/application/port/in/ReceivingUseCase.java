@@ -1,6 +1,7 @@
 package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateReceivingCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.Receiving;
 import com.example.sms.domain.model.purchase.ReceivingStatus;
 
@@ -25,6 +26,16 @@ public interface ReceivingUseCase {
      * @return 入荷リスト
      */
     List<Receiving> getAllReceivings();
+
+    /**
+     * ページネーション付きで入荷を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<Receiving> getReceivings(int page, int size, String keyword);
 
     /**
      * 入荷番号で入荷を取得する.

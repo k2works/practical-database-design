@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.DepartmentUseCase;
 import com.example.sms.application.port.in.EmployeeUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.department.Department;
 import com.example.sms.domain.model.employee.Employee;
 import org.springframework.stereotype.Controller;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 部門マスタ画面コントローラー.
@@ -23,6 +23,8 @@ import java.util.Locale;
 @Controller
 @RequestMapping("/departments")
 public class DepartmentWebController {
+
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final DepartmentUseCase departmentUseCase;
     private final EmployeeUseCase employeeUseCase;
@@ -37,35 +39,20 @@ public class DepartmentWebController {
      */
     @GetMapping
     public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Integer level,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Department> departments = getFilteredDepartments(level);
+        PageResult<Department> departmentPage = departmentUseCase.getDepartments(page, size, level, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            departments = departments.stream()
-                .filter(d -> (d.getDepartmentCode() != null
-                        && d.getDepartmentCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (d.getDepartmentName() != null
-                        && d.getDepartmentName().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("departments", departments);
+        model.addAttribute("departments", departmentPage.getContent());
+        model.addAttribute("page", departmentPage);
         model.addAttribute("selectedLevel", level);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "departments/list";
-    }
-
-    private List<Department> getFilteredDepartments(Integer level) {
-        if (level != null) {
-            return departmentUseCase.getDepartmentsByHierarchyLevel(level);
-        } else {
-            return departmentUseCase.getAllDepartments();
-        }
     }
 
     /**

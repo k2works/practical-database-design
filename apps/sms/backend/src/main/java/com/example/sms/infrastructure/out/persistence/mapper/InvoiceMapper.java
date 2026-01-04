@@ -37,6 +37,19 @@ public interface InvoiceMapper {
 
     List<Invoice> findAll();
 
+    /**
+     * ページネーション付きで請求を検索.
+     */
+    List<Invoice> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する請求の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     List<InvoiceDetail> findDetailsByInvoiceId(Integer invoiceId);
 
     Invoice findWithDetailsByInvoiceNumber(String invoiceNumber);

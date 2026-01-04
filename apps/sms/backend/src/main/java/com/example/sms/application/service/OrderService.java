@@ -6,6 +6,7 @@ import com.example.sms.application.port.in.command.UpdateOrderCommand;
 import com.example.sms.application.port.out.SalesOrderRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
 import com.example.sms.domain.exception.SalesOrderNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.TaxCategory;
 import com.example.sms.domain.model.sales.OrderStatus;
 import com.example.sms.domain.model.sales.SalesOrder;
@@ -151,6 +152,12 @@ public class OrderService implements OrderUseCase {
     @Transactional(readOnly = true)
     public List<SalesOrder> getAllOrders() {
         return salesOrderRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<SalesOrder> getOrders(int page, int size, String keyword) {
+        return salesOrderRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateSupplierCommand;
 import com.example.sms.application.port.in.command.UpdateSupplierCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Supplier;
 
 import java.util.List;
@@ -16,6 +17,11 @@ public interface SupplierUseCase {
     Supplier updateSupplier(String supplierCode, String branchNumber, UpdateSupplierCommand command);
 
     List<Supplier> getAllSuppliers();
+
+    /**
+     * ページネーション付きで仕入先を取得.
+     */
+    PageResult<Supplier> getSuppliers(int page, int size, String keyword);
 
     List<Supplier> getSuppliersByCode(String supplierCode);
 

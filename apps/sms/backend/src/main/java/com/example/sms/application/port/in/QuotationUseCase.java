@@ -2,6 +2,7 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateQuotationCommand;
 import com.example.sms.application.port.in.command.UpdateQuotationCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.sales.Quotation;
 import com.example.sms.domain.model.sales.QuotationStatus;
 
@@ -35,6 +36,16 @@ public interface QuotationUseCase {
      * @return 見積リスト
      */
     List<Quotation> getAllQuotations();
+
+    /**
+     * ページネーション付きで見積を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<Quotation> getQuotations(int page, int size, String keyword);
 
     /**
      * 見積番号で見積を取得する.

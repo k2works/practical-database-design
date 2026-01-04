@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.SupplierRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Supplier;
 import com.example.sms.infrastructure.out.persistence.mapper.SupplierMapper;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,14 @@ public class SupplierRepositoryImpl implements SupplierRepository {
     @Override
     public List<Supplier> findAll() {
         return supplierMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Supplier> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Supplier> suppliers = supplierMapper.findWithPagination(offset, size, keyword);
+        long totalElements = supplierMapper.count(keyword);
+        return new PageResult<>(suppliers, page, size, totalElements);
     }
 
     @Override

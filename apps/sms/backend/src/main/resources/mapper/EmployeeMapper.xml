@@ -42,6 +42,36 @@
         ORDER BY "社員コード"
     </select>
 
+    <select id="findWithPagination" resultMap="EmployeeResultMap">
+        SELECT * FROM "社員マスタ"
+        <where>
+            <if test="departmentCode != null and departmentCode != ''">
+                "部門コード" = #{departmentCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("社員コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("社員名") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("社員名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "社員コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "社員マスタ"
+        <where>
+            <if test="departmentCode != null and departmentCode != ''">
+                "部門コード" = #{departmentCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("社員コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("社員名") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("社員名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.sms.domain.model.employee.Employee">
         UPDATE "社員マスタ" SET
             "社員名" = #{employeeName},

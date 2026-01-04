@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.CustomerProductPriceUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductClassificationUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.product.CustomerProductPrice;
 import com.example.sms.domain.model.product.Product;
@@ -25,7 +26,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 商品マスタ画面コントローラー.
@@ -33,6 +33,8 @@ import java.util.Locale;
 @Controller
 @RequestMapping("/products")
 public class ProductWebController {
+
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final ProductUseCase productUseCase;
     private final ProductClassificationUseCase classificationUseCase;
@@ -54,32 +56,20 @@ public class ProductWebController {
      */
     @GetMapping
     public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) ProductCategory category,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Product> products = productUseCase.getAllProducts();
+        PageResult<Product> productPage = productUseCase.getProducts(page, size, category, keyword);
 
-        // カテゴリでフィルタ
-        if (category != null) {
-            products = products.stream()
-                .filter(p -> p.getProductCategory() == category)
-                .toList();
-        }
-
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            products = products.stream()
-                .filter(p -> p.getProductCode().toLowerCase(Locale.ROOT).contains(lowerKeyword)
-                    || p.getProductName().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                .toList();
-        }
-
-        model.addAttribute("products", products);
+        model.addAttribute("products", productPage.getContent());
+        model.addAttribute("page", productPage);
         model.addAttribute("categories", ProductCategory.values());
         model.addAttribute("selectedCategory", category);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "products/list";
     }
 

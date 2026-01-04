@@ -1,5 +1,6 @@
 package com.example.sms.application.port.in;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.employee.Employee;
 
 import java.util.List;
@@ -15,6 +16,17 @@ public interface EmployeeUseCase {
      * @return 社員リスト
      */
     List<Employee> getAllEmployees();
+
+    /**
+     * ページネーション付きで社員を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param departmentCode 部門コード
+     * @param keyword キーワード
+     * @return ページネーション結果
+     */
+    PageResult<Employee> getEmployees(int page, int size, String departmentCode, String keyword);
 
     /**
      * 社員コードで社員を取得する.

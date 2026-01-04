@@ -22,6 +22,19 @@ public interface CustomerMapper {
 
     List<Customer> findAll();
 
+    /**
+     * ページネーション付きで顧客を検索.
+     */
+    List<Customer> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する顧客の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     void update(Customer customer);
 
     void deleteByCodeAndBranch(@Param("customerCode") String customerCode,

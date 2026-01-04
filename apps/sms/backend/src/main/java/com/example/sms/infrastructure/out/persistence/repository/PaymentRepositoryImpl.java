@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.PaymentRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.payment.Payment;
 import com.example.sms.domain.model.payment.PaymentDetail;
 import com.example.sms.domain.model.payment.PaymentStatus;
@@ -72,6 +73,14 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     @Override
     public List<Payment> findAll() {
         return paymentMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Payment> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Payment> payments = paymentMapper.findWithPagination(offset, size, keyword);
+        long totalElements = paymentMapper.count(keyword);
+        return new PageResult<>(payments, page, size, totalElements);
     }
 
     @Override

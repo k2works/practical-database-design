@@ -1773,6 +1773,398 @@ public class ExcelReportGenerator {
 
 ---
 
+## 第26章：ページネーションの実装
+
+### 26.1 ページネーションの設計
+
+一覧画面でデータ量が多い場合、すべてのデータを一度に表示するとパフォーマンスが低下します。ページネーションを実装して、データを分割して表示します。
+
+| 要素 | 説明 |
+|------|------|
+| **PageResult<T>** | ページネーション結果を表す汎用クラス |
+| **LIMIT/OFFSET** | SQL でのページ分割 |
+| **表示件数** | ユーザーが選択可能（10/25/50/100件） |
+| **ページナビゲーション** | 最初/前/ページ番号/次/最後 |
+
+---
+
+### 26.2 PageResult クラス
+
+<details>
+<summary>PageResult.java</summary>
+
+```java
+package com.example.sms.domain.model.common;
+
+import java.util.List;
+
+/**
+ * ページネーション結果を表す汎用クラス.
+ *
+ * @param <T> コンテンツの型
+ */
+public class PageResult<T> {
+
+    private final List<T> content;
+    private final int page;
+    private final int size;
+    private final long totalElements;
+    private final int totalPages;
+
+    public PageResult(List<T> content, int page, int size, long totalElements) {
+        this.content = content;
+        this.page = page;
+        this.size = size;
+        this.totalElements = totalElements;
+        this.totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 0;
+    }
+
+    public List<T> getContent() {
+        return content;
+    }
+
+    public int getPage() {
+        return page;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public long getTotalElements() {
+        return totalElements;
+    }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    public boolean isFirst() {
+        return page == 0;
+    }
+
+    public boolean isLast() {
+        return page >= totalPages - 1;
+    }
+
+    public boolean hasPrevious() {
+        return page > 0;
+    }
+
+    public boolean hasNext() {
+        return page < totalPages - 1;
+    }
+}
+```
+
+</details>
+
+---
+
+### 26.3 Mapper 層の実装
+
+ページネーション用のクエリと件数取得クエリを追加します。
+
+<details>
+<summary>PartnerMapper.java（抜粋）</summary>
+
+```java
+/**
+ * ページネーション付きで取引先を検索.
+ */
+List<Partner> findWithPagination(
+    @Param("offset") int offset,
+    @Param("limit") int limit,
+    @Param("type") String type,
+    @Param("keyword") String keyword);
+
+/**
+ * 検索条件に一致する取引先の件数を取得.
+ */
+long count(@Param("type") String type, @Param("keyword") String keyword);
+```
+
+</details>
+
+<details>
+<summary>PartnerMapper.xml（抜粋）</summary>
+
+```xml
+<select id="findWithPagination" resultMap="PartnerResultMap">
+    SELECT * FROM "取引先マスタ"
+    <where>
+        <if test="type == 'customer'">
+            "顧客区分" = TRUE
+        </if>
+        <if test="type == 'supplier'">
+            "仕入先区分" = TRUE
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (LOWER("取引先コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("取引先名") LIKE LOWER('%' || #{keyword} || '%'))
+        </if>
+    </where>
+    ORDER BY "取引先コード"
+    LIMIT #{limit} OFFSET #{offset}
+</select>
+
+<select id="count" resultType="long">
+    SELECT COUNT(*) FROM "取引先マスタ"
+    <where>
+        <if test="type == 'customer'">
+            "顧客区分" = TRUE
+        </if>
+        <if test="type == 'supplier'">
+            "仕入先区分" = TRUE
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (LOWER("取引先コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("取引先名") LIKE LOWER('%' || #{keyword} || '%'))
+        </if>
+    </where>
+</select>
+```
+
+</details>
+
+---
+
+### 26.4 Repository 層の実装
+
+<details>
+<summary>PartnerRepository.java（抜粋）</summary>
+
+```java
+/**
+ * ページネーション付きで取引先を検索.
+ */
+PageResult<Partner> findWithPagination(int page, int size, String type, String keyword);
+```
+
+</details>
+
+<details>
+<summary>PartnerRepositoryImpl.java（抜粋）</summary>
+
+```java
+@Override
+public PageResult<Partner> findWithPagination(int page, int size, String type, String keyword) {
+    int offset = page * size;
+    List<Partner> partners = partnerMapper.findWithPagination(offset, size, type, keyword);
+    long totalElements = partnerMapper.count(type, keyword);
+    return new PageResult<>(partners, page, size, totalElements);
+}
+```
+
+</details>
+
+---
+
+### 26.5 UseCase / Service 層の実装
+
+<details>
+<summary>PartnerUseCase.java（抜粋）</summary>
+
+```java
+/**
+ * ページネーション付きで取引先を取得.
+ */
+PageResult<Partner> getPartners(int page, int size, String type, String keyword);
+```
+
+</details>
+
+<details>
+<summary>PartnerService.java（抜粋）</summary>
+
+```java
+@Override
+@Transactional(readOnly = true)
+public PageResult<Partner> getPartners(int page, int size, String type, String keyword) {
+    return partnerRepository.findWithPagination(page, size, type, keyword);
+}
+```
+
+</details>
+
+---
+
+### 26.6 Controller の実装
+
+<details>
+<summary>PartnerWebController.java（抜粋）</summary>
+
+```java
+@GetMapping
+public String list(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String type,
+        @RequestParam(required = false) String keyword,
+        Model model) {
+
+    PageResult<Partner> partnerPage = partnerUseCase.getPartners(page, size, type, keyword);
+
+    model.addAttribute("partners", partnerPage.getContent());
+    model.addAttribute("page", partnerPage);
+    model.addAttribute("selectedType", type);
+    model.addAttribute("keyword", keyword);
+    model.addAttribute("currentSize", size);
+
+    return "partners/list";
+}
+```
+
+</details>
+
+---
+
+### 26.7 テンプレートの実装
+
+<details>
+<summary>list.html ページネーション部分</summary>
+
+```html
+<!-- 検索フォーム -->
+<div class="search-form">
+    <form th:action="@{/partners}" method="get" class="row g-3">
+        <!-- 表示件数 -->
+        <div class="col-md-2">
+            <label class="form-label">表示件数</label>
+            <select name="size" class="form-select">
+                <option value="10" th:selected="${currentSize == 10}">10件</option>
+                <option value="25" th:selected="${currentSize == 25}">25件</option>
+                <option value="50" th:selected="${currentSize == 50}">50件</option>
+                <option value="100" th:selected="${currentSize == 100}">100件</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-secondary">検索</button>
+        </div>
+    </form>
+</div>
+
+<!-- ページネーション -->
+<div class="mt-3">
+    <!-- 件数表示 -->
+    <div class="text-muted text-center mb-2">
+        <span th:if="${page.totalElements > 0}">
+            <span th:text="${page.page * page.size + 1}">1</span> -
+            <span th:text="${page.page * page.size + #lists.size(partners)}">10</span> 件
+            （全 <span th:text="${page.totalElements}">0</span> 件）
+        </span>
+        <span th:if="${page.totalElements == 0}">0 件</span>
+    </div>
+
+    <!-- ページナビゲーション -->
+    <nav th:if="${page.totalPages > 1}" aria-label="ページナビゲーション">
+        <ul class="pagination justify-content-center mb-0">
+            <!-- 最初のページへ -->
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                <a class="page-link" th:href="@{/partners(page=0, size=${currentSize})}">&laquo;</a>
+            </li>
+            <!-- 前のページへ -->
+            <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                <a class="page-link" th:href="@{/partners(page=${page.page - 1}, size=${currentSize})}">&lsaquo;</a>
+            </li>
+
+            <!-- ページ番号 -->
+            <th:block th:with="startPage=${page.page > 2 ? page.page - 2 : 0},
+                               endPage=${page.page + 2 < page.totalPages - 1 ? page.page + 2 : page.totalPages - 1}">
+                <li class="page-item" th:if="${startPage > 0}">
+                    <span class="page-link">...</span>
+                </li>
+                <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                    class="page-item"
+                    th:classappend="${i == page.page} ? 'active'">
+                    <a class="page-link"
+                       th:href="@{/partners(page=${i}, size=${currentSize})}"
+                       th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:if="${endPage < page.totalPages - 1}">
+                    <span class="page-link">...</span>
+                </li>
+            </th:block>
+
+            <!-- 次のページへ -->
+            <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                <a class="page-link" th:href="@{/partners(page=${page.page + 1}, size=${currentSize})}">&rsaquo;</a>
+            </li>
+            <!-- 最後のページへ -->
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                <a class="page-link" th:href="@{/partners(page=${page.totalPages - 1}, size=${currentSize})}">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+```
+
+</details>
+
+---
+
+### 26.8 ページネーションの動作
+
+```
+                    ページネーション処理フロー
+┌─────────────────────────────────────────────────────────────┐
+│  ブラウザ                                                    │
+│  /partners?page=2&size=10&keyword=xxx                       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Controller                                                  │
+│  - page, size, keyword パラメータを受け取る                   │
+│  - UseCase.getPartners(page, size, keyword) を呼び出す       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Service / Repository                                        │
+│  - offset = page * size を計算                               │
+│  - findWithPagination(offset, size, keyword) を実行          │
+│  - count(keyword) で総件数を取得                             │
+│  - PageResult<T> を生成して返却                              │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  SQL (MyBatis)                                               │
+│  SELECT * FROM "テーブル"                                    │
+│  WHERE ... LIMIT 10 OFFSET 20                               │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  PageResult<T>                                               │
+│  - content: データリスト (10件)                               │
+│  - page: 2                                                   │
+│  - size: 10                                                  │
+│  - totalElements: 57                                         │
+│  - totalPages: 6                                             │
+│  - isFirst/isLast/hasPrevious/hasNext メソッド               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 26.9 検索条件の保持
+
+ページ遷移時に検索条件を保持するため、すべてのリンクに検索パラメータを含めます。
+
+```html
+<!-- 検索条件付きページネーションリンク -->
+<a th:href="@{/partners(
+    page=${i},
+    size=${currentSize},
+    type=${selectedType},
+    keyword=${keyword}
+)}">
+```
+
+---
+
 ## まとめ
 
 ### 学んだこと
@@ -1782,6 +2174,7 @@ public class ExcelReportGenerator {
 3. **Excel 出力**: Apache POI による Excel ファイル生成
 4. **PDF 出力**: iText による PDF ファイル生成
 5. **ダウンロード**: ResponseEntity による添付ファイル返却
+6. **ページネーション**: PageResult<T> による一覧画面のページ分割
 
 ---
 

@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.ReceivingUseCase;
 import com.example.sms.application.port.in.command.CreateReceivingCommand;
 import com.example.sms.application.port.out.ReceivingRepository;
 import com.example.sms.domain.exception.ReceivingNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.Receiving;
 import com.example.sms.domain.model.purchase.ReceivingDetail;
 import com.example.sms.domain.model.purchase.ReceivingStatus;
@@ -83,6 +84,12 @@ public class ReceivingService implements ReceivingUseCase {
     @Transactional(readOnly = true)
     public List<Receiving> getAllReceivings() {
         return receivingRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Receiving> getReceivings(int page, int size, String keyword) {
+        return receivingRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

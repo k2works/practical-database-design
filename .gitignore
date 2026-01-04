@@ -152,3 +152,4 @@ vite.config.ts.timestamp-*
 # Wiki submodule
 docs/wiki/
 /docs/assets/schemaspy-output/
+tmp

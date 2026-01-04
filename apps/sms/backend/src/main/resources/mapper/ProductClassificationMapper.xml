@@ -42,6 +42,28 @@
         ORDER BY "商品分類パス"
     </select>
 
+    <select id="findWithPagination" resultMap="ProductClassificationResultMap">
+        SELECT * FROM "商品分類マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("商品分類コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("商品分類名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "商品分類パス"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "商品分類マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("商品分類コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("商品分類名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.sms.domain.model.product.ProductClassification">
         UPDATE "商品分類マスタ" SET
             "商品分類名" = #{classificationName},

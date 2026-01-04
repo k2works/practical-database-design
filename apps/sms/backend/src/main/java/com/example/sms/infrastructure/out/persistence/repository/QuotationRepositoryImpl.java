@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.QuotationRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.sales.Quotation;
 import com.example.sms.domain.model.sales.QuotationDetail;
 import com.example.sms.domain.model.sales.QuotationStatus;
@@ -70,6 +71,14 @@ public class QuotationRepositoryImpl implements QuotationRepository {
     @Override
     public List<Quotation> findAll() {
         return quotationMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Quotation> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Quotation> quotations = quotationMapper.findWithPagination(offset, size, keyword);
+        long totalElements = quotationMapper.count(keyword);
+        return new PageResult<>(quotations, page, size, totalElements);
     }
 
     @Override

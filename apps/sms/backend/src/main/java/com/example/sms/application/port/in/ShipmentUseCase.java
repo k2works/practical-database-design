@@ -2,6 +2,7 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateShipmentCommand;
 import com.example.sms.application.port.in.command.UpdateShipmentCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.shipping.Shipment;
 import com.example.sms.domain.model.shipping.ShipmentStatus;
 
@@ -35,6 +36,16 @@ public interface ShipmentUseCase {
      * @return 出荷リスト
      */
     List<Shipment> getAllShipments();
+
+    /**
+     * ページネーション付きで出荷を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<Shipment> getShipments(int page, int size, String keyword);
 
     /**
      * 出荷番号で出荷を取得する.

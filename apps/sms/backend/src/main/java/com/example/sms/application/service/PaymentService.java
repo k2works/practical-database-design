@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.PaymentUseCase;
 import com.example.sms.application.port.in.command.CreatePaymentCommand;
 import com.example.sms.application.port.out.PaymentRepository;
 import com.example.sms.domain.exception.PaymentNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.payment.Payment;
 import com.example.sms.domain.model.payment.PaymentDetail;
 import com.example.sms.domain.model.payment.PaymentStatus;
@@ -95,6 +96,12 @@ public class PaymentService implements PaymentUseCase {
     @Transactional(readOnly = true)
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Payment> getPayments(int page, int size, String keyword) {
+        return paymentRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

@@ -2,7 +2,9 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateProductCommand;
 import com.example.sms.application.port.in.command.UpdateProductCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.Product;
+import com.example.sms.domain.model.product.ProductCategory;
 
 import java.util.List;
 
@@ -34,6 +36,17 @@ public interface ProductUseCase {
      * @return 商品リスト
      */
     List<Product> getAllProducts();
+
+    /**
+     * ページネーション付きで商品を取得する.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param category カテゴリ（null可）
+     * @param keyword キーワード（null可）
+     * @return ページ結果
+     */
+    PageResult<Product> getProducts(int page, int size, ProductCategory category, String keyword);
 
     /**
      * 商品コードで商品を取得する.

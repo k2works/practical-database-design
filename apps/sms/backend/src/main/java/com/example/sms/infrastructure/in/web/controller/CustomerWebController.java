@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.CustomerUseCase;
 import com.example.sms.application.port.in.ShippingDestinationUseCase;
 import com.example.sms.application.port.in.command.CreateCustomerCommand;
 import com.example.sms.application.port.in.command.UpdateCustomerCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.BillingType;
 import com.example.sms.domain.model.partner.Customer;
 import com.example.sms.domain.model.partner.PaymentMethod;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 顧客マスタ画面コントローラー.
@@ -41,23 +41,18 @@ public class CustomerWebController {
      * 顧客一覧画面を表示.
      */
     @GetMapping
-    public String list(@RequestParam(required = false) String keyword, Model model) {
-        List<Customer> customers = customerUseCase.getAllCustomers();
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            Model model) {
 
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            customers = customers.stream()
-                .filter(c -> (c.getCustomerCode() != null
-                        && c.getCustomerCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (c.getCustomerName() != null
-                        && c.getCustomerName().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (c.getCustomerNameKana() != null
-                        && c.getCustomerNameKana().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
+        PageResult<Customer> customerPage = customerUseCase.getCustomers(page, size, keyword);
 
-        model.addAttribute("customers", customers);
+        model.addAttribute("customers", customerPage.getContent());
+        model.addAttribute("page", customerPage);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "customers/list";
     }
 

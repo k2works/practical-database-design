@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.PartnerUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -43,19 +45,22 @@ class PartnerWebControllerTest {
         @DisplayName("取引先一覧画面を表示できる")
         void shouldDisplayPartnerList() throws Exception {
             Partner partner = createTestPartner("WEB-P001", "Webテスト取引先", true, false);
-            when(partnerUseCase.getAllPartners()).thenReturn(List.of(partner));
+            PageResult<Partner> pageResult = new PageResult<>(List.of(partner), 0, 10, 1);
+            when(partnerUseCase.getPartners(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("partners/list"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("partners"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("partners"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("page"));
         }
 
         @Test
         @DisplayName("顧客タイプでフィルタできる")
         void shouldFilterByCustomerType() throws Exception {
             Partner customer = createTestPartner("WEB-C001", "顧客", true, false);
-            when(partnerUseCase.getCustomers()).thenReturn(List.of(customer));
+            PageResult<Partner> pageResult = new PageResult<>(List.of(customer), 0, 10, 1);
+            when(partnerUseCase.getPartners(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners")
                     .param("type", "customer"))
@@ -68,7 +73,8 @@ class PartnerWebControllerTest {
         @DisplayName("仕入先タイプでフィルタできる")
         void shouldFilterBySupplierType() throws Exception {
             Partner supplier = createTestPartner("WEB-S002", "仕入先", false, true);
-            when(partnerUseCase.getSuppliers()).thenReturn(List.of(supplier));
+            PageResult<Partner> pageResult = new PageResult<>(List.of(supplier), 0, 10, 1);
+            when(partnerUseCase.getPartners(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners")
                     .param("type", "supplier"))
@@ -81,7 +87,8 @@ class PartnerWebControllerTest {
         @DisplayName("キーワードで検索できる")
         void shouldSearchByKeyword() throws Exception {
             Partner partner = createTestPartner("WEB-P002", "検索テスト取引先", true, false);
-            when(partnerUseCase.getAllPartners()).thenReturn(List.of(partner));
+            PageResult<Partner> pageResult = new PageResult<>(List.of(partner), 0, 10, 1);
+            when(partnerUseCase.getPartners(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners")
                     .param("keyword", "検索"))

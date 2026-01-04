@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.ReceivingRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.Receiving;
 import com.example.sms.domain.model.purchase.ReceivingDetail;
 import com.example.sms.domain.model.purchase.ReceivingStatus;
@@ -77,6 +78,14 @@ public class ReceivingRepositoryImpl implements ReceivingRepository {
     @Override
     public List<Receiving> findAll() {
         return receivingMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Receiving> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Receiving> receivings = receivingMapper.findWithPagination(offset, size, keyword);
+        long totalElements = receivingMapper.count(keyword);
+        return new PageResult<>(receivings, page, size, totalElements);
     }
 
     @Override

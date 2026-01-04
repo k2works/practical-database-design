@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.SupplierUseCase;
 import com.example.sms.application.port.in.command.CreateSupplierCommand;
 import com.example.sms.application.port.in.command.UpdateSupplierCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.partner.Supplier;
 import org.springframework.stereotype.Controller;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 仕入先マスタ画面コントローラー.
@@ -38,25 +38,20 @@ public class SupplierWebController {
      * 仕入先一覧画面を表示.
      */
     @GetMapping
-    public String list(@RequestParam(required = false) String keyword, Model model) {
-        List<Supplier> suppliers = supplierUseCase.getAllSuppliers();
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            Model model) {
+
+        PageResult<Supplier> supplierPage = supplierUseCase.getSuppliers(page, size, keyword);
         List<Partner> partners = partnerUseCase.getSuppliers();
 
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            suppliers = suppliers.stream()
-                .filter(s -> (s.getSupplierCode() != null
-                        && s.getSupplierCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (s.getRepresentativeName() != null
-                        && s.getRepresentativeName().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (s.getDepartmentName() != null
-                        && s.getDepartmentName().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("suppliers", suppliers);
+        model.addAttribute("suppliers", supplierPage.getContent());
+        model.addAttribute("page", supplierPage);
         model.addAttribute("partners", partners);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "suppliers/list";
     }
 

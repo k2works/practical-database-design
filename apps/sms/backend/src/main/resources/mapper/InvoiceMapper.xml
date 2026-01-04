@@ -164,6 +164,28 @@
         SELECT * FROM "請求データ" ORDER BY "請求日" DESC, "請求番号"
     </select>
 
+    <select id="findWithPagination" resultMap="InvoiceResultMap">
+        SELECT * FROM "請求データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("請求番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "請求日" DESC, "請求番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "請求データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("請求番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findDetailsByInvoiceId" resultMap="InvoiceDetailResultMap">
         SELECT * FROM "請求明細"
         WHERE "請求ID" = #{invoiceId}

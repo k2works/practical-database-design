@@ -146,6 +146,30 @@
         SELECT * FROM "入荷データ" ORDER BY "入荷日" DESC, "入荷番号"
     </select>
 
+    <select id="findWithPagination" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("入荷番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "入荷日" DESC, "入荷番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "入荷データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("入荷番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findDetailsByReceivingId" resultMap="ReceivingDetailResultMap">
         SELECT * FROM "入荷明細データ"
         WHERE "入荷ID" = #{receivingId}

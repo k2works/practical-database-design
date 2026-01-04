@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.ProductRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
 import com.example.sms.infrastructure.out.persistence.mapper.ProductMapper;
@@ -42,6 +43,17 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public List<Product> findByClassificationCode(String classificationCode) {
         return productMapper.findByClassificationCode(classificationCode);
+    }
+
+    @Override
+    public PageResult<Product> findWithPagination(int page, int size, ProductCategory category, String keyword) {
+        int offset = page * size;
+        String categoryName = category != null ? category.getDisplayName() : null;
+
+        List<Product> products = productMapper.findWithPagination(offset, size, categoryName, keyword);
+        long totalElements = productMapper.count(categoryName, keyword);
+
+        return new PageResult<>(products, page, size, totalElements);
     }
 
     @Override

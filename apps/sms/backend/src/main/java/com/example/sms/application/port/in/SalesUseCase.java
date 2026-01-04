@@ -2,6 +2,7 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateSalesCommand;
 import com.example.sms.application.port.in.command.UpdateSalesCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.sales.Sales;
 import com.example.sms.domain.model.sales.SalesStatus;
 
@@ -35,6 +36,16 @@ public interface SalesUseCase {
      * @return 売上リスト
      */
     List<Sales> getAllSales();
+
+    /**
+     * ページネーション付きで売上を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<Sales> getSales(int page, int size, String keyword);
 
     /**
      * 売上番号で売上を取得する.

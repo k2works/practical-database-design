@@ -175,6 +175,30 @@
         SELECT * FROM "受注データ" ORDER BY "受注日" DESC, "受注番号"
     </select>
 
+    <select id="findWithPagination" resultMap="SalesOrderResultMap">
+        SELECT * FROM "受注データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("受注番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客注文番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "受注日" DESC, "受注番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "受注データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("受注番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客注文番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findDetailsByOrderId" resultMap="SalesOrderDetailResultMap">
         SELECT * FROM "受注明細"
         WHERE "受注ID" = #{orderId}

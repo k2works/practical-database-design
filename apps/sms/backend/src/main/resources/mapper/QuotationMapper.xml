@@ -101,6 +101,30 @@
         SELECT * FROM "見積データ" ORDER BY "見積日" DESC, "見積番号"
     </select>
 
+    <select id="findWithPagination" resultMap="QuotationResultMap">
+        SELECT * FROM "見積データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("見積番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("件名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "見積日" DESC, "見積番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "見積データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("見積番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("件名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findDetailsByQuotationId" resultMap="QuotationDetailResultMap">
         SELECT * FROM "見積明細"
         WHERE "見積ID" = #{quotationId}

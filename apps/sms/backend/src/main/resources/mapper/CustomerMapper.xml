@@ -82,6 +82,30 @@
         ORDER BY "顧客コード", "顧客枝番"
     </select>
 
+    <select id="findWithPagination" resultMap="CustomerResultMap">
+        SELECT * FROM "顧客マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "顧客コード", "顧客枝番"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "顧客マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.sms.domain.model.partner.Customer">
         UPDATE "顧客マスタ" SET
             "顧客区分" = #{customerCategory},

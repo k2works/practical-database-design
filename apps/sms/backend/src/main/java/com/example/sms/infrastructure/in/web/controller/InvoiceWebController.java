@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.InvoiceUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.invoice.Invoice;
 import com.example.sms.domain.model.invoice.InvoiceStatus;
 import com.example.sms.domain.model.partner.Partner;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 請求画面コントローラー.
@@ -43,38 +43,20 @@ public class InvoiceWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) InvoiceStatus status,
-            @RequestParam(required = false) String customerCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Invoice> invoices = getFilteredInvoices(status, customerCode);
+        PageResult<Invoice> invoicePage = invoiceUseCase.getInvoices(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            invoices = invoices.stream()
-                .filter(i -> i.getInvoiceNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                .toList();
-        }
-
-        model.addAttribute("invoices", invoices);
+        model.addAttribute("invoices", invoicePage.getContent());
+        model.addAttribute("page", invoicePage);
         model.addAttribute("statuses", InvoiceStatus.values());
         model.addAttribute("customers", partnerUseCase.getCustomers());
-        model.addAttribute("selectedStatus", status);
-        model.addAttribute("selectedCustomerCode", customerCode);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "invoices/list";
-    }
-
-    private List<Invoice> getFilteredInvoices(InvoiceStatus status, String customerCode) {
-        if (status != null) {
-            return invoiceUseCase.getInvoicesByStatus(status);
-        } else if (customerCode != null && !customerCode.isBlank()) {
-            return invoiceUseCase.getInvoicesByCustomer(customerCode);
-        } else {
-            return invoiceUseCase.getAllInvoices();
-        }
     }
 
     /**

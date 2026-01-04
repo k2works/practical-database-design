@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.PartnerUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.infrastructure.in.web.form.PartnerForm;
 import jakarta.validation.Valid;
@@ -15,9 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-import java.util.Locale;
-
 /**
  * 取引先マスタ画面コントローラー.
  */
@@ -25,8 +23,7 @@ import java.util.Locale;
 @RequestMapping("/partners")
 public class PartnerWebController {
 
-    private static final String TYPE_CUSTOMER = "customer";
-    private static final String TYPE_SUPPLIER = "supplier";
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final PartnerUseCase partnerUseCase;
 
@@ -39,35 +36,20 @@ public class PartnerWebController {
      */
     @GetMapping
     public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Partner> partners = getPartnersByType(type);
+        PageResult<Partner> partnerPage = partnerUseCase.getPartners(page, size, type, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            partners = partners.stream()
-                .filter(p -> p.getPartnerCode().toLowerCase(Locale.ROOT).contains(lowerKeyword)
-                    || p.getPartnerName().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                .toList();
-        }
-
-        model.addAttribute("partners", partners);
+        model.addAttribute("partners", partnerPage.getContent());
+        model.addAttribute("page", partnerPage);
         model.addAttribute("selectedType", type);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "partners/list";
-    }
-
-    private List<Partner> getPartnersByType(String type) {
-        if (TYPE_CUSTOMER.equals(type)) {
-            return partnerUseCase.getCustomers();
-        } else if (TYPE_SUPPLIER.equals(type)) {
-            return partnerUseCase.getSuppliers();
-        } else {
-            return partnerUseCase.getAllPartners();
-        }
     }
 
     /**

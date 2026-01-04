@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.receipt.Receipt;
 import com.example.sms.domain.model.receipt.ReceiptStatus;
 
@@ -14,6 +15,11 @@ import java.util.Optional;
 public interface ReceiptRepository {
 
     void save(Receipt receipt);
+
+    /**
+     * ページネーション付きで入金を検索.
+     */
+    PageResult<Receipt> findWithPagination(int page, int size, String keyword);
 
     Optional<Receipt> findById(Integer id);
 

@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.InvoiceRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.invoice.Invoice;
 import com.example.sms.domain.model.invoice.InvoiceDetail;
 import com.example.sms.domain.model.invoice.InvoiceStatus;
@@ -82,6 +83,14 @@ public class InvoiceRepositoryImpl implements InvoiceRepository {
     @Override
     public List<Invoice> findAll() {
         return invoiceMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Invoice> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Invoice> invoices = invoiceMapper.findWithPagination(offset, size, keyword);
+        long totalElements = invoiceMapper.count(keyword);
+        return new PageResult<>(invoices, page, size, totalElements);
     }
 
     @Override

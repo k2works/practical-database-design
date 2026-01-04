@@ -61,6 +61,40 @@
         ORDER BY "取引先コード"
     </select>
 
+    <select id="findWithPagination" resultMap="PartnerResultMap">
+        SELECT * FROM "取引先マスタ"
+        <where>
+            <if test="type == 'customer'">
+                "顧客区分" = TRUE
+            </if>
+            <if test="type == 'supplier'">
+                "仕入先区分" = TRUE
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("取引先コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("取引先名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "取引先コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "取引先マスタ"
+        <where>
+            <if test="type == 'customer'">
+                "顧客区分" = TRUE
+            </if>
+            <if test="type == 'supplier'">
+                "仕入先区分" = TRUE
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("取引先コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("取引先名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.sms.domain.model.partner.Partner">
         UPDATE "取引先マスタ" SET
             "取引先名" = #{partnerName},

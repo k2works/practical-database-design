@@ -1,5 +1,6 @@
 package com.example.sms.application.port.in;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.ProductClassification;
 
 import java.util.List;
@@ -15,6 +16,11 @@ public interface ProductClassificationUseCase {
      * @return 商品分類リスト
      */
     List<ProductClassification> getAllClassifications();
+
+    /**
+     * ページネーション付きで商品分類を取得.
+     */
+    PageResult<ProductClassification> getClassifications(int page, int size, String keyword);
 
     /**
      * 分類コードで商品分類を取得する.

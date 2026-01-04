@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.CustomerProductPriceUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductClassificationUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
 import com.example.sms.domain.model.product.ProductClassification;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -61,20 +63,23 @@ class ProductWebControllerTest {
         @DisplayName("商品一覧画面を表示できる")
         void shouldDisplayProductList() throws Exception {
             Product product = createTestProduct("WEB-001", "Web商品");
-            when(productUseCase.getAllProducts()).thenReturn(List.of(product));
+            PageResult<Product> pageResult = new PageResult<>(List.of(product), 0, 10, 1);
+            when(productUseCase.getProducts(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("products/list"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("products"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("categories"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("categories"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("page"));
         }
 
         @Test
         @DisplayName("カテゴリでフィルタできる")
         void shouldFilterByCategory() throws Exception {
             Product product = createTestProduct("WEB-002", "商品商品");
-            when(productUseCase.getAllProducts()).thenReturn(List.of(product));
+            PageResult<Product> pageResult = new PageResult<>(List.of(product), 0, 10, 1);
+            when(productUseCase.getProducts(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products")
                     .param("category", "PRODUCT"))
@@ -87,7 +92,8 @@ class ProductWebControllerTest {
         @DisplayName("キーワードで検索できる")
         void shouldSearchByKeyword() throws Exception {
             Product product = createTestProduct("WEB-003", "検索テスト商品");
-            when(productUseCase.getAllProducts()).thenReturn(List.of(product));
+            PageResult<Product> pageResult = new PageResult<>(List.of(product), 0, 10, 1);
+            when(productUseCase.getProducts(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products")
                     .param("keyword", "検索"))

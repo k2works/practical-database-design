@@ -34,6 +34,19 @@ public interface ShipmentMapper {
 
     List<Shipment> findAll();
 
+    /**
+     * ページネーション付きで出荷を検索.
+     */
+    List<Shipment> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する出荷の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     List<ShipmentDetail> findDetailsByShipmentId(Integer shipmentId);
 
     void updateHeader(Shipment shipment);

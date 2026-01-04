@@ -163,6 +163,30 @@
         SELECT * FROM "支払データ"
     </select>
 
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="PaymentResultMap">
+        SELECT * FROM "支払データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("支払番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "ID" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 検索条件に一致する件数 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "支払データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("支払番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <!-- 楽観ロック付き更新 -->
     <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.payment.Payment">
         UPDATE "支払データ"

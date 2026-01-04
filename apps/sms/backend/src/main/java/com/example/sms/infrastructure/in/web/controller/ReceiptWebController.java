@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.ReceiptUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.receipt.Receipt;
 import com.example.sms.domain.model.receipt.ReceiptMethod;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 入金画面コントローラー.
@@ -44,40 +44,20 @@ public class ReceiptWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) ReceiptStatus status,
-            @RequestParam(required = false) String customerCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Receipt> receipts = getFilteredReceipts(status, customerCode);
+        PageResult<Receipt> receiptPage = receiptUseCase.getReceipts(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            receipts = receipts.stream()
-                .filter(r -> r.getReceiptNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword)
-                    || (r.getPayerName() != null
-                        && r.getPayerName().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("receipts", receipts);
+        model.addAttribute("receipts", receiptPage.getContent());
+        model.addAttribute("page", receiptPage);
         model.addAttribute("statuses", ReceiptStatus.values());
         model.addAttribute("customers", partnerUseCase.getCustomers());
-        model.addAttribute("selectedStatus", status);
-        model.addAttribute("selectedCustomerCode", customerCode);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "receipts/list";
-    }
-
-    private List<Receipt> getFilteredReceipts(ReceiptStatus status, String customerCode) {
-        if (status != null) {
-            return receiptUseCase.getReceiptsByStatus(status);
-        } else if (customerCode != null && !customerCode.isBlank()) {
-            return receiptUseCase.getReceiptsByCustomer(customerCode);
-        } else {
-            return receiptUseCase.getAllReceipts();
-        }
     }
 
     /**

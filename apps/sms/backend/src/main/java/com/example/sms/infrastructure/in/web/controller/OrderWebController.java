@@ -3,6 +3,7 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.OrderUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.sales.OrderStatus;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 受注画面コントローラー.
@@ -50,40 +50,20 @@ public class OrderWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) String customerCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<SalesOrder> orders = getFilteredOrders(status, customerCode);
+        PageResult<SalesOrder> orderPage = orderUseCase.getOrders(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            orders = orders.stream()
-                .filter(o -> o.getOrderNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword)
-                    || (o.getCustomerOrderNumber() != null
-                        && o.getCustomerOrderNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("orders", orders);
+        model.addAttribute("orders", orderPage.getContent());
+        model.addAttribute("page", orderPage);
         model.addAttribute("statuses", OrderStatus.values());
         model.addAttribute("customers", partnerUseCase.getCustomers());
-        model.addAttribute("selectedStatus", status);
-        model.addAttribute("selectedCustomerCode", customerCode);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "orders/list";
-    }
-
-    private List<SalesOrder> getFilteredOrders(OrderStatus status, String customerCode) {
-        if (status != null) {
-            return orderUseCase.getOrdersByStatus(status);
-        } else if (customerCode != null && !customerCode.isBlank()) {
-            return orderUseCase.getOrdersByCustomer(customerCode);
-        } else {
-            return orderUseCase.getAllOrders();
-        }
     }
 
     /**

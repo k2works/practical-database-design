@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.OrderUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
 import com.example.sms.application.port.in.ShipmentUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
 import com.example.sms.domain.model.product.TaxCategory;
@@ -26,7 +27,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -61,26 +64,48 @@ class ShipmentWebControllerTest {
         @DisplayName("出荷一覧画面を表示できる")
         void shouldDisplayShipmentList() throws Exception {
             Shipment shipment = createTestShipment("SHIP-WEB-001");
-            when(shipmentUseCase.getAllShipments()).thenReturn(List.of(shipment));
+            PageResult<Shipment> pageResult = new PageResult<>(
+                List.of(shipment), 0, 10, 1L);
+            when(shipmentUseCase.getShipments(anyInt(), anyInt(), isNull())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("shipments/list"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("shipments"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("statuses"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("page"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("statuses"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("currentSize"));
         }
 
         @Test
-        @DisplayName("ステータスでフィルタできる")
-        void shouldFilterByStatus() throws Exception {
+        @DisplayName("キーワードで検索できる")
+        void shouldSearchByKeyword() throws Exception {
             Shipment shipment = createTestShipment("SHIP-WEB-002");
-            when(shipmentUseCase.getShipmentsByStatus(ShipmentStatus.INSTRUCTED)).thenReturn(List.of(shipment));
+            PageResult<Shipment> pageResult = new PageResult<>(
+                List.of(shipment), 0, 10, 1L);
+            when(shipmentUseCase.getShipments(anyInt(), anyInt(), anyString())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments")
-                    .param("status", "INSTRUCTED"))
+                    .param("keyword", "SHIP-WEB"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("shipments/list"))
-                .andExpect(MockMvcResultMatchers.model().attribute("selectedStatus", ShipmentStatus.INSTRUCTED));
+                .andExpect(MockMvcResultMatchers.model().attribute("keyword", "SHIP-WEB"));
+        }
+
+        @Test
+        @DisplayName("ページネーションができる")
+        void shouldPaginate() throws Exception {
+            Shipment shipment = createTestShipment("SHIP-WEB-003");
+            PageResult<Shipment> pageResult = new PageResult<>(
+                List.of(shipment), 1, 25, 30L);
+            when(shipmentUseCase.getShipments(anyInt(), anyInt(), isNull())).thenReturn(pageResult);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/shipments")
+                    .param("page", "1")
+                    .param("size", "25"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("shipments/list"))
+                .andExpect(MockMvcResultMatchers.model().attribute("currentSize", 25));
         }
     }
 

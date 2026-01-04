@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.ProductClassificationUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductClassification;
 import org.springframework.stereotype.Controller;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 商品分類マスタ画面コントローラー.
@@ -38,22 +38,19 @@ public class ProductClassificationWebController {
      * 商品分類一覧画面を表示.
      */
     @GetMapping
-    public String list(@RequestParam(required = false) String keyword, Model model) {
-        List<ProductClassification> classifications = classificationUseCase.getAllClassifications();
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            Model model) {
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            classifications = classifications.stream()
-                .filter(c -> (c.getClassificationCode() != null
-                        && c.getClassificationCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (c.getClassificationName() != null
-                        && c.getClassificationName().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
+        PageResult<ProductClassification> classificationPage =
+            classificationUseCase.getClassifications(page, size, keyword);
 
-        model.addAttribute("classifications", classifications);
+        model.addAttribute("classifications", classificationPage.getContent());
+        model.addAttribute("page", classificationPage);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "product-classifications/list";
     }
 

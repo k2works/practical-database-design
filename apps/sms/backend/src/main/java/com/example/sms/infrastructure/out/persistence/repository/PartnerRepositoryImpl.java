@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.PartnerRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.infrastructure.out.persistence.mapper.PartnerMapper;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,14 @@ public class PartnerRepositoryImpl implements PartnerRepository {
     @Override
     public List<Partner> findSuppliers() {
         return partnerMapper.findSuppliers();
+    }
+
+    @Override
+    public PageResult<Partner> findWithPagination(int page, int size, String type, String keyword) {
+        int offset = page * size;
+        List<Partner> partners = partnerMapper.findWithPagination(offset, size, type, keyword);
+        long totalElements = partnerMapper.count(type, keyword);
+        return new PageResult<>(partners, page, size, totalElements);
     }
 
     @Override

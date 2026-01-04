@@ -1,6 +1,7 @@
 package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreatePurchaseOrderCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.PurchaseOrder;
 import com.example.sms.domain.model.purchase.PurchaseOrderStatus;
 
@@ -25,6 +26,16 @@ public interface PurchaseOrderUseCase {
      * @return 発注リスト
      */
     List<PurchaseOrder> getAllPurchaseOrders();
+
+    /**
+     * ページネーション付きで発注を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<PurchaseOrder> getPurchaseOrders(int page, int size, String keyword);
 
     /**
      * 発注番号で発注を取得する.

@@ -15,6 +15,19 @@ import java.util.Optional;
 @Mapper
 public interface PurchaseMapper {
 
+    /**
+     * ページネーション付きで仕入を検索.
+     */
+    List<Purchase> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する仕入の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     void insertHeader(Purchase purchase);
 
     void insertDetail(PurchaseDetail detail);

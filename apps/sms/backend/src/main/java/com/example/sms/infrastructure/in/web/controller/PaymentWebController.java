@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.PaymentUseCase;
 import com.example.sms.application.port.in.SupplierUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.payment.Payment;
 import com.example.sms.domain.model.payment.PaymentMethod;
 import com.example.sms.domain.model.payment.PaymentStatus;
@@ -17,9 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
-import java.util.Locale;
 
 /**
  * 支払画面コントローラー.
@@ -43,36 +41,20 @@ public class PaymentWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) PaymentStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Payment> payments = getFilteredPayments(status);
+        PageResult<Payment> paymentPage = paymentUseCase.getPayments(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            payments = payments.stream()
-                .filter(p -> (p.getPaymentNumber() != null
-                        && p.getPaymentNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (p.getSupplierCode() != null
-                        && p.getSupplierCode().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("payments", payments);
+        model.addAttribute("payments", paymentPage.getContent());
+        model.addAttribute("page", paymentPage);
         model.addAttribute("statuses", PaymentStatus.values());
-        model.addAttribute("selectedStatus", status);
+        model.addAttribute("suppliers", supplierUseCase.getAllSuppliers());
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "payments/list";
-    }
-
-    private List<Payment> getFilteredPayments(PaymentStatus status) {
-        if (status != null) {
-            return paymentUseCase.getPaymentsByStatus(status);
-        } else {
-            return paymentUseCase.getAllPayments();
-        }
     }
 
     /**

@@ -36,6 +36,19 @@ public interface SalesMapper {
 
     List<Sales> findAll();
 
+    /**
+     * ページネーション付きで売上を検索.
+     */
+    List<Sales> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する売上の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     List<SalesDetail> findDetailsBySalesId(Integer salesId);
 
     void updateHeader(Sales sales);

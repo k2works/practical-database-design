@@ -115,6 +115,30 @@
         SELECT * FROM "出荷データ" ORDER BY "出荷日" DESC, "出荷番号"
     </select>
 
+    <select id="findWithPagination" resultMap="ShipmentResultMap">
+        SELECT * FROM "出荷データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("出荷番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("出荷先名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "出荷日" DESC, "出荷番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "出荷データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("出荷番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("出荷先名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findDetailsByShipmentId" resultMap="ShipmentDetailResultMap">
         SELECT * FROM "出荷明細"
         WHERE "出荷ID" = #{shipmentId}

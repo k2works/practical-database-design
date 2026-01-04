@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.ProductClassificationRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.ProductClassification;
 import com.example.sms.infrastructure.out.persistence.mapper.ProductClassificationMapper;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,14 @@ public class ProductClassificationRepositoryImpl implements ProductClassificatio
     @Override
     public List<ProductClassification> findChildren(String parentPath) {
         return productClassificationMapper.findByPathPrefix(parentPath);
+    }
+
+    @Override
+    public PageResult<ProductClassification> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<ProductClassification> classifications = productClassificationMapper.findWithPagination(offset, size, keyword);
+        long totalElements = productClassificationMapper.count(keyword);
+        return new PageResult<>(classifications, page, size, totalElements);
     }
 
     @Override

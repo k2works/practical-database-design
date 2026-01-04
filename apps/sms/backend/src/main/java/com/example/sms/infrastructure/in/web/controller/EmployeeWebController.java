@@ -3,6 +3,7 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.DepartmentUseCase;
 import com.example.sms.application.port.in.EmployeeUseCase;
 import com.example.sms.domain.exception.DepartmentNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.department.Department;
 import com.example.sms.domain.model.employee.Employee;
 import org.slf4j.Logger;
@@ -19,7 +20,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 社員マスタ画面コントローラー.
@@ -29,6 +29,7 @@ import java.util.Locale;
 public class EmployeeWebController {
 
     private static final Logger LOG = LoggerFactory.getLogger(EmployeeWebController.class);
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final EmployeeUseCase employeeUseCase;
     private final DepartmentUseCase departmentUseCase;
@@ -43,40 +44,22 @@ public class EmployeeWebController {
      */
     @GetMapping
     public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String departmentCode,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Employee> employees = getFilteredEmployees(departmentCode);
-
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            employees = employees.stream()
-                .filter(e -> (e.getEmployeeCode() != null
-                        && e.getEmployeeCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (e.getEmployeeName() != null
-                        && e.getEmployeeName().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (e.getEmployeeNameKana() != null
-                        && e.getEmployeeNameKana().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
+        PageResult<Employee> employeePage = employeeUseCase.getEmployees(page, size, departmentCode, keyword);
         List<Department> departments = departmentUseCase.getAllDepartments();
 
-        model.addAttribute("employees", employees);
+        model.addAttribute("employees", employeePage.getContent());
+        model.addAttribute("page", employeePage);
         model.addAttribute("departments", departments);
         model.addAttribute("selectedDepartmentCode", departmentCode);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "employees/list";
-    }
-
-    private List<Employee> getFilteredEmployees(String departmentCode) {
-        if (departmentCode != null && !departmentCode.isBlank()) {
-            return employeeUseCase.getEmployeesByDepartment(departmentCode);
-        } else {
-            return employeeUseCase.getAllEmployees();
-        }
     }
 
     /**

@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
 import com.example.sms.application.port.in.SalesUseCase;
 import com.example.sms.application.port.in.ShipmentUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.sales.Sales;
@@ -25,7 +26,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 売上画面コントローラー.
@@ -55,38 +55,20 @@ public class SalesWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) SalesStatus status,
-            @RequestParam(required = false) String customerCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Sales> salesList = getFilteredSales(status, customerCode);
+        PageResult<Sales> salesPage = salesUseCase.getSales(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            salesList = salesList.stream()
-                .filter(s -> s.getSalesNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                .toList();
-        }
-
-        model.addAttribute("salesList", salesList);
+        model.addAttribute("salesList", salesPage.getContent());
+        model.addAttribute("page", salesPage);
         model.addAttribute("statuses", SalesStatus.values());
         model.addAttribute("customers", partnerUseCase.getCustomers());
-        model.addAttribute("selectedStatus", status);
-        model.addAttribute("selectedCustomerCode", customerCode);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "sales/list";
-    }
-
-    private List<Sales> getFilteredSales(SalesStatus status, String customerCode) {
-        if (status != null) {
-            return salesUseCase.getSalesByStatus(status);
-        } else if (customerCode != null && !customerCode.isBlank()) {
-            return salesUseCase.getSalesByCustomer(customerCode);
-        } else {
-            return salesUseCase.getAllSales();
-        }
     }
 
     /**

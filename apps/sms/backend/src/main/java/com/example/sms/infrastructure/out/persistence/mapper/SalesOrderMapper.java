@@ -16,6 +16,19 @@ import java.util.Optional;
 @Mapper
 public interface SalesOrderMapper {
 
+    /**
+     * ページネーション付きで受注を検索.
+     */
+    List<SalesOrder> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する受注の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     void insertHeader(SalesOrder salesOrder);
 
     void insertDetail(SalesOrderDetail detail);

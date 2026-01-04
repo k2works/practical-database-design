@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.EmployeeRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.employee.Employee;
 import com.example.sms.infrastructure.out.persistence.mapper.EmployeeMapper;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,14 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
     @Override
     public List<Employee> findByDepartmentCode(String departmentCode) {
         return employeeMapper.findByDepartmentCode(departmentCode);
+    }
+
+    @Override
+    public PageResult<Employee> findWithPagination(int page, int size, String departmentCode, String keyword) {
+        int offset = page * size;
+        List<Employee> employees = employeeMapper.findWithPagination(offset, size, departmentCode, keyword);
+        long totalElements = employeeMapper.count(departmentCode, keyword);
+        return new PageResult<>(employees, page, size, totalElements);
     }
 
     @Override

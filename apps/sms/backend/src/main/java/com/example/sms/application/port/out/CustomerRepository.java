@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Customer;
 
 import java.util.List;
@@ -17,6 +18,11 @@ public interface CustomerRepository {
     List<Customer> findByCode(String customerCode);
 
     List<Customer> findAll();
+
+    /**
+     * ページネーション付きで顧客を検索.
+     */
+    PageResult<Customer> findWithPagination(int page, int size, String keyword);
 
     void update(Customer customer);
 

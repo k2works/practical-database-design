@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.payment.Payment;
 import com.example.sms.domain.model.payment.PaymentStatus;
 
@@ -27,6 +28,8 @@ public interface PaymentRepository {
     List<Payment> findByPaymentDueDateBetween(LocalDate from, LocalDate to);
 
     List<Payment> findAll();
+
+    PageResult<Payment> findWithPagination(int page, int size, String keyword);
 
     void update(Payment payment);
 

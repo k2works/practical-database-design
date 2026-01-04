@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.ShipmentRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.shipping.Shipment;
 import com.example.sms.domain.model.shipping.ShipmentDetail;
 import com.example.sms.domain.model.shipping.ShipmentStatus;
@@ -65,6 +66,14 @@ public class ShipmentRepositoryImpl implements ShipmentRepository {
     @Override
     public List<Shipment> findAll() {
         return shipmentMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Shipment> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Shipment> shipments = shipmentMapper.findWithPagination(offset, size, keyword);
+        long totalElements = shipmentMapper.count(keyword);
+        return new PageResult<>(shipments, page, size, totalElements);
     }
 
     @Override

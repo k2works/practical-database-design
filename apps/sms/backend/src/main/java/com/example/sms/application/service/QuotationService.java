@@ -6,6 +6,7 @@ import com.example.sms.application.port.in.command.UpdateQuotationCommand;
 import com.example.sms.application.port.out.QuotationRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
 import com.example.sms.domain.exception.QuotationNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.TaxCategory;
 import com.example.sms.domain.model.sales.Quotation;
 import com.example.sms.domain.model.sales.QuotationDetail;
@@ -137,6 +138,12 @@ public class QuotationService implements QuotationUseCase {
     @Transactional(readOnly = true)
     public List<Quotation> getAllQuotations() {
         return quotationRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Quotation> getQuotations(int page, int size, String keyword) {
+        return quotationRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

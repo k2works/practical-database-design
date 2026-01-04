@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.OrderUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
 import com.example.sms.application.port.in.ShipmentUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.sales.SalesOrder;
@@ -25,7 +26,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 出荷画面コントローラー.
@@ -55,35 +55,19 @@ public class ShipmentWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) ShipmentStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Shipment> shipments = getFilteredShipments(status);
+        PageResult<Shipment> shipmentPage = shipmentUseCase.getShipments(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            shipments = shipments.stream()
-                .filter(s -> s.getShipmentNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword)
-                    || (s.getShippingDestinationName() != null
-                        && s.getShippingDestinationName().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("shipments", shipments);
+        model.addAttribute("shipments", shipmentPage.getContent());
+        model.addAttribute("page", shipmentPage);
         model.addAttribute("statuses", ShipmentStatus.values());
-        model.addAttribute("selectedStatus", status);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "shipments/list";
-    }
-
-    private List<Shipment> getFilteredShipments(ShipmentStatus status) {
-        if (status != null) {
-            return shipmentUseCase.getShipmentsByStatus(status);
-        } else {
-            return shipmentUseCase.getAllShipments();
-        }
     }
 
     /**

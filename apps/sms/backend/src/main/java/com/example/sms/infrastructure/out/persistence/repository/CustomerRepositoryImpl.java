@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.CustomerRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Customer;
 import com.example.sms.infrastructure.out.persistence.mapper.CustomerMapper;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,14 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     @Override
     public List<Customer> findAll() {
         return customerMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Customer> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Customer> customers = customerMapper.findWithPagination(offset, size, keyword);
+        long totalElements = customerMapper.count(keyword);
+        return new PageResult<>(customers, page, size, totalElements);
     }
 
     @Override

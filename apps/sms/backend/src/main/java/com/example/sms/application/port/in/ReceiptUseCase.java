@@ -2,6 +2,7 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateReceiptCommand;
 import com.example.sms.application.port.in.command.UpdateReceiptCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.receipt.Receipt;
 import com.example.sms.domain.model.receipt.ReceiptStatus;
 
@@ -35,6 +36,16 @@ public interface ReceiptUseCase {
      * @return 入金リスト
      */
     List<Receipt> getAllReceipts();
+
+    /**
+     * ページネーション付きで入金を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<Receipt> getReceipts(int page, int size, String keyword);
 
     /**
      * 入金番号で入金を取得する.

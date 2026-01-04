@@ -6,6 +6,7 @@ import com.example.sms.application.port.in.command.UpdateCustomerCommand;
 import com.example.sms.application.port.out.CustomerRepository;
 import com.example.sms.domain.exception.CustomerNotFoundException;
 import com.example.sms.domain.exception.DuplicateCustomerException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Customer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -117,6 +118,12 @@ public class CustomerService implements CustomerUseCase {
     @Transactional(readOnly = true)
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Customer> getCustomers(int page, int size, String keyword) {
+        return customerRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

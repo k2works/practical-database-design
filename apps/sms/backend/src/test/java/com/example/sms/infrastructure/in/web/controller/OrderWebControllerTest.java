@@ -3,6 +3,7 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.OrderUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
 import com.example.sms.domain.model.product.TaxCategory;
@@ -27,6 +28,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -58,29 +60,52 @@ class OrderWebControllerTest {
         @DisplayName("受注一覧画面を表示できる")
         void shouldDisplayOrderList() throws Exception {
             SalesOrder order = createTestOrder("ORD-WEB-001");
-            when(orderUseCase.getAllOrders()).thenReturn(List.of(order));
+            PageResult<SalesOrder> pageResult = new PageResult<>(
+                List.of(order), 0, 10, 1L);
+            when(orderUseCase.getOrders(anyInt(), anyInt(), isNull())).thenReturn(pageResult);
             when(partnerUseCase.getCustomers()).thenReturn(List.of());
 
             mockMvc.perform(MockMvcRequestBuilders.get("/orders"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("orders/list"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("orders"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("page"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("statuses"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("customers"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("customers"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("currentSize"));
         }
 
         @Test
-        @DisplayName("ステータスでフィルタできる")
-        void shouldFilterByStatus() throws Exception {
+        @DisplayName("キーワードで検索できる")
+        void shouldSearchByKeyword() throws Exception {
             SalesOrder order = createTestOrder("ORD-WEB-002");
-            when(orderUseCase.getOrdersByStatus(OrderStatus.RECEIVED)).thenReturn(List.of(order));
+            PageResult<SalesOrder> pageResult = new PageResult<>(
+                List.of(order), 0, 10, 1L);
+            when(orderUseCase.getOrders(anyInt(), anyInt(), anyString())).thenReturn(pageResult);
             when(partnerUseCase.getCustomers()).thenReturn(List.of());
 
             mockMvc.perform(MockMvcRequestBuilders.get("/orders")
-                    .param("status", "RECEIVED"))
+                    .param("keyword", "ORD-WEB"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("orders/list"))
-                .andExpect(MockMvcResultMatchers.model().attribute("selectedStatus", OrderStatus.RECEIVED));
+                .andExpect(MockMvcResultMatchers.model().attribute("keyword", "ORD-WEB"));
+        }
+
+        @Test
+        @DisplayName("ページネーションができる")
+        void shouldPaginate() throws Exception {
+            SalesOrder order = createTestOrder("ORD-WEB-003");
+            PageResult<SalesOrder> pageResult = new PageResult<>(
+                List.of(order), 1, 25, 30L);
+            when(orderUseCase.getOrders(anyInt(), anyInt(), isNull())).thenReturn(pageResult);
+            when(partnerUseCase.getCustomers()).thenReturn(List.of());
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders")
+                    .param("page", "1")
+                    .param("size", "25"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("orders/list"))
+                .andExpect(MockMvcResultMatchers.model().attribute("currentSize", 25));
         }
     }
 

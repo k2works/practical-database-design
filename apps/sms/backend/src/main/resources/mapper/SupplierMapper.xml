@@ -47,6 +47,30 @@
         ORDER BY "仕入先コード", "仕入先枝番"
     </select>
 
+    <select id="findWithPagination" resultMap="SupplierResultMap">
+        SELECT * FROM "仕入先マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先担当者名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("部門名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "仕入先コード", "仕入先枝番"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "仕入先マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先担当者名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("部門名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.sms.domain.model.partner.Supplier">
         UPDATE "仕入先マスタ" SET
             "仕入先担当者名" = #{representativeName},

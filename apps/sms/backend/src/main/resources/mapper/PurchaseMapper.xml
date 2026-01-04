@@ -127,6 +127,28 @@
         SELECT * FROM "仕入データ" ORDER BY "仕入日" DESC, "仕入番号"
     </select>
 
+    <select id="findWithPagination" resultMap="PurchaseResultMap">
+        SELECT * FROM "仕入データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("仕入番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "仕入日" DESC, "仕入番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "仕入データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("仕入番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findDetailsByPurchaseId" resultMap="PurchaseDetailResultMap">
         SELECT * FROM "仕入明細データ"
         WHERE "仕入ID" = #{purchaseId}

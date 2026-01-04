@@ -119,6 +119,28 @@
         SELECT * FROM "売上データ" ORDER BY "売上日" DESC, "売上番号"
     </select>
 
+    <select id="findWithPagination" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("売上番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "売上日" DESC, "売上番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "売上データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("売上番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findDetailsBySalesId" resultMap="SalesDetailResultMap">
         SELECT * FROM "売上明細"
         WHERE "売上ID" = #{salesId}

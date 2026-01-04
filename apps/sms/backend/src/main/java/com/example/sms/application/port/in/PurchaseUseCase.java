@@ -1,6 +1,7 @@
 package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreatePurchaseCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.Purchase;
 
 import java.util.List;
@@ -24,6 +25,16 @@ public interface PurchaseUseCase {
      * @return 仕入リスト
      */
     List<Purchase> getAllPurchases();
+
+    /**
+     * ページネーション付きで仕入を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード
+     * @return ページ結果
+     */
+    PageResult<Purchase> getPurchases(int page, int size, String keyword);
 
     /**
      * 仕入番号で仕入を取得する.

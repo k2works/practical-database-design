@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.DepartmentRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.department.Department;
 import com.example.sms.infrastructure.out.persistence.mapper.DepartmentMapper;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,14 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
     @Override
     public List<Department> findChildren(String parentPath) {
         return departmentMapper.findByPathPrefix(parentPath);
+    }
+
+    @Override
+    public PageResult<Department> findWithPagination(int page, int size, Integer level, String keyword) {
+        int offset = page * size;
+        List<Department> departments = departmentMapper.findWithPagination(offset, size, level, keyword);
+        long totalElements = departmentMapper.count(level, keyword);
+        return new PageResult<>(departments, page, size, totalElements);
     }
 
     @Override

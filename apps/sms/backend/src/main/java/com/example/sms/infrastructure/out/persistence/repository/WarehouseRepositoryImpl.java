@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.WarehouseRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Warehouse;
 import com.example.sms.infrastructure.out.persistence.mapper.WarehouseMapper;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,14 @@ public class WarehouseRepositoryImpl implements WarehouseRepository {
     @Override
     public List<Warehouse> findActive() {
         return warehouseMapper.findActive();
+    }
+
+    @Override
+    public PageResult<Warehouse> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Warehouse> warehouses = warehouseMapper.findWithPagination(offset, size, keyword);
+        long totalElements = warehouseMapper.count(keyword);
+        return new PageResult<>(warehouses, page, size, totalElements);
     }
 
     @Override

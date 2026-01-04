@@ -5,6 +5,7 @@ import com.example.sms.application.port.in.command.CreateSalesCommand;
 import com.example.sms.application.port.in.command.UpdateSalesCommand;
 import com.example.sms.application.port.out.SalesRepository;
 import com.example.sms.domain.exception.SalesNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.TaxCategory;
 import com.example.sms.domain.model.sales.Sales;
 import com.example.sms.domain.model.sales.SalesDetail;
@@ -126,6 +127,12 @@ public class SalesService implements SalesUseCase {
     @Transactional(readOnly = true)
     public List<Sales> getAllSales() {
         return salesRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Sales> getSales(int page, int size, String keyword) {
+        return salesRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

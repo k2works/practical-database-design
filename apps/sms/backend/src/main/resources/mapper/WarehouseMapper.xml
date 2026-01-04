@@ -47,6 +47,30 @@
         ORDER BY "倉庫コード"
     </select>
 
+    <select id="findWithPagination" resultMap="WarehouseResultMap">
+        SELECT * FROM "倉庫マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "倉庫コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "倉庫マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.sms.domain.model.inventory.Warehouse">
         UPDATE "倉庫マスタ" SET
             "倉庫名" = #{warehouseName},

@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Supplier;
 
 import java.util.List;
@@ -17,6 +18,11 @@ public interface SupplierRepository {
     List<Supplier> findByCode(String supplierCode);
 
     List<Supplier> findAll();
+
+    /**
+     * ページネーション付きで仕入先を検索.
+     */
+    PageResult<Supplier> findWithPagination(int page, int size, String keyword);
 
     void update(Supplier supplier);
 

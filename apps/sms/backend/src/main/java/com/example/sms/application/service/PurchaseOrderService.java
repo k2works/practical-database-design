@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.PurchaseOrderUseCase;
 import com.example.sms.application.port.in.command.CreatePurchaseOrderCommand;
 import com.example.sms.application.port.out.PurchaseOrderRepository;
 import com.example.sms.domain.exception.PurchaseOrderNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.PurchaseOrder;
 import com.example.sms.domain.model.purchase.PurchaseOrderDetail;
 import com.example.sms.domain.model.purchase.PurchaseOrderStatus;
@@ -81,6 +82,12 @@ public class PurchaseOrderService implements PurchaseOrderUseCase {
     @Transactional(readOnly = true)
     public List<PurchaseOrder> getAllPurchaseOrders() {
         return purchaseOrderRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<PurchaseOrder> getPurchaseOrders(int page, int size, String keyword) {
+        return purchaseOrderRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

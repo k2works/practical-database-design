@@ -34,6 +34,19 @@ public interface PaymentMapper {
 
     List<Payment> findAll();
 
+    /**
+     * ページネーション付きで支払を検索.
+     */
+    List<Payment> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する支払の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     int updateWithOptimisticLock(Payment payment);
 
     Integer findVersionById(Integer id);

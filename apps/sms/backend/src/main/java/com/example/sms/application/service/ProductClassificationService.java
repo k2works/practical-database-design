@@ -3,6 +3,7 @@ package com.example.sms.application.service;
 import com.example.sms.application.port.in.ProductClassificationUseCase;
 import com.example.sms.application.port.out.ProductClassificationRepository;
 import com.example.sms.domain.exception.ProductClassificationNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.ProductClassification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,12 @@ public class ProductClassificationService implements ProductClassificationUseCas
     @Transactional(readOnly = true)
     public List<ProductClassification> getAllClassifications() {
         return classificationRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<ProductClassification> getClassifications(int page, int size, String keyword) {
+        return classificationRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

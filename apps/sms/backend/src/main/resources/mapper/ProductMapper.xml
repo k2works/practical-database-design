@@ -68,6 +68,34 @@
         ORDER BY "商品コード"
     </select>
 
+    <select id="findWithPagination" resultMap="ProductResultMap">
+        SELECT * FROM "商品マスタ"
+        <where>
+            <if test="category != null and category != ''">
+                "商品区分" = #{category}::商品区分
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("商品コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("商品名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "商品コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "商品マスタ"
+        <where>
+            <if test="category != null and category != ''">
+                "商品区分" = #{category}::商品区分
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("商品コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("商品名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.sms.domain.model.product.Product">
         UPDATE "商品マスタ" SET
             "商品正式名" = #{productFullName},

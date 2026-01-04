@@ -6,6 +6,7 @@ import com.example.sms.application.port.in.command.UpdateSupplierCommand;
 import com.example.sms.application.port.out.SupplierRepository;
 import com.example.sms.domain.exception.DuplicateSupplierException;
 import com.example.sms.domain.exception.SupplierNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Supplier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,6 +75,12 @@ public class SupplierService implements SupplierUseCase {
     @Transactional(readOnly = true)
     public List<Supplier> getAllSuppliers() {
         return supplierRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Supplier> getSuppliers(int page, int size, String keyword) {
+        return supplierRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

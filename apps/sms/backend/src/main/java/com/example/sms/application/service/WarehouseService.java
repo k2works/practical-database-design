@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.WarehouseUseCase;
 import com.example.sms.application.port.out.WarehouseRepository;
 import com.example.sms.domain.exception.DuplicateWarehouseException;
 import com.example.sms.domain.exception.WarehouseNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Warehouse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,6 +67,12 @@ public class WarehouseService implements WarehouseUseCase {
     @Transactional(readOnly = true)
     public List<Warehouse> getActiveWarehouses() {
         return warehouseRepository.findActive();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Warehouse> getWarehouses(int page, int size, String keyword) {
+        return warehouseRepository.findWithPagination(page, size, keyword);
     }
 
     @Override

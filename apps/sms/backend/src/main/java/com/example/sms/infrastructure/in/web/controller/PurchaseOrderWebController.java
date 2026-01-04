@@ -3,6 +3,7 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.ProductUseCase;
 import com.example.sms.application.port.in.PurchaseOrderUseCase;
 import com.example.sms.application.port.in.SupplierUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.PurchaseOrder;
 import com.example.sms.domain.model.purchase.PurchaseOrderStatus;
 import com.example.sms.infrastructure.in.web.form.PurchaseOrderForm;
@@ -17,9 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
-import java.util.Locale;
 
 /**
  * 発注画面コントローラー.
@@ -46,36 +44,19 @@ public class PurchaseOrderWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) PurchaseOrderStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<PurchaseOrder> purchaseOrders = getFilteredPurchaseOrders(status);
+        PageResult<PurchaseOrder> purchaseOrderPage = purchaseOrderUseCase.getPurchaseOrders(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            purchaseOrders = purchaseOrders.stream()
-                .filter(po -> (po.getPurchaseOrderNumber() != null
-                        && po.getPurchaseOrderNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (po.getSupplierCode() != null
-                        && po.getSupplierCode().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("purchaseOrders", purchaseOrders);
+        model.addAttribute("purchaseOrders", purchaseOrderPage.getContent());
+        model.addAttribute("page", purchaseOrderPage);
         model.addAttribute("statuses", PurchaseOrderStatus.values());
-        model.addAttribute("selectedStatus", status);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "purchase-orders/list";
-    }
-
-    private List<PurchaseOrder> getFilteredPurchaseOrders(PurchaseOrderStatus status) {
-        if (status != null) {
-            return purchaseOrderUseCase.getPurchaseOrdersByStatus(status);
-        } else {
-            return purchaseOrderUseCase.getAllPurchaseOrders();
-        }
     }
 
     /**

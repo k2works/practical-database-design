@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.invoice.Invoice;
 import com.example.sms.domain.model.invoice.InvoiceStatus;
 
@@ -33,6 +34,8 @@ public interface InvoiceRepository {
     Optional<Invoice> findLatestByCustomerCode(String customerCode);
 
     List<Invoice> findAll();
+
+    PageResult<Invoice> findWithPagination(int page, int size, String keyword);
 
     void update(Invoice invoice);
 

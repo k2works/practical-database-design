@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.ReceiptRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.receipt.Receipt;
 import com.example.sms.domain.model.receipt.ReceiptApplication;
 import com.example.sms.domain.model.receipt.ReceiptStatus;
@@ -33,6 +34,14 @@ public class ReceiptRepositoryImpl implements ReceiptRepository {
                 receiptMapper.insertApplication(application);
             }
         }
+    }
+
+    @Override
+    public PageResult<Receipt> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Receipt> receipts = receiptMapper.findWithPagination(offset, size, keyword);
+        long totalElements = receiptMapper.count(keyword);
+        return new PageResult<>(receipts, page, size, totalElements);
     }
 
     @Override

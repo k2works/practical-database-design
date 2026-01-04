@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.PurchaseOrderRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.PurchaseOrder;
 import com.example.sms.domain.model.purchase.PurchaseOrderDetail;
 import com.example.sms.domain.model.purchase.PurchaseOrderStatus;
@@ -77,6 +78,14 @@ public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
     @Override
     public List<PurchaseOrder> findAll() {
         return purchaseOrderMapper.findAll();
+    }
+
+    @Override
+    public PageResult<PurchaseOrder> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<PurchaseOrder> purchaseOrders = purchaseOrderMapper.findWithPagination(offset, size, keyword);
+        long totalElements = purchaseOrderMapper.count(keyword);
+        return new PageResult<>(purchaseOrders, page, size, totalElements);
     }
 
     @Override

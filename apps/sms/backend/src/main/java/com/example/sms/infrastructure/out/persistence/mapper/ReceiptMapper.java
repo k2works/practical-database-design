@@ -19,6 +19,19 @@ public interface ReceiptMapper {
 
     void insertHeader(Receipt receipt);
 
+    /**
+     * ページネーション付きで入金を検索.
+     */
+    List<Receipt> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する入金の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     void insertApplication(ReceiptApplication application);
 
     Optional<Receipt> findById(Integer id);

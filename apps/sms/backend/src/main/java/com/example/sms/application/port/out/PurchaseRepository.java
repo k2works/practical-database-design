@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.purchase.Purchase;
 
 import java.time.LocalDate;
@@ -28,6 +29,8 @@ public interface PurchaseRepository {
     List<Purchase> findByPurchaseDateBetween(LocalDate from, LocalDate to);
 
     List<Purchase> findAll();
+
+    PageResult<Purchase> findWithPagination(int page, int size, String keyword);
 
     void update(Purchase purchase);
 

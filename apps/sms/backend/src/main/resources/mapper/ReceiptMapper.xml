@@ -150,6 +150,30 @@
         SELECT * FROM "入金データ" ORDER BY "入金日" DESC, "入金番号"
     </select>
 
+    <select id="findWithPagination" resultMap="ReceiptResultMap">
+        SELECT * FROM "入金データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("入金番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("振込名義") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "入金日" DESC, "入金番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "入金データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("入金番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("振込名義") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <select id="findApplicationsByReceiptId" resultMap="ReceiptApplicationResultMap">
         SELECT * FROM "入金消込明細"
         WHERE "入金ID" = #{receiptId}

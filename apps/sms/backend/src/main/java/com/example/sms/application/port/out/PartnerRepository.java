@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 
 import java.util.List;
@@ -19,6 +20,17 @@ public interface PartnerRepository {
     List<Partner> findCustomers();
 
     List<Partner> findSuppliers();
+
+    /**
+     * ページネーション付きで取引先を検索.
+     *
+     * @param page    ページ番号（0始まり）
+     * @param size    ページサイズ
+     * @param type    種別（customer/supplier/null）
+     * @param keyword キーワード
+     * @return ページネーション結果
+     */
+    PageResult<Partner> findWithPagination(int page, int size, String type, String keyword);
 
     void update(Partner partner);
 

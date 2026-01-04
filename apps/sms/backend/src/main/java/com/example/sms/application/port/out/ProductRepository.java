@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.product.ProductCategory;
 
@@ -20,6 +21,17 @@ public interface ProductRepository {
     List<Product> findByCategory(ProductCategory category);
 
     List<Product> findByClassificationCode(String classificationCode);
+
+    /**
+     * ページネーション付きで商品を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param category カテゴリ（null可）
+     * @param keyword キーワード（null可）
+     * @return ページ結果
+     */
+    PageResult<Product> findWithPagination(int page, int size, ProductCategory category, String keyword);
 
     void update(Product product);
 

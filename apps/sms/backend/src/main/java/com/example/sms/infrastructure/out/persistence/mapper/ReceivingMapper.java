@@ -34,6 +34,19 @@ public interface ReceivingMapper {
 
     List<Receiving> findAll();
 
+    /**
+     * ページネーション付きで入荷を検索.
+     */
+    List<Receiving> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する入荷の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     List<ReceivingDetail> findDetailsByReceivingId(Integer receivingId);
 
     Receiving findWithDetailsByReceivingNumber(String receivingNumber);

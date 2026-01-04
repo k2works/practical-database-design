@@ -3,6 +3,7 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.QuotationUseCase;
 import com.example.sms.application.port.in.PartnerUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.partner.Partner;
 import com.example.sms.domain.model.product.Product;
 import com.example.sms.domain.model.sales.Quotation;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 見積画面コントローラー.
@@ -50,40 +50,20 @@ public class QuotationWebController {
      */
     @GetMapping
     public String list(
-            @RequestParam(required = false) QuotationStatus status,
-            @RequestParam(required = false) String customerCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Quotation> quotations = getFilteredQuotations(status, customerCode);
+        PageResult<Quotation> quotationPage = quotationUseCase.getQuotations(page, size, keyword);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            quotations = quotations.stream()
-                .filter(q -> q.getQuotationNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword)
-                    || (q.getSubject() != null
-                        && q.getSubject().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("quotations", quotations);
+        model.addAttribute("quotations", quotationPage.getContent());
+        model.addAttribute("page", quotationPage);
         model.addAttribute("statuses", QuotationStatus.values());
         model.addAttribute("customers", partnerUseCase.getCustomers());
-        model.addAttribute("selectedStatus", status);
-        model.addAttribute("selectedCustomerCode", customerCode);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "estimates/list";
-    }
-
-    private List<Quotation> getFilteredQuotations(QuotationStatus status, String customerCode) {
-        if (status != null) {
-            return quotationUseCase.getQuotationsByStatus(status);
-        } else if (customerCode != null && !customerCode.isBlank()) {
-            return quotationUseCase.getQuotationsByCustomer(customerCode);
-        } else {
-            return quotationUseCase.getAllQuotations();
-        }
     }
 
     /**

@@ -6,7 +6,9 @@ import com.example.sms.application.port.in.command.UpdateProductCommand;
 import com.example.sms.application.port.out.ProductRepository;
 import com.example.sms.domain.exception.DuplicateProductException;
 import com.example.sms.domain.exception.ProductNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.product.Product;
+import com.example.sms.domain.model.product.ProductCategory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +90,12 @@ public class ProductService implements ProductUseCase {
     @Transactional(readOnly = true)
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Product> getProducts(int page, int size, ProductCategory category, String keyword) {
+        return productRepository.findWithPagination(page, size, category, keyword);
     }
 
     @Override

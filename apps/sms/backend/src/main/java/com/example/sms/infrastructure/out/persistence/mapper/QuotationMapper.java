@@ -32,6 +32,19 @@ public interface QuotationMapper {
 
     List<Quotation> findAll();
 
+    /**
+     * ページネーション付きで見積を検索.
+     */
+    List<Quotation> findWithPagination(
+        @Param("offset") int offset,
+        @Param("limit") int limit,
+        @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する見積の件数を取得.
+     */
+    long count(@Param("keyword") String keyword);
+
     List<QuotationDetail> findDetailsByQuotationId(Integer quotationId);
 
     void updateHeader(Quotation quotation);

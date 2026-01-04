@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.sales.Quotation;
 import com.example.sms.domain.model.sales.QuotationStatus;
 
@@ -27,6 +28,8 @@ public interface QuotationRepository {
     List<Quotation> findByQuotationDateBetween(LocalDate from, LocalDate to);
 
     List<Quotation> findAll();
+
+    PageResult<Quotation> findWithPagination(int page, int size, String keyword);
 
     void update(Quotation quotation);
 

@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.sales.OrderStatus;
 import com.example.sms.domain.model.sales.SalesOrder;
 
@@ -31,6 +32,8 @@ public interface SalesOrderRepository {
     List<SalesOrder> findByRequestedDeliveryDateBetween(LocalDate from, LocalDate to);
 
     List<SalesOrder> findAll();
+
+    PageResult<SalesOrder> findWithPagination(int page, int size, String keyword);
 
     void update(SalesOrder salesOrder);
 

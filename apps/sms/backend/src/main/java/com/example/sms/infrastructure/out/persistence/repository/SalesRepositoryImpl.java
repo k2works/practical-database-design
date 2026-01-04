@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.SalesRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.sales.Sales;
 import com.example.sms.domain.model.sales.SalesDetail;
 import com.example.sms.domain.model.sales.SalesStatus;
@@ -70,6 +71,14 @@ public class SalesRepositoryImpl implements SalesRepository {
     @Override
     public List<Sales> findAll() {
         return salesMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Sales> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<Sales> salesList = salesMapper.findWithPagination(offset, size, keyword);
+        long totalElements = salesMapper.count(keyword);
+        return new PageResult<>(salesList, page, size, totalElements);
     }
 
     @Override
