@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.AccountsReceivableMapper">
+
+    <resultMap id="AccountsReceivableResultMap" type="com.example.sms.domain.model.invoice.AccountsReceivable">
+        <id property="id" column="ID"/>
+        <result property="customerCode" column="顧客コード"/>
+        <result property="customerBranchNumber" column="顧客枝番"/>
+        <result property="baseDate" column="基準日"/>
+        <result property="previousMonthBalance" column="前月残高"/>
+        <result property="currentMonthSales" column="当月売上"/>
+        <result property="currentMonthReceipts" column="当月入金"/>
+        <result property="currentMonthBalance" column="当月残高"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.invoice.AccountsReceivable"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "売掛金残高" (
+            "顧客コード", "顧客枝番", "基準日",
+            "前月残高", "当月売上", "当月入金", "当月残高",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{customerCode}, #{customerBranchNumber}, #{baseDate},
+            #{previousMonthBalance}, #{currentMonthSales}, #{currentMonthReceipts}, #{currentMonthBalance},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="AccountsReceivableResultMap">
+        SELECT * FROM "売掛金残高" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByCustomerAndBaseDate" resultMap="AccountsReceivableResultMap">
+        SELECT * FROM "売掛金残高"
+        WHERE "顧客コード" = #{customerCode}
+          AND "顧客枝番" = #{customerBranchNumber}
+          AND "基準日" = #{baseDate}
+    </select>
+
+    <select id="findByCustomerCode" resultMap="AccountsReceivableResultMap">
+        SELECT * FROM "売掛金残高"
+        WHERE "顧客コード" = #{customerCode}
+        ORDER BY "基準日" DESC
+    </select>
+
+    <select id="findByBaseDate" resultMap="AccountsReceivableResultMap">
+        SELECT * FROM "売掛金残高"
+        WHERE "基準日" = #{baseDate}
+        ORDER BY "顧客コード", "顧客枝番"
+    </select>
+
+    <select id="findAll" resultMap="AccountsReceivableResultMap">
+        SELECT * FROM "売掛金残高"
+        ORDER BY "基準日" DESC, "顧客コード", "顧客枝番"
+    </select>
+
+    <update id="update" parameterType="com.example.sms.domain.model.invoice.AccountsReceivable">
+        UPDATE "売掛金残高" SET
+            "前月残高" = #{previousMonthBalance},
+            "当月売上" = #{currentMonthSales},
+            "当月入金" = #{currentMonthReceipts},
+            "当月残高" = #{currentMonthBalance},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "売掛金残高" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "売掛金残高" CASCADE
+    </delete>
+</mapper>
