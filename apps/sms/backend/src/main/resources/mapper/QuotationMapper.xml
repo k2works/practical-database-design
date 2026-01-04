@@ -8,12 +8,12 @@
         <id property="id" column="ID"/>
         <result property="quotationNumber" column="見積番号"/>
         <result property="quotationDate" column="見積日"/>
-        <result property="expirationDate" column="見積有効期限"/>
+        <result property="validUntil" column="見積有効期限"/>
         <result property="customerCode" column="顧客コード"/>
         <result property="customerBranchNumber" column="顧客枝番"/>
-        <result property="representativeCode" column="担当者コード"/>
+        <result property="salesRepCode" column="担当者コード"/>
         <result property="subject" column="件名"/>
-        <result property="quotationAmount" column="見積金額"/>
+        <result property="subtotal" column="見積金額"/>
         <result property="taxAmount" column="消費税額"/>
         <result property="totalAmount" column="見積合計"/>
         <result property="status" column="ステータス"
@@ -51,8 +51,8 @@
             "担当者コード", "件名", "見積金額", "消費税額", "見積合計",
             "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者"
         ) VALUES (
-            #{quotationNumber}, #{quotationDate}, #{expirationDate}, #{customerCode}, #{customerBranchNumber},
-            #{representativeCode}, #{subject}, #{quotationAmount}, #{taxAmount}, #{totalAmount},
+            #{quotationNumber}, #{quotationDate}, #{validUntil}, #{customerCode}, #{customerBranchNumber},
+            #{salesRepCode}, #{subject}, #{subtotal}, #{taxAmount}, #{totalAmount},
             #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler}::見積ステータス,
             #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
         )
@@ -134,12 +134,12 @@
     <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Quotation">
         UPDATE "見積データ" SET
             "見積日" = #{quotationDate},
-            "見積有効期限" = #{expirationDate},
+            "見積有効期限" = #{validUntil},
             "顧客コード" = #{customerCode},
             "顧客枝番" = #{customerBranchNumber},
-            "担当者コード" = #{representativeCode},
+            "担当者コード" = #{salesRepCode},
             "件名" = #{subject},
-            "見積金額" = #{quotationAmount},
+            "見積金額" = #{subtotal},
             "消費税額" = #{taxAmount},
             "見積合計" = #{totalAmount},
             "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler}::見積ステータス,
