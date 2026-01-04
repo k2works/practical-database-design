@@ -764,6 +764,104 @@ open build/reports/jacoco/test/html/index.html
 
 ---
 
+## コミット前の品質チェック
+
+husky + lint-staged により、コミット時に自動で品質チェックが実行されます。
+
+### セットアップ
+
+プロジェクトルートで以下を実行します。
+
+```bash
+# 依存関係のインストール
+npm install
+
+# husky の初期化（初回のみ）
+npx husky init
+```
+
+### 設定ファイル
+
+#### package.json
+
+プロジェクトルートの `package.json` に以下の設定を追加します。
+
+```json
+{
+  "name": "practical-database-design",
+  "private": true,
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11"
+  }
+}
+```
+
+#### .lintstagedrc.sms.json
+
+SMS バックエンド用の lint-staged 設定ファイルを作成します。
+
+```json
+{
+  "apps/sms/backend/src/**/*.java": [
+    "bash -c 'cd apps/sms/backend && ./gradlew checkstyleMain checkstyleTest pmdMain spotbugsMain --no-daemon'"
+  ]
+}
+```
+
+#### .husky/pre-commit
+
+`.husky/pre-commit` ファイルを作成します。
+
+```bash
+npx lint-staged --config .lintstagedrc.sms.json
+```
+
+### 自動実行される品質チェック
+
+**バックエンド（Java ファイルに変更がある場合）:**
+
+| ツール | 目的 |
+|--------|------|
+| Checkstyle | コーディング規約の検証 |
+| PMD | バグパターン検出 |
+| SpotBugs | 潜在バグ検出 |
+
+### 手動での品質チェック
+
+```bash
+cd apps/sms/backend
+
+# 全品質チェック
+./gradlew qualityCheck
+
+# テストのみ
+./gradlew test
+
+# カバレッジレポート
+./gradlew jacocoTestReport
+# 結果: build/reports/jacoco/test/html/index.html
+
+# すべてのテストと品質チェックを実行
+./gradlew fullCheck
+```
+
+### pre-commit フックが失敗する場合
+
+```bash
+# バックエンドのチェック
+cd apps/sms/backend
+./gradlew qualityCheck
+
+# エラーを確認してコードを修正
+# 再度コミット
+```
+
+---
+
 ## トラブルシューティング
 
 ### Java 25 と Gradle の互換性
