@@ -1,5 +1,6 @@
 package com.example.sms.application.port.in;
 
+import com.example.sms.application.port.in.command.CreatePurchaseCommand;
 import com.example.sms.domain.model.purchase.Purchase;
 
 import java.util.List;
@@ -8,6 +9,14 @@ import java.util.List;
  * 仕入ユースケース（Input Port）.
  */
 public interface PurchaseUseCase {
+
+    /**
+     * 仕入を登録する.
+     *
+     * @param command 登録コマンド
+     * @return 登録された仕入
+     */
+    Purchase createPurchase(CreatePurchaseCommand command);
 
     /**
      * 全仕入を取得する.

@@ -1,5 +1,6 @@
 package com.example.sms.application.port.in;
 
+import com.example.sms.application.port.in.command.CreatePurchaseOrderCommand;
 import com.example.sms.domain.model.purchase.PurchaseOrder;
 import com.example.sms.domain.model.purchase.PurchaseOrderStatus;
 
@@ -9,6 +10,14 @@ import java.util.List;
  * 発注ユースケース（Input Port）.
  */
 public interface PurchaseOrderUseCase {
+
+    /**
+     * 発注を登録する.
+     *
+     * @param command 登録コマンド
+     * @return 登録された発注
+     */
+    PurchaseOrder createPurchaseOrder(CreatePurchaseOrderCommand command);
 
     /**
      * 全発注を取得する.

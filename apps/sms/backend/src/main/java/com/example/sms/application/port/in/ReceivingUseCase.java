@@ -1,5 +1,6 @@
 package com.example.sms.application.port.in;
 
+import com.example.sms.application.port.in.command.CreateReceivingCommand;
 import com.example.sms.domain.model.purchase.Receiving;
 import com.example.sms.domain.model.purchase.ReceivingStatus;
 
@@ -9,6 +10,14 @@ import java.util.List;
  * 入荷ユースケース（Input Port）.
  */
 public interface ReceivingUseCase {
+
+    /**
+     * 入荷を登録する.
+     *
+     * @param command 登録コマンド
+     * @return 登録された入荷
+     */
+    Receiving createReceiving(CreateReceivingCommand command);
 
     /**
      * 全入荷を取得する.
