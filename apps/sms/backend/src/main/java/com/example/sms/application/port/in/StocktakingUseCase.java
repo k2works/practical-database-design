@@ -1,5 +1,6 @@
 package com.example.sms.application.port.in;
 
+import com.example.sms.application.port.in.command.CreateStocktakingCommand;
 import com.example.sms.domain.model.inventory.Stocktaking;
 import com.example.sms.domain.model.inventory.StocktakingStatus;
 
@@ -9,6 +10,14 @@ import java.util.List;
  * 棚卸ユースケース（Input Port）.
  */
 public interface StocktakingUseCase {
+
+    /**
+     * 棚卸を登録する.
+     *
+     * @param command 登録コマンド
+     * @return 登録された棚卸
+     */
+    Stocktaking createStocktaking(CreateStocktakingCommand command);
 
     /**
      * 全棚卸を取得する.

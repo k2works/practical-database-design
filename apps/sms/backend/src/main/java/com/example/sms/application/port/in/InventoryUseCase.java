@@ -1,5 +1,6 @@
 package com.example.sms.application.port.in;
 
+import com.example.sms.application.port.in.command.CreateInventoryCommand;
 import com.example.sms.domain.model.inventory.Inventory;
 import com.example.sms.domain.model.inventory.StockMovement;
 
@@ -9,6 +10,14 @@ import java.util.List;
  * 在庫ユースケース（Input Port）.
  */
 public interface InventoryUseCase {
+
+    /**
+     * 在庫を登録する.
+     *
+     * @param command 登録コマンド
+     * @return 登録された在庫
+     */
+    Inventory createInventory(CreateInventoryCommand command);
 
     /**
      * 全在庫を取得する.

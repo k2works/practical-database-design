@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>在庫登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">在庫登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/inventories}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/inventories}" th:object="${form}" method="post">
+                <!-- 基本情報 -->
+                <h5 class="mb-3">基本情報</h5>
+
+                <!-- 倉庫 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">倉庫</label>
+                    <div class="col-md-4">
+                        <select th:field="*{warehouseCode}"
+                                class="form-select" th:classappend="${#fields.hasErrors('warehouseCode')} ? 'is-invalid'">
+                            <option value="">選択してください</option>
+                            <option th:each="warehouse : ${warehouses}"
+                                    th:value="${warehouse.warehouseCode}"
+                                    th:text="${warehouse.warehouseCode + ' - ' + warehouse.warehouseName}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('warehouseCode')}"
+                             th:errors="*{warehouseCode}"></div>
+                    </div>
+                </div>
+
+                <!-- 商品 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">商品</label>
+                    <div class="col-md-4">
+                        <select th:field="*{productCode}"
+                                class="form-select" th:classappend="${#fields.hasErrors('productCode')} ? 'is-invalid'">
+                            <option value="">選択してください</option>
+                            <option th:each="product : ${products}"
+                                    th:value="${product.productCode}"
+                                    th:text="${product.productCode + ' - ' + product.productName}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('productCode')}"
+                             th:errors="*{productCode}"></div>
+                    </div>
+                </div>
+
+                <!-- ロケーション -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">ロケーション</label>
+                    <div class="col-md-3">
+                        <input type="text" th:field="*{locationCode}"
+                               class="form-control" th:classappend="${#fields.hasErrors('locationCode')} ? 'is-invalid'"
+                               placeholder="A-01-01">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('locationCode')}"
+                             th:errors="*{locationCode}"></div>
+                    </div>
+                </div>
+
+                <!-- 数量情報 -->
+                <h5 class="mb-3 mt-4">数量情報</h5>
+
+                <!-- 現在庫数 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">現在庫数</label>
+                    <div class="col-md-2">
+                        <input type="number" th:field="*{currentQuantity}"
+                               class="form-control text-end" th:classappend="${#fields.hasErrors('currentQuantity')} ? 'is-invalid'"
+                               step="1" min="0">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('currentQuantity')}"
+                             th:errors="*{currentQuantity}"></div>
+                    </div>
+                </div>
+
+                <!-- 引当数 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">引当数</label>
+                    <div class="col-md-2">
+                        <input type="number" th:field="*{allocatedQuantity}"
+                               class="form-control text-end" th:classappend="${#fields.hasErrors('allocatedQuantity')} ? 'is-invalid'"
+                               step="1" min="0">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('allocatedQuantity')}"
+                             th:errors="*{allocatedQuantity}"></div>
+                    </div>
+                </div>
+
+                <!-- 発注残数 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">発注残数</label>
+                    <div class="col-md-2">
+                        <input type="number" th:field="*{orderedQuantity}"
+                               class="form-control text-end" th:classappend="${#fields.hasErrors('orderedQuantity')} ? 'is-invalid'"
+                               step="1" min="0">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('orderedQuantity')}"
+                             th:errors="*{orderedQuantity}"></div>
+                    </div>
+                </div>
+
+                <!-- ロット・シリアル情報 -->
+                <h5 class="mb-3 mt-4">ロット・シリアル情報</h5>
+
+                <!-- ロット番号 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">ロット番号</label>
+                    <div class="col-md-4">
+                        <input type="text" th:field="*{lotNumber}"
+                               class="form-control" th:classappend="${#fields.hasErrors('lotNumber')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('lotNumber')}"
+                             th:errors="*{lotNumber}"></div>
+                    </div>
+                </div>
+
+                <!-- シリアル番号 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">シリアル番号</label>
+                    <div class="col-md-4">
+                        <input type="text" th:field="*{serialNumber}"
+                               class="form-control" th:classappend="${#fields.hasErrors('serialNumber')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('serialNumber')}"
+                             th:errors="*{serialNumber}"></div>
+                    </div>
+                </div>
+
+                <!-- 有効期限 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">有効期限</label>
+                    <div class="col-md-3">
+                        <input type="date" th:field="*{expirationDate}" class="form-control">
+                    </div>
+                </div>
+
+                <!-- ボタン -->
+                <div class="row mt-4">
+                    <div class="col-md-9 offset-md-3">
+                        <button type="submit" class="btn btn-primary">登録</button>
+                        <a th:href="@{/inventories}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

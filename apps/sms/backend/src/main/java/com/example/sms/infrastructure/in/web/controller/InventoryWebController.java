@@ -1,14 +1,22 @@
 package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.InventoryUseCase;
+import com.example.sms.application.port.in.ProductUseCase;
+import com.example.sms.application.port.in.WarehouseUseCase;
 import com.example.sms.domain.model.inventory.Inventory;
 import com.example.sms.domain.model.inventory.StockMovement;
+import com.example.sms.infrastructure.in.web.form.InventoryForm;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Locale;
@@ -21,9 +29,16 @@ import java.util.Locale;
 public class InventoryWebController {
 
     private final InventoryUseCase inventoryUseCase;
+    private final WarehouseUseCase warehouseUseCase;
+    private final ProductUseCase productUseCase;
 
-    public InventoryWebController(InventoryUseCase inventoryUseCase) {
+    public InventoryWebController(
+            InventoryUseCase inventoryUseCase,
+            WarehouseUseCase warehouseUseCase,
+            ProductUseCase productUseCase) {
         this.inventoryUseCase = inventoryUseCase;
+        this.warehouseUseCase = warehouseUseCase;
+        this.productUseCase = productUseCase;
     }
 
     /**
@@ -74,6 +89,38 @@ public class InventoryWebController {
         Inventory inventory = inventoryUseCase.getInventoryById(id);
         model.addAttribute("inventory", inventory);
         return "inventories/show";
+    }
+
+    /**
+     * 在庫登録フォームを表示.
+     */
+    @GetMapping("/new")
+    public String newForm(Model model) {
+        model.addAttribute("form", new InventoryForm());
+        model.addAttribute("warehouses", warehouseUseCase.getAllWarehouses());
+        model.addAttribute("products", productUseCase.getAllProducts());
+        return "inventories/new";
+    }
+
+    /**
+     * 在庫を登録.
+     */
+    @PostMapping
+    public String create(
+            @Valid @ModelAttribute("form") InventoryForm form,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("warehouses", warehouseUseCase.getAllWarehouses());
+            model.addAttribute("products", productUseCase.getAllProducts());
+            return "inventories/new";
+        }
+
+        Inventory created = inventoryUseCase.createInventory(form.toCreateCommand());
+        redirectAttributes.addFlashAttribute("successMessage", "在庫を登録しました");
+        return "redirect:/inventories/" + created.getId();
     }
 
     /**

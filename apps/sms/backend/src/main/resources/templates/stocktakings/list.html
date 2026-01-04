@@ -10,6 +10,11 @@
 <div layout:fragment="content">
     <h1 class="page-title">棚卸</h1>
 
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/stocktakings/new}" class="btn btn-primary">新規登録</a>
+    </div>
+
     <!-- 検索フォーム -->
     <div class="search-form">
         <form th:action="@{/stocktakings}" method="get" class="row g-3">

@@ -1,6 +1,7 @@
 package com.example.sms.application.service;
 
 import com.example.sms.application.port.in.InventoryUseCase;
+import com.example.sms.application.port.in.command.CreateInventoryCommand;
 import com.example.sms.application.port.out.InventoryRepository;
 import com.example.sms.application.port.out.StockMovementRepository;
 import com.example.sms.domain.exception.InventoryNotFoundException;
@@ -9,6 +10,7 @@ import com.example.sms.domain.model.inventory.StockMovement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -26,6 +28,24 @@ public class InventoryService implements InventoryUseCase {
             StockMovementRepository stockMovementRepository) {
         this.inventoryRepository = inventoryRepository;
         this.stockMovementRepository = stockMovementRepository;
+    }
+
+    @Override
+    public Inventory createInventory(CreateInventoryCommand command) {
+        Inventory inventory = Inventory.builder()
+            .warehouseCode(command.warehouseCode())
+            .productCode(command.productCode())
+            .locationCode(command.locationCode())
+            .currentQuantity(command.currentQuantity() != null ? command.currentQuantity() : BigDecimal.ZERO)
+            .allocatedQuantity(command.allocatedQuantity() != null ? command.allocatedQuantity() : BigDecimal.ZERO)
+            .orderedQuantity(command.orderedQuantity() != null ? command.orderedQuantity() : BigDecimal.ZERO)
+            .lotNumber(command.lotNumber())
+            .serialNumber(command.serialNumber())
+            .expirationDate(command.expirationDate())
+            .build();
+
+        inventoryRepository.save(inventory);
+        return inventory;
     }
 
     @Override
