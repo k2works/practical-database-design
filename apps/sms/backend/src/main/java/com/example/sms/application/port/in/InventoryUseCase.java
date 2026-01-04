@@ -1,6 +1,7 @@
 package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateInventoryCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Inventory;
 import com.example.sms.domain.model.inventory.StockMovement;
 
@@ -25,6 +26,17 @@ public interface InventoryUseCase {
      * @return 在庫リスト
      */
     List<Inventory> getAllInventories();
+
+    /**
+     * 在庫をページネーション付きで取得する.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード（任意）
+     * @param warehouseCode 倉庫コード（任意）
+     * @return ページング結果
+     */
+    PageResult<Inventory> getInventories(int page, int size, String keyword, String warehouseCode);
 
     /**
      * IDで在庫を取得する.

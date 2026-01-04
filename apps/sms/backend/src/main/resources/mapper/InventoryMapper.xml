@@ -77,6 +77,42 @@
         SELECT * FROM "在庫データ" ORDER BY "倉庫コード", "商品コード"
     </select>
 
+    <select id="findWithPagination" resultMap="InventoryResultMap">
+        SELECT * FROM "在庫データ"
+        <where>
+            <if test="warehouseCode != null and warehouseCode != ''">
+                "倉庫コード" = #{warehouseCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    LOWER("商品コード") LIKE LOWER('%' || #{keyword} || '%')
+                    OR LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%')
+                    OR LOWER("ロケーションコード") LIKE LOWER('%' || #{keyword} || '%')
+                    OR LOWER("ロット番号") LIKE LOWER('%' || #{keyword} || '%')
+                )
+            </if>
+        </where>
+        ORDER BY "倉庫コード", "商品コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "在庫データ"
+        <where>
+            <if test="warehouseCode != null and warehouseCode != ''">
+                "倉庫コード" = #{warehouseCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    LOWER("商品コード") LIKE LOWER('%' || #{keyword} || '%')
+                    OR LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%')
+                    OR LOWER("ロケーションコード") LIKE LOWER('%' || #{keyword} || '%')
+                    OR LOWER("ロット番号") LIKE LOWER('%' || #{keyword} || '%')
+                )
+            </if>
+        </where>
+    </select>
+
     <select id="findVersionById" resultType="java.lang.Integer">
         SELECT "バージョン" FROM "在庫データ" WHERE "ID" = #{id}
     </select>

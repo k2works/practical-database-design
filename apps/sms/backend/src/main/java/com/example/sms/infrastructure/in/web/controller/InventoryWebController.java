@@ -3,6 +3,7 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.InventoryUseCase;
 import com.example.sms.application.port.in.ProductUseCase;
 import com.example.sms.application.port.in.WarehouseUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Inventory;
 import com.example.sms.domain.model.inventory.StockMovement;
 import com.example.sms.infrastructure.in.web.form.InventoryForm;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 在庫画面コントローラー.
@@ -46,39 +46,20 @@ public class InventoryWebController {
      */
     @GetMapping
     public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String warehouseCode,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Inventory> inventories = getFilteredInventories(warehouseCode);
+        PageResult<Inventory> inventoryPage = inventoryUseCase.getInventories(page, size, keyword, warehouseCode);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            inventories = inventories.stream()
-                .filter(inv -> (inv.getProductCode() != null
-                        && inv.getProductCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (inv.getWarehouseCode() != null
-                        && inv.getWarehouseCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (inv.getLocationCode() != null
-                        && inv.getLocationCode().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (inv.getLotNumber() != null
-                        && inv.getLotNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("inventories", inventories);
+        model.addAttribute("inventories", inventoryPage.getContent());
+        model.addAttribute("page", inventoryPage);
         model.addAttribute("selectedWarehouse", warehouseCode);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "inventories/list";
-    }
-
-    private List<Inventory> getFilteredInventories(String warehouseCode) {
-        if (warehouseCode != null && !warehouseCode.isBlank()) {
-            return inventoryUseCase.getInventoriesByWarehouse(warehouseCode);
-        } else {
-            return inventoryUseCase.getAllInventories();
-        }
     }
 
     /**

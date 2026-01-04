@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.InventoryRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Inventory;
 import com.example.sms.infrastructure.out.persistence.mapper.InventoryMapper;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,14 @@ public class InventoryRepositoryImpl implements InventoryRepository {
     @Override
     public List<Inventory> findAll() {
         return inventoryMapper.findAll();
+    }
+
+    @Override
+    public PageResult<Inventory> findWithPagination(int page, int size, String keyword, String warehouseCode) {
+        int offset = page * size;
+        List<Inventory> content = inventoryMapper.findWithPagination(offset, size, keyword, warehouseCode);
+        long totalElements = inventoryMapper.count(keyword, warehouseCode);
+        return new PageResult<>(content, page, size, totalElements);
     }
 
     @Override

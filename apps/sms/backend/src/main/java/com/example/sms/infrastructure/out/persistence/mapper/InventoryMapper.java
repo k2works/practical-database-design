@@ -36,6 +36,16 @@ public interface InventoryMapper {
 
     List<Inventory> findAll();
 
+    List<Inventory> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("keyword") String keyword,
+            @Param("warehouseCode") String warehouseCode);
+
+    long count(
+            @Param("keyword") String keyword,
+            @Param("warehouseCode") String warehouseCode);
+
     Integer findVersionById(Integer id);
 
     int updateWithOptimisticLock(Inventory inventory);

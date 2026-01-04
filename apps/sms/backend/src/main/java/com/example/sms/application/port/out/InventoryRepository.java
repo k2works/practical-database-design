@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Inventory;
 
 import java.math.BigDecimal;
@@ -27,6 +28,8 @@ public interface InventoryRepository {
     List<Inventory> findByExpirationDateBefore(LocalDate date);
 
     List<Inventory> findAll();
+
+    PageResult<Inventory> findWithPagination(int page, int size, String keyword, String warehouseCode);
 
     void update(Inventory inventory);
 

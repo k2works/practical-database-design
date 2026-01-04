@@ -5,6 +5,7 @@ import com.example.sms.application.port.in.command.CreateInventoryCommand;
 import com.example.sms.application.port.out.InventoryRepository;
 import com.example.sms.application.port.out.StockMovementRepository;
 import com.example.sms.domain.exception.InventoryNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Inventory;
 import com.example.sms.domain.model.inventory.StockMovement;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,12 @@ public class InventoryService implements InventoryUseCase {
     @Transactional(readOnly = true)
     public List<Inventory> getAllInventories() {
         return inventoryRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Inventory> getInventories(int page, int size, String keyword, String warehouseCode) {
+        return inventoryRepository.findWithPagination(page, size, keyword, warehouseCode);
     }
 
     @Override
