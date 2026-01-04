@@ -1,7 +1,9 @@
 package com.example.sms.infrastructure.in.web.controller;
 
 import com.example.sms.application.port.in.DepartmentUseCase;
+import com.example.sms.application.port.in.EmployeeUseCase;
 import com.example.sms.domain.model.department.Department;
+import com.example.sms.domain.model.employee.Employee;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,9 +25,11 @@ import java.util.Locale;
 public class DepartmentWebController {
 
     private final DepartmentUseCase departmentUseCase;
+    private final EmployeeUseCase employeeUseCase;
 
-    public DepartmentWebController(DepartmentUseCase departmentUseCase) {
+    public DepartmentWebController(DepartmentUseCase departmentUseCase, EmployeeUseCase employeeUseCase) {
         this.departmentUseCase = departmentUseCase;
+        this.employeeUseCase = employeeUseCase;
     }
 
     /**
@@ -70,7 +74,9 @@ public class DepartmentWebController {
     @GetMapping("/{departmentCode}")
     public String show(@PathVariable String departmentCode, Model model) {
         Department department = departmentUseCase.getDepartmentByCode(departmentCode);
+        List<Employee> employees = employeeUseCase.getEmployeesByDepartment(departmentCode);
         model.addAttribute("department", department);
+        model.addAttribute("employees", employees);
         return "departments/show";
     }
 

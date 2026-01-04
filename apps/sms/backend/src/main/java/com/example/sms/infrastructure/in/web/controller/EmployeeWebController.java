@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 
@@ -106,8 +107,16 @@ public class EmployeeWebController {
      * 社員登録画面を表示.
      */
     @GetMapping("/new")
-    public String newEmployee(Model model) {
-        model.addAttribute("employee", new Employee());
+    public String newEmployee(
+            @RequestParam(required = false) String departmentCode,
+            @RequestParam(required = false) LocalDate departmentStartDate,
+            Model model) {
+        Employee employee = new Employee();
+        if (departmentCode != null && !departmentCode.isBlank()) {
+            employee.setDepartmentCode(departmentCode);
+            employee.setDepartmentStartDate(departmentStartDate);
+        }
+        model.addAttribute("employee", employee);
         model.addAttribute("departments", departmentUseCase.getAllDepartments());
         model.addAttribute("isNew", true);
         return "employees/form";
