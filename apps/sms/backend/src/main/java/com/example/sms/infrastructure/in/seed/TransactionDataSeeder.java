@@ -453,7 +453,169 @@ public class TransactionDataSeeder {
             .createdBy("EMP-011")
             .build());
 
-        LOG.info("入出庫履歴データ 9件 投入完了");
+        // 追加データ（10件目〜20件目）
+
+        // 入荷入庫（牛肉・2025年1月10日）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("BEEF-001")
+            .movementDateTime(LocalDateTime.of(2025, 1, 10, 9, 30, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(new BigDecimal("80"))
+            .beforeQuantity(new BigDecimal("48"))
+            .afterQuantity(new BigDecimal("128"))
+            .documentNumber("RCV-2025-002")
+            .documentType("入荷")
+            .movementReason("入荷入庫")
+            .createdBy("EMP-011")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("BEEF-002")
+            .movementDateTime(LocalDateTime.of(2025, 1, 10, 9, 35, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(new BigDecimal("60"))
+            .beforeQuantity(new BigDecimal("80"))
+            .afterQuantity(new BigDecimal("140"))
+            .documentNumber("RCV-2025-002")
+            .documentType("入荷")
+            .movementReason("入荷入庫")
+            .createdBy("EMP-011")
+            .build());
+
+        // 出荷出庫（レストラン向け・2025年1月12日）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("CHKN-001")
+            .movementDateTime(LocalDateTime.of(2025, 1, 12, 14, 0, 0))
+            .movementType(MovementType.SHIPMENT)
+            .movementQuantity(new BigDecimal("50"))
+            .beforeQuantity(new BigDecimal("302"))
+            .afterQuantity(new BigDecimal("252"))
+            .documentNumber("SHP-2025-002")
+            .documentType("出荷")
+            .movementReason("出荷出庫（レストランA向け）")
+            .createdBy("EMP-010")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("PORK-001")
+            .movementDateTime(LocalDateTime.of(2025, 1, 12, 14, 5, 0))
+            .movementType(MovementType.SHIPMENT)
+            .movementQuantity(new BigDecimal("40"))
+            .beforeQuantity(new BigDecimal("195"))
+            .afterQuantity(new BigDecimal("155"))
+            .documentNumber("SHP-2025-002")
+            .documentType("出荷")
+            .movementReason("出荷出庫（レストランA向け）")
+            .createdBy("EMP-010")
+            .build());
+
+        // 入荷入庫（2025年1月18日）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("CHKN-002")
+            .movementDateTime(LocalDateTime.of(2025, 1, 18, 10, 0, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(new BigDecimal("200"))
+            .beforeQuantity(new BigDecimal("350"))
+            .afterQuantity(new BigDecimal("550"))
+            .documentNumber("RCV-2025-003")
+            .documentType("入荷")
+            .movementReason("入荷入庫")
+            .createdBy("EMP-011")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("BEEF-003")
+            .movementDateTime(LocalDateTime.of(2025, 1, 18, 10, 10, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(new BigDecimal("75"))
+            .beforeQuantity(new BigDecimal("100"))
+            .afterQuantity(new BigDecimal("175"))
+            .documentNumber("RCV-2025-003")
+            .documentType("入荷")
+            .movementReason("入荷入庫")
+            .createdBy("EMP-011")
+            .build());
+
+        // 出荷出庫（スーパー向け・2025年1月20日）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("PORK-002")
+            .movementDateTime(LocalDateTime.of(2025, 1, 20, 8, 30, 0))
+            .movementType(MovementType.SHIPMENT)
+            .movementQuantity(new BigDecimal("35"))
+            .beforeQuantity(new BigDecimal("250"))
+            .afterQuantity(new BigDecimal("215"))
+            .documentNumber("SHP-2025-003")
+            .documentType("出荷")
+            .movementReason("出荷出庫（スーパーB向け）")
+            .createdBy("EMP-010")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("CHKN-001")
+            .movementDateTime(LocalDateTime.of(2025, 1, 20, 8, 35, 0))
+            .movementType(MovementType.SHIPMENT)
+            .movementQuantity(new BigDecimal("60"))
+            .beforeQuantity(new BigDecimal("252"))
+            .afterQuantity(new BigDecimal("192"))
+            .documentNumber("SHP-2025-003")
+            .documentType("出荷")
+            .movementReason("出荷出庫（スーパーB向け）")
+            .createdBy("EMP-010")
+            .build());
+
+        // 棚卸調整（2025年1月度棚卸）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("BEEF-002")
+            .movementDateTime(LocalDateTime.of(2025, 1, 25, 17, 0, 0))
+            .movementType(MovementType.ADJUSTMENT_MINUS)
+            .movementQuantity(BigDecimal.valueOf(3))
+            .beforeQuantity(new BigDecimal("110"))
+            .afterQuantity(new BigDecimal("107"))
+            .documentNumber("STK-2025-001")
+            .documentType("棚卸")
+            .movementReason("棚卸差異調整（帳簿110→実棚107）")
+            .createdBy("EMP-011")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("CHKN-002")
+            .movementDateTime(LocalDateTime.of(2025, 1, 25, 17, 5, 0))
+            .movementType(MovementType.ADJUSTMENT_PLUS)
+            .movementQuantity(BigDecimal.valueOf(5))
+            .beforeQuantity(new BigDecimal("550"))
+            .afterQuantity(new BigDecimal("555"))
+            .documentNumber("STK-2025-001")
+            .documentType("棚卸")
+            .movementReason("棚卸差異調整（帳簿550→実棚555）")
+            .createdBy("EMP-011")
+            .build());
+
+        // 返品入庫（2025年1月22日）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("BEEF-001")
+            .movementDateTime(LocalDateTime.of(2025, 1, 22, 11, 0, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(BigDecimal.TEN)
+            .beforeQuantity(new BigDecimal("128"))
+            .afterQuantity(new BigDecimal("138"))
+            .documentNumber("RTN-2025-001")
+            .documentType("返品")
+            .movementReason("顧客返品（品質問題なし）")
+            .createdBy("EMP-011")
+            .build());
+
+        LOG.info("入出庫履歴データ 20件 投入完了");
     }
 
     private void seedQuotations() {
