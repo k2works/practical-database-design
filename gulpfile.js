@@ -18,7 +18,11 @@ schemaspyTasks(gulp);
 herokuSmsTasks(gulp);
 dockerSmsTasks(gulp);
 
-export const dev = gulp.series('docker:sms:up', 'schemaspy:sms:generate', 'mkdocs:serve', 'mkdocs:open');
+export const dev = gulp.series(
+    'docker:sms:up',
+    'schemaspy:sms:generate',
+    gulp.parallel('mkdocs:serve', 'mkdocs:open')
+);
 
 // Export gulp to make it available to the gulp CLI
 export default gulp;
