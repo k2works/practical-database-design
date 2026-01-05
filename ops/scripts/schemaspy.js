@@ -15,6 +15,16 @@ const isWindows = process.platform === 'win32';
 const isMac = process.platform === 'darwin';
 
 /**
+ * DOCKER_HOST をクリアした環境変数を取得（Docker Desktop との互換性のため）
+ * @returns {NodeJS.ProcessEnv}
+ */
+function getDockerEnv() {
+    const env = { ...process.env };
+    delete env.DOCKER_HOST;
+    return env;
+}
+
+/**
  * SchemaSpy関連のGulpタスクを登録する
  * @param {import('gulp').Gulp} gulp
  */
@@ -41,20 +51,23 @@ export default function (gulp) {
             try {
                 execSync('docker compose ps postgres --format json', {
                     cwd: PROJECT_DIR,
-                    stdio: 'pipe'
+                    stdio: 'pipe',
+                    env: getDockerEnv()
                 });
             } catch (e) {
                 console.log('PostgreSQL is not running. Starting it...');
                 execSync('docker compose up -d postgres', {
                     cwd: PROJECT_DIR,
-                    stdio: 'inherit'
+                    stdio: 'inherit',
+                    env: getDockerEnv()
                 });
                 console.log('Waiting for PostgreSQL to be ready...');
                 // ヘルスチェックを待つ
                 execSync('docker compose exec postgres pg_isready -U postgres', {
                     cwd: PROJECT_DIR,
                     stdio: 'inherit',
-                    timeout: 30000
+                    timeout: 30000,
+                    env: getDockerEnv()
                 });
             }
 
@@ -62,7 +75,8 @@ export default function (gulp) {
             console.log('\nRunning SchemaSpy...');
             execSync('docker compose --profile schemaspy up schemaspy', {
                 cwd: PROJECT_DIR,
-                stdio: 'inherit'
+                stdio: 'inherit',
+                env: getDockerEnv()
             });
 
             console.log('\nSchemaSpy ER diagram for SMS generated successfully!');

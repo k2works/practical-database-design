@@ -4,6 +4,16 @@ import { execSync, spawn } from 'child_process';
 import path from 'path';
 
 /**
+ * DOCKER_HOST をクリアした環境変数を取得（Docker Desktop との互換性のため）
+ * @returns {NodeJS.ProcessEnv}
+ */
+function getDockerEnv() {
+    const env = { ...process.env };
+    delete env.DOCKER_HOST;
+    return env;
+}
+
+/**
  * SMS Docker 関連の Gulp タスクを登録する
  * @param {import('gulp').Gulp} gulp
  */
@@ -19,7 +29,8 @@ export default function (gulp) {
 
             execSync('docker compose up -d postgres', {
                 cwd: PROJECT_DIR,
-                stdio: 'inherit'
+                stdio: 'inherit',
+                env: getDockerEnv()
             });
 
             console.log('Waiting for PostgreSQL to be ready...');
@@ -30,7 +41,8 @@ export default function (gulp) {
                 try {
                     execSync('docker compose exec -T postgres pg_isready -U postgres', {
                         cwd: PROJECT_DIR,
-                        stdio: 'pipe'
+                        stdio: 'pipe',
+                        env: getDockerEnv()
                     });
                     break;
                 } catch (e) {
@@ -60,7 +72,8 @@ export default function (gulp) {
 
             execSync('docker compose down', {
                 cwd: PROJECT_DIR,
-                stdio: 'inherit'
+                stdio: 'inherit',
+                env: getDockerEnv()
             });
 
             console.log('\nSMS Docker containers stopped.');
@@ -80,7 +93,8 @@ export default function (gulp) {
 
             execSync('docker compose down -v', {
                 cwd: PROJECT_DIR,
-                stdio: 'inherit'
+                stdio: 'inherit',
+                env: getDockerEnv()
             });
 
             console.log('\nSMS Docker containers and volumes removed.');
@@ -100,7 +114,8 @@ export default function (gulp) {
 
             execSync('docker compose ps', {
                 cwd: PROJECT_DIR,
-                stdio: 'inherit'
+                stdio: 'inherit',
+                env: getDockerEnv()
             });
 
             done();
@@ -119,7 +134,8 @@ export default function (gulp) {
 
             const child = spawn('docker', ['compose', 'logs', '-f', 'postgres'], {
                 cwd: PROJECT_DIR,
-                stdio: 'inherit'
+                stdio: 'inherit',
+                env: getDockerEnv()
             });
 
             child.on('close', (code) => {
