@@ -200,17 +200,17 @@ class SeedDataServiceTest extends BaseIntegrationTest {
     class ShipmentAndSalesValidation {
 
         @Test
-        @DisplayName("出荷データは依存関係の複雑さにより初期シードでは投入しない")
-        void shipmentsNotSeededInitially() {
+        @DisplayName("出荷データが1件投入される")
+        void seedsShipments() {
             var shipments = shipmentRepository.findAll();
-            assertThat(shipments).isEmpty();
+            assertThat(shipments).hasSize(1);
         }
 
         @Test
-        @DisplayName("売上データは依存関係の複雑さにより初期シードでは投入しない")
-        void salesNotSeededInitially() {
+        @DisplayName("売上データが1件投入される")
+        void seedsSales() {
             var sales = salesRepository.findAll();
-            assertThat(sales).isEmpty();
+            assertThat(sales).hasSize(1);
         }
     }
 

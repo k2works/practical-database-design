@@ -14,7 +14,10 @@ import com.example.sms.application.port.out.SalesOrderRepository;
 import com.example.sms.application.port.out.SalesRepository;
 import com.example.sms.application.port.out.ShipmentRepository;
 import com.example.sms.application.port.out.StocktakingRepository;
+import com.example.sms.application.port.out.StockMovementRepository;
 import com.example.sms.domain.model.inventory.Inventory;
+import com.example.sms.domain.model.inventory.MovementType;
+import com.example.sms.domain.model.inventory.StockMovement;
 import com.example.sms.domain.model.inventory.Stocktaking;
 import com.example.sms.domain.model.inventory.StocktakingDetail;
 import com.example.sms.domain.model.inventory.StocktakingStatus;
@@ -42,14 +45,21 @@ import com.example.sms.domain.model.sales.OrderStatus;
 import com.example.sms.domain.model.sales.Quotation;
 import com.example.sms.domain.model.sales.QuotationDetail;
 import com.example.sms.domain.model.sales.QuotationStatus;
+import com.example.sms.domain.model.sales.Sales;
+import com.example.sms.domain.model.sales.SalesDetail;
 import com.example.sms.domain.model.sales.SalesOrder;
 import com.example.sms.domain.model.sales.SalesOrderDetail;
+import com.example.sms.domain.model.sales.SalesStatus;
+import com.example.sms.domain.model.shipping.Shipment;
+import com.example.sms.domain.model.shipping.ShipmentDetail;
+import com.example.sms.domain.model.shipping.ShipmentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -68,6 +78,7 @@ public class TransactionDataSeeder {
     // 在庫管理リポジトリ
     private final InventoryRepository inventoryRepository;
     private final StocktakingRepository stocktakingRepository;
+    private final StockMovementRepository stockMovementRepository;
 
     // 販売管理リポジトリ
     private final QuotationRepository quotationRepository;
@@ -92,6 +103,7 @@ public class TransactionDataSeeder {
     public TransactionDataSeeder(
             InventoryRepository inventoryRepository,
             StocktakingRepository stocktakingRepository,
+            StockMovementRepository stockMovementRepository,
             QuotationRepository quotationRepository,
             SalesOrderRepository salesOrderRepository,
             ShipmentRepository shipmentRepository,
@@ -106,6 +118,7 @@ public class TransactionDataSeeder {
             PayableBalanceRepository payableBalanceRepository) {
         this.inventoryRepository = inventoryRepository;
         this.stocktakingRepository = stocktakingRepository;
+        this.stockMovementRepository = stockMovementRepository;
         this.quotationRepository = quotationRepository;
         this.salesOrderRepository = salesOrderRepository;
         this.shipmentRepository = shipmentRepository;
@@ -128,6 +141,7 @@ public class TransactionDataSeeder {
         // 在庫管理トランザクション
         seedInventories();
         seedStocktakings();
+        seedStockMovements();
 
         // 販売管理トランザクション
         seedQuotations();
@@ -175,6 +189,7 @@ public class TransactionDataSeeder {
         quotationRepository.deleteAll();
 
         // 在庫管理トランザクション
+        stockMovementRepository.deleteAll();
         stocktakingRepository.deleteAll();
         inventoryRepository.deleteAll();
     }
@@ -303,6 +318,142 @@ public class TransactionDataSeeder {
             .differenceQuantity(diffQty)
             .adjustedFlag(actualQty != null && diffQty != null && diffQty.signum() == 0)
             .build();
+    }
+
+    private void seedStockMovements() {
+        LOG.info("入出庫履歴データを投入中...");
+
+        // 入荷入庫（鶏肉・2024年12月28日）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("CHKN-001")
+            .movementDateTime(LocalDateTime.of(2024, 12, 28, 10, 0, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(new BigDecimal("300"))
+            .beforeQuantity(BigDecimal.ZERO)
+            .afterQuantity(new BigDecimal("300"))
+            .documentNumber("RCV-2024-001")
+            .documentType("入荷")
+            .movementReason("入荷入庫")
+            .createdBy("EMP-011")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("CHKN-002")
+            .movementDateTime(LocalDateTime.of(2024, 12, 28, 10, 5, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(new BigDecimal("250"))
+            .beforeQuantity(new BigDecimal("100"))
+            .afterQuantity(new BigDecimal("350"))
+            .documentNumber("RCV-2024-001")
+            .documentType("入荷")
+            .movementReason("入荷入庫")
+            .createdBy("EMP-011")
+            .build());
+
+        // 入荷入庫（豚肉・2025年1月15日）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("PORK-001")
+            .movementDateTime(LocalDateTime.of(2025, 1, 15, 9, 0, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(new BigDecimal("100"))
+            .beforeQuantity(new BigDecimal("100"))
+            .afterQuantity(new BigDecimal("200"))
+            .documentNumber("RCV-2025-001")
+            .documentType("入荷")
+            .movementReason("入荷入庫")
+            .createdBy("EMP-011")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("PORK-002")
+            .movementDateTime(LocalDateTime.of(2025, 1, 15, 9, 5, 0))
+            .movementType(MovementType.RECEIPT)
+            .movementQuantity(new BigDecimal("90"))
+            .beforeQuantity(new BigDecimal("160"))
+            .afterQuantity(new BigDecimal("250"))
+            .documentNumber("RCV-2025-001")
+            .documentType("入荷")
+            .movementReason("入荷入庫")
+            .createdBy("EMP-011")
+            .build());
+
+        // 出荷出庫（ホテル向け・2025年1月16日）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("BEEF-002")
+            .movementDateTime(LocalDateTime.of(2025, 1, 16, 8, 0, 0))
+            .movementType(MovementType.SHIPMENT)
+            .movementQuantity(new BigDecimal("30"))
+            .beforeQuantity(new BigDecimal("110"))
+            .afterQuantity(new BigDecimal("80"))
+            .documentNumber("SHP-2025-001")
+            .documentType("出荷")
+            .movementReason("出荷出庫")
+            .createdBy("EMP-010")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("BEEF-003")
+            .movementDateTime(LocalDateTime.of(2025, 1, 16, 8, 5, 0))
+            .movementType(MovementType.SHIPMENT)
+            .movementQuantity(new BigDecimal("25"))
+            .beforeQuantity(new BigDecimal("125"))
+            .afterQuantity(new BigDecimal("100"))
+            .documentNumber("SHP-2025-001")
+            .documentType("出荷")
+            .movementReason("出荷出庫")
+            .createdBy("EMP-010")
+            .build());
+
+        // 棚卸調整（2024年12月度棚卸）
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("BEEF-001")
+            .movementDateTime(LocalDateTime.of(2024, 12, 28, 17, 0, 0))
+            .movementType(MovementType.ADJUSTMENT_MINUS)
+            .movementQuantity(BigDecimal.valueOf(2))
+            .beforeQuantity(new BigDecimal("50"))
+            .afterQuantity(new BigDecimal("48"))
+            .documentNumber("STK-2024-012")
+            .documentType("棚卸")
+            .movementReason("棚卸差異調整（帳簿50→実棚48）")
+            .createdBy("EMP-011")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("PORK-001")
+            .movementDateTime(LocalDateTime.of(2024, 12, 28, 17, 5, 0))
+            .movementType(MovementType.ADJUSTMENT_MINUS)
+            .movementQuantity(new BigDecimal("5"))
+            .beforeQuantity(new BigDecimal("200"))
+            .afterQuantity(new BigDecimal("195"))
+            .documentNumber("STK-2024-012")
+            .documentType("棚卸")
+            .movementReason("棚卸差異調整（帳簿200→実棚195）")
+            .createdBy("EMP-011")
+            .build());
+
+        stockMovementRepository.save(StockMovement.builder()
+            .warehouseCode("WH-HQ")
+            .productCode("CHKN-001")
+            .movementDateTime(LocalDateTime.of(2024, 12, 28, 17, 10, 0))
+            .movementType(MovementType.ADJUSTMENT_PLUS)
+            .movementQuantity(BigDecimal.valueOf(2))
+            .beforeQuantity(new BigDecimal("300"))
+            .afterQuantity(new BigDecimal("302"))
+            .documentNumber("STK-2024-012")
+            .documentType("棚卸")
+            .movementReason("棚卸差異調整（帳簿300→実棚302）")
+            .createdBy("EMP-011")
+            .build());
+
+        LOG.info("入出庫履歴データ 9件 投入完了");
     }
 
     private void seedQuotations() {
@@ -492,15 +643,121 @@ public class TransactionDataSeeder {
     }
 
     private void seedShipments() {
-        // 出荷データは受注IDへの外部キー参照が必要なため、初期シードでは投入しない
-        // 受注→出荷の業務フローで生成される
-        LOG.info("出荷データ: 依存関係のため初期シードではスキップ");
+        LOG.info("出荷データを投入中...");
+
+        // ORD-2025-003（ホテル向け・出荷済み）の出荷データ
+        SalesOrder order3 = salesOrderRepository.findWithDetailsByOrderNumber("ORD-2025-003")
+            .orElseThrow(() -> new IllegalStateException("受注 ORD-2025-003 が見つかりません"));
+
+        Shipment ship1 = Shipment.builder()
+            .shipmentNumber("SHP-2025-001")
+            .shipmentDate(LocalDate.of(2025, 1, 16))
+            .orderId(order3.getId())
+            .customerCode("CUS-005")
+            .customerBranchNumber("00")
+            .representativeCode("EMP-010")
+            .warehouseCode("WH-HQ")
+            .status(ShipmentStatus.SHIPPED)
+            .remarks("ホテルレストラン向け納品")
+            .createdBy("EMP-010")
+            .updatedBy("EMP-010")
+            .details(List.of(
+                createShipmentDetail(1, order3.getDetails().get(0).getId(),
+                    "BEEF-002", "黒毛和牛ロース", 30, "kg", 6000, "WH-HQ"),
+                createShipmentDetail(2, order3.getDetails().get(1).getId(),
+                    "BEEF-003", "黒毛和牛カルビ", 25, "kg", 5500, "WH-HQ")
+            ))
+            .build();
+        shipmentRepository.save(ship1);
+
+        LOG.info("出荷データ 1件 投入完了");
+    }
+
+    private ShipmentDetail createShipmentDetail(int lineNumber, Integer orderDetailId,
+                                                  String productCode, String productName,
+                                                  int quantity, String unit, int unitPrice,
+                                                  String warehouseCode) {
+        BigDecimal qty = new BigDecimal(quantity);
+        BigDecimal price = new BigDecimal(unitPrice);
+        BigDecimal amount = qty.multiply(price);
+        BigDecimal taxAmount = amount.multiply(TAX_RATE).divide(HUNDRED);
+
+        return ShipmentDetail.builder()
+            .lineNumber(lineNumber)
+            .orderDetailId(orderDetailId)
+            .productCode(productCode)
+            .productName(productName)
+            .shippedQuantity(qty)
+            .unit(unit)
+            .unitPrice(price)
+            .amount(amount)
+            .taxCategory(TaxCategory.EXCLUSIVE)
+            .taxRate(TAX_RATE)
+            .taxAmount(taxAmount)
+            .warehouseCode(warehouseCode)
+            .build();
     }
 
     private void seedSales() {
-        // 売上データは受注ID/出荷IDへの外部キー参照が必要なため、初期シードでは投入しない
-        // 出荷→売上の業務フローで生成される
-        LOG.info("売上データ: 依存関係のため初期シードではスキップ");
+        LOG.info("売上データを投入中...");
+
+        // SHP-2025-001（ホテル向け・出荷済み）の売上データ
+        Shipment ship1 = shipmentRepository.findByShipmentNumber("SHP-2025-001")
+            .orElseThrow(() -> new IllegalStateException("出荷 SHP-2025-001 が見つかりません"));
+
+        SalesOrder order3 = salesOrderRepository.findById(ship1.getOrderId())
+            .orElseThrow(() -> new IllegalStateException("受注が見つかりません"));
+
+        Sales sales1 = Sales.builder()
+            .salesNumber("SLS-2025-001")
+            .salesDate(LocalDate.of(2025, 1, 16))
+            .orderId(order3.getId())
+            .shipmentId(ship1.getId())
+            .customerCode("CUS-005")
+            .customerBranchNumber("00")
+            .representativeCode("EMP-010")
+            .salesAmount(new BigDecimal("317500"))
+            .taxAmount(new BigDecimal("31750"))
+            .totalAmount(new BigDecimal("349250"))
+            .status(SalesStatus.RECORDED)
+            .remarks("ホテルレストラン向け売上")
+            .createdBy("EMP-010")
+            .updatedBy("EMP-010")
+            .details(List.of(
+                createSalesDetail(1, order3.getDetails().get(0).getId(), null,
+                    "BEEF-002", "黒毛和牛ロース", 30, "kg", 6000),
+                createSalesDetail(2, order3.getDetails().get(1).getId(), null,
+                    "BEEF-003", "黒毛和牛カルビ", 25, "kg", 5500)
+            ))
+            .build();
+        salesRepository.save(sales1);
+
+        LOG.info("売上データ 1件 投入完了");
+    }
+
+    private SalesDetail createSalesDetail(int lineNumber, Integer orderDetailId,
+                                            Integer shipmentDetailId, String productCode,
+                                            String productName, int quantity,
+                                            String unit, int unitPrice) {
+        BigDecimal qty = new BigDecimal(quantity);
+        BigDecimal price = new BigDecimal(unitPrice);
+        BigDecimal amount = qty.multiply(price);
+        BigDecimal taxAmount = amount.multiply(TAX_RATE).divide(HUNDRED);
+
+        return SalesDetail.builder()
+            .lineNumber(lineNumber)
+            .orderDetailId(orderDetailId)
+            .shipmentDetailId(shipmentDetailId)
+            .productCode(productCode)
+            .productName(productName)
+            .salesQuantity(qty)
+            .unit(unit)
+            .unitPrice(price)
+            .amount(amount)
+            .taxCategory(TaxCategory.EXCLUSIVE)
+            .taxRate(TAX_RATE)
+            .taxAmount(taxAmount)
+            .build();
     }
 
     private void seedInvoices() {

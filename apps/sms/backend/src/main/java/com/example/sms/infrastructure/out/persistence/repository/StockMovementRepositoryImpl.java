@@ -3,67 +3,72 @@ package com.example.sms.infrastructure.out.persistence.repository;
 import com.example.sms.application.port.out.StockMovementRepository;
 import com.example.sms.domain.model.inventory.MovementType;
 import com.example.sms.domain.model.inventory.StockMovement;
+import com.example.sms.infrastructure.out.persistence.mapper.StockMovementMapper;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * 入出庫履歴リポジトリ実装.
- * TODO: マッパー実装後に本実装を行う
  */
 @Repository
 public class StockMovementRepositoryImpl implements StockMovementRepository {
 
+    private final StockMovementMapper stockMovementMapper;
+
+    public StockMovementRepositoryImpl(StockMovementMapper stockMovementMapper) {
+        this.stockMovementMapper = stockMovementMapper;
+    }
+
     @Override
     public void save(StockMovement movement) {
-        // TODO: 実装
+        stockMovementMapper.insert(movement);
     }
 
     @Override
     public Optional<StockMovement> findById(Integer id) {
-        return Optional.empty();
+        return stockMovementMapper.findById(id);
     }
 
     @Override
     public List<StockMovement> findByWarehouseCode(String warehouseCode) {
-        return Collections.emptyList();
+        return stockMovementMapper.findByWarehouseCode(warehouseCode);
     }
 
     @Override
     public List<StockMovement> findByProductCode(String productCode) {
-        return Collections.emptyList();
+        return stockMovementMapper.findByProductCode(productCode);
     }
 
     @Override
     public List<StockMovement> findByWarehouseAndProduct(String warehouseCode, String productCode) {
-        return Collections.emptyList();
+        return stockMovementMapper.findByWarehouseAndProduct(warehouseCode, productCode);
     }
 
     @Override
     public List<StockMovement> findByMovementType(MovementType movementType) {
-        return Collections.emptyList();
+        return stockMovementMapper.findByMovementType(movementType);
     }
 
     @Override
     public List<StockMovement> findByMovementDateTimeBetween(LocalDateTime from, LocalDateTime to) {
-        return Collections.emptyList();
+        return stockMovementMapper.findByMovementDateTimeBetween(from, to);
     }
 
     @Override
     public List<StockMovement> findAll() {
-        return Collections.emptyList();
+        return stockMovementMapper.findAll();
     }
 
     @Override
     public void deleteById(Integer id) {
-        // TODO: 実装
+        stockMovementMapper.deleteById(id);
     }
 
     @Override
     public void deleteAll() {
-        // TODO: 実装
+        stockMovementMapper.deleteAll();
     }
 }

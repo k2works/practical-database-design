@@ -58,6 +58,7 @@ class ReceivingRepositoryTest extends BaseIntegrationTest {
     @BeforeEach
     void setUp() {
         // 商品を参照するトランザクションデータを先に削除
+        jdbcTemplate.execute("TRUNCATE TABLE \"入出庫履歴データ\" CASCADE");
         jdbcTemplate.execute("TRUNCATE TABLE \"棚卸明細データ\" CASCADE");
         jdbcTemplate.execute("TRUNCATE TABLE \"棚卸データ\" CASCADE");
 
