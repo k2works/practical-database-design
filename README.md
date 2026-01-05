@@ -111,14 +111,23 @@
 - [運用](#運用)
 - [開発](#開発)
 
+## デモ
+
+- [販売管理システムデモ](https://deploy-demo-sms-b33828d678a9.herokuapp.com/)
+
 ## 詳細
 
 ### Quick Start
 
 ```bash
 npm install
-npm run docs:serve
+npm start
 ```
+
+以下が自動実行されます：
+1. MkDocs サーバー起動 & ブラウザで開く
+2. PostgreSQL コンテナ起動
+3. SchemaSpy ER 図生成
 
 ブラウザで http://localhost:8000 にアクセスして記事をプレビューできます。
 
@@ -187,7 +196,38 @@ claude mcp add github npx -y @modelcontextprotocol/server-github -s project
 |---------|------|
 | `npm run docs:serve` | MkDocs サーバーの起動 |
 | `npm run docs:stop` | MkDocs サーバーの停止 |
-| `npm run docs:build` | MkDocs ドキュメントのビルド |
+| `npm run docs:build` | Docker 起動 + ER 図生成 + MkDocs ビルド |
+
+##### SMS Docker タスク
+
+| コマンド | 説明 |
+|---------|------|
+| `npm run docker:sms:up` | PostgreSQL コンテナ起動 |
+| `npm run docker:sms:down` | PostgreSQL コンテナ停止 |
+| `gulp docker:sms:clean` | コンテナ停止 & ボリューム削除（データリセット） |
+| `gulp docker:sms:status` | コンテナ状態確認 |
+| `gulp docker:sms:logs` | PostgreSQL ログ表示 |
+
+##### SMS SchemaSpy タスク
+
+| コマンド | 説明 |
+|---------|------|
+| `npm run schemaspy:sms` | SchemaSpy ER 図生成 |
+| `gulp schemaspy:sms:open` | 生成済み ER 図をブラウザで開く |
+| `gulp schemaspy:sms:clean` | ER 図出力ディレクトリをクリーン |
+
+##### SMS Heroku デプロイタスク
+
+| コマンド | 説明 |
+|---------|------|
+| `gulp heroku:sms:create` | Heroku アプリ新規作成 |
+| `gulp heroku:sms:deploy` | ビルド → プッシュ → リリース（一括） |
+| `gulp heroku:sms:build` | Docker イメージビルド |
+| `gulp heroku:sms:push` | イメージを Heroku にプッシュ |
+| `gulp heroku:sms:release` | リリース実行 |
+| `gulp heroku:sms:logs` | Heroku ログ表示 |
+| `gulp heroku:sms:open` | ブラウザでアプリを開く |
+| `gulp heroku:sms:restart` | Dyno 再起動（データリセット） |
 
 ##### 作業履歴（ジャーナル）タスク
 
@@ -251,9 +291,14 @@ practical-database-design/
 │   ├── reference/         # 参照ドキュメント
 │   └── wiki/              # 参照元記事（wiki サブモジュール）
 ├── apps/                  # アプリケーション実装
-│   └── java/              # Java 実装
+│   └── sms/               # 販売管理システム（Spring Boot）
+│       ├── backend/       # バックエンド API
+│       └── docker-compose.yml
+├── ops/                   # 運用スクリプト
+│   └── scripts/           # Gulp タスク定義
 ├── mkdocs.yml             # MkDocs 設定
 ├── docker-compose.yml     # Docker 設定
+├── gulpfile.js            # Gulp 設定
 └── package.json           # npm スクリプト
 ```
 
