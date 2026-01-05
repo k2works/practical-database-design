@@ -48,6 +48,9 @@ dependencies {
     // === runtimeOnly ===
     runtimeOnly("org.postgresql:postgresql")
 
+    // H2 Database（デモ環境用）
+    runtimeOnly("com.h2database:h2")
+
     // === compileOnly ===
     compileOnly("org.projectlombok:lombok")
 

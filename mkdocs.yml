@@ -65,6 +65,9 @@ nav:
       - 技術スタック: article/techstack.md
       - アウトライン: article/outline.md
       - 執筆ワークフロー: article/workflow.md
+      - デプロイ:
+          - SMS デモデプロイ: article/deploy-sms.md
+          - FAS デモデプロイ: article/deploy-fas.md
       - 第1部 基幹業務システムの全体像:
           - 第1章 基幹業務システムとは: article/part1/chapter01.md
           - 第2章 基幹業務システムの業務領域: article/part1/chapter02.md
