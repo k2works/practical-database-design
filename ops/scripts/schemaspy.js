@@ -34,11 +34,11 @@ export default function (gulp) {
     const INDEX_FILE = path.join(OUTPUT_DIR, 'index.html');
 
     /**
-     * SchemaSpy ER図を生成する
+     * バックエンドを起動してマイグレーションを実行
      */
-    gulp.task('schemaspy:sms:generate', (done) => {
+    gulp.task('schemaspy:sms:migrate', (done) => {
         try {
-            console.log('Generating SchemaSpy ER diagram for SMS...');
+            console.log('Starting backend for database migration...');
 
             // 出力ディレクトリを作成（存在しない場合）
             if (!fs.existsSync(OUTPUT_DIR)) {
@@ -46,33 +46,82 @@ export default function (gulp) {
                 console.log(`Created output directory: ${OUTPUT_DIR}`);
             }
 
-            // PostgreSQL が起動していることを確認
-            console.log('Checking PostgreSQL status...');
-            try {
-                execSync('docker compose ps postgres --format json', {
-                    cwd: PROJECT_DIR,
-                    stdio: 'pipe',
-                    env: getDockerEnv()
-                });
-            } catch (e) {
-                console.log('PostgreSQL is not running. Starting it...');
-                execSync('docker compose up -d postgres', {
-                    cwd: PROJECT_DIR,
-                    stdio: 'inherit',
-                    env: getDockerEnv()
-                });
-                console.log('Waiting for PostgreSQL to be ready...');
-                // ヘルスチェックを待つ
-                execSync('docker compose exec postgres pg_isready -U postgres', {
-                    cwd: PROJECT_DIR,
-                    stdio: 'inherit',
-                    timeout: 30000,
-                    env: getDockerEnv()
-                });
+            // PostgreSQL を起動
+            console.log('Starting PostgreSQL...');
+            execSync('docker compose up -d postgres', {
+                cwd: PROJECT_DIR,
+                stdio: 'inherit',
+                env: getDockerEnv()
+            });
+
+            // PostgreSQL の準備完了を待つ
+            console.log('Waiting for PostgreSQL to be ready...');
+            let retries = 30;
+            while (retries > 0) {
+                try {
+                    execSync('docker compose exec -T postgres pg_isready -U postgres', {
+                        cwd: PROJECT_DIR,
+                        stdio: 'pipe',
+                        env: getDockerEnv()
+                    });
+                    break;
+                } catch (e) {
+                    retries--;
+                    if (retries === 0) {
+                        throw new Error('PostgreSQL failed to become ready');
+                    }
+                    execSync('sleep 1 || timeout /t 1 /nobreak >nul', { stdio: 'pipe', shell: true });
+                }
             }
 
-            // SchemaSpy を実行
-            console.log('\nRunning SchemaSpy...');
+            // バックエンドを起動（マイグレーション実行）
+            console.log('\nStarting backend (running Flyway migrations)...');
+            execSync('docker compose --profile backend up -d backend', {
+                cwd: PROJECT_DIR,
+                stdio: 'inherit',
+                env: getDockerEnv()
+            });
+
+            // バックエンドのヘルスチェックを待つ（最大120秒）
+            console.log('Waiting for backend to be healthy (migrations to complete)...');
+            retries = 24; // 24 * 5秒 = 120秒
+            while (retries > 0) {
+                try {
+                    const result = execSync('docker compose --profile backend ps backend --format json', {
+                        cwd: PROJECT_DIR,
+                        stdio: 'pipe',
+                        env: getDockerEnv()
+                    }).toString();
+
+                    if (result.includes('"Health":"healthy"') || result.includes('"Health": "healthy"')) {
+                        console.log('Backend is healthy!');
+                        break;
+                    }
+                } catch (e) {
+                    // ignore
+                }
+                retries--;
+                if (retries === 0) {
+                    throw new Error('Backend failed to become healthy within timeout');
+                }
+                console.log(`  Waiting... (${retries * 5}s remaining)`);
+                execSync('sleep 5 || timeout /t 5 /nobreak >nul', { stdio: 'pipe', shell: true });
+            }
+
+            console.log('\nDatabase migration completed!');
+            done();
+        } catch (error) {
+            console.error('Error during migration:', error.message);
+            done(error);
+        }
+    });
+
+    /**
+     * SchemaSpy ER図を生成する（マイグレーション後）
+     */
+    gulp.task('schemaspy:sms:run', (done) => {
+        try {
+            console.log('Running SchemaSpy...');
             execSync('docker compose --profile schemaspy run --rm schemaspy', {
                 cwd: PROJECT_DIR,
                 stdio: 'inherit',
@@ -88,6 +137,33 @@ export default function (gulp) {
             done(error);
         }
     });
+
+    /**
+     * バックエンドを停止する
+     */
+    gulp.task('schemaspy:sms:stop-backend', (done) => {
+        try {
+            console.log('Stopping backend...');
+            execSync('docker compose --profile backend stop backend', {
+                cwd: PROJECT_DIR,
+                stdio: 'inherit',
+                env: getDockerEnv()
+            });
+            done();
+        } catch (error) {
+            // バックエンドが起動していない場合は無視
+            done();
+        }
+    });
+
+    /**
+     * SchemaSpy ER図を生成する（マイグレーション含む）
+     */
+    gulp.task('schemaspy:sms:generate', gulp.series(
+        'schemaspy:sms:migrate',
+        'schemaspy:sms:run',
+        'schemaspy:sms:stop-backend'
+    ));
 
     /**
      * 生成されたSchemaSpy ER図をブラウザで開く
@@ -168,7 +244,9 @@ SchemaSpy SMS Tasks
 ===================
 
 Available tasks:
-  schemaspy:sms:generate    - Generate SchemaSpy ER diagram
+  schemaspy:sms:generate    - Generate SchemaSpy ER diagram (with migrations)
+  schemaspy:sms:migrate     - Run database migrations only
+  schemaspy:sms:run         - Run SchemaSpy only (no migrations)
   schemaspy:sms:open        - Open generated ER diagram in browser
   schemaspy:sms:clean       - Clean output directory
   schemaspy:sms:regenerate  - Clean and regenerate ER diagram
