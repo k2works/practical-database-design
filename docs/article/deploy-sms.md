@@ -318,9 +318,9 @@ jobs:
 
 リポジトリの Settings → Secrets and variables → Actions で以下を登録：
 
-| シークレット名 | 内容 |
-|----------------|------|
-| `HEROKU_API_KEY` | Heroku API キー |
+| シークレット名              | 内容 |
+|----------------------|------|
+| `HEROKU_API_KEY_SMS` | Heroku API キー |
 
 #### Heroku API キーの取得
 

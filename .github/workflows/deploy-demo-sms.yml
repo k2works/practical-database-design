@@ -21,17 +21,17 @@ jobs:
 
       - name: Login to Heroku Container Registry
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_SMS }}
         run: heroku container:login
 
       - name: Build and push
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_SMS }}
         run: |
           docker build -t registry.heroku.com/deploy-demo-sms/web apps/sms/backend
           docker push registry.heroku.com/deploy-demo-sms/web
 
       - name: Release
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_SMS }}
         run: heroku container:release web -a deploy-demo-sms
