@@ -1,5 +1,6 @@
 package com.example.sms.application.port.out;
 
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Stocktaking;
 import com.example.sms.domain.model.inventory.StocktakingStatus;
 
@@ -13,6 +14,8 @@ import java.util.Optional;
 public interface StocktakingRepository {
 
     void save(Stocktaking stocktaking);
+
+    PageResult<Stocktaking> findWithPagination(int page, int size, String keyword, StocktakingStatus status);
 
     Optional<Stocktaking> findById(Integer id);
 

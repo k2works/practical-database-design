@@ -4,6 +4,7 @@ import com.example.sms.application.port.in.StocktakingUseCase;
 import com.example.sms.application.port.in.command.CreateStocktakingCommand;
 import com.example.sms.application.port.out.StocktakingRepository;
 import com.example.sms.domain.exception.StocktakingNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Stocktaking;
 import com.example.sms.domain.model.inventory.StocktakingDetail;
 import com.example.sms.domain.model.inventory.StocktakingStatus;
@@ -80,6 +81,12 @@ public class StocktakingService implements StocktakingUseCase {
     @Transactional(readOnly = true)
     public List<Stocktaking> getAllStocktakings() {
         return stocktakingRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Stocktaking> getStocktakings(int page, int size, String keyword, StocktakingStatus status) {
+        return stocktakingRepository.findWithPagination(page, size, keyword, status);
     }
 
     @Override

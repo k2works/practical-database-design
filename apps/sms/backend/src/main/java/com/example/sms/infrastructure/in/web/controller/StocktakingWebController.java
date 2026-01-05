@@ -3,6 +3,7 @@ package com.example.sms.infrastructure.in.web.controller;
 import com.example.sms.application.port.in.ProductUseCase;
 import com.example.sms.application.port.in.StocktakingUseCase;
 import com.example.sms.application.port.in.WarehouseUseCase;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Stocktaking;
 import com.example.sms.domain.model.inventory.StocktakingStatus;
 import com.example.sms.infrastructure.in.web.form.StocktakingForm;
@@ -17,9 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
-import java.util.Locale;
 
 /**
  * 棚卸画面コントローラー.
@@ -46,36 +44,21 @@ public class StocktakingWebController {
      */
     @GetMapping
     public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) StocktakingStatus status,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        List<Stocktaking> stocktakings = getFilteredStocktakings(status);
+        PageResult<Stocktaking> stocktakingPage = stocktakingUseCase.getStocktakings(page, size, keyword, status);
 
-        // キーワードでフィルタ
-        if (keyword != null && !keyword.isBlank()) {
-            String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
-            stocktakings = stocktakings.stream()
-                .filter(st -> (st.getStocktakingNumber() != null
-                        && st.getStocktakingNumber().toLowerCase(Locale.ROOT).contains(lowerKeyword))
-                    || (st.getWarehouseCode() != null
-                        && st.getWarehouseCode().toLowerCase(Locale.ROOT).contains(lowerKeyword)))
-                .toList();
-        }
-
-        model.addAttribute("stocktakings", stocktakings);
+        model.addAttribute("stocktakings", stocktakingPage.getContent());
+        model.addAttribute("page", stocktakingPage);
         model.addAttribute("statuses", StocktakingStatus.values());
         model.addAttribute("selectedStatus", status);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
         return "stocktakings/list";
-    }
-
-    private List<Stocktaking> getFilteredStocktakings(StocktakingStatus status) {
-        if (status != null) {
-            return stocktakingUseCase.getStocktakingsByStatus(status);
-        } else {
-            return stocktakingUseCase.getAllStocktakings();
-        }
     }
 
     /**

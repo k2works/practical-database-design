@@ -79,6 +79,17 @@ public interface InventoryUseCase {
     List<StockMovement> getAllStockMovements();
 
     /**
+     * 入出庫履歴をページネーション付きで取得する.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param warehouseCode 倉庫コード（任意）
+     * @param productCode 商品コード（任意）
+     * @return ページング結果
+     */
+    PageResult<StockMovement> getStockMovements(int page, int size, String warehouseCode, String productCode);
+
+    /**
      * 倉庫コードで入出庫履歴を検索する.
      *
      * @param warehouseCode 倉庫コード

@@ -95,6 +95,12 @@ public class InventoryService implements InventoryUseCase {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResult<StockMovement> getStockMovements(int page, int size, String warehouseCode, String productCode) {
+        return stockMovementRepository.findWithPagination(page, size, warehouseCode, productCode);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<StockMovement> getStockMovementsByWarehouse(String warehouseCode) {
         return stockMovementRepository.findByWarehouseCode(warehouseCode);
     }

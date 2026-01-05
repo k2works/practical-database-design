@@ -1,6 +1,7 @@
 package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.StockMovementRepository;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.MovementType;
 import com.example.sms.domain.model.inventory.StockMovement;
 import com.example.sms.infrastructure.out.persistence.mapper.StockMovementMapper;
@@ -25,6 +26,14 @@ public class StockMovementRepositoryImpl implements StockMovementRepository {
     @Override
     public void save(StockMovement movement) {
         stockMovementMapper.insert(movement);
+    }
+
+    @Override
+    public PageResult<StockMovement> findWithPagination(int page, int size, String warehouseCode, String productCode) {
+        int offset = page * size;
+        List<StockMovement> content = stockMovementMapper.findWithPagination(offset, size, warehouseCode, productCode);
+        long totalElements = stockMovementMapper.count(warehouseCode, productCode);
+        return new PageResult<>(content, page, size, totalElements);
     }
 
     @Override

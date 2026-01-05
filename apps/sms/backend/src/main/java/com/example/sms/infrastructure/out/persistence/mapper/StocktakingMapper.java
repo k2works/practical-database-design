@@ -20,6 +20,16 @@ public interface StocktakingMapper {
 
     void insertDetail(StocktakingDetail detail);
 
+    List<Stocktaking> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("keyword") String keyword,
+            @Param("status") StocktakingStatus status);
+
+    long count(
+            @Param("keyword") String keyword,
+            @Param("status") StocktakingStatus status);
+
     Optional<Stocktaking> findById(Integer id);
 
     Optional<Stocktaking> findByStocktakingNumber(String stocktakingNumber);

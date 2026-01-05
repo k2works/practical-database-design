@@ -34,6 +34,15 @@
                 <input type="text" name="keyword" class="form-control"
                        th:value="${keyword}" placeholder="棚卸番号、倉庫コード">
             </div>
+            <div class="col-md-2">
+                <label class="form-label">表示件数</label>
+                <select name="size" class="form-select">
+                    <option value="10" th:selected="${currentSize == 10}">10件</option>
+                    <option value="25" th:selected="${currentSize == 25}">25件</option>
+                    <option value="50" th:selected="${currentSize == 50}">50件</option>
+                    <option value="100" th:selected="${currentSize == 100}">100件</option>
+                </select>
+            </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-secondary">検索</button>
             </div>
@@ -83,9 +92,63 @@
         </tbody>
     </table>
 
-    <!-- 件数表示 -->
-    <div class="text-muted">
-        <span th:text="${#lists.size(stocktakings)}">0</span> 件
+    <!-- 件数表示とページネーション -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="text-muted">
+            <span th:if="${page.totalElements > 0}">
+                <span th:text="${page.page * page.size + 1}">1</span> -
+                <span th:text="${page.page * page.size + #lists.size(stocktakings)}">10</span> 件
+                （全 <span th:text="${page.totalElements}">0</span> 件）
+            </span>
+            <span th:if="${page.totalElements == 0}">0 件</span>
+        </div>
+
+        <!-- ページネーション -->
+        <nav th:if="${page.totalPages > 1}" aria-label="ページナビゲーション">
+            <ul class="pagination justify-content-center mb-0">
+                <!-- 最初のページ -->
+                <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/stocktakings(page=0, size=${currentSize}, status=${selectedStatus?.name()}, keyword=${keyword})}">&laquo;</a>
+                </li>
+
+                <!-- 前ページ -->
+                <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/stocktakings(page=${page.page - 1}, size=${currentSize}, status=${selectedStatus?.name()}, keyword=${keyword})}">&lsaquo;</a>
+                </li>
+
+                <!-- ページ番号（前後2ページを表示） -->
+                <th:block th:with="startPage=${page.page > 2 ? page.page - 2 : 0},
+                               endPage=${page.page + 2 < page.totalPages - 1 ? page.page + 2 : page.totalPages - 1}">
+                    <li class="page-item" th:if="${startPage > 0}">
+                        <span class="page-link">...</span>
+                    </li>
+                    <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                        class="page-item"
+                        th:classappend="${i == page.page} ? 'active'">
+                        <a class="page-link"
+                           th:href="@{/stocktakings(page=${i}, size=${currentSize}, status=${selectedStatus?.name()}, keyword=${keyword})}"
+                           th:text="${i + 1}">1</a>
+                    </li>
+                    <li class="page-item" th:if="${endPage < page.totalPages - 1}">
+                        <span class="page-link">...</span>
+                    </li>
+                </th:block>
+
+                <!-- 次ページ -->
+                <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/stocktakings(page=${page.page + 1}, size=${currentSize}, status=${selectedStatus?.name()}, keyword=${keyword})}">&rsaquo;</a>
+                </li>
+
+                <!-- 最後のページ -->
+                <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/stocktakings(page=${page.totalPages - 1}, size=${currentSize}, status=${selectedStatus?.name()}, keyword=${keyword})}">&raquo;</a>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>
 </body>

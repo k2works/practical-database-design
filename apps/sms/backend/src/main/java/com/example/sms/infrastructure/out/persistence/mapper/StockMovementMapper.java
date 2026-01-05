@@ -17,6 +17,16 @@ public interface StockMovementMapper {
 
     void insert(StockMovement movement);
 
+    List<StockMovement> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("warehouseCode") String warehouseCode,
+            @Param("productCode") String productCode);
+
+    long count(
+            @Param("warehouseCode") String warehouseCode,
+            @Param("productCode") String productCode);
+
     Optional<StockMovement> findById(@Param("id") Integer id);
 
     List<StockMovement> findByWarehouseCode(@Param("warehouseCode") String warehouseCode);

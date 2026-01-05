@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-
 /**
  * 在庫画面コントローラー.
  */
@@ -109,25 +107,20 @@ public class InventoryWebController {
      */
     @GetMapping("/movements")
     public String movementList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String warehouseCode,
             @RequestParam(required = false) String productCode,
             Model model) {
 
-        List<StockMovement> movements = getFilteredMovements(warehouseCode, productCode);
+        PageResult<StockMovement> movementPage = inventoryUseCase.getStockMovements(
+                page, size, warehouseCode, productCode);
 
-        model.addAttribute("movements", movements);
+        model.addAttribute("movements", movementPage.getContent());
+        model.addAttribute("page", movementPage);
         model.addAttribute("selectedWarehouse", warehouseCode);
         model.addAttribute("selectedProduct", productCode);
+        model.addAttribute("currentSize", size);
         return "inventories/movements";
-    }
-
-    private List<StockMovement> getFilteredMovements(String warehouseCode, String productCode) {
-        if (warehouseCode != null && !warehouseCode.isBlank()) {
-            return inventoryUseCase.getStockMovementsByWarehouse(warehouseCode);
-        } else if (productCode != null && !productCode.isBlank()) {
-            return inventoryUseCase.getStockMovementsByProduct(productCode);
-        } else {
-            return inventoryUseCase.getAllStockMovements();
-        }
     }
 }

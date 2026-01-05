@@ -23,6 +23,32 @@
         <result property="createdBy" column="作成者"/>
     </resultMap>
 
+    <select id="findWithPagination" resultMap="StockMovementResultMap">
+        SELECT * FROM "入出庫履歴データ"
+        <where>
+            <if test="warehouseCode != null and warehouseCode != ''">
+                "倉庫コード" = #{warehouseCode}
+            </if>
+            <if test="productCode != null and productCode != ''">
+                AND "商品コード" = #{productCode}
+            </if>
+        </where>
+        ORDER BY "移動日時" DESC, "ID" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "入出庫履歴データ"
+        <where>
+            <if test="warehouseCode != null and warehouseCode != ''">
+                "倉庫コード" = #{warehouseCode}
+            </if>
+            <if test="productCode != null and productCode != ''">
+                AND "商品コード" = #{productCode}
+            </if>
+        </where>
+    </select>
+
     <insert id="insert" parameterType="com.example.sms.domain.model.inventory.StockMovement"
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "入出庫履歴データ" (

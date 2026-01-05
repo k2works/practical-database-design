@@ -2,6 +2,7 @@ package com.example.sms.infrastructure.out.persistence.repository;
 
 import com.example.sms.application.port.out.StocktakingRepository;
 import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Stocktaking;
 import com.example.sms.domain.model.inventory.StocktakingDetail;
 import com.example.sms.domain.model.inventory.StocktakingStatus;
@@ -36,6 +37,14 @@ public class StocktakingRepositoryImpl implements StocktakingRepository {
                 stocktakingMapper.insertDetail(detail);
             }
         }
+    }
+
+    @Override
+    public PageResult<Stocktaking> findWithPagination(int page, int size, String keyword, StocktakingStatus status) {
+        int offset = page * size;
+        List<Stocktaking> content = stocktakingMapper.findWithPagination(offset, size, keyword, status);
+        long totalElements = stocktakingMapper.count(keyword, status);
+        return new PageResult<>(content, page, size, totalElements);
     }
 
     @Override

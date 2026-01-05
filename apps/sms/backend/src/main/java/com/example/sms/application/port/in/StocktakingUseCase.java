@@ -1,6 +1,7 @@
 package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateStocktakingCommand;
+import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.inventory.Stocktaking;
 import com.example.sms.domain.model.inventory.StocktakingStatus;
 
@@ -25,6 +26,17 @@ public interface StocktakingUseCase {
      * @return 棚卸リスト
      */
     List<Stocktaking> getAllStocktakings();
+
+    /**
+     * 棚卸をページネーション付きで取得する.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param keyword 検索キーワード（任意）
+     * @param status 棚卸ステータス（任意）
+     * @return ページング結果
+     */
+    PageResult<Stocktaking> getStocktakings(int page, int size, String keyword, StocktakingStatus status);
 
     /**
      * 棚卸番号で棚卸を取得する.

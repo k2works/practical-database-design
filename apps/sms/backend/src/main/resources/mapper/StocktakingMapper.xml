@@ -77,6 +77,34 @@
         <result property="updatedAt" column="std_更新日時"/>
     </resultMap>
 
+    <select id="findWithPagination" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("棚卸番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+            <if test="status != null">
+                AND "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス
+            </if>
+        </where>
+        ORDER BY "棚卸日" DESC, "棚卸番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "棚卸データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("棚卸番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+            <if test="status != null">
+                AND "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス
+            </if>
+        </where>
+    </select>
+
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking"
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "棚卸データ" (
