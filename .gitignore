@@ -153,3 +153,6 @@ vite.config.ts.timestamp-*
 docs/wiki/
 /docs/assets/schemaspy-output/
 tmp
+
+site/
+.DS_Store
