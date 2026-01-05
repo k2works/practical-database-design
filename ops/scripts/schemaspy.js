@@ -73,7 +73,7 @@ export default function (gulp) {
 
             // SchemaSpy を実行
             console.log('\nRunning SchemaSpy...');
-            execSync('docker compose --profile schemaspy up schemaspy', {
+            execSync('docker compose --profile schemaspy run --rm schemaspy', {
                 cwd: PROJECT_DIR,
                 stdio: 'inherit',
                 env: getDockerEnv()
