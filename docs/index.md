@@ -44,4 +44,4 @@
 
 ### データベース
 
-- [SchemaSpy ER 図](./assets/schemaspy-output/index.html) - データベースの ER 図。テーブル構造やリレーションを可視化。
+- [SchemaSpy ER 図（SMS）](./assets/schemaspy-output/sms/index.html) - 販売管理システムのデータベース ER 図。テーブル構造やリレーションを可視化。

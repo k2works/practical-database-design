@@ -36,7 +36,7 @@ services:
       -s public
       -connprops useSSL\\=false
     volumes:
-      - ../../docs/assets/schemaspy-output:/output
+      - ../../docs/assets/schemaspy-output/sms:/output
     profiles:
       - schemaspy
 
