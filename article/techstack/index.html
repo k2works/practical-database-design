@@ -1,0 +1,4687 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="基幹業務システム（販売管理・財務会計・生産管理）のデータベース設計を体系的に解説">
+      
+      
+        <meta name="author" content="k2works">
+      
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../outline/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>技術スタック - 実践データベース設計：基幹業務システム編</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../docs/mkdocs/assets/css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="実践データベース設計：基幹業務システム編" class="md-header__button md-logo" aria-label="実践データベース設計：基幹業務システム編" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            実践データベース設計：基幹業務システム編
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              技術スタック
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/k2works/practical-database-design" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    practical-database-design
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  実践データベース設計
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="実践データベース設計：基幹業務システム編" class="md-nav__button md-logo" aria-label="実践データベース設計：基幹業務システム編" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    実践データベース設計：基幹業務システム編
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/k2works/practical-database-design" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    practical-database-design
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    実践データベース設計
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    実践データベース設計
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    概要
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技術スタック
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技術スタック
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        バックエンド
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        フロントエンド
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        インフラストラクチャ
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        命名規則
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        プロジェクト構成
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        サブシステム一覧
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        環境構築
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="環境構築">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        前提条件
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        バックエンドのセットアップ
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="バックエンドのセットアップ">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-gradle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Gradle プロジェクトの初期化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-buildgradlekts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. build.gradle.kts の設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-settingsgradlekts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. settings.gradle.kts の設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-gradle-wrapperproperties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. gradle-wrapper.properties の設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Docker Compose のセットアップ
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-flyway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Flyway マイグレーションのセットアップ
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-testcontainers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. TestContainers のセットアップ
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 最初のテスト：データベース接続確認
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        コード品質管理ツールの設定
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="コード品質管理ツールの設定">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#checkstyle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkstyle の設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PMD の設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spotbugs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SpotBugs の設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        コード品質チェックの実行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        テストカバレッジの確認
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        コミット前の品質チェック
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="コミット前の品質チェック">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        セットアップ
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        設定ファイル
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="設定ファイル">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#packagejson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        package.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lintstagedrcsmsjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .lintstagedrc.sms.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#huskypre-commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .husky/pre-commit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自動実行される品質チェック
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        手動での品質チェック
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pre-commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pre-commit フックが失敗する場合
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        トラブルシューティング
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="トラブルシューティング">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#java-25-gradle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Java 25 と Gradle の互換性
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spring-boot-400-flyway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spring Boot 4.0.0 の Flyway 自動設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testcontainers-spring-boot-400" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TestContainers と Spring Boot 4.0.0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pmd-7x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PMD 7.x のルール変更
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gitignore-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .gitignore での out ディレクトリ
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tdd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TDD アプローチの導入
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TDD アプローチの導入">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#red-green-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Red-Green-Refactor サイクル
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tdd_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        データベース設計への TDD 適用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mybatis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MyBatis での日本語カラム対応
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        フロントエンドのセットアップ
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="フロントエンドのセットアップ">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-vite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Vite プロジェクトの初期化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 追加パッケージのインストール
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        起動手順
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    アウトライン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    執筆ワークフロー
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_5" id="__nav_1_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1部 基幹業務システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第1部 基幹業務システムの全体像
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1章 基幹業務システムとは
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2章 基幹業務システムの業務領域
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3章 業務フローの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_6" id="__nav_1_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2部 販売管理システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第2部 販売管理システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4章 販売管理システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5章 マスタ情報の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6章 受注・出荷・売上の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7章 債権管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8章 調達管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9章 在庫管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10章 債務管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11章 共通処理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12章 販売管理データ設計（B社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3部 財務会計システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第3部 財務会計システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14章 財務会計システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15章 勘定科目の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16章 仕訳の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17章 自動仕訳の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18章 勘定科目残高の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19章 赤黒とログの設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20章 財務会計データ設計（D社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4部 生産管理システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第4部 生産管理システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22章 生産管理システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23章 マスタ情報の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24章 生産計画の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25章 購買管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26章 外注委託管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27章 工程管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28章 在庫管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第29章 品質管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter30/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第30章 製造原価管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter31/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第31章 生産管理データ設計（E社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter32/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第32章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5部 エンタープライズインテグレーション
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第5部 エンタープライズインテグレーション
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter33.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第33章 システム統合の概要
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter34.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第34章 メッセージングパターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter35.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第35章 システム間連携パターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter36.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第36章 マスタデータ管理（MDM）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter37.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第37章 イベント駆動アーキテクチャ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter38.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第38章 API設計とサービス連携
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter39.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第39章 データ連携の実装パターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_10" id="__nav_1_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 販売管理システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 販売管理システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_11" id="__nav_1_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 財務会計システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 財務会計システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_12" id="__nav_1_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 生産管理システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 生産管理システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_13" id="__nav_1_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 財務会計システムORM実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 財務会計システムORM実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter14-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14章 財務会計システムの全体像【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter15-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15章 勘定科目の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter16-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16章 仕訳の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter17-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17章 自動仕訳の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter18-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18章 勘定科目残高の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter19-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19章 赤黒とログの設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter20-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20章 財務会計データ設計（D社事例）【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter21-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21章 APIサービスの実装【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_14" id="__nav_1_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    付録
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    付録
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/er-diagrams.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A 全体ER図
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/table-definitions.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    B テーブル定義一覧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/glossary.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C 用語集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_15" id="__nav_1_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    データベース
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    データベース
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assets/schemaspy-output/sms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SchemaSpy ER図（SMS）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="_1">技術スタック<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>本記事シリーズで使用する技術スタックを定義します。</p>
+<hr />
+<h2 id="_2">バックエンド<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>カテゴリ</th>
+<th>技術</th>
+<th>バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>言語</td>
+<td>Java</td>
+<td>25</td>
+</tr>
+<tr>
+<td>フレームワーク</td>
+<td>Spring Boot</td>
+<td>4.0.0</td>
+</tr>
+<tr>
+<td>ORM</td>
+<td>MyBatis</td>
+<td>4.0.0</td>
+</tr>
+<tr>
+<td>データベース</td>
+<td>PostgreSQL</td>
+<td>16</td>
+</tr>
+<tr>
+<td>マイグレーション</td>
+<td>Flyway</td>
+<td>-</td>
+</tr>
+<tr>
+<td>テスト</td>
+<td>JUnit 5 + TestContainers</td>
+<td>-</td>
+</tr>
+<tr>
+<td>品質管理</td>
+<td>JaCoCo, Checkstyle, PMD, SpotBugs</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">フロントエンド<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>カテゴリ</th>
+<th>技術</th>
+<th>バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>言語</td>
+<td>TypeScript</td>
+<td>5.x</td>
+</tr>
+<tr>
+<td>フレームワーク</td>
+<td>React</td>
+<td>19.x</td>
+</tr>
+<tr>
+<td>ビルドツール</td>
+<td>Vite</td>
+<td>6.x</td>
+</tr>
+<tr>
+<td>スタイリング</td>
+<td>Tailwind CSS</td>
+<td>4.x</td>
+</tr>
+<tr>
+<td>状態管理</td>
+<td>TanStack Query</td>
+<td>5.x</td>
+</tr>
+<tr>
+<td>HTTP クライアント</td>
+<td>Axios</td>
+<td>-</td>
+</tr>
+<tr>
+<td>テスト</td>
+<td>Vitest + Testing Library</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_4">インフラストラクチャ<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>カテゴリ</th>
+<th>技術</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>コンテナ</td>
+<td>Docker / Docker Compose</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>GitHub Actions</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_5">命名規則<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>要素</th>
+<th>言語</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>テーブル名</td>
+<td>日本語</td>
+<td><code>"商品マスタ"</code>, <code>"受注データ"</code></td>
+</tr>
+<tr>
+<td>カラム名</td>
+<td>日本語</td>
+<td><code>"商品コード"</code>, <code>"商品名"</code></td>
+</tr>
+<tr>
+<td>ENUM 型</td>
+<td>日本語</td>
+<td><code>商品区分</code>, <code>取引先区分</code></td>
+</tr>
+<tr>
+<td>ENUM 値</td>
+<td>日本語</td>
+<td><code>'商品'</code>, <code>'顧客'</code></td>
+</tr>
+<tr>
+<td>Java クラス名</td>
+<td>英語</td>
+<td><code>Product</code>, <code>Order</code>, <code>Customer</code></td>
+</tr>
+<tr>
+<td>Java フィールド名</td>
+<td>英語</td>
+<td><code>productCode</code>, <code>productName</code></td>
+</tr>
+<tr>
+<td>MyBatis resultMap</td>
+<td>日本語 ↔ 英語</td>
+<td><code>column="商品コード" property="productCode"</code></td>
+</tr>
+<tr>
+<td>TypeScript 型名</td>
+<td>英語</td>
+<td><code>Product</code>, <code>Order</code>, <code>Customer</code></td>
+</tr>
+<tr>
+<td>TypeScript プロパティ名</td>
+<td>英語</td>
+<td><code>productCode</code>, <code>productName</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">プロジェクト構成<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>各サブシステムは以下のディレクトリ構成に従います。</p>
+<div class="highlight"><pre><span></span><code>apps/{system}/
+├── backend/
+│   ├── build.gradle.kts               # Gradle ビルド設定（Kotlin DSL）
+│   ├── settings.gradle.kts            # Gradle 設定
+│   ├── config/                        # 品質管理ツール設定
+│   │   ├── checkstyle/
+│   │   │   └── checkstyle.xml
+│   │   ├── pmd/
+│   │   │   └── ruleset.xml
+│   │   └── spotbugs/
+│   │       └── exclude.xml
+│   │
+│   └── src/
+│       ├── main/
+│       │   ├── java/com/example/sms/
+│       │   │   │
+│       │   │   ├── domain/            # ドメイン層
+│       │   │   │   ├── model/         # ドメインモデル
+│       │   │   │   │   ├── master/    # マスタエンティティ
+│       │   │   │   │   └── transaction/ # トランザクションエンティティ
+│       │   │   │   ├── type/          # 基本型（通貨、単位、数量等）
+│       │   │   │   └── exception/     # ドメイン例外
+│       │   │   │
+│       │   │   ├── application/       # アプリケーション層
+│       │   │   │   ├── port/
+│       │   │   │   │   ├── in/        # Input Port（UseCase）
+│       │   │   │   │   └── out/       # Output Port（Repository）
+│       │   │   │   └── service/       # Application Service
+│       │   │   │
+│       │   │   ├── infrastructure/    # インフラストラクチャ層
+│       │   │   │   ├── in/            # Input Adapter
+│       │   │   │   │   └── rest/      # REST API Controller
+│       │   │   │   ├── out/           # Output Adapter
+│       │   │   │   │   └── persistence/ # 永続化（MyBatis Mapper）
+│       │   │   │   └── config/        # 設定クラス
+│       │   │   │
+│       │   │   └── Application.java   # メインクラス
+│       │   │
+│       │   └── resources/
+│       │       ├── application.yml    # アプリケーション設定
+│       │       ├── db/migration/      # Flyway マイグレーション
+│       │       └── mapper/            # MyBatis XML マッパー
+│       │
+│       └── test/
+│           ├── java/com/example/sms/
+│           │   ├── testsetup/         # テスト基盤クラス
+│           │   │   └── BaseIntegrationTest.java
+│           │   ├── domain/            # ドメイン層テスト
+│           │   ├── application/       # アプリケーション層テスト
+│           │   └── infrastructure/    # インフラ層テスト
+│           │
+│           └── resources/
+│               └── application-test.yml
+│
+├── frontend/                          # フロントエンド
+│   └── src/
+│       ├── components/                # UI コンポーネント
+│       ├── pages/                     # ページコンポーネント
+│       ├── hooks/                     # カスタムフック
+│       ├── services/                  # API クライアント
+│       └── types/                     # 型定義
+│
+└── docker-compose.yml                 # Docker 構成
+</code></pre></div>
+<hr />
+<h2 id="_7">サブシステム一覧<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>システム</th>
+<th>ディレクトリ</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>販売管理システム</td>
+<td><code>apps/sms</code></td>
+<td>Sales Management System</td>
+</tr>
+<tr>
+<td>財務会計システム</td>
+<td><code>apps/fas</code></td>
+<td>Financial Accounting System</td>
+</tr>
+<tr>
+<td>生産管理システム</td>
+<td><code>apps/pms</code></td>
+<td>Production Management System</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">環境構築<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p>TDD でデータベース設計を進めるための開発環境を構築します。テスト駆動開発のゴールは <strong>動作するきれいなコード</strong> ですが、それを実現するためには <a href="https://t-wada.hatenablog.jp/entry/clean-code-that-works">ソフトウェア開発の三種の神器</a> が必要です。</p>
+<blockquote>
+<p>今日のソフトウェア開発の世界において絶対になければならない3つの技術的な柱があります。
+三本柱と言ったり、三種の神器と言ったりしていますが、それらは</p>
+<ul>
+<li>バージョン管理</li>
+<li>テスティング</li>
+<li>自動化</li>
+</ul>
+<p>の3つです。</p>
+</blockquote>
+<h3 id="_9">前提条件<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<p>以下のツールがインストールされていることを確認してください。</p>
+<ul>
+<li>Java 21 以上（推奨：Java 25）</li>
+<li>Gradle 8.x 以上（推奨：Gradle Wrapper 使用）</li>
+<li>Docker &amp; Docker Compose</li>
+<li>Git</li>
+<li>Node.js 22.x 以上</li>
+</ul>
+<hr />
+<h2 id="_10">バックエンドのセットアップ<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
+<h3 id="1-gradle">1. Gradle プロジェクトの初期化<a class="headerlink" href="#1-gradle" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>apps/sms/backend
+mkdir<span class="w"> </span>-p<span class="w"> </span>src/main/java/com/example/sms
+mkdir<span class="w"> </span>-p<span class="w"> </span>src/main/resources/db/migration
+mkdir<span class="w"> </span>-p<span class="w"> </span>src/test/java/com/example/sms/testsetup
+mkdir<span class="w"> </span>-p<span class="w"> </span>src/test/resources
+mkdir<span class="w"> </span>-p<span class="w"> </span>config/checkstyle<span class="w"> </span>config/pmd<span class="w"> </span>config/spotbugs
+</code></pre></div>
+<h3 id="2-buildgradlekts">2. build.gradle.kts の設定<a class="headerlink" href="#2-buildgradlekts" title="Permanent link">&para;</a></h3>
+<p><code>build.gradle.kts</code>（Kotlin DSL）を以下のように作成します。</p>
+<div class="highlight"><pre><span></span><code><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">java</span>
+<span class="w">    </span><span class="n">jacoco</span>
+<span class="w">    </span><span class="n">checkstyle</span>
+<span class="w">    </span><span class="n">pmd</span>
+<span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;org.springframework.boot&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;4.0.0&quot;</span>
+<span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;io.spring.dependency-management&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;1.1.7&quot;</span>
+<span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;com.github.spotbugs&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;6.0.27&quot;</span>
+<span class="p">}</span>
+
+<span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;com.example.sms&quot;</span>
+<span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0.0.1-SNAPSHOT&quot;</span>
+
+<span class="n">java</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">toolchain</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">languageVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JavaLanguageVersion</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="m">25</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">repositories</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">mavenCentral</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="c1">// バージョン管理</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">mybatisVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;4.0.0&quot;</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">testcontainersVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1.20.4&quot;</span>
+
+<span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// === implementation ===</span>
+<span class="w">    </span><span class="c1">// Spring Boot Starters</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-web&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-validation&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-jdbc&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// Database</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.mybatis.spring.boot:mybatis-spring-boot-starter:</span><span class="si">$</span><span class="n">mybatisVersion</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-flyway&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.flywaydb:flyway-database-postgresql&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// === runtimeOnly ===</span>
+<span class="w">    </span><span class="n">runtimeOnly</span><span class="p">(</span><span class="s">&quot;org.postgresql:postgresql&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// === compileOnly ===</span>
+<span class="w">    </span><span class="n">compileOnly</span><span class="p">(</span><span class="s">&quot;org.projectlombok:lombok&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// === annotationProcessor ===</span>
+<span class="w">    </span><span class="n">annotationProcessor</span><span class="p">(</span><span class="s">&quot;org.projectlombok:lombok&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// === testImplementation ===</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-test&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-testcontainers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.mybatis.spring.boot:mybatis-spring-boot-starter-test:</span><span class="si">$</span><span class="n">mybatisVersion</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="n">platform</span><span class="p">(</span><span class="s">&quot;org.testcontainers:testcontainers-bom:</span><span class="si">$</span><span class="n">testcontainersVersion</span><span class="s">&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.testcontainers:junit-jupiter&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.testcontainers:postgresql&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// === testCompileOnly ===</span>
+<span class="w">    </span><span class="n">testCompileOnly</span><span class="p">(</span><span class="s">&quot;org.projectlombok:lombok&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// === testAnnotationProcessor ===</span>
+<span class="w">    </span><span class="n">testAnnotationProcessor</span><span class="p">(</span><span class="s">&quot;org.projectlombok:lombok&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// === testRuntimeOnly ===</span>
+<span class="w">    </span><span class="n">testRuntimeOnly</span><span class="p">(</span><span class="s">&quot;org.junit.platform:junit-platform-launcher&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">tasks</span><span class="p">.</span><span class="na">withType</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">useJUnitPlatform</span><span class="p">()</span>
+<span class="w">    </span><span class="n">finalizedBy</span><span class="p">(</span><span class="n">tasks</span><span class="p">.</span><span class="na">jacocoTestReport</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">// TestContainers の共有を有効化</span>
+<span class="w">    </span><span class="n">jvmArgs</span><span class="p">(</span><span class="s">&quot;-Dtestcontainers.reuse.enable=true&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">// テストを順次実行（並列実行しない）</span>
+<span class="w">    </span><span class="n">maxParallelForks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>
+<span class="p">}</span>
+
+<span class="c1">// JaCoCo</span>
+<span class="n">jacoco</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">toolVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0.8.14&quot;</span><span class="w"> </span><span class="c1">// Java 25 support</span>
+<span class="p">}</span>
+
+<span class="n">tasks</span><span class="p">.</span><span class="na">jacocoTestReport</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">dependsOn</span><span class="p">(</span><span class="n">tasks</span><span class="p">.</span><span class="na">test</span><span class="p">)</span>
+<span class="w">    </span><span class="n">reports</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">xml</span><span class="p">.</span><span class="na">required</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">        </span><span class="n">html</span><span class="p">.</span><span class="na">required</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">classDirectories</span><span class="p">.</span><span class="na">setFrom</span><span class="p">(</span>
+<span class="w">        </span><span class="n">files</span><span class="p">(</span><span class="n">classDirectories</span><span class="p">.</span><span class="na">files</span><span class="p">.</span><span class="na">map</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">fileTree</span><span class="p">(</span><span class="nb">it</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">exclude</span><span class="p">(</span>
+<span class="w">                    </span><span class="s">&quot;**/Application.class&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="s">&quot;**/Application</span><span class="err">$</span><span class="s">*.class&quot;</span>
+<span class="w">                </span><span class="p">)</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Checkstyle</span>
+<span class="n">checkstyle</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">toolVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;10.20.2&quot;</span>
+<span class="w">    </span><span class="n">configFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">file</span><span class="p">(</span><span class="s">&quot;</span><span class="si">${</span><span class="n">rootDir</span><span class="si">}</span><span class="s">/config/checkstyle/checkstyle.xml&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">isIgnoreFailures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+
+<span class="c1">// SpotBugs (Java 25 対応: 4.9.7+)</span>
+<span class="n">spotbugs</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">ignoreFailures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="n">excludeFilter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">file</span><span class="p">(</span><span class="s">&quot;</span><span class="si">${</span><span class="n">rootDir</span><span class="si">}</span><span class="s">/config/spotbugs/exclude.xml&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">toolVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;4.9.8&quot;</span>
+<span class="p">}</span>
+
+<span class="n">tasks</span><span class="p">.</span><span class="na">withType</span><span class="o">&lt;</span><span class="n">com</span><span class="p">.</span><span class="na">github</span><span class="p">.</span><span class="na">spotbugs</span><span class="p">.</span><span class="na">snom</span><span class="p">.</span><span class="na">SpotBugsTask</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">reports</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="s">&quot;html&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">required</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">reports</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="s">&quot;xml&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">required</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// PMD (Java 25 対応: 7.16.0+)</span>
+<span class="n">pmd</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">toolVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;7.16.0&quot;</span>
+<span class="w">    </span><span class="n">isConsoleOutput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="n">ruleSetFiles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">(</span><span class="s">&quot;</span><span class="si">${</span><span class="n">rootDir</span><span class="si">}</span><span class="s">/config/pmd/ruleset.xml&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">ruleSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">listOf</span><span class="p">()</span>
+<span class="w">    </span><span class="n">isIgnoreFailures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+
+<span class="c1">// カスタムタスク: TDD用の継続的テスト実行</span>
+<span class="n">tasks</span><span class="p">.</span><span class="na">register</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;tdd&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Run tests in TDD mode (always executes)&quot;</span>
+<span class="w">    </span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;verification&quot;</span>
+<span class="w">    </span><span class="n">useJUnitPlatform</span><span class="p">()</span>
+<span class="w">    </span><span class="n">testLogging</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">events</span><span class="p">(</span><span class="s">&quot;passed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;skipped&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;failed&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="n">exceptionFormat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">org</span><span class="p">.</span><span class="na">gradle</span><span class="p">.</span><span class="na">api</span><span class="p">.</span><span class="na">tasks</span><span class="p">.</span><span class="na">testing</span><span class="p">.</span><span class="na">logging</span><span class="p">.</span><span class="na">TestExceptionFormat</span><span class="p">.</span><span class="na">FULL</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">outputs</span><span class="p">.</span><span class="na">upToDateWhen</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// カスタムタスク: 品質チェック全実行</span>
+<span class="n">tasks</span><span class="p">.</span><span class="na">register</span><span class="p">(</span><span class="s">&quot;qualityCheck&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Run all quality checks (Checkstyle, PMD, SpotBugs)&quot;</span>
+<span class="w">    </span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;verification&quot;</span>
+<span class="w">    </span><span class="n">dependsOn</span><span class="p">(</span><span class="s">&quot;checkstyleMain&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;checkstyleTest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pmdMain&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pmdTest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spotbugsMain&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spotbugsTest&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// カスタムタスク: すべてのテストと品質チェックを実行</span>
+<span class="n">tasks</span><span class="p">.</span><span class="na">register</span><span class="p">(</span><span class="s">&quot;fullCheck&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Run all tests and quality checks&quot;</span>
+<span class="w">    </span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;verification&quot;</span>
+<span class="w">    </span><span class="n">dependsOn</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;qualityCheck&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;jacocoTestReport&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="3-settingsgradlekts">3. settings.gradle.kts の設定<a class="headerlink" href="#3-settingsgradlekts" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">rootProject</span><span class="p">.</span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;sms-backend&quot;</span>
+</code></pre></div>
+<h3 id="4-gradle-wrapperproperties">4. gradle-wrapper.properties の設定<a class="headerlink" href="#4-gradle-wrapperproperties" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="na">distributionBase</span><span class="o">=</span><span class="s">GRADLE_USER_HOME</span>
+<span class="na">distributionPath</span><span class="o">=</span><span class="s">wrapper/dists</span>
+<span class="na">distributionUrl</span><span class="o">=</span><span class="s">https</span><span class="se">\:</span><span class="s">//services.gradle.org/distributions/gradle-9.2.1-bin.zip</span>
+<span class="na">networkTimeout</span><span class="o">=</span><span class="s">10000</span>
+<span class="na">validateDistributionUrl</span><span class="o">=</span><span class="s">true</span>
+<span class="na">zipStoreBase</span><span class="o">=</span><span class="s">GRADLE_USER_HOME</span>
+<span class="na">zipStorePath</span><span class="o">=</span><span class="s">wrapper/dists</span>
+</code></pre></div>
+<h3 id="5-docker-compose">5. Docker Compose のセットアップ<a class="headerlink" href="#5-docker-compose" title="Permanent link">&para;</a></h3>
+<p><code>docker-compose.yml</code> を作成します。</p>
+<div class="highlight"><pre><span></span><code><span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">postgres</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres:16-alpine</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sms-postgres</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">POSTGRES_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${POSTGRES_USER:-postgres}</span>
+<span class="w">      </span><span class="nt">POSTGRES_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${POSTGRES_PASSWORD:-postgres}</span>
+<span class="w">      </span><span class="nt">POSTGRES_DB</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${POSTGRES_DB:-sms}</span>
+<span class="w">      </span><span class="nt">TZ</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Asia/Tokyo&#39;</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;${POSTGRES_PORT:-5432}:5432&quot;</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres_data:/var/lib/postgresql/data</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD-SHELL&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;pg_isready</span><span class="nv"> </span><span class="s">-U</span><span class="nv"> </span><span class="s">${POSTGRES_USER:-postgres}&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+
+<span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">postgres_data</span><span class="p">:</span>
+</code></pre></div>
+<h3 id="6-flyway">6. Flyway マイグレーションのセットアップ<a class="headerlink" href="#6-flyway" title="Permanent link">&para;</a></h3>
+<p><code>src/main/resources/db/migration/V001__create_enum_types.sql</code> を作成します。</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- 商品区分</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TYPE</span><span class="w"> </span><span class="err">商品区分</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">ENUM</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;商品&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;製品&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;サービス&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;諸口&#39;</span><span class="p">);</span>
+
+<span class="c1">-- 取引先区分</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TYPE</span><span class="w"> </span><span class="err">取引先区分</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">ENUM</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;顧客&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;仕入先&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;両方&#39;</span><span class="p">);</span>
+
+<span class="c1">-- 税区分</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TYPE</span><span class="w"> </span><span class="err">税区分</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">ENUM</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;外税&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;内税&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;非課税&#39;</span><span class="p">);</span>
+
+<span class="c1">-- 請求区分</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TYPE</span><span class="w"> </span><span class="err">請求区分</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">ENUM</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;都度&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;締め&#39;</span><span class="p">);</span>
+
+<span class="c1">-- 支払方法</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TYPE</span><span class="w"> </span><span class="err">支払方法</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">ENUM</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;現金&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;振込&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;手形&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;小切手&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;その他&#39;</span><span class="p">);</span>
+</code></pre></div>
+<h3 id="7-testcontainers">7. TestContainers のセットアップ<a class="headerlink" href="#7-testcontainers" title="Permanent link">&para;</a></h3>
+<p>テスト用のデータベースコンテナを管理する基盤クラスを作成します。</p>
+<p>まず、TestContainers の設定クラスを作成します。</p>
+<p><code>src/test/java/com/example/sms/TestcontainersConfiguration.java</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.example.sms</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.boot.test.context.TestConfiguration</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.boot.testcontainers.service.connection.ServiceConnection</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.context.annotation.Bean</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.testcontainers.containers.PostgreSQLContainer</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.testcontainers.utility.DockerImageName</span><span class="p">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * TestContainers 設定クラス.</span>
+<span class="cm"> * PostgreSQL コンテナを Spring Bean として定義し、</span>
+<span class="cm"> * ServiceConnection で自動的にデータソースを設定する。</span>
+<span class="cm"> */</span>
+<span class="nd">@TestConfiguration</span><span class="p">(</span><span class="n">proxyBeanMethods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TestcontainersConfiguration</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nd">@Bean</span>
+<span class="w">    </span><span class="nd">@ServiceConnection</span>
+<span class="w">    </span><span class="n">PostgreSQLContainer</span><span class="o">&lt;?&gt;</span><span class="w"> </span><span class="nf">postgresContainer</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">PostgreSQLContainer</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">DockerImageName</span><span class="p">.</span><span class="na">parse</span><span class="p">(</span><span class="s">&quot;postgres:16-alpine&quot;</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>次に、統合テストの基底クラスを作成します。</p>
+<p><code>src/test/java/com/example/sms/testsetup/BaseIntegrationTest.java</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.example.sms.testsetup</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">com.example.sms.TestcontainersConfiguration</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.boot.test.context.SpringBootTest</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.context.annotation.Import</span><span class="p">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * 統合テストの基底クラス。</span>
+<span class="cm"> * TestContainers を使用して PostgreSQL コンテナを起動し、</span>
+<span class="cm"> * Spring Boot の @ServiceConnection で自動的にデータソースを設定する。</span>
+<span class="cm"> * Flyway マイグレーションが自動実行される。</span>
+<span class="cm"> */</span>
+<span class="nd">@SpringBootTest</span>
+<span class="nd">@Import</span><span class="p">(</span><span class="n">TestcontainersConfiguration</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
+<span class="nd">@org.springframework.test.context.ActiveProfiles</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+<span class="nd">@SuppressWarnings</span><span class="p">({</span><span class="s">&quot;PMD.AbstractClassWithoutAbstractMethod&quot;</span><span class="p">})</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">abstract</span><span class="w"> </span><span class="kd">class</span> <span class="nc">BaseIntegrationTest</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="cm">/**</span>
+<span class="cm">     * 継承のみを許可するための protected コンストラクタ。</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="nf">BaseIntegrationTest</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// TestContainers の基底クラスのため空実装</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>src/test/resources/application-test.yml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">spring</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">flyway</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">locations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">classpath:db/migration</span>
+<span class="w">    </span><span class="nt">baseline-on-migrate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">logging</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">level</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">org.flywaydb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
+</code></pre></div>
+<h3 id="8">8. 最初のテスト：データベース接続確認<a class="headerlink" href="#8" title="Permanent link">&para;</a></h3>
+<p><code>src/test/java/com/example/sms/DatabaseConnectionTest.java</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.example.sms</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">com.example.sms.testsetup.BaseIntegrationTest</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.junit.jupiter.api.DisplayName</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.junit.jupiter.api.Test</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.beans.factory.annotation.Autowired</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">javax.sql.DataSource</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.sql.Connection</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.sql.ResultSet</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.sql.Statement</span><span class="p">;</span>
+
+<span class="kn">import static</span><span class="w"> </span><span class="nn">org.assertj.core.api.Assertions.assertThat</span><span class="p">;</span>
+
+<span class="nd">@DisplayName</span><span class="p">(</span><span class="s">&quot;データベース接続&quot;</span><span class="p">)</span>
+<span class="kd">class</span> <span class="nc">DatabaseConnectionTest</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">BaseIntegrationTest</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nd">@Autowired</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">DataSource</span><span class="w"> </span><span class="n">dataSource</span><span class="p">;</span>
+
+<span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="nd">@DisplayName</span><span class="p">(</span><span class="s">&quot;PostgreSQLに接続できる&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">canConnectToPostgres</span><span class="p">()</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">Exception</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">Connection</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataSource</span><span class="p">.</span><span class="na">getConnection</span><span class="p">();</span>
+<span class="w">             </span><span class="n">Statement</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="p">.</span><span class="na">createStatement</span><span class="p">();</span>
+<span class="w">             </span><span class="n">ResultSet</span><span class="w"> </span><span class="n">rs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="na">executeQuery</span><span class="p">(</span><span class="s">&quot;SELECT 1&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">assertThat</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">next</span><span class="p">()).</span><span class="na">isTrue</span><span class="p">();</span>
+<span class="w">            </span><span class="n">assertThat</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">getInt</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="na">isEqualTo</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="nd">@DisplayName</span><span class="p">(</span><span class="s">&quot;商品区分ENUMが作成されている&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">productTypeEnumExists</span><span class="p">()</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">Exception</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">Connection</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataSource</span><span class="p">.</span><span class="na">getConnection</span><span class="p">();</span>
+<span class="w">             </span><span class="n">Statement</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="p">.</span><span class="na">createStatement</span><span class="p">();</span>
+<span class="w">             </span><span class="n">ResultSet</span><span class="w"> </span><span class="n">rs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="na">executeQuery</span><span class="p">(</span>
+<span class="w">                 </span><span class="s">&quot;SELECT unnest(enum_range(NULL::商品区分))::text&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">assertThat</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">next</span><span class="p">()).</span><span class="na">isTrue</span><span class="p">();</span>
+<span class="w">            </span><span class="n">assertThat</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">getString</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="na">isEqualTo</span><span class="p">(</span><span class="s">&quot;商品&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="nd">@DisplayName</span><span class="p">(</span><span class="s">&quot;取引先区分ENUMが作成されている&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">partnerTypeEnumExists</span><span class="p">()</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">Exception</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">Connection</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataSource</span><span class="p">.</span><span class="na">getConnection</span><span class="p">();</span>
+<span class="w">             </span><span class="n">Statement</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="p">.</span><span class="na">createStatement</span><span class="p">();</span>
+<span class="w">             </span><span class="n">ResultSet</span><span class="w"> </span><span class="n">rs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="na">executeQuery</span><span class="p">(</span>
+<span class="w">                 </span><span class="s">&quot;SELECT unnest(enum_range(NULL::取引先区分))::text&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">assertThat</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">next</span><span class="p">()).</span><span class="na">isTrue</span><span class="p">();</span>
+<span class="w">            </span><span class="n">assertThat</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">getString</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="na">isEqualTo</span><span class="p">(</span><span class="s">&quot;顧客&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nd">@Test</span>
+<span class="w">    </span><span class="nd">@DisplayName</span><span class="p">(</span><span class="s">&quot;税区分ENUMが作成されている&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">taxTypeEnumExists</span><span class="p">()</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">Exception</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">Connection</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataSource</span><span class="p">.</span><span class="na">getConnection</span><span class="p">();</span>
+<span class="w">             </span><span class="n">Statement</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="p">.</span><span class="na">createStatement</span><span class="p">();</span>
+<span class="w">             </span><span class="n">ResultSet</span><span class="w"> </span><span class="n">rs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="na">executeQuery</span><span class="p">(</span>
+<span class="w">                 </span><span class="s">&quot;SELECT unnest(enum_range(NULL::税区分))::text&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">assertThat</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">next</span><span class="p">()).</span><span class="na">isTrue</span><span class="p">();</span>
+<span class="w">            </span><span class="n">assertThat</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">getString</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="na">isEqualTo</span><span class="p">(</span><span class="s">&quot;外税&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>テストを実行します。</p>
+<div class="highlight"><pre><span></span><code>./gradlew<span class="w"> </span><span class="nb">test</span>
+
+BUILD<span class="w"> </span>SUCCESSFUL
+</code></pre></div>
+<hr />
+<h2 id="_11">コード品質管理ツールの設定<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
+<p>良いコードを書き続けるためにはコードの品質を維持していく必要があります。</p>
+<h3 id="checkstyle">Checkstyle の設定<a class="headerlink" href="#checkstyle" title="Permanent link">&para;</a></h3>
+<p>Checkstyle は、Java のコーディング規約を検証するツールです。</p>
+<p><code>config/checkstyle/checkstyle.xml</code> を作成します。</p>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="cp">&lt;!DOCTYPE module PUBLIC</span>
+<span class="cp">        &quot;-//Checkstyle//DTD Checkstyle Configuration 1.3//EN&quot;</span>
+<span class="cp">        &quot;https://checkstyle.org/dtds/configuration_1_3.dtd&quot;&gt;</span>
+
+<span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;Checker&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;property</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;charset&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;UTF-8&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;property</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;severity&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;warning&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;property</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;fileExtensions&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;java, properties, xml&quot;</span><span class="nt">/&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- ファイルサイズのチェック --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;FileLength&quot;</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nt">&lt;property</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;max&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;500&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/module&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- TreeWalker --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;TreeWalker&quot;</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- 命名規約 --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;ConstantName&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;LocalFinalVariableName&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;LocalVariableName&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;MemberName&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;MethodName&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;PackageName&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;ParameterName&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;StaticVariableName&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;TypeName&quot;</span><span class="nt">/&gt;</span>
+
+<span class="w">        </span><span class="cm">&lt;!-- インポート --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;AvoidStarImport&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;IllegalImport&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;RedundantImport&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;UnusedImports&quot;</span><span class="nt">/&gt;</span>
+
+<span class="w">        </span><span class="cm">&lt;!-- サイズ制限 --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;MethodLength&quot;</span><span class="nt">&gt;</span>
+<span class="w">            </span><span class="nt">&lt;property</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;max&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;150&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;/module&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;ParameterNumber&quot;</span><span class="nt">&gt;</span>
+<span class="w">            </span><span class="nt">&lt;property</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;max&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;7&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;/module&gt;</span>
+
+<span class="w">        </span><span class="cm">&lt;!-- 空白 --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;EmptyForIteratorPad&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;GenericWhitespace&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;MethodParamPad&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;NoWhitespaceAfter&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;NoWhitespaceBefore&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;OperatorWrap&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;ParenPad&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;TypecastParenPad&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;WhitespaceAfter&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;WhitespaceAround&quot;</span><span class="nt">/&gt;</span>
+
+<span class="w">        </span><span class="cm">&lt;!-- 複雑度 --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;module</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;CyclomaticComplexity&quot;</span><span class="nt">&gt;</span>
+<span class="w">            </span><span class="nt">&lt;property</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;max&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;10&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;/module&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/module&gt;</span>
+<span class="nt">&lt;/module&gt;</span>
+</code></pre></div>
+<h3 id="pmd">PMD の設定<a class="headerlink" href="#pmd" title="Permanent link">&para;</a></h3>
+<p>PMD は、Java のコード品質を分析するツールです。</p>
+<p><code>config/pmd/ruleset.xml</code> を作成します。</p>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="nt">&lt;ruleset</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;Custom Rules&quot;</span>
+<span class="w">         </span><span class="na">xmlns=</span><span class="s">&quot;http://pmd.sourceforge.net/ruleset/2.0.0&quot;</span>
+<span class="w">         </span><span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+<span class="w">         </span><span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://pmd.sourceforge.net/ruleset/2.0.0</span>
+<span class="s">         https://pmd.sourceforge.io/ruleset_2_0_0.xsd&quot;</span><span class="nt">&gt;</span>
+
+<span class="w">    </span><span class="nt">&lt;description&gt;</span>PMD<span class="w"> </span>Custom<span class="w"> </span>Ruleset<span class="nt">&lt;/description&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- ベストプラクティス --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/bestpractices.xml&quot;</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- テストでは複数アサートを許可 --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;UnitTestContainsTooManyAsserts&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- ResultSet のチェックはテストコードでは必須ではない --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;CheckResultSet&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/rule&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- コードスタイル --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/codestyle.xml&quot;</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;AtLeastOneConstructor&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;OnlyOneReturn&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;LongVariable&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;ShortVariable&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- final パラメータは強制しない --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;MethodArgumentCouldBeFinal&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- ローカル変数の final は強制しない --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;LocalVariableCouldBeFinal&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- デフォルトアクセス修飾子のコメントは強制しない --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;CommentDefaultAccessModifier&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- var の使用を許可 --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;UseExplicitTypes&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/rule&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- 設計 --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/design.xml&quot;</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;LawOfDemeter&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;LoosePackageCoupling&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- Spring Boot Application クラスは例外 --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;UseUtilityClass&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- データモデルはフィールド数が多くなることがある --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;TooManyFields&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/rule&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- マルチスレッド --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/multithreading.xml&quot;</span><span class="nt">/&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- エラープローン --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/errorprone.xml&quot;</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- テストで文字列リテラルの重複は許可 --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;AvoidDuplicateLiterals&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="cm">&lt;!-- @TestConfiguration クラスはテストケースを持たない --&gt;</span>
+<span class="w">        </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;TestClassWithoutTestCases&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/rule&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- パフォーマンス --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/performance.xml&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/ruleset&gt;</span>
+</code></pre></div>
+<h3 id="spotbugs">SpotBugs の設定<a class="headerlink" href="#spotbugs" title="Permanent link">&para;</a></h3>
+<p><code>config/spotbugs/exclude.xml</code> を作成します。</p>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;FindBugsFilter&gt;</span>
+<span class="w">    </span><span class="cm">&lt;!-- Application クラスの除外 --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;Match&gt;</span>
+<span class="w">        </span><span class="nt">&lt;Class</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;com.example.sms.Application&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/Match&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- Lombok 生成コードの除外 --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;Match&gt;</span>
+<span class="w">        </span><span class="nt">&lt;Bug</span><span class="w"> </span><span class="na">pattern=</span><span class="s">&quot;EI_EXPOSE_REP&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/Match&gt;</span>
+<span class="w">    </span><span class="nt">&lt;Match&gt;</span>
+<span class="w">        </span><span class="nt">&lt;Bug</span><span class="w"> </span><span class="na">pattern=</span><span class="s">&quot;EI_EXPOSE_REP2&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/Match&gt;</span>
+
+<span class="w">    </span><span class="cm">&lt;!-- テストクラスの除外 --&gt;</span>
+<span class="w">    </span><span class="nt">&lt;Match&gt;</span>
+<span class="w">        </span><span class="nt">&lt;Source</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;~.*Test\.java&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/Match&gt;</span>
+<span class="nt">&lt;/FindBugsFilter&gt;</span>
+</code></pre></div>
+<h3 id="_12">コード品質チェックの実行<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Checkstyle 実行</span>
+./gradlew<span class="w"> </span>checkstyleMain<span class="w"> </span>checkstyleTest
+
+<span class="c1"># PMD 実行</span>
+./gradlew<span class="w"> </span>pmdMain<span class="w"> </span>pmdTest
+
+<span class="c1"># SpotBugs 実行</span>
+./gradlew<span class="w"> </span>spotbugsMain<span class="w"> </span>spotbugsTest
+
+<span class="c1"># すべての品質チェックを実行</span>
+./gradlew<span class="w"> </span>check
+</code></pre></div>
+<h3 id="_13">テストカバレッジの確認<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># テストを実行してカバレッジレポートを生成</span>
+./gradlew<span class="w"> </span><span class="nb">test</span><span class="w"> </span>jacocoTestReport
+
+<span class="c1"># レポートの表示</span>
+open<span class="w"> </span>build/reports/jacoco/test/html/index.html
+</code></pre></div>
+<hr />
+<h2 id="_14">コミット前の品質チェック<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h2>
+<p>husky + lint-staged により、コミット時に自動で品質チェックが実行されます。</p>
+<h3 id="_15">セットアップ<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
+<p>プロジェクトルートで以下を実行します。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 依存関係のインストール</span>
+npm<span class="w"> </span>install
+
+<span class="c1"># husky の初期化（初回のみ）</span>
+npx<span class="w"> </span>husky<span class="w"> </span>init
+</code></pre></div>
+<h3 id="_16">設定ファイル<a class="headerlink" href="#_16" title="Permanent link">&para;</a></h3>
+<h4 id="packagejson">package.json<a class="headerlink" href="#packagejson" title="Permanent link">&para;</a></h4>
+<p>プロジェクトルートの <code>package.json</code> に以下の設定を追加します。</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;practical-database-design&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;private&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;scripts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;prepare&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;husky&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;devDependencies&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;husky&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^9.1.7&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;lint-staged&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^15.2.11&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="lintstagedrcsmsjson">.lintstagedrc.sms.json<a class="headerlink" href="#lintstagedrcsmsjson" title="Permanent link">&para;</a></h4>
+<p>SMS バックエンド用の lint-staged 設定ファイルを作成します。</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;apps/sms/backend/src/**/*.java&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;bash -c &#39;cd apps/sms/backend &amp;&amp; ./gradlew checkstyleMain checkstyleTest pmdMain spotbugsMain --no-daemon&#39;&quot;</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="huskypre-commit">.husky/pre-commit<a class="headerlink" href="#huskypre-commit" title="Permanent link">&para;</a></h4>
+<p><code>.husky/pre-commit</code> ファイルを作成します。</p>
+<div class="highlight"><pre><span></span><code>npx<span class="w"> </span>lint-staged<span class="w"> </span>--config<span class="w"> </span>.lintstagedrc.sms.json
+</code></pre></div>
+<h3 id="_17">自動実行される品質チェック<a class="headerlink" href="#_17" title="Permanent link">&para;</a></h3>
+<p><strong>バックエンド（Java ファイルに変更がある場合）:</strong></p>
+<table>
+<thead>
+<tr>
+<th>ツール</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Checkstyle</td>
+<td>コーディング規約の検証</td>
+</tr>
+<tr>
+<td>PMD</td>
+<td>バグパターン検出</td>
+</tr>
+<tr>
+<td>SpotBugs</td>
+<td>潜在バグ検出</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_18">手動での品質チェック<a class="headerlink" href="#_18" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>apps/sms/backend
+
+<span class="c1"># 全品質チェック</span>
+./gradlew<span class="w"> </span>qualityCheck
+
+<span class="c1"># テストのみ</span>
+./gradlew<span class="w"> </span><span class="nb">test</span>
+
+<span class="c1"># カバレッジレポート</span>
+./gradlew<span class="w"> </span>jacocoTestReport
+<span class="c1"># 結果: build/reports/jacoco/test/html/index.html</span>
+
+<span class="c1"># すべてのテストと品質チェックを実行</span>
+./gradlew<span class="w"> </span>fullCheck
+</code></pre></div>
+<h3 id="pre-commit">pre-commit フックが失敗する場合<a class="headerlink" href="#pre-commit" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># バックエンドのチェック</span>
+<span class="nb">cd</span><span class="w"> </span>apps/sms/backend
+./gradlew<span class="w"> </span>qualityCheck
+
+<span class="c1"># エラーを確認してコードを修正</span>
+<span class="c1"># 再度コミット</span>
+</code></pre></div>
+<hr />
+<h2 id="_19">トラブルシューティング<a class="headerlink" href="#_19" title="Permanent link">&para;</a></h2>
+<h3 id="java-25-gradle">Java 25 と Gradle の互換性<a class="headerlink" href="#java-25-gradle" title="Permanent link">&para;</a></h3>
+<p><strong>問題</strong>: Gradle Kotlin DSL が Java 25 をサポートしていない</p>
+<div class="highlight"><pre><span></span><code>java.lang.IllegalArgumentException: 25.0.1
+  at org.jetbrains.kotlin.com.intellij.util.lang.JavaVersion.parse
+</code></pre></div>
+<p><strong>解決策</strong>: Gradle 9.2.1 以上を使用する</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># gradle-wrapper.properties</span>
+<span class="na">distributionUrl</span><span class="o">=</span><span class="s">https</span><span class="se">\:</span><span class="s">//services.gradle.org/distributions/gradle-9.2.1-bin.zip</span>
+</code></pre></div>
+<h3 id="spring-boot-400-flyway">Spring Boot 4.0.0 の Flyway 自動設定<a class="headerlink" href="#spring-boot-400-flyway" title="Permanent link">&para;</a></h3>
+<p><strong>問題</strong>: Flyway マイグレーションが実行されない</p>
+<p>Spring Boot 4.0.0 では auto-configuration がモジュール化され、<code>flyway-core</code> だけでは自動設定されません。</p>
+<p><strong>解決策</strong>: <code>spring-boot-starter-flyway</code> を使用する</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// build.gradle.kts</span>
+<span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-flyway&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.flywaydb:flyway-database-postgresql&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>参考: <a href="https://www.danvega.dev/blog/2025/12/12/spring-boot-4-modularization">Spring Boot 4 Modularization</a></p>
+<h3 id="testcontainers-spring-boot-400">TestContainers と Spring Boot 4.0.0<a class="headerlink" href="#testcontainers-spring-boot-400" title="Permanent link">&para;</a></h3>
+<p><strong>問題</strong>: <code>AutoConfigureTestDatabase</code> が見つからない</p>
+<p>Spring Boot 4.0.0 では <code>@ServiceConnection</code> を使用した自動設定が推奨されます。</p>
+<p><strong>解決策</strong>: <code>@TestConfiguration</code> + <code>@Import</code> パターンを使用する</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// TestcontainersConfiguration.java</span>
+<span class="nd">@TestConfiguration</span><span class="p">(</span><span class="n">proxyBeanMethods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TestcontainersConfiguration</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nd">@Bean</span>
+<span class="w">    </span><span class="nd">@ServiceConnection</span>
+<span class="w">    </span><span class="n">PostgreSQLContainer</span><span class="o">&lt;?&gt;</span><span class="w"> </span><span class="nf">postgresContainer</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">PostgreSQLContainer</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">DockerImageName</span><span class="p">.</span><span class="na">parse</span><span class="p">(</span><span class="s">&quot;postgres:16-alpine&quot;</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// BaseIntegrationTest.java</span>
+<span class="nd">@SpringBootTest</span>
+<span class="nd">@Import</span><span class="p">(</span><span class="n">TestcontainersConfiguration</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">abstract</span><span class="w"> </span><span class="kd">class</span> <span class="nc">BaseIntegrationTest</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>このパターンを使用すると、複数のテストクラス間でコンテナを共有でき、接続の問題を回避できます。</p>
+<p><strong>注意</strong>: <code>~/.testcontainers.properties</code> に以下の設定を追加すると、コンテナの再利用が有効になります。</p>
+<div class="highlight"><pre><span></span><code><span class="na">testcontainers.reuse.enable</span><span class="o">=</span><span class="s">true</span>
+</code></pre></div>
+<h3 id="pmd-7x">PMD 7.x のルール変更<a class="headerlink" href="#pmd-7x" title="Permanent link">&para;</a></h3>
+<p><strong>問題</strong>: PMD 7.x で除外ルール名が見つからない</p>
+<p>PMD 7.x では一部のルールがカテゴリ間で移動されています。</p>
+<p><strong>解決策1</strong>: ruleset.xml で正しいカテゴリから除外する</p>
+<div class="highlight"><pre><span></span><code><span class="cm">&lt;!-- コードスタイル --&gt;</span>
+<span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/codestyle.xml&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;LocalVariableCouldBeFinal&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;UseExplicitTypes&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
+
+<span class="cm">&lt;!-- 設計 --&gt;</span>
+<span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/design.xml&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;TooManyFields&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
+
+<span class="cm">&lt;!-- エラープローン --&gt;</span>
+<span class="nt">&lt;rule</span><span class="w"> </span><span class="na">ref=</span><span class="s">&quot;category/java/errorprone.xml&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;AvoidDuplicateLiterals&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;exclude</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;TestClassWithoutTestCases&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
+</code></pre></div>
+<p><strong>解決策2</strong>: <code>@SuppressWarnings</code> で個別に抑制する</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Lombok @Builder.Default を使う場合はデフォルト値を明示する必要があるため</span>
+<span class="nd">@SuppressWarnings</span><span class="p">(</span><span class="s">&quot;PMD.RedundantFieldInitializer&quot;</span><span class="p">)</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Partner</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nd">@Builder.Default</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="n">isCustomer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="gitignore-out">.gitignore での <code>out</code> ディレクトリ<a class="headerlink" href="#gitignore-out" title="Permanent link">&para;</a></h3>
+<p><strong>問題</strong>: <code>application/port/out</code> が git に追跡されない</p>
+<p>Next.js の出力ディレクトリ <code>out</code> が無視される設定がある場合、Java の <code>port/out</code> も無視されます。</p>
+<p><strong>解決策</strong>: .gitignore で Java ソースを例外にする</p>
+<div class="highlight"><pre><span></span><code>/out
+
+# Java source out directories should not be ignored
+!**/src/**/out/
+</code></pre></div>
+<hr />
+<h2 id="tdd">TDD アプローチの導入<a class="headerlink" href="#tdd" title="Permanent link">&para;</a></h2>
+<h3 id="red-green-refactor">Red-Green-Refactor サイクル<a class="headerlink" href="#red-green-refactor" title="Permanent link">&para;</a></h3>
+<p>TDD の基本サイクルを、データベース設計に適用します。</p>
+<p><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBjb250ZW50U3R5bGVUeXBlPSJ0ZXh0L2NzcyIgZGF0YS1kaWFncmFtLXR5cGU9IlNUQVRFIiBoZWlnaHQ9IjQzNXB4IiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBzdHlsZT0id2lkdGg6MzAxcHg7aGVpZ2h0OjQzNXB4O2JhY2tncm91bmQ6I0ZGRkZGRjsiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDMwMSA0MzUiIHdpZHRoPSIzMDFweCIgem9vbUFuZFBhbj0ibWFnbmlmeSI+PHRpdGxlPlRERCYjMTI0Njk7JiMxMjQ1MjsmIzEyNDYzOyYjMTI1MjM7PC90aXRsZT48ZGVmcy8+PGc+PGcgY2xhc3M9InRpdGxlIiBkYXRhLXNvdXJjZS1saW5lPSIxIj48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGxlbmd0aEFkanVzdD0ic3BhY2luZyIgdGV4dExlbmd0aD0iODguNzkxNyIgeD0iOTkuMTQ0MiIgeT0iMjIuOTk1MSI+VEREJiMxMjQ2OTsmIzEyNDUyOyYjMTI0NjM7JiMxMjUyMzs8L3RleHQ+PC9nPjxnIGlkPSJyZWQiPjxyZWN0IGZpbGw9IiNGMUYxRjEiIGhlaWdodD0iNTAuMjY1NiIgcng9IjEyLjUiIHJ5PSIxMi41IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjAuNTsiIHdpZHRoPSIxNDAuMDAwOSIgeD0iOTUiIHk9IjEyNC4yOTY5Ii8+PGxpbmUgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDowLjU7IiB4MT0iOTUiIHgyPSIyMzUuMDAwOSIgeTE9IjE1MC41OTM4IiB5Mj0iMTUwLjU5MzgiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nIiB0ZXh0TGVuZ3RoPSIyNy4yMjc1IiB4PSIxNTEuMzg2NyIgeT0iMTQyLjI5MiI+UmVkPC90ZXh0Pjx0ZXh0IGZpbGw9IiMwMDAwMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBsZW5ndGhBZGp1c3Q9InNwYWNpbmciIHRleHRMZW5ndGg9IjEyMC4wMDA5IiB4PSIxMDAiIHk9IjE2Ni43MzI0Ij4mIzIyODMzOyYjMjU5NDM7JiMxMjM3NzsmIzEyNDI3OyYjMTI0ODY7JiMxMjQ3MzsmIzEyNDg4OyYjMTI0MzQ7JiMyNjM2MDsmIzEyMzY3OzwvdGV4dD48L2c+PGcgaWQ9ImdyZWVuIj48cmVjdCBmaWxsPSIjRjFGMUYxIiBoZWlnaHQ9IjUwLjI2NTYiIHJ4PSIxMi41IiByeT0iMTIuNSIgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDowLjU7IiB3aWR0aD0iMTY0LjAwMTEiIHg9IjciIHk9IjI1MS41NjY5Ii8+PGxpbmUgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDowLjU7IiB4MT0iNyIgeDI9IjE3MS4wMDExIiB5MT0iMjc3Ljg2MzgiIHkyPSIyNzcuODYzOCIvPjx0ZXh0IGZpbGw9IiMwMDAwMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBsZW5ndGhBZGp1c3Q9InNwYWNpbmciIHRleHRMZW5ndGg9IjQyLjcwNDEiIHg9IjY3LjY0ODUiIHk9IjI2OS41NjIiPkdyZWVuPC90ZXh0Pjx0ZXh0IGZpbGw9IiMwMDAwMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBsZW5ndGhBZGp1c3Q9InNwYWNpbmciIHRleHRMZW5ndGg9IjE0NC4wMDExIiB4PSIxMiIgeT0iMjk0LjAwMjQiPiYjMTI0ODY7JiMxMjQ3MzsmIzEyNDg4OyYjMTI0MzQ7JiMzNjg5MDsmIzEyMzc3OyYjMjYzNjg7JiMyMzU2NzsmIzM4NDgwOyYjMTIzOTg7JiMyMzQ1NTsmIzM1MDEzOzwvdGV4dD48L2c+PGcgaWQ9InJlZmFjdG9yIj48cmVjdCBmaWxsPSIjRjFGMUYxIiBoZWlnaHQ9IjUwLjI2NTYiIHJ4PSIxMi41IiByeT0iMTIuNSIgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDowLjU7IiB3aWR0aD0iOTIuMDAwNSIgeD0iMTE5IiB5PSIzNzguODI2OSIvPjxsaW5lIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MC41OyIgeDE9IjExOSIgeDI9IjIxMS4wMDA1IiB5MT0iNDA1LjEyMzgiIHkyPSI0MDUuMTIzOCIvPjx0ZXh0IGZpbGw9IiMwMDAwMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBsZW5ndGhBZGp1c3Q9InNwYWNpbmciIHRleHRMZW5ndGg9IjU5LjM1NjQiIHg9IjEzNS4zMjIxIiB5PSIzOTYuODIyIj5SZWZhY3RvcjwvdGV4dD48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nIiB0ZXh0TGVuZ3RoPSI3Mi4wMDA1IiB4PSIxMjQiIHk9IjQyMS4yNjI0Ij4mIzEyNDY3OyYjMTI1NDA7JiMxMjQ4OTsmIzEyNDM0OyYjMjU5MTM7JiMyMTg5Mjs8L3RleHQ+PC9nPjxlbGxpcHNlIGN4PSIxNjUiIGN5PSI1My4yOTY5IiBmaWxsPSIjMjIyMjIyIiByeD0iMTAiIHJ5PSIxMCIgc3R5bGU9InN0cm9rZTojMjIyMjIyO3N0cm9rZS13aWR0aDoxOyIvPjwhLS1saW5rICpzdGFydCogdG8gcmVkLS0+PGcgY2xhc3M9ImxpbmsiIGRhdGEtZW50aXR5LTE9Ii5zdGFydC4iIGRhdGEtZW50aXR5LTI9InJlZCIgZGF0YS1zb3VyY2UtbGluZT0iNyIgZGF0YS11aWQ9ImxuazMiIGlkPSJsaW5rXy5zdGFydC5fcmVkIj48cGF0aCBkPSJNMTY1LDYzLjY2NjkgQzE2NSw3Ny42MTY5IDE2NSw5OC4zMjY5IDE2NSwxMTguMDQ2OSIgZmlsbD0ibm9uZSIgaWQ9IipzdGFydCotdG8tcmVkIiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjE7Ii8+PHBvbHlnb24gZmlsbD0iIzE4MTgxOCIgcG9pbnRzPSIxNjUsMTI0LjA0NjksMTY5LDExNS4wNDY5LDE2NSwxMTkuMDQ2OSwxNjEsMTE1LjA0NjksMTY1LDEyNC4wNDY5IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjE7Ii8+PC9nPjwhLS1saW5rIHJlZCB0byBncmVlbi0tPjxnIGNsYXNzPSJsaW5rIiBkYXRhLWVudGl0eS0xPSJyZWQiIGRhdGEtZW50aXR5LTI9ImdyZWVuIiBkYXRhLXNvdXJjZS1saW5lPSI4IiBkYXRhLXVpZD0ibG5rNCIgaWQ9ImxpbmtfcmVkX2dyZWVuIj48cGF0aCBkPSJNMTUwLjE3LDE3NC44ODY5IEMxMzYuNzgsMTk2Ljk1NjkgMTIwLjI5MjYsMjI0LjEyNzQgMTA2LjkxMjYsMjQ2LjE3NzQiIGZpbGw9Im5vbmUiIGlkPSJyZWQtdG8tZ3JlZW4iIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MTsiLz48cG9seWdvbiBmaWxsPSIjMTgxODE4IiBwb2ludHM9IjEwMy44LDI1MS4zMDY5LDExMS44ODg2LDI0NS42ODc3LDEwNi4zOTM4LDI0Ny4wMzIzLDEwNS4wNDkyLDI0MS41Mzc2LDEwMy44LDI1MS4zMDY5IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjE7Ii8+PHRleHQgZmlsbD0iIzAwMDAwMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTMiIGxlbmd0aEFkanVzdD0ic3BhY2luZyIgdGV4dExlbmd0aD0iMjYiIHg9IjEzMi41NSIgeT0iMjE3LjYzMzgiPiYjMjM0NTU7JiMzNTAxMzs8L3RleHQ+PC9nPjwhLS1saW5rIGdyZWVuIHRvIHJlZmFjdG9yLS0+PGcgY2xhc3M9ImxpbmsiIGRhdGEtZW50aXR5LTE9ImdyZWVuIiBkYXRhLWVudGl0eS0yPSJyZWZhY3RvciIgZGF0YS1zb3VyY2UtbGluZT0iOSIgZGF0YS11aWQ9ImxuazUiIGlkPSJsaW5rX2dyZWVuX3JlZmFjdG9yIj48cGF0aCBkPSJNOTIuNTUsMzAyLjAyNjkgQzk1LjQzLDMxNi4zOTY5IDEwMC40NSwzMzQuNTE2OSAxMDksMzQ4LjgyNjkgQzExNS41MiwzNTkuNzQ2OSAxMjAuNDE1NywzNjUuODUwNyAxMjkuNTQ1NywzNzQuMzgwNyIgZmlsbD0ibm9uZSIgaWQ9ImdyZWVuLXRvLXJlZmFjdG9yIiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjE7Ii8+PHBvbHlnb24gZmlsbD0iIzE4MTgxOCIgcG9pbnRzPSIxMzMuOTMsMzc4LjQ3NjksMTMwLjA4NDQsMzY5LjQwOTgsMTMwLjI3NjUsMzc1LjA2MzQsMTI0LjYyMjksMzc1LjI1NTUsMTMzLjkzLDM3OC40NzY5IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjE7Ii8+PHRleHQgZmlsbD0iIzAwMDAwMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTMiIGxlbmd0aEFkanVzdD0ic3BhY2luZyIgdGV4dExlbmd0aD0iMTA0LjAwMDEiIHg9IjExMCIgeT0iMzQ0Ljg5MzgiPiYjMTI1MjI7JiMxMjUwMTsmIzEyNDQ5OyYjMTI0NjM7JiMxMjQ3OTsmIzEyNTIyOyYjMTI1MzE7JiMxMjQ2NDs8L3RleHQ+PC9nPjwhLS1saW5rIHJlZmFjdG9yIHRvIHJlZC0tPjxnIGNsYXNzPSJsaW5rIiBkYXRhLWVudGl0eS0xPSJyZWZhY3RvciIgZGF0YS1lbnRpdHktMj0icmVkIiBkYXRhLXNvdXJjZS1saW5lPSIxMCIgZGF0YS11aWQ9ImxuazYiIGlkPSJsaW5rX3JlZmFjdG9yX3JlZCI+PHBhdGggZD0iTTE5Ny42MywzNzguMzk2OSBDMjA2LjIzLDM3MC4wNTY5IDIxNC4zOCwzNTkuOTk2OSAyMTksMzQ4LjgyNjkgQzI0My45NiwyODguNDY2OSAyMDguODI1OSwyMTguMTAxMiAxODQuOTQ1OSwxNzkuOTkxMiIgZmlsbD0ibm9uZSIgaWQ9InJlZmFjdG9yLXRvLXJlZCIgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDoxOyIvPjxwb2x5Z29uIGZpbGw9IiMxODE4MTgiIHBvaW50cz0iMTgxLjc2LDE3NC45MDY5LDE4My4xNDkzLDE4NC42NTczLDE4NC40MTQ5LDE3OS4xNDM4LDE4OS45MjgzLDE4MC40MDk0LDE4MS43NiwxNzQuOTA2OSIgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDoxOyIvPjx0ZXh0IGZpbGw9IiMwMDAwMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEzIiBsZW5ndGhBZGp1c3Q9InNwYWNpbmciIHRleHRMZW5ndGg9IjY1LjAwMDEiIHg9IjIyOC4wOCIgeT0iMjgxLjI2MzgiPiYjMjc0MjU7JiMxMjM5ODsmIzEyNDg2OyYjMTI0NzM7JiMxMjQ4ODs8L3RleHQ+PC9nPjwhLS1TUkM9W0F5YWlvS2JMMjc1blVUb3F6TjdKYWlURHdueXRoLVJZQVl2OUI0YkxLMGZBSkw1SUkybk1BNGZES1IxSVVCZmF1eEVmcW55dHBkcFNyRnN1a1VybnF5eDdwSHNGY29PemN4dFpTTUNfSjh6eEtNZmc3YlhORWVXNXI4VWl6Y04zQkEwMXAtT3FGRHRHX3RCY1hDVUR3dndrY196WVNJbDJuaEo0djlCeThnWXI0MHg4WkFSRFp2bHRGNnhrMURhdFBVVkpRSXJTTkQ1UWlHZ3drZE9XcnQ2MU4wWFltLW80Y1doWEdYR1hwNmZVelJYdndrRWNYSTNWRGtxN1NwU19SamgwMUxTM0RITWV6amNRWEswdG1kcTAwMDAwXS0tPjwvZz48L3N2Zz4=" class="uml" alt="uml diagram" title="" /></p>
+<ol>
+<li><strong>Red（失敗）</strong>: まず、欲しい機能のテストを書きます。この時点ではテーブルも実装もないため、テストは失敗します。</li>
+<li><strong>Green（成功）</strong>: テストを通すための最小限の実装（テーブル定義、リポジトリなど）を行います。</li>
+<li><strong>Refactor（改善）</strong>: テストが通った状態を維持しながら、コードを改善します。</li>
+</ol>
+<h3 id="tdd_1">データベース設計への TDD 適用<a class="headerlink" href="#tdd_1" title="Permanent link">&para;</a></h3>
+<p>従来のデータベース設計では、最初に完璧な ER 図を描こうとします。しかし、TDD アプローチでは：</p>
+<ol>
+<li><strong>最小限のテストから始める</strong>: 「商品を登録できる」という単純なテストから開始</li>
+<li><strong>段階的に拡張</strong>: テストを追加しながら、テーブル構造を進化させる</li>
+<li><strong>リファクタリングを恐れない</strong>: テストがあるので、安心して構造を変更できる</li>
+</ol>
+<h3 id="mybatis">MyBatis での日本語カラム対応<a class="headerlink" href="#mybatis" title="Permanent link">&para;</a></h3>
+<p>MyBatis では、日本語カラム名をそのまま使用できます。</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// エンティティクラス</span>
+<span class="nd">@Data</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">商品マスタ</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Integer</span><span class="w"> </span><span class="n">id</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">商品コード</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">商品正式名</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">商品名</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">商品名カナ</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">商品区分</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">製品型番</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">BigDecimal</span><span class="w"> </span><span class="n">販売単価</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">BigDecimal</span><span class="w"> </span><span class="n">仕入単価</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">税区分</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">商品分類コード</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Boolean</span><span class="w"> </span><span class="n">雑区分</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Boolean</span><span class="w"> </span><span class="n">在庫管理対象区分</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Boolean</span><span class="w"> </span><span class="n">在庫引当区分</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">仕入先コード</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">LocalDateTime</span><span class="w"> </span><span class="n">作成日時</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">作成者名</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">LocalDateTime</span><span class="w"> </span><span class="n">更新日時</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">更新者名</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1">// Mapper インターフェース</span>
+<span class="nd">@Mapper</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">商品マスタMapper</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nd">@Insert</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">        INSERT INTO 商品マスタ (</span>
+<span class="s">            商品コード, 商品正式名, 商品名, 商品名カナ, 商品区分,</span>
+<span class="s">            製品型番, 販売単価, 仕入単価, 税区分, 商品分類コード,</span>
+<span class="s">            雑区分, 在庫管理対象区分, 在庫引当区分, 仕入先コード,</span>
+<span class="s">            作成者名, 更新者名</span>
+<span class="s">        ) VALUES (</span>
+<span class="s">            #{商品コード}, #{商品正式名}, #{商品名}, #{商品名カナ}, #{商品区分}::商品区分,</span>
+<span class="s">            #{製品型番}, #{販売単価}, #{仕入単価}, #{税区分}::税区分, #{商品分類コード},</span>
+<span class="s">            #{雑区分}, #{在庫管理対象区分}, #{在庫引当区分}, #{仕入先コード},</span>
+<span class="s">            #{作成者名}, #{更新者名}</span>
+<span class="s">        )</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="nd">@Options</span><span class="p">(</span><span class="n">useGeneratedKeys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="n">keyProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">insert</span><span class="p">(</span><span class="n">商品マスタ</span><span class="w"> </span><span class="n">product</span><span class="p">);</span>
+
+<span class="w">    </span><span class="nd">@Select</span><span class="p">(</span><span class="s">&quot;SELECT * FROM 商品マスタ WHERE 商品コード = #{商品コード}&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">Optional</span><span class="o">&lt;</span><span class="n">商品マスタ</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">findBy商品コード</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">商品コード</span><span class="p">);</span>
+
+<span class="w">    </span><span class="nd">@Delete</span><span class="p">(</span><span class="s">&quot;TRUNCATE TABLE 商品マスタ CASCADE&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">deleteAll</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="_20">フロントエンドのセットアップ<a class="headerlink" href="#_20" title="Permanent link">&para;</a></h2>
+<h3 id="1-vite">1. Vite プロジェクトの初期化<a class="headerlink" href="#1-vite" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>apps/sms/frontend
+npm<span class="w"> </span>create<span class="w"> </span>vite@latest<span class="w"> </span>.<span class="w"> </span>--<span class="w"> </span>--template<span class="w"> </span>react-ts
+npm<span class="w"> </span>install
+</code></pre></div>
+<h3 id="2">2. 追加パッケージのインストール<a class="headerlink" href="#2" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>install<span class="w"> </span>axios<span class="w"> </span>@tanstack/react-query
+npm<span class="w"> </span>install<span class="w"> </span>-D<span class="w"> </span>tailwindcss<span class="w"> </span>postcss<span class="w"> </span>autoprefixer
+npm<span class="w"> </span>install<span class="w"> </span>-D<span class="w"> </span>vitest<span class="w"> </span>@testing-library/react<span class="w"> </span>@testing-library/jest-dom
+npx<span class="w"> </span>tailwindcss<span class="w"> </span>init<span class="w"> </span>-p
+</code></pre></div>
+<hr />
+<h2 id="_21">起動手順<a class="headerlink" href="#_21" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Docker コンテナ起動</span>
+<span class="nb">cd</span><span class="w"> </span>apps/sms
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+
+<span class="c1"># 2. バックエンド起動</span>
+<span class="nb">cd</span><span class="w"> </span>backend
+./gradlew<span class="w"> </span>bootRun
+
+<span class="c1"># 3. フロントエンド起動</span>
+<span class="nb">cd</span><span class="w"> </span>frontend
+npm<span class="w"> </span>run<span class="w"> </span>dev
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/k2works/practical-database-design" target="_blank" rel="noopener" title="GitHub Repository" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+      
+        <script src="../../docs/assets/js/extra.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,4251 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="基幹業務システム（販売管理・財務会計・生産管理）のデータベース設計を体系的に解説">
+      
+      
+        <meta name="author" content="k2works">
+      
+      
+      
+        <link rel="prev" href="../techstack/">
+      
+      
+        <link rel="next" href="../workflow/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>アウトライン - 実践データベース設計：基幹業務システム編</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../docs/mkdocs/assets/css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="実践データベース設計：基幹業務システム編" class="md-header__button md-logo" aria-label="実践データベース設計：基幹業務システム編" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            実践データベース設計：基幹業務システム編
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              アウトライン
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/k2works/practical-database-design" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    practical-database-design
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  実践データベース設計
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="実践データベース設計：基幹業務システム編" class="md-nav__button md-logo" aria-label="実践データベース設計：基幹業務システム編" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    実践データベース設計：基幹業務システム編
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/k2works/practical-database-design" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    practical-database-design
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    実践データベース設計
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    実践データベース設計
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    概要
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../techstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技術スタック
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    アウトライン
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    アウトライン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        記事の目的
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        対象読者
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        執筆方針
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    執筆ワークフロー
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_5" id="__nav_1_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1部 基幹業務システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第1部 基幹業務システムの全体像
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1章 基幹業務システムとは
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2章 基幹業務システムの業務領域
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3章 業務フローの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_6" id="__nav_1_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2部 販売管理システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第2部 販売管理システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4章 販売管理システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5章 マスタ情報の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6章 受注・出荷・売上の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7章 債権管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8章 調達管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9章 在庫管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10章 債務管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11章 共通処理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12章 販売管理データ設計（B社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3部 財務会計システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第3部 財務会計システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14章 財務会計システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15章 勘定科目の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16章 仕訳の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17章 自動仕訳の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18章 勘定科目残高の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19章 赤黒とログの設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20章 財務会計データ設計（D社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4部 生産管理システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第4部 生産管理システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22章 生産管理システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23章 マスタ情報の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24章 生産計画の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25章 購買管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26章 外注委託管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27章 工程管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28章 在庫管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第29章 品質管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter30/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第30章 製造原価管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter31/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第31章 生産管理データ設計（E社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter32/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第32章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5部 エンタープライズインテグレーション
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第5部 エンタープライズインテグレーション
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter33.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第33章 システム統合の概要
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter34.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第34章 メッセージングパターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter35.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第35章 システム間連携パターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter36.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第36章 マスタデータ管理（MDM）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter37.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第37章 イベント駆動アーキテクチャ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter38.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第38章 API設計とサービス連携
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter39.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第39章 データ連携の実装パターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_10" id="__nav_1_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 販売管理システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 販売管理システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_11" id="__nav_1_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 財務会計システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 財務会計システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_12" id="__nav_1_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 生産管理システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 生産管理システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_13" id="__nav_1_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 財務会計システムORM実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 財務会計システムORM実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter14-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14章 財務会計システムの全体像【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter15-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15章 勘定科目の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter16-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16章 仕訳の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter17-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17章 自動仕訳の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter18-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18章 勘定科目残高の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter19-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19章 赤黒とログの設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter20-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20章 財務会計データ設計（D社事例）【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter21-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21章 APIサービスの実装【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_14" id="__nav_1_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    付録
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    付録
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/er-diagrams.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A 全体ER図
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/table-definitions.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    B テーブル定義一覧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/glossary.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C 用語集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_15" id="__nav_1_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    データベース
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    データベース
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assets/schemaspy-output/sms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SchemaSpy ER図（SMS）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="_1">実践データベース設計：基幹業務システム編<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<h2 id="_2">記事の目的<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>基幹業務システム（販売管理・財務会計・生産管理）のデータベース設計を、業務フローとデータモデルの観点から体系的に解説する。</p>
+<h2 id="_3">対象読者<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>データベース設計の基礎を学びたいエンジニア</li>
+<li>基幹業務システムの全体像を理解したい開発者</li>
+<li>販売管理・財務会計・生産管理の業務知識を習得したい方</li>
+</ul>
+<h2 id="_4">執筆方針<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li>ダイアグラムには PlantUML を使用</li>
+<li>業務フローと ER 図を中心に解説</li>
+<li>日本語テーブル・日本語カラムでデータベースを定義</li>
+<li>実装はコード部分は<code>&lt;details&gt;</code>タグを使って表示を切り替えられるようにする</li>
+<li>タスク項目などは一行開けて記述する</li>
+<li>NG
+  <div class="highlight"><pre><span></span><code>  <span class="gs">**受入条件**</span>:
+<span class="w">  </span><span class="k">- [ ]</span> ログアウトボタンをクリックするとログアウトできる
+<span class="w">  </span><span class="k">- [ ]</span> ログアウト後、ログイン画面に遷移する
+<span class="w">  </span><span class="k">- [ ]</span> JWT トークンが無効化される
+</code></pre></div></li>
+<li>OK
+  <div class="highlight"><pre><span></span><code>  <span class="gs">**受入条件**</span>:
+
+<span class="w">  </span><span class="k">- [ ]</span> ログアウトボタンをクリックするとログアウトできる
+<span class="w">  </span><span class="k">- [ ]</span> ログアウト後、ログイン画面に遷移する
+<span class="w">  </span><span class="k">- [ ]</span> JWT トークンが無効化される
+</code></pre></div></li>
+</ul>
+<hr />
+<h1 id="1">第1部：基幹業務システムの全体像<a class="headerlink" href="#1" title="Permanent link">&para;</a></h1>
+<h2 id="1_1">第1章：基幹業務システムとは<a class="headerlink" href="#1_1" title="Permanent link">&para;</a></h2>
+<h3 id="11">1.1 ドメイン駆動設計と基幹業務システム<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<ul>
+<li>戦略的設計と戦術的設計</li>
+<li>基幹業務システムへの適用</li>
+</ul>
+<h3 id="12">1.2 基幹業務システムを構成するサブシステム<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<ul>
+<li>販売管理システム</li>
+<li>財務会計システム</li>
+<li>生産管理システム</li>
+<li>人事システム</li>
+</ul>
+<hr />
+<h2 id="2">第2章：基幹業務システムの業務領域<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<h3 id="21">2.1 販売管理領域<a class="headerlink" href="#21" title="Permanent link">&para;</a></h3>
+<ul>
+<li>受注・出荷・売上</li>
+<li>得意先との関係</li>
+</ul>
+<h3 id="22">2.2 購買管理領域<a class="headerlink" href="#22" title="Permanent link">&para;</a></h3>
+<ul>
+<li>発注・入荷/受入・仕入（検収）</li>
+<li>仕入先・委託先との関係</li>
+</ul>
+<h3 id="23">2.3 在庫管理領域<a class="headerlink" href="#23" title="Permanent link">&para;</a></h3>
+<ul>
+<li>在庫の受払</li>
+<li>販売管理・購買管理・生産管理との連携</li>
+</ul>
+<h3 id="24">2.4 生産管理領域<a class="headerlink" href="#24" title="Permanent link">&para;</a></h3>
+<ul>
+<li>生産計画・品質管理・工程管理・製造原価管理</li>
+<li>購買管理・在庫管理との連携</li>
+</ul>
+<h3 id="25">2.5 債権管理領域<a class="headerlink" href="#25" title="Permanent link">&para;</a></h3>
+<ul>
+<li>請求・入金</li>
+<li>販売管理との連携</li>
+</ul>
+<h3 id="26">2.6 債務管理領域<a class="headerlink" href="#26" title="Permanent link">&para;</a></h3>
+<ul>
+<li>支払・出金</li>
+<li>購買管理との連携</li>
+</ul>
+<h3 id="27">2.7 会計領域<a class="headerlink" href="#27" title="Permanent link">&para;</a></h3>
+<ul>
+<li>仕訳・決算</li>
+<li>債権・債務・生産管理からの仕訳連携</li>
+</ul>
+<h3 id="28">2.8 人事領域<a class="headerlink" href="#28" title="Permanent link">&para;</a></h3>
+<ul>
+<li>給与計算・人事管理</li>
+<li>会計との連携</li>
+</ul>
+<hr />
+<h2 id="3">第3章：業務フローの全体像<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<h3 id="31">3.1 販売管理システムの業務フロー<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<ul>
+<li>得意先 → 営業部門 → 販売管理</li>
+<li>販売管理 → 調達管理 / 在庫管理 / 債権管理</li>
+<li>調達管理 → 仕入先 / 在庫管理 / 債務管理</li>
+</ul>
+<h3 id="32">3.2 財務会計システムの業務フロー<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
+<ul>
+<li>会計部門 → 財務会計 / 管理会計</li>
+<li>財務会計：債権・債務・手形・資産・経理</li>
+<li>管理会計：経営分析・損益分岐点分析・投資の経済性計算・キャッシュフロー計算</li>
+</ul>
+<h3 id="33">3.3 生産管理システムの業務フロー<a class="headerlink" href="#33" title="Permanent link">&para;</a></h3>
+<ul>
+<li>得意先 → 営業部門 → 生産計画</li>
+<li>生産計画 → 購買管理 / 工程管理</li>
+<li>購買管理 → 仕入先 / 委託先 / 在庫管理</li>
+<li>工程管理 → 在庫管理 / 製造原価管理 / 品質管理</li>
+<li>基準情報との連携</li>
+</ul>
+<hr />
+<h1 id="2_1">第2部：販売管理システム<a class="headerlink" href="#2_1" title="Permanent link">&para;</a></h1>
+<h2 id="4">第4章：販売管理システムの全体像<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="41">4.1 販売管理システムのスコープ<a class="headerlink" href="#41" title="Permanent link">&para;</a></h3>
+<ul>
+<li>見積</li>
+<li>受注</li>
+<li>出荷</li>
+<li>売上</li>
+</ul>
+<h3 id="42">4.2 販売組織の役割分担<a class="headerlink" href="#42" title="Permanent link">&para;</a></h3>
+<ul>
+<li>営業部門・調達部門・倉庫部門・経理部門・財務部門</li>
+<li>業務フローと各部門の責務</li>
+</ul>
+<h3 id="43">4.3 販売管理システムのアーキテクチャ<a class="headerlink" href="#43" title="Permanent link">&para;</a></h3>
+<ul>
+<li>プロジェクト構成</li>
+<li>Domain層（ドメイン層）<ul>
+<li>model（ドメインモデル）</li>
+<li>type（基本型：通貨、単位、数量等）</li>
+<li>exception（ドメイン例外）</li>
+</ul>
+</li>
+<li>Application層（アプリケーション層）<ul>
+<li>port/in（Input Port）</li>
+<li>port/out（Output Port）</li>
+<li>service（Application Service）</li>
+</ul>
+</li>
+<li>Infrastructure層（インフラストラクチャ層）<ul>
+<li>in/rest（Input Adapter - REST API）</li>
+<li>out/persistence（Output Adapter - 永続化）</li>
+<li>config（設定）</li>
+</ul>
+</li>
+<li>ヘキサゴナルアーキテクチャ（ポート&amp;アダプター）</li>
+<li>ドメイン（中心）</li>
+<li>ポート（入力ポート・出力ポート）</li>
+<li>アダプター（プライマリ・セカンダリ）</li>
+<li>依存性の方向と依存性逆転の原則</li>
+<li>ドメイン駆動設計の適用</li>
+<li>集約とリポジトリ</li>
+<li>ドメインサービス</li>
+<li>アプリケーションサービス</li>
+<li>API 設計</li>
+<li>RESTful API の基本方針</li>
+<li>エンドポイント設計</li>
+</ul>
+<hr />
+<h2 id="5">第5章：マスタ情報の設計<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<h3 id="51">5.1 部門マスタの設計<a class="headerlink" href="#51" title="Permanent link">&para;</a></h3>
+<ul>
+<li>組織階層と部門パス</li>
+<li>最下層区分の管理</li>
+<li>組織改正に強いマスタ設計（履歴管理）</li>
+<li>複数組織図と所在地の対応</li>
+</ul>
+<h3 id="52">5.2 社員マスタの設計<a class="headerlink" href="#52" title="Permanent link">&para;</a></h3>
+<ul>
+<li>部門との関連付け</li>
+<li>適用期間を持つ履歴管理</li>
+</ul>
+<h3 id="53">5.3 商品マスタの設計<a class="headerlink" href="#53" title="Permanent link">&para;</a></h3>
+<ul>
+<li>商品コード・商品名・単価</li>
+<li>商品区分と税区分</li>
+<li>商品分類の階層構造（商品分類パス）</li>
+<li>顧客別販売単価の管理</li>
+</ul>
+<h3 id="54">5.4 原価管理の設計<a class="headerlink" href="#54" title="Permanent link">&para;</a></h3>
+<ul>
+<li>8種類の原価法の理解</li>
+<li>個別原価法</li>
+<li>先入先出法</li>
+<li>後入先出法</li>
+<li>総平均法</li>
+<li>移動平均法</li>
+<li>単純平均法</li>
+<li>最終仕入原価法</li>
+<li>売価還元法</li>
+</ul>
+<h3 id="55">5.5 消費税の設計<a class="headerlink" href="#55" title="Permanent link">&para;</a></h3>
+<ul>
+<li>外税・内税・非課税の区分</li>
+<li>消費税計算の考え方</li>
+</ul>
+<h3 id="56">5.6 顧客マスタの設計<a class="headerlink" href="#56" title="Permanent link">&para;</a></h3>
+<ul>
+<li>取引先コードと顧客枝番</li>
+<li>請求先・回収先の概念</li>
+<li>出荷先マスタとの連携</li>
+<li>地域マスタによる分類</li>
+</ul>
+<h3 id="57">5.7 取引条件の設計<a class="headerlink" href="#57" title="Permanent link">&para;</a></h3>
+<ul>
+<li>締日・支払月・支払日の管理</li>
+<li>都度請求と締め請求の違い</li>
+<li>与信管理（与信限度額・一時増加枠）</li>
+</ul>
+<hr />
+<h2 id="6">第6章：受注・出荷・売上の設計<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<h3 id="61-db">6.1 受注業務の DB 設計<a class="headerlink" href="#61-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>受注業務フローの理解</li>
+<li>受注データ・受注明細データの構造</li>
+<li>顧客マスタ・商品マスタとの連携</li>
+</ul>
+<h3 id="62-db">6.2 出荷業務の DB 設計<a class="headerlink" href="#62-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>出荷業務の流れ</li>
+<li>出荷指示データ・出荷明細データ</li>
+<li>在庫との連携</li>
+</ul>
+<h3 id="63-db">6.3 売上業務の DB 設計<a class="headerlink" href="#63-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>売上データ・売上明細データの構造</li>
+<li>出荷完了から売上計上への流れ</li>
+<li>返品処理の設計</li>
+<li>赤黒処理の考え方</li>
+</ul>
+<h3 id="64">6.4 リレーションと楽観ロックの設計<a class="headerlink" href="#64" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MyBatis ネストした ResultMap によるリレーション設定</li>
+<li>ヘッダ・明細の一括取得（JOIN クエリ）</li>
+<li>楽観ロック（Optimistic Locking）の実装</li>
+<li>バージョンカラムによる同時更新制御</li>
+</ul>
+<hr />
+<h2 id="7">第7章：債権管理の設計<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<h3 id="71-db">7.1 請求業務の DB 設計<a class="headerlink" href="#71-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>都度請求と締め請求</li>
+<li>請求データ・請求明細の構造</li>
+<li>締処理の設計</li>
+</ul>
+<h3 id="72-db">7.2 回収業務の DB 設計<a class="headerlink" href="#72-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>入金方法の種類（現金・振込・手形等）</li>
+<li>入金データ・入金明細の構造</li>
+<li>入金消込の処理</li>
+<li>債権残高管理</li>
+</ul>
+<h3 id="73">7.3 リレーションと楽観ロックの設計<a class="headerlink" href="#73" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MyBatis ネストした ResultMap によるリレーション設定</li>
+<li>ヘッダ・明細の一括取得（JOIN クエリ）</li>
+<li>楽観ロック（Optimistic Locking）の実装</li>
+<li>バージョンカラムによる同時更新制御</li>
+</ul>
+<hr />
+<h2 id="8">第8章：調達管理の設計<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<h3 id="81-db">8.1 発注業務の DB 設計<a class="headerlink" href="#81-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>調達の4つのパターン</li>
+<li>発注データ・発注明細データの構造</li>
+<li>仕入先マスタとの連携</li>
+</ul>
+<h3 id="82-db">8.2 入荷・検収業務の DB 設計<a class="headerlink" href="#82-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>入荷データの構造</li>
+<li>検収（仕入計上）処理</li>
+<li>諸口品目の扱い</li>
+</ul>
+<h3 id="83">8.3 リレーションと楽観ロックの設計<a class="headerlink" href="#83" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MyBatis ネストした ResultMap によるリレーション設定</li>
+<li>ヘッダ・明細の一括取得（JOIN クエリ）</li>
+<li>楽観ロック（Optimistic Locking）の実装</li>
+<li>バージョンカラムによる同時更新制御</li>
+</ul>
+<hr />
+<h2 id="9">第9章：在庫管理の設計<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<h3 id="91-db">9.1 在庫情報の DB 設計<a class="headerlink" href="#91-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>倉庫コード × 商品コードの在庫管理</li>
+<li>在庫数量・引当数量の管理</li>
+<li>倉庫マスタの設計</li>
+</ul>
+<h3 id="92-db">9.2 在庫移動・棚卸の DB 設計<a class="headerlink" href="#92-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>入出庫履歴の管理</li>
+<li>棚卸業務の設計</li>
+<li>在庫調整処理</li>
+</ul>
+<h3 id="93">9.3 リレーションと楽観ロックの設計<a class="headerlink" href="#93" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MyBatis ネストした ResultMap によるリレーション設定</li>
+<li>ヘッダ・明細の一括取得（JOIN クエリ）</li>
+<li>楽観ロック（Optimistic Locking）の実装</li>
+<li>バージョンカラムによる同時更新制御</li>
+</ul>
+<hr />
+<h2 id="10">第10章：債務管理の設計<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<h3 id="101-db">10.1 支払業務の DB 設計<a class="headerlink" href="#101-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>支払締処理</li>
+<li>支払方法の種類</li>
+<li>支払データ・支払明細の構造</li>
+<li>買掛金残高管理</li>
+</ul>
+<h3 id="102">10.2 リレーションと楽観ロックの設計<a class="headerlink" href="#102" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MyBatis ネストした ResultMap によるリレーション設定</li>
+<li>ヘッダ・明細の一括取得（JOIN クエリ）</li>
+<li>楽観ロック（Optimistic Locking）の実装</li>
+<li>バージョンカラムによる同時更新制御</li>
+</ul>
+<hr />
+<h2 id="11_1">第11章：共通処理の設計<a class="headerlink" href="#11_1" title="Permanent link">&para;</a></h2>
+<h3 id="111">11.1 赤黒処理の設計<a class="headerlink" href="#111" title="Permanent link">&para;</a></h3>
+<ul>
+<li>赤黒処理とは（確定済み伝票の訂正方法）</li>
+<li>赤伝票（マイナス計上）と黒伝票（プラス計上）</li>
+<li>赤黒処理履歴テーブルのスキーマ設計</li>
+<li>赤黒処理サービスの実装</li>
+</ul>
+<h3 id="112">11.2 自動採番の設計<a class="headerlink" href="#112" title="Permanent link">&para;</a></h3>
+<ul>
+<li>採番の要件（一意性・連番性・可読性・拡張性）</li>
+<li>採番パターン（年次・月次・日次・連番）</li>
+<li>採番マスタと採番履歴テーブルの設計</li>
+<li>採番サービスの実装</li>
+</ul>
+<h3 id="113">11.3 監査カラムの設計<a class="headerlink" href="#113" title="Permanent link">&para;</a></h3>
+<ul>
+<li>監査カラムとは（作成日時・作成者・更新日時・更新者）</li>
+<li>論理削除（削除フラグ・削除日時・削除者）</li>
+<li>監査カラム用エンティティ基底クラス</li>
+<li>MyBatis インターセプターによる自動設定</li>
+</ul>
+<h3 id="114">11.4 履歴テーブルの設計<a class="headerlink" href="#114" title="Permanent link">&para;</a></h3>
+<ul>
+<li>履歴管理の種類（変更履歴・スナップショット・イベントソーシング）</li>
+<li>変更履歴テーブル（JSONB による変更前後保存）</li>
+<li>マスタ履歴テーブル（適用期間による履歴管理）</li>
+<li>履歴サービスの実装</li>
+</ul>
+<hr />
+<h2 id="12b">第12章：販売管理データ設計（B 社事例）<a class="headerlink" href="#12b" title="Permanent link">&para;</a></h2>
+<h3 id="121-b">12.1 B 社の概要<a class="headerlink" href="#121-b" title="Permanent link">&para;</a></h3>
+<ul>
+<li>会社プロファイル（食肉・食肉加工品の製造・販売業）</li>
+<li>沿革と事業環境</li>
+<li>事業の特徴（高品質商品・対面販売・多様な販路・自社製造・OEM 対応）</li>
+</ul>
+<h3 id="122">12.2 組織構成<a class="headerlink" href="#122" title="Permanent link">&para;</a></h3>
+<ul>
+<li>組織図（食肉製造・販売事業、食肉加工品事業、コンサルティング事業）</li>
+<li>部門マスタの階層構造</li>
+<li>社員の配置（正社員 24 名、パート 21 名）</li>
+</ul>
+<h3 id="123">12.3 ビジネスモデル<a class="headerlink" href="#123" title="Permanent link">&para;</a></h3>
+<ul>
+<li>ビジネスモデルキャンバス</li>
+<li>得意先の分類（百貨店・スーパー・ホテル・飲食店・観光施設）</li>
+<li>仕入先の分類（食肉卸・畜産業者）</li>
+<li>商品構成（牛肉・豚肉・鶏肉・加工品）</li>
+</ul>
+<h3 id="124">12.4 データ構造の設計<a class="headerlink" href="#124" title="Permanent link">&para;</a></h3>
+<ul>
+<li>マスタデータの構成</li>
+<li>商品コード体系（BEEF-/PORK-/CHKN-/PROC-）</li>
+<li>取引先コード体系（CUS-/SUP-）</li>
+<li>Enum の日本語・英語マッピング</li>
+</ul>
+<h3 id="125-seed">12.5 Seed データの実装<a class="headerlink" href="#125-seed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>実装方針（外部キー制約・複合キー・日本語テーブル名）</li>
+<li>MasterDataSeeder の実装</li>
+<li>TransactionDataSeeder の実装</li>
+<li>データの検証と活用</li>
+</ul>
+<hr />
+<h2 id="13api">第13章：API サービスの実装<a class="headerlink" href="#13api" title="Permanent link">&para;</a></h2>
+<h3 id="131">13.1 ヘキサゴナルアーキテクチャの復習<a class="headerlink" href="#131" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ports and Adapters パターンの概要</li>
+<li>ドメイン中心設計</li>
+<li>依存性の逆転</li>
+<li>テスト容易性</li>
+</ul>
+<h3 id="132">13.2 アーキテクチャ構造<a class="headerlink" href="#132" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Domain 層（ビジネスルールとドメインモデル）</li>
+<li>Application 層（ユースケースの実装）</li>
+<li>Infrastructure 層（外部技術との接続）</li>
+<li>Input Port / Output Port の分離</li>
+<li>各レイヤーの責務</li>
+</ul>
+<h3 id="133-api">13.3 マスタ API の実装<a class="headerlink" href="#133-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>商品マスタ API（CRUD エンドポイント）</li>
+<li>TDD による実装（Red-Green-Refactor）</li>
+<li>Controller・Service・Repository の実装</li>
+<li>顧客マスタ API（請求先・回収先の管理）</li>
+</ul>
+<h3 id="134-api">13.4 トランザクション API の実装<a class="headerlink" href="#134-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>受注 API（受注登録・受注照会・受注明細照会）</li>
+<li>出荷 API（出荷指示・出荷確定）</li>
+<li>売上 API（売上計上・売上照会）</li>
+<li>請求・入金 API（請求締め・入金消込）</li>
+</ul>
+<h3 id="135">13.5 エラーハンドリング<a class="headerlink" href="#135" title="Permanent link">&para;</a></h3>
+<ul>
+<li>グローバル例外ハンドラー（@RestControllerAdvice）</li>
+<li>ドメイン例外の定義と変換</li>
+<li>ProblemDetail によるエラーレスポンス</li>
+<li>バリデーションエラーの処理</li>
+</ul>
+<h3 id="136-api">13.6 API ドキュメント<a class="headerlink" href="#136-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>OpenAPI / Swagger の設定</li>
+<li>エンドポイントの文書化</li>
+<li>リクエスト・レスポンスのスキーマ定義</li>
+</ul>
+<h3 id="137-api">13.7 API インテグレーションテスト<a class="headerlink" href="#137-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>テストコンテナによる統合テスト環境</li>
+<li>REST API エンドポイントのテスト</li>
+<li>データベース状態の検証</li>
+<li>テストデータのセットアップとクリーンアップ</li>
+</ul>
+<hr />
+<h1 id="3_1">第3部：財務会計システム<a class="headerlink" href="#3_1" title="Permanent link">&para;</a></h1>
+<h2 id="14">第14章：財務会計システムの全体像<a class="headerlink" href="#14" title="Permanent link">&para;</a></h2>
+<h3 id="141">14.1 財務会計システムのスコープ<a class="headerlink" href="#141" title="Permanent link">&para;</a></h3>
+<ul>
+<li>債権管理（請求・入金）</li>
+<li>債務管理（支払・出金）</li>
+<li>経理（仕訳・決算）</li>
+</ul>
+<h3 id="142">14.2 財務会計と管理会計の違い<a class="headerlink" href="#142" title="Permanent link">&para;</a></h3>
+<ul>
+<li>財務会計：外部報告目的</li>
+<li>管理会計：内部意思決定目的</li>
+</ul>
+<h3 id="143">14.3 財務会計システムのアーキテクチャ<a class="headerlink" href="#143" title="Permanent link">&para;</a></h3>
+<ul>
+<li>プロジェクト構成</li>
+<li>Domain層（ドメイン層）<ul>
+<li>model（ドメインモデル）</li>
+<li>type（基本型：通貨、単位、数量等）</li>
+<li>exception（ドメイン例外）</li>
+</ul>
+</li>
+<li>Application層（アプリケーション層）<ul>
+<li>port/in（Input Port）</li>
+<li>port/out（Output Port）</li>
+<li>service（Application Service）</li>
+</ul>
+</li>
+<li>Infrastructure層（インフラストラクチャ層）<ul>
+<li>in/rest（Input Adapter - REST API）</li>
+<li>out/persistence（Output Adapter - 永続化）</li>
+<li>config（設定）</li>
+</ul>
+</li>
+<li>ヘキサゴナルアーキテクチャ（ポート&amp;アダプター）</li>
+<li>ドメイン（中心）</li>
+<li>ポート（入力ポート・出力ポート）</li>
+<li>アダプター（プライマリ・セカンダリ）</li>
+<li>依存性の方向と依存性逆転の原則</li>
+<li>ドメイン駆動設計の適用</li>
+<li>集約とリポジトリ</li>
+<li>ドメインサービス</li>
+<li>アプリケーションサービス</li>
+<li>API 設計</li>
+<li>RESTful API の基本方針</li>
+<li>エンドポイント設計</li>
+</ul>
+<hr />
+<h2 id="15">第15章：勘定科目の設計<a class="headerlink" href="#15" title="Permanent link">&para;</a></h2>
+<h3 id="151">15.1 勘定科目マスタの設計<a class="headerlink" href="#151" title="Permanent link">&para;</a></h3>
+<ul>
+<li>勘定科目コード・勘定科目名</li>
+<li>BSPL 区分（貸借対照表 / 損益計算書）</li>
+<li>貸借区分（借方 / 貸方）</li>
+<li>取引要素区分（資産・負債・資本・収益・費用）</li>
+<li>集計区分（見出科目・集計科目・明細科目）</li>
+<li>管理会計区分・費用区分</li>
+<li>補助科目種別</li>
+<li>消費税計算区分・課税取引コード</li>
+<li>期日管理区分</li>
+</ul>
+<h3 id="152">15.2 勘定科目構成マスタの設計<a class="headerlink" href="#152" title="Permanent link">&para;</a></h3>
+<ul>
+<li>チルダ連結方式による階層構造</li>
+<li>貸借対照表の科目ツリー構造</li>
+<li>科目残高集計の考え方</li>
+</ul>
+<h3 id="153">15.3 課税取引マスタの設計<a class="headerlink" href="#153" title="Permanent link">&para;</a></h3>
+<ul>
+<li>課税取引コード・税率の管理</li>
+</ul>
+<hr />
+<h2 id="16">第16章：仕訳の設計<a class="headerlink" href="#16" title="Permanent link">&para;</a></h2>
+<h3 id="161">16.1 仕訳テーブルの設計<a class="headerlink" href="#161" title="Permanent link">&para;</a></h3>
+<ul>
+<li>仕訳伝票番号・起票日・入力日</li>
+<li>決算仕訳フラグ・単複フラグ</li>
+<li>仕訳伝票区分</li>
+<li>部門コード・社員コード</li>
+<li>赤伝フラグ・赤黒伝票番号</li>
+</ul>
+<h3 id="162">16.2 仕訳明細の設計<a class="headerlink" href="#162" title="Permanent link">&para;</a></h3>
+<ul>
+<li>仕訳行番号・行摘要</li>
+</ul>
+<h3 id="163">16.3 仕訳貸借明細の設計<a class="headerlink" href="#163" title="Permanent link">&para;</a></h3>
+<ul>
+<li>貸借区分（借方 / 貸方）</li>
+<li>勘定科目コード・補助科目コード</li>
+<li>仕訳金額・基軸換算仕訳金額</li>
+<li>通貨コード・為替レート</li>
+<li>部門コード・プロジェクトコード・セグメントコード</li>
+<li>消費税区分・消費税率・消費税計算区分</li>
+<li>期日・資金繰フラグ</li>
+<li>相手勘定科目・相手補助科目</li>
+<li>付箋コード・付箋内容</li>
+</ul>
+<hr />
+<h2 id="17">第17章：自動仕訳の設計<a class="headerlink" href="#17" title="Permanent link">&para;</a></h2>
+<h3 id="171">17.1 自動仕訳の概要<a class="headerlink" href="#171" title="Permanent link">&para;</a></h3>
+<ul>
+<li>販売管理システムと会計システムの連携</li>
+<li>手入力による非連携（アナログ連携）の課題</li>
+<li>自動仕訳処理のデータフロー</li>
+</ul>
+<h3 id="172">17.2 自動仕訳パターンマスタの設計<a class="headerlink" href="#172" title="Permanent link">&para;</a></h3>
+<ul>
+<li>商品グループ × 顧客グループによる条件分岐</li>
+<li>借方科目・貸方科目の自動判定</li>
+<li>売上返品時の科目設定</li>
+</ul>
+<h3 id="173">17.3 自動仕訳処理の設計<a class="headerlink" href="#173" title="Permanent link">&para;</a></h3>
+<ul>
+<li>フラグ管理方式と日付管理方式</li>
+<li>セット中心のアプリケーション設計</li>
+<li>ループ処理との比較</li>
+</ul>
+<h3 id="174">17.4 売上伝票から仕訳伝票への転記ロジック<a class="headerlink" href="#174" title="Permanent link">&para;</a></h3>
+<ul>
+<li>明細行の分解と集約</li>
+<li>借方（売掛金）と貸方（売上）の展開</li>
+<li>消費税の按分計算</li>
+<li>貸借一致の原則</li>
+</ul>
+<hr />
+<h2 id="18">第18章：勘定科目残高の設計<a class="headerlink" href="#18" title="Permanent link">&para;</a></h2>
+<h3 id="181">18.1 日次勘定科目残高の設計<a class="headerlink" href="#181" title="Permanent link">&para;</a></h3>
+<ul>
+<li>起票日 × 勘定科目 × 補助科目 × 部門 × プロジェクト</li>
+<li>借方金額・貸方金額</li>
+<li>日計表の出力</li>
+</ul>
+<h3 id="182">18.2 月次勘定科目残高の設計<a class="headerlink" href="#182" title="Permanent link">&para;</a></h3>
+<ul>
+<li>決算期 × 月度による管理</li>
+<li>月初残高・月末残高</li>
+<li>合計残高試算表の出力</li>
+</ul>
+<h3 id="183">18.3 残高更新のタイミング<a class="headerlink" href="#183" title="Permanent link">&para;</a></h3>
+<ul>
+<li>仕訳入力時の即時更新</li>
+<li>バッチ処理による集計</li>
+</ul>
+<hr />
+<h2 id="19">第19章：赤黒とログの設計<a class="headerlink" href="#19" title="Permanent link">&para;</a></h2>
+<h3 id="191-3">19.1 3つのアプローチ<a class="headerlink" href="#191-3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>データ自体にログ情報を持つ方式</li>
+<li>赤黒処理・論理削除方式</li>
+<li>ログテーブルにログ情報を保存する方式</li>
+</ul>
+<h3 id="192">19.2 業務システムでの使い分け<a class="headerlink" href="#192" title="Permanent link">&para;</a></h3>
+<ul>
+<li>会計絡みは赤黒処理</li>
+<li>マスタ関連はログテーブル</li>
+<li>それ以外はデータ自体にログ</li>
+</ul>
+<hr />
+<h2 id="20d">第20章：財務会計データ設計（D 社事例）<a class="headerlink" href="#20d" title="Permanent link">&para;</a></h2>
+<h3 id="201-d">20.1 D 社の概要<a class="headerlink" href="#201-d" title="Permanent link">&para;</a></h3>
+<ul>
+<li>会社プロファイル（化粧品製造販売）</li>
+<li>企業概要（資本金 5 億円、従業員 300 名、年間売上高 80 億円）</li>
+<li>決算期（3 月期）</li>
+<li>経理体制（経理部 10 名、財務課 3 名）</li>
+</ul>
+<h3 id="202">20.2 組織構成<a class="headerlink" href="#202" title="Permanent link">&para;</a></h3>
+<ul>
+<li>組織図（営業本部・製造本部・管理本部・研究開発本部）</li>
+<li>部門マスタの階層構造</li>
+<li>部門コード体系</li>
+</ul>
+<h3 id="203">20.3 勘定科目体系<a class="headerlink" href="#203" title="Permanent link">&para;</a></h3>
+<ul>
+<li>勘定科目の構成（資産・負債・純資産・収益・費用）</li>
+<li>勘定科目コード体系</li>
+<li>補助科目の設計</li>
+</ul>
+<h3 id="204-seed">20.4 Seed データの実装<a class="headerlink" href="#204-seed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>マスタデータの構成（勘定科目・部門・社員）</li>
+<li>仕訳サンプルデータの作成</li>
+<li>データの検証と活用</li>
+</ul>
+<hr />
+<h2 id="21api">第21章：API サービスの実装<a class="headerlink" href="#21api" title="Permanent link">&para;</a></h2>
+<h3 id="211">21.1 ヘキサゴナルアーキテクチャの復習<a class="headerlink" href="#211" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ports and Adapters パターンの概要</li>
+<li>ドメイン中心設計</li>
+<li>依存性の逆転</li>
+<li>テスト容易性</li>
+</ul>
+<h3 id="212">21.2 アーキテクチャ構造<a class="headerlink" href="#212" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Domain 層（ビジネスルールとドメインモデル）</li>
+<li>Application 層（ユースケースの実装）</li>
+<li>Infrastructure 層（外部技術との接続）</li>
+<li>Input Port / Output Port の分離</li>
+<li>各レイヤーの責務</li>
+</ul>
+<h3 id="213-api">21.3 マスタ API の実装<a class="headerlink" href="#213-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>勘定科目マスタ API（CRUD エンドポイント）</li>
+<li>TDD による実装（Red-Green-Refactor）</li>
+<li>Controller・Service・Repository の実装</li>
+<li>補助科目マスタ API（勘定科目との関連）</li>
+</ul>
+<h3 id="214-api">21.4 トランザクション API の実装<a class="headerlink" href="#214-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>仕訳 API（仕訳登録・照会・貸借一致バリデーション）</li>
+<li>残高照会 API（日次残高・月次残高）</li>
+<li>試算表 API（合計残高試算表の出力）</li>
+<li>部門別・プロジェクト別の残高照会</li>
+</ul>
+<h3 id="215">21.5 エラーハンドリング<a class="headerlink" href="#215" title="Permanent link">&para;</a></h3>
+<ul>
+<li>グローバル例外ハンドラー（@RestControllerAdvice）</li>
+<li>ドメイン例外の定義と変換</li>
+<li>ProblemDetail によるエラーレスポンス</li>
+<li>バリデーションエラーの処理</li>
+</ul>
+<h3 id="216-api">21.6 API ドキュメント<a class="headerlink" href="#216-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>OpenAPI / Swagger の設定</li>
+<li>エンドポイントの文書化</li>
+<li>リクエスト・レスポンスのスキーマ定義</li>
+</ul>
+<h3 id="217-api">21.7 API インテグレーションテスト<a class="headerlink" href="#217-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>テストコンテナによる統合テスト環境</li>
+<li>REST API エンドポイントのテスト</li>
+<li>データベース状態の検証</li>
+<li>テストデータのセットアップとクリーンアップ</li>
+</ul>
+<hr />
+<h1 id="4_1">第4部：生産管理システム<a class="headerlink" href="#4_1" title="Permanent link">&para;</a></h1>
+<h2 id="22_1">第22章：生産管理システムの全体像<a class="headerlink" href="#22_1" title="Permanent link">&para;</a></h2>
+<h3 id="221">22.1 生産管理システムのスコープ<a class="headerlink" href="#221" title="Permanent link">&para;</a></h3>
+<ul>
+<li>生産計画（MPS・MRP）</li>
+<li>購買管理（発注・入荷・検収）</li>
+<li>工程管理（製造指示・製造実績）</li>
+<li>在庫管理（受払・在庫状態）</li>
+<li>品質管理（受入検査・出荷検査・トレーサビリティ）</li>
+<li>製造原価管理（標準原価・実際原価・配賦）</li>
+</ul>
+<h3 id="222">22.2 生産組織の役割分担<a class="headerlink" href="#222" title="Permanent link">&para;</a></h3>
+<ul>
+<li>営業部・生産管理部・製造部・購買部・外注部</li>
+<li>資材倉庫・製品倉庫</li>
+<li>業務フローと各部門の責務</li>
+</ul>
+<h3 id="223">22.3 生産管理システムのアーキテクチャ<a class="headerlink" href="#223" title="Permanent link">&para;</a></h3>
+<ul>
+<li>プロジェクト構成</li>
+<li>Domain層（ドメイン層）<ul>
+<li>model（ドメインモデル）</li>
+<li>type（基本型：通貨、単位、数量等）</li>
+<li>exception（ドメイン例外）</li>
+</ul>
+</li>
+<li>Application層（アプリケーション層）<ul>
+<li>port/in（Input Port）</li>
+<li>port/out（Output Port）</li>
+<li>service（Application Service）</li>
+</ul>
+</li>
+<li>Infrastructure層（インフラストラクチャ層）<ul>
+<li>in/rest（Input Adapter - REST API）</li>
+<li>out/persistence（Output Adapter - 永続化）</li>
+<li>config（設定）</li>
+</ul>
+</li>
+<li>ヘキサゴナルアーキテクチャ（ポート&amp;アダプター）</li>
+<li>ドメイン（中心）</li>
+<li>ポート（入力ポート・出力ポート）</li>
+<li>アダプター（プライマリ・セカンダリ）</li>
+<li>依存性の方向と依存性逆転の原則</li>
+<li>ドメイン駆動設計の適用</li>
+<li>集約とリポジトリ</li>
+<li>ドメインサービス</li>
+<li>アプリケーションサービス</li>
+<li>API 設計</li>
+<li>RESTful API の基本方針</li>
+<li>エンドポイント設計</li>
+</ul>
+<hr />
+<h2 id="23_1">第23章：マスタ情報の設計<a class="headerlink" href="#23_1" title="Permanent link">&para;</a></h2>
+<h3 id="231">23.1 品目マスタの設計<a class="headerlink" href="#231" title="Permanent link">&para;</a></h3>
+<ul>
+<li>品目コード・品名</li>
+<li>品目区分（製品・半製品・中間品・部品・材料・原料・資材）</li>
+<li>品目グループコード</li>
+<li>単位コード・場所コード</li>
+<li>リードタイム・安全リードタイム・安全在庫数</li>
+<li>歩留率・最小ロット数・刻みロット数・最大ロット数</li>
+<li>有効期間（世代管理）</li>
+</ul>
+<h3 id="232-bom">23.2 BOM（部品構成表）の設計<a class="headerlink" href="#232-bom" title="Permanent link">&para;</a></h3>
+<ul>
+<li>親品目コード × 子品目コード</li>
+<li>基準量・必要量・不良率</li>
+<li>工順</li>
+<li>適用期間（開始日・停止日）</li>
+<li>再帰 CTE による BOM 展開</li>
+</ul>
+<h3 id="233">23.3 補助マスタの設計<a class="headerlink" href="#233" title="Permanent link">&para;</a></h3>
+<ul>
+<li>カレンダマスタ（就業日・就業時間・シフト）</li>
+<li>場所マスタ（場所コード・場所種類）</li>
+<li>倉庫マスタ（倉庫コード・倉庫区分）</li>
+<li>部門マスタ（部門コード・部門階層）</li>
+<li>担当者マスタ（担当者コード・部門・適用期間）</li>
+<li>資源マスタ（資源コード・資源名・部門との関連）</li>
+<li>取引先マスタ（取引先コード・連絡先・就業日パターン）</li>
+<li>工程マスタ（工程コード・工程名）</li>
+<li>工程表（品目コード × 工順 × 工程コード）</li>
+<li>単価マスタ（品目 × 取引先 × ロット単位数 × 適用期間）</li>
+</ul>
+<hr />
+<h2 id="24_1">第24章：生産計画の設計<a class="headerlink" href="#24_1" title="Permanent link">&para;</a></h2>
+<h3 id="241">24.1 生産計画の特徴<a class="headerlink" href="#241" title="Permanent link">&para;</a></h3>
+<ul>
+<li>計画系と実績系の分離</li>
+<li>バリエーションの豊富さ</li>
+<li>計画系の流れ（ビジネスプラン → 販売計画 → 生産計画 → MPS → MRP）</li>
+</ul>
+<h3 id="242-mrp">24.2 MRP（所要量展開）<a class="headerlink" href="#242-mrp" title="Permanent link">&para;</a></h3>
+<ul>
+<li>総所要量・正味所要量の計算</li>
+<li>ロットまとめ（最小ロット・刻みロット・最大ロット）</li>
+<li>オーダ情報の構造</li>
+<li>所要情報の構造</li>
+<li>引当情報の構造</li>
+<li>在庫推移・発注残・製造残との連携</li>
+</ul>
+<hr />
+<h2 id="25_1">第25章：購買管理の設計<a class="headerlink" href="#25_1" title="Permanent link">&para;</a></h2>
+<h3 id="251-db">25.1 発注業務の DB 設計<a class="headerlink" href="#251-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>発注データ・発注明細データの構造</li>
+<li>オーダ情報・場所マスタ・単価マスタとの連携</li>
+<li>諸口品目の扱い</li>
+<li>納期管理・分納対応</li>
+</ul>
+<h3 id="252-db">25.2 入荷・検収業務の DB 設計<a class="headerlink" href="#252-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>入荷受入データの構造</li>
+<li>発注明細との紐付け</li>
+<li>入荷受入区分（入荷 / 受入返品）</li>
+<li>受入検査データの構造</li>
+<li>受入検査結果データ（欠点コード・数量）</li>
+<li>欠点マスタの設計</li>
+<li>検収データの構造</li>
+<li>検収単価・検収金額・消費税</li>
+<li>検収返品データの構造</li>
+<li>在庫計上処理</li>
+</ul>
+<hr />
+<h2 id="26_1">第26章：外注委託管理の設計<a class="headerlink" href="#26_1" title="Permanent link">&para;</a></h2>
+<h3 id="261">26.1 外注委託業務の理解<a class="headerlink" href="#261" title="Permanent link">&para;</a></h3>
+<ul>
+<li>外注委託とは（専門加工・生産能力補完・コスト最適化）</li>
+<li>有償支給と無償支給</li>
+<li>外注委託の業務フロー</li>
+</ul>
+<h3 id="262-db">26.2 外注委託の DB 設計<a class="headerlink" href="#262-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>外注オーダの構造</li>
+<li>支給データ・支給明細データの構造</li>
+<li>発注データとの紐付け</li>
+<li>支給金額の計算（有償支給の場合）</li>
+</ul>
+<h3 id="263">26.3 消費業務の設計<a class="headerlink" href="#263" title="Permanent link">&para;</a></h3>
+<ul>
+<li>消費データ・消費明細データの構造</li>
+<li>入荷受入データとの紐付け</li>
+<li>消費率の計算</li>
+</ul>
+<h3 id="264">26.4 外注委託ワークフロー<a class="headerlink" href="#264" title="Permanent link">&para;</a></h3>
+<ul>
+<li>発注作成 → 支給品出荷 → 加工 → 入荷 → 検収 → 消費記録</li>
+<li>有償支給と無償支給の会計処理の違い</li>
+</ul>
+<hr />
+<h2 id="27_1">第27章：工程管理の設計<a class="headerlink" href="#27_1" title="Permanent link">&para;</a></h2>
+<h3 id="271-db">27.1 製造指示の DB 設計<a class="headerlink" href="#271-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>工程管理業務の流れ</li>
+<li>作業指示データの構造</li>
+<li>作業指示明細データ（工順・工程コード）</li>
+<li>オーダ情報・工程表との連携</li>
+<li>作業指示書とピッキングリスト</li>
+</ul>
+<h3 id="272-db">27.2 製造実績の DB 設計<a class="headerlink" href="#272-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>完成実績データの構造</li>
+<li>完成数量・良品数・不良品数</li>
+<li>完成検査結果データ（欠点コード）</li>
+<li>消費実績データ・消費明細データ</li>
+<li>場所コードとの紐付け</li>
+<li>工数実績データの構造</li>
+<li>作業指示明細との紐付け</li>
+<li>担当者・部門・工数の記録</li>
+</ul>
+<h3 id="273">27.3 進捗管理<a class="headerlink" href="#273" title="Permanent link">&para;</a></h3>
+<ul>
+<li>工程別進捗の管理</li>
+<li>遅延アラートの設計</li>
+<li>進捗状況の可視化</li>
+</ul>
+<hr />
+<h2 id="28_1">第28章：在庫管理の設計<a class="headerlink" href="#28_1" title="Permanent link">&para;</a></h2>
+<h3 id="281-db">28.1 在庫情報の DB 設計<a class="headerlink" href="#281-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>場所コード × 品目コード</li>
+<li>在庫数・合格数・不良数・未検査数</li>
+<li>ロケーション管理</li>
+</ul>
+<h3 id="282-db">28.2 払出業務の DB 設計<a class="headerlink" href="#282-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>払出指示データ・払出指示明細データ</li>
+<li>オーダ情報・BOM との連携</li>
+<li>払出データ・払出明細データの構造</li>
+<li>支給データとの統合</li>
+<li>払出区分（自社 / 外注）</li>
+<li>計画区分（計画 / 計画外）</li>
+</ul>
+<h3 id="283-db">28.3 棚卸業務の DB 設計<a class="headerlink" href="#283-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>棚卸表発行・実棚入力</li>
+<li>帳簿在庫と実棚在庫の差異分析</li>
+<li>在庫調整データの構造</li>
+</ul>
+<hr />
+<h2 id="29">第29章：品質管理の設計<a class="headerlink" href="#29" title="Permanent link">&para;</a></h2>
+<h3 id="291">29.1 品質管理の概要<a class="headerlink" href="#291" title="Permanent link">&para;</a></h3>
+<ul>
+<li>品質管理の目的と重要性</li>
+<li>検査の種類と位置づけ</li>
+</ul>
+<h3 id="292">29.2 受入検査・工程検査・出荷検査<a class="headerlink" href="#292" title="Permanent link">&para;</a></h3>
+<ul>
+<li>受入検査の設計（購買品の品質確認）</li>
+<li>工程検査の設計（製造中の品質確認）</li>
+<li>出荷検査の設計（出荷前の品質確認）</li>
+<li>トレーサビリティ（ロット追跡・履歴管理）</li>
+</ul>
+<hr />
+<h2 id="30">第30章：製造原価管理の設計<a class="headerlink" href="#30" title="Permanent link">&para;</a></h2>
+<h3 id="301">30.1 原価計算の概要<a class="headerlink" href="#301" title="Permanent link">&para;</a></h3>
+<ul>
+<li>標準原価と実際原価</li>
+<li>原価差異分析</li>
+</ul>
+<h3 id="302">30.2 材料費・労務費・製造間接費<a class="headerlink" href="#302" title="Permanent link">&para;</a></h3>
+<ul>
+<li>材料費の計算（直接材料費・間接材料費）</li>
+<li>労務費の計算（直接労務費・間接労務費）</li>
+<li>製造間接費の配賦</li>
+<li>製品原価の集計</li>
+</ul>
+<hr />
+<h2 id="31e">第31章：生産管理データ設計（E 社事例）<a class="headerlink" href="#31e" title="Permanent link">&para;</a></h2>
+<h3 id="311-e">31.1 E 社の概要<a class="headerlink" href="#311-e" title="Permanent link">&para;</a></h3>
+<ul>
+<li>会社プロファイル（精密機械部品製造業）</li>
+<li>企業概要（従業員約 50 名）</li>
+<li>生産の特徴（多品種少量・受注生産型）</li>
+<li>外注活用（メッキ処理・熱処理）</li>
+</ul>
+<h3 id="312">31.2 組織構成<a class="headerlink" href="#312" title="Permanent link">&para;</a></h3>
+<ul>
+<li>組織図（営業部・生産管理部・製造部・品質管理部・購買部・倉庫部・外注管理部）</li>
+<li>部門マスタの階層構造</li>
+<li>担当者の配置</li>
+</ul>
+<h3 id="313">31.3 データ構造の設計<a class="headerlink" href="#313" title="Permanent link">&para;</a></h3>
+<ul>
+<li>品目コード体系（PROD-/SEMI-/PART-/MAT-）</li>
+<li>取引先コード体系（SUP-/OUT-/CUS-）</li>
+<li>工程コード体系（LATHE/MILL/GRIND/DRILL/HEAT/PLAT/ASSY/INSP）</li>
+<li>BOM 階層（製品→半製品→部品→材料）</li>
+<li>Enum の日本語・英語マッピング</li>
+</ul>
+<h3 id="314-seed">31.4 Seed データの実装<a class="headerlink" href="#314-seed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>実装方針（外部キー制約・複合キー・日本語テーブル名）</li>
+<li>SeedDataService の設計</li>
+<li>MasterDataSeeder の実装（部門・担当者・品目・BOM・工程・取引先・単価）</li>
+<li>TransactionDataSeeder の実装（発注・入荷・作業指示・完成実績・在庫）</li>
+</ul>
+<h3 id="315">31.5 データの検証と活用<a class="headerlink" href="#315" title="Permanent link">&para;</a></h3>
+<ul>
+<li>データの整合性確認（BOM 展開・在庫残高・発注残）</li>
+<li>サンプルデータの活用方法</li>
+<li>テストシナリオへの応用</li>
+</ul>
+<hr />
+<h2 id="32api">第32章：API サービスの実装<a class="headerlink" href="#32api" title="Permanent link">&para;</a></h2>
+<h3 id="321">32.1 ヘキサゴナルアーキテクチャの復習<a class="headerlink" href="#321" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ports and Adapters パターンの概要</li>
+<li>ドメイン中心設計</li>
+<li>依存性の逆転</li>
+<li>テスト容易性</li>
+</ul>
+<h3 id="322">32.2 アーキテクチャ構造<a class="headerlink" href="#322" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Domain 層（ビジネスルールとドメインモデル）</li>
+<li>Application 層（ユースケースの実装）</li>
+<li>Infrastructure 層（外部技術との接続）</li>
+<li>Input Port / Output Port の分離</li>
+<li>各レイヤーの責務</li>
+</ul>
+<h3 id="323-api">32.3 マスタ API の実装<a class="headerlink" href="#323-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>品目マスタ API（CRUD エンドポイント）</li>
+<li>TDD による実装（Red-Green-Refactor）</li>
+<li>Controller・Service・Repository の実装</li>
+<li>BOM マスタ API（部品展開・使用先照会）</li>
+</ul>
+<h3 id="324-api">32.4 トランザクション API の実装<a class="headerlink" href="#324-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>発注 API（発注登録・発注照会・発注明細照会）</li>
+<li>在庫照会 API（在庫残高照会・在庫推移照会）</li>
+<li>作業指示 API（作業指示登録・進捗更新）</li>
+<li>MRP 実行 API（所要量計算・発注提案生成）</li>
+</ul>
+<h3 id="325">32.5 エラーハンドリング<a class="headerlink" href="#325" title="Permanent link">&para;</a></h3>
+<ul>
+<li>グローバル例外ハンドラー（@RestControllerAdvice）</li>
+<li>ドメイン例外の定義と変換</li>
+<li>ProblemDetail によるエラーレスポンス</li>
+<li>バリデーションエラーの処理</li>
+</ul>
+<h3 id="326-api">32.6 API ドキュメント<a class="headerlink" href="#326-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>OpenAPI / Swagger の設定</li>
+<li>エンドポイントの文書化</li>
+<li>リクエスト・レスポンスのスキーマ定義</li>
+</ul>
+<h3 id="327-api">32.7 API インテグレーションテスト<a class="headerlink" href="#327-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>テストコンテナによる統合テスト環境</li>
+<li>REST API エンドポイントのテスト</li>
+<li>データベース状態の検証</li>
+<li>テストデータのセットアップとクリーンアップ</li>
+</ul>
+<hr />
+<h1 id="5_1">第5部：エンタープライズインテグレーション<a class="headerlink" href="#5_1" title="Permanent link">&para;</a></h1>
+<h2 id="33_1">第33章：システム統合の概要<a class="headerlink" href="#33_1" title="Permanent link">&para;</a></h2>
+<h3 id="331">33.1 なぜシステム統合が必要か<a class="headerlink" href="#331" title="Permanent link">&para;</a></h3>
+<ul>
+<li>サイロ化した基幹業務システムの課題</li>
+<li>データの一貫性と整合性の確保</li>
+<li>リアルタイム連携とバッチ連携</li>
+</ul>
+<h3 id="332">33.2 境界付けられたコンテキスト<a class="headerlink" href="#332" title="Permanent link">&para;</a></h3>
+<ul>
+<li>境界付けられたコンテキスト（Bounded Context）とは</li>
+<li>基幹業務システムにおけるコンテキストの識別</li>
+<li>販売コンテキスト</li>
+<li>会計コンテキスト</li>
+<li>生産コンテキスト</li>
+<li>コンテキストマップの作成</li>
+<li>コンテキスト間の関係パターン</li>
+<li>共有カーネル（Shared Kernel）</li>
+<li>顧客/供給者（Customer/Supplier）</li>
+<li>適合者（Conformist）</li>
+<li>腐敗防止層（Anti-Corruption Layer）</li>
+<li>公開ホストサービス（Open Host Service）</li>
+<li>公表された言語（Published Language）</li>
+</ul>
+<h3 id="333">33.3 統合パターンの選択基準<a class="headerlink" href="#333" title="Permanent link">&para;</a></h3>
+<ul>
+<li>同期 vs 非同期</li>
+<li>ポイントツーポイント vs ハブ&amp;スポーク</li>
+<li>データ統合 vs プロセス統合</li>
+</ul>
+<hr />
+<h2 id="34">第34章：メッセージングパターン<a class="headerlink" href="#34" title="Permanent link">&para;</a></h2>
+<h3 id="341">34.1 メッセージングの基礎<a class="headerlink" href="#341" title="Permanent link">&para;</a></h3>
+<ul>
+<li>メッセージチャネル（Message Channel）</li>
+<li>メッセージ（Message）の構造</li>
+<li>パイプとフィルター（Pipes and Filters）</li>
+</ul>
+<h3 id="342">34.2 メッセージルーティング<a class="headerlink" href="#342" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Content-Based Router（内容ベースルーター）</li>
+<li>Message Filter（メッセージフィルター）</li>
+<li>Splitter / Aggregator（分割 / 集約）</li>
+<li>Resequencer（再順序付け）</li>
+</ul>
+<h3 id="343">34.3 メッセージ変換<a class="headerlink" href="#343" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Message Translator（メッセージ変換）</li>
+<li>Envelope Wrapper（エンベロープラッパー）</li>
+<li>Content Enricher（コンテンツエンリッチャー）</li>
+<li>Canonical Data Model（標準データモデル）</li>
+</ul>
+<hr />
+<h2 id="35">第35章：システム間連携パターン<a class="headerlink" href="#35" title="Permanent link">&para;</a></h2>
+<h3 id="351">35.1 販売管理と財務会計の連携<a class="headerlink" href="#351" title="Permanent link">&para;</a></h3>
+<ul>
+<li>売上データから仕訳データへの変換</li>
+<li>自動仕訳パターンの適用</li>
+<li>イベント駆動による仕訳生成</li>
+</ul>
+<h3 id="352">35.2 販売管理と生産管理の連携<a class="headerlink" href="#352" title="Permanent link">&para;</a></h3>
+<ul>
+<li>受注情報から生産計画への連携</li>
+<li>需要予測データの共有</li>
+<li>在庫情報の同期</li>
+</ul>
+<h3 id="353">35.3 生産管理と財務会計の連携<a class="headerlink" href="#353" title="Permanent link">&para;</a></h3>
+<ul>
+<li>製造原価から仕訳への変換</li>
+<li>検収データの会計連携</li>
+<li>棚卸差異の会計処理</li>
+</ul>
+<hr />
+<h2 id="36mdm">第36章：マスタデータ管理（MDM）<a class="headerlink" href="#36mdm" title="Permanent link">&para;</a></h2>
+<h3 id="361">36.1 マスタデータ統合の課題<a class="headerlink" href="#361" title="Permanent link">&para;</a></h3>
+<ul>
+<li>各システムでのマスタ重複</li>
+<li>コード体系の不一致</li>
+<li>更新タイミングの同期</li>
+</ul>
+<h3 id="362-mdm">36.2 MDM パターン<a class="headerlink" href="#362-mdm" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Registry Style（参照型）</li>
+<li>Consolidation Style（統合型）</li>
+<li>Coexistence Style（共存型）</li>
+<li>Transaction Hub Style（トランザクションハブ型）</li>
+</ul>
+<h3 id="363">36.3 共通マスタの設計<a class="headerlink" href="#363" title="Permanent link">&para;</a></h3>
+<ul>
+<li>取引先マスタの統合</li>
+<li>商品/品目マスタの統合</li>
+<li>部門・組織マスタの統合</li>
+</ul>
+<hr />
+<h2 id="37">第37章：イベント駆動アーキテクチャ<a class="headerlink" href="#37" title="Permanent link">&para;</a></h2>
+<h3 id="371">37.1 イベント駆動の基礎<a class="headerlink" href="#371" title="Permanent link">&para;</a></h3>
+<ul>
+<li>ドメインイベントとは</li>
+<li>イベントソーシング</li>
+<li>CQRS（コマンドクエリ責務分離）</li>
+</ul>
+<h3 id="372">37.2 基幹業務システムのイベント設計<a class="headerlink" href="#372" title="Permanent link">&para;</a></h3>
+<ul>
+<li>販売管理イベント（受注確定・出荷完了・売上計上）</li>
+<li>財務会計イベント（仕訳登録・月次締め・決算確定）</li>
+<li>生産管理イベント（製造指示・完成報告・検収完了）</li>
+</ul>
+<h3 id="373">37.3 イベントストアの設計<a class="headerlink" href="#373" title="Permanent link">&para;</a></h3>
+<ul>
+<li>イベントテーブルの構造</li>
+<li>スナップショットの管理</li>
+<li>イベントの再生とリプレイ</li>
+</ul>
+<hr />
+<h2 id="38api">第38章：API 設計とサービス連携<a class="headerlink" href="#38api" title="Permanent link">&para;</a></h2>
+<h3 id="381-api">38.1 API 設計の原則<a class="headerlink" href="#381-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>RESTful API の設計</li>
+<li>リソース指向設計</li>
+<li>バージョニング戦略</li>
+</ul>
+<h3 id="382">38.2 サービス間通信<a class="headerlink" href="#382" title="Permanent link">&para;</a></h3>
+<ul>
+<li>同期通信（REST / gRPC）</li>
+<li>非同期通信（メッセージキュー）</li>
+<li>サーキットブレーカーパターン</li>
+</ul>
+<h3 id="383-api">38.3 API ゲートウェイ<a class="headerlink" href="#383-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>認証・認可の一元化</li>
+<li>レート制限とスロットリング</li>
+<li>ログ集約とモニタリング</li>
+</ul>
+<h3 id="384-api">38.4 API インテグレーションテスト<a class="headerlink" href="#384-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>テストコンテナによる統合テスト環境</li>
+<li>REST API エンドポイントのテスト</li>
+<li>データベース状態の検証</li>
+<li>テストデータのセットアップとクリーンアップ</li>
+<li>サービス間連携テスト</li>
+</ul>
+<hr />
+<h2 id="39">第39章：データ連携の実装パターン<a class="headerlink" href="#39" title="Permanent link">&para;</a></h2>
+<h3 id="391">39.1 バッチ連携<a class="headerlink" href="#391" title="Permanent link">&para;</a></h3>
+<ul>
+<li>ファイル連携（CSV / XML / JSON）</li>
+<li>ETL 処理の設計</li>
+<li>差分抽出と全件抽出</li>
+</ul>
+<h3 id="392">39.2 リアルタイム連携<a class="headerlink" href="#392" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Change Data Capture（CDC）</li>
+<li>データベーストリガーの活用</li>
+<li>メッセージキューによる非同期連携</li>
+</ul>
+<h3 id="393">39.3 連携テーブルの設計<a class="headerlink" href="#393" title="Permanent link">&para;</a></h3>
+<ul>
+<li>連携ステータス管理</li>
+<li>エラーハンドリングとリトライ</li>
+<li>冪等性の確保</li>
+</ul>
+<hr />
+<h1 id="_5">付録<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h1>
+<h2 id="a-er">A：全体 ER 図<a class="headerlink" href="#a-er" title="Permanent link">&para;</a></h2>
+<h3 id="a1">A.1 基幹業務システム全体図<a class="headerlink" href="#a1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>各サブシステム間の連携</li>
+</ul>
+<h3 id="a2-er">A.2 販売管理システム ER 図<a class="headerlink" href="#a2-er" title="Permanent link">&para;</a></h3>
+<ul>
+<li>マスタ系テーブルの関連</li>
+<li>トランザクション系テーブルの関連</li>
+</ul>
+<h3 id="a3-er">A.3 財務会計システム ER 図<a class="headerlink" href="#a3-er" title="Permanent link">&para;</a></h3>
+<ul>
+<li>勘定科目系テーブルの関連</li>
+<li>仕訳系テーブルの関連</li>
+</ul>
+<h3 id="a4-er">A.4 生産管理システム ER 図<a class="headerlink" href="#a4-er" title="Permanent link">&para;</a></h3>
+<ul>
+<li>品目・BOM・工程系テーブルの関連</li>
+<li>購買・工程管理・在庫系テーブルの関連</li>
+</ul>
+<h2 id="b">B：テーブル定義一覧<a class="headerlink" href="#b" title="Permanent link">&para;</a></h2>
+<ul>
+<li>各テーブルのカラム定義</li>
+<li>主キー・外部キー一覧</li>
+</ul>
+<h2 id="c">C：用語集<a class="headerlink" href="#c" title="Permanent link">&para;</a></h2>
+<ul>
+<li>基幹業務システム用語</li>
+<li>販売管理用語</li>
+<li>財務会計用語</li>
+<li>生産管理用語</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/k2works/practical-database-design" target="_blank" rel="noopener" title="GitHub Repository" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+      
+        <script src="../../docs/assets/js/extra.js"></script>
+      
+    
+  </body>
+</html>
