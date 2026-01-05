@@ -92,9 +92,14 @@ export default function (gulp) {
             console.log(`Building Docker image: ${REGISTRY_URL}`);
             console.log(`Build context: ${BACKEND_DIR}`);
 
+            // DOCKER_HOST 環境変数をクリアして実行（Docker Desktop との互換性のため）
+            const env = { ...process.env };
+            delete env.DOCKER_HOST;
+
             execSync(`docker build -t ${REGISTRY_URL} ${BACKEND_DIR}`, {
                 stdio: 'inherit',
-                cwd: process.cwd()
+                cwd: process.cwd(),
+                env
             });
 
             console.log('\nBuild successful!');
@@ -118,8 +123,13 @@ export default function (gulp) {
         try {
             console.log(`Pushing image to ${REGISTRY_URL}...`);
 
+            // DOCKER_HOST 環境変数をクリアして実行
+            const env = { ...process.env };
+            delete env.DOCKER_HOST;
+
             execSync(`docker push ${REGISTRY_URL}`, {
-                stdio: 'inherit'
+                stdio: 'inherit',
+                env
             });
 
             console.log('\nPush successful!');
