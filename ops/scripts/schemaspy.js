@@ -125,6 +125,20 @@ export default function (gulp) {
     gulp.task('schemaspy:sms:run', (done) => {
         try {
             console.log('Running SchemaSpy...');
+
+            // 出力ディレクトリを作成し、書き込み権限を付与（CI環境対応）
+            if (!fs.existsSync(OUTPUT_DIR)) {
+                fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+            }
+            // Linux/macOS では chmod を実行（Windows では無視）
+            if (!isWindows) {
+                try {
+                    execSync(`chmod -R 777 "${OUTPUT_DIR}"`, { stdio: 'pipe' });
+                } catch (e) {
+                    // 権限変更失敗は無視
+                }
+            }
+
             execSync('docker compose --profile schemaspy run --rm schemaspy', {
                 cwd: PROJECT_DIR,
                 stdio: 'inherit',
