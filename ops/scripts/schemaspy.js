@@ -20,15 +20,15 @@ const isMac = process.platform === 'darwin';
  */
 export default function (gulp) {
     const PROJECT_DIR = path.join(process.cwd(), 'apps', 'sms');
-    const OUTPUT_DIR = path.join(process.cwd(), 'docs', 'assets', 'schemaspy-output');
+    const OUTPUT_DIR = path.join(process.cwd(), 'docs', 'assets', 'schemaspy-output', 'sms');
     const INDEX_FILE = path.join(OUTPUT_DIR, 'index.html');
 
     /**
      * SchemaSpy ER図を生成する
      */
-    gulp.task('schemaspy:generate', (done) => {
+    gulp.task('schemaspy:sms:generate', (done) => {
         try {
-            console.log('Generating SchemaSpy ER diagram...');
+            console.log('Generating SchemaSpy ER diagram for SMS...');
 
             // 出力ディレクトリを作成（存在しない場合）
             if (!fs.existsSync(OUTPUT_DIR)) {
@@ -65,7 +65,7 @@ export default function (gulp) {
                 stdio: 'inherit'
             });
 
-            console.log('\nSchemaSpy ER diagram generated successfully!');
+            console.log('\nSchemaSpy ER diagram for SMS generated successfully!');
             console.log(`Output directory: ${OUTPUT_DIR}`);
 
             done();
@@ -78,14 +78,14 @@ export default function (gulp) {
     /**
      * 生成されたSchemaSpy ER図をブラウザで開く
      */
-    gulp.task('schemaspy:open', (done) => {
+    gulp.task('schemaspy:sms:open', (done) => {
         try {
-            console.log('Opening SchemaSpy ER diagram...');
+            console.log('Opening SchemaSpy ER diagram for SMS...');
 
             // index.html が存在するか確認
             if (!fs.existsSync(INDEX_FILE)) {
                 console.error(`Error: SchemaSpy output not found at ${INDEX_FILE}`);
-                console.log('Please run "gulp schemaspy:generate" first.');
+                console.log('Please run "gulp schemaspy:sms:generate" first.');
                 done(new Error('SchemaSpy output not found'));
                 return;
             }
@@ -106,9 +106,9 @@ export default function (gulp) {
     /**
      * SchemaSpy 出力をクリーンアップする
      */
-    gulp.task('schemaspy:clean', (done) => {
+    gulp.task('schemaspy:sms:clean', (done) => {
         try {
-            console.log('Cleaning SchemaSpy output directory...');
+            console.log('Cleaning SchemaSpy SMS output directory...');
 
             if (fs.existsSync(OUTPUT_DIR)) {
                 // ディレクトリ内のファイルを削除（.gitkeep は残す）
@@ -123,9 +123,9 @@ export default function (gulp) {
                         }
                     }
                 });
-                console.log('SchemaSpy output directory cleaned successfully!');
+                console.log('SchemaSpy SMS output directory cleaned successfully!');
             } else {
-                console.log('SchemaSpy output directory does not exist.');
+                console.log('SchemaSpy SMS output directory does not exist.');
             }
 
             done();
@@ -138,10 +138,31 @@ export default function (gulp) {
     /**
      * SchemaSpy を再生成する（クリーン後に生成）
      */
-    gulp.task('schemaspy:regenerate', gulp.series('schemaspy:clean', 'schemaspy:generate'));
+    gulp.task('schemaspy:sms:regenerate', gulp.series('schemaspy:sms:clean', 'schemaspy:sms:generate'));
 
     /**
      * SchemaSpy を生成してブラウザで開く
      */
-    gulp.task('schemaspy', gulp.series('schemaspy:generate', 'schemaspy:open'));
+    gulp.task('schemaspy:sms', gulp.series('schemaspy:sms:generate', 'schemaspy:sms:open'));
+
+    /**
+     * ヘルプを表示
+     */
+    gulp.task('schemaspy:sms:help', (done) => {
+        console.log(`
+SchemaSpy SMS Tasks
+===================
+
+Available tasks:
+  schemaspy:sms:generate    - Generate SchemaSpy ER diagram
+  schemaspy:sms:open        - Open generated ER diagram in browser
+  schemaspy:sms:clean       - Clean output directory
+  schemaspy:sms:regenerate  - Clean and regenerate ER diagram
+  schemaspy:sms             - Generate and open ER diagram
+  schemaspy:sms:help        - Show this help
+
+Output directory: ${OUTPUT_DIR}
+`);
+        done();
+    });
 }

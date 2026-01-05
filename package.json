@@ -9,6 +9,7 @@
     "docs:serve": "gulp mkdocs:serve",
     "docs:stop": "gulp mkdocs:stop",
     "docs:build": "gulp mkdocs:build",
+    "schemaspy:sms": "gulp schemaspy:sms:generate",
     "claude:yol": "claude --dangerously-skip-permissions",
     "prepare": "husky"
   },
