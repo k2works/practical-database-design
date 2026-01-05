@@ -8,7 +8,7 @@
     "journal": "gulp journal:generate",
     "docs:serve": "gulp mkdocs:serve",
     "docs:stop": "gulp mkdocs:stop",
-    "docs:build": "gulp mkdocs:build",
+    "docs:build": "gulp docker:sms:up && gulp schemaspy:sms:generate && gulp mkdocs:build",
     "schemaspy:sms": "gulp schemaspy:sms:generate",
     "docker:sms:up": "gulp docker:sms:up",
     "docker:sms:down": "gulp docker:sms:down",
