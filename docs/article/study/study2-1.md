@@ -306,7 +306,8 @@ dependencies {
 
     // 帳票出力
     implementation("org.apache.poi:poi-ooxml:5.3.0")  // Excel
-    implementation("com.itextpdf:itext7-core:8.0.5")  // PDF
+    implementation("io.github.openhtmltopdf:openhtmltopdf-pdfbox:1.1.22")  // PDF（Thymeleaf + HTML/CSS）
+    implementation("io.github.openhtmltopdf:openhtmltopdf-slf4j:1.1.22")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -961,71 +962,293 @@ public class ReportController {
 
 </details>
 
-### 17.3 PDF 帳票出力
+### 17.3 PDF 帳票出力（Thymeleaf + OpenHTMLtoPDF）
+
+PDF 帳票は **Thymeleaf テンプレート + OpenHTMLtoPDF** を使用して実装します。この方式により、HTML/CSS で帳票のレイアウトを定義でき、デザインの自由度が高く保守性も向上します。
+
+```plantuml
+@startuml pdf_generation_flow
+title PDF 生成フロー
+
+participant "Controller" as C
+participant "PdfGeneratorService" as PDF
+participant "TemplateEngine" as T
+participant "PdfRendererBuilder" as R
+
+C -> PDF : generatePdf(templateName, variables)
+PDF -> T : process(templateName, context)
+T --> PDF : HTML 文字列
+PDF -> R : withHtmlContent(html, null)
+R -> R : run()
+R --> PDF : PDF バイナリ
+PDF --> C : byte[]
+
+@enduml
+```
+
+#### PDF 生成サービス
 
 <details>
-<summary>コード例: PDF 請求書出力</summary>
+<summary>コード例: PdfGeneratorService.java</summary>
 
 ```java
-@GetMapping("/invoice/{invoiceNumber}/pdf")
-public void exportInvoicePdf(@PathVariable String invoiceNumber, HttpServletResponse response)
-        throws IOException {
+package com.example.sms.infrastructure.in.web.service;
 
-    Invoice invoice = invoiceUseCase.getInvoice(invoiceNumber);
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
-    response.setContentType("application/pdf");
-    response.setHeader("Content-Disposition",
-        "attachment; filename=invoice_" + invoiceNumber + ".pdf");
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
-    try (PdfWriter writer = new PdfWriter(response.getOutputStream());
-         PdfDocument pdf = new PdfDocument(writer);
-         Document document = new Document(pdf, PageSize.A4)) {
+/**
+ * PDF生成サービス.
+ * ThymeleafテンプレートからPDFを生成する.
+ */
+@Service
+public class PdfGeneratorService {
 
-        // 日本語フォント設定
-        PdfFont font = PdfFontFactory.createFont("HeiseiKakuGo-W5", "UniJIS-UCS2-H");
-        document.setFont(font);
+    private static final String FONT_FAMILY = "Japanese";
 
-        // タイトル
-        document.add(new Paragraph("請求書")
-            .setFontSize(24)
-            .setTextAlignment(TextAlignment.CENTER));
+    /** Windowsのシステムフォントパス. */
+    private static final String[] WINDOWS_FONTS = {
+        "C:/Windows/Fonts/YuGothM.ttc",   // Yu Gothic Medium
+        "C:/Windows/Fonts/YuGothR.ttc",   // Yu Gothic Regular
+        "C:/Windows/Fonts/msgothic.ttc",  // MS Gothic
+        "C:/Windows/Fonts/meiryo.ttc"     // Meiryo
+    };
 
-        // 請求先情報
-        document.add(new Paragraph(invoice.getCustomerName() + " 御中")
-            .setFontSize(14));
+    private final TemplateEngine templateEngine;
+    private final File japaneseFontFile;
 
-        // 請求明細テーブル
-        Table table = new Table(UnitValue.createPercentArray(new float[]{3, 5, 2, 2, 2}))
-            .useAllAvailableWidth();
+    public PdfGeneratorService(TemplateEngine templateEngine) {
+        this.templateEngine = templateEngine;
+        this.japaneseFontFile = findJapaneseFont();
+    }
 
-        // ヘッダー
-        table.addHeaderCell(new Cell().add(new Paragraph("商品コード")));
-        table.addHeaderCell(new Cell().add(new Paragraph("商品名")));
-        table.addHeaderCell(new Cell().add(new Paragraph("数量")));
-        table.addHeaderCell(new Cell().add(new Paragraph("単価")));
-        table.addHeaderCell(new Cell().add(new Paragraph("金額")));
+    /**
+     * ThymeleafテンプレートからPDFを生成する.
+     */
+    public byte[] generatePdf(String templateName, Map<String, Object> variables) {
+        Context context = new Context();
+        context.setVariables(variables);
+        String html = templateEngine.process(templateName, context);
 
-        // 明細行
-        for (InvoiceDetail detail : invoice.getDetails()) {
-            table.addCell(detail.getProductCode());
-            table.addCell(detail.getProductName());
-            table.addCell(String.valueOf(detail.getQuantity()));
-            table.addCell(formatCurrency(detail.getUnitPrice()));
-            table.addCell(formatCurrency(detail.getAmount()));
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            PdfRendererBuilder builder = new PdfRendererBuilder()
+                .useFastMode();
+
+            // 日本語フォントを登録
+            if (japaneseFontFile != null) {
+                builder = builder.useFont(japaneseFontFile, FONT_FAMILY);
+            }
+
+            builder.withHtmlContent(html, null)
+                .toStream(outputStream)
+                .run();
+
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            throw new PdfGenerationException("PDF生成に失敗しました", e);
+        }
+    }
+
+    /** 日本語フォントを検索する. */
+    private File findJapaneseFont() {
+        // クラスパスからフォントを検索
+        ClassPathResource fontResource = new ClassPathResource("fonts/NotoSansJP-Regular.ttf");
+        if (fontResource.exists()) {
+            try {
+                return fontResource.getFile();
+            } catch (IOException e) {
+                // クラスパスからの読み込み失敗時はシステムフォントを試す
+            }
         }
 
-        document.add(table);
-
-        // 合計
-        document.add(new Paragraph("合計金額: " + formatCurrency(invoice.getTotalAmount()))
-            .setTextAlignment(TextAlignment.RIGHT)
-            .setFontSize(16)
-            .setBold());
+        // Windowsのシステムフォントを検索
+        for (String fontPath : WINDOWS_FONTS) {
+            File fontFile = new File(fontPath);
+            if (fontFile.exists()) {
+                return fontFile;
+            }
+        }
+        return null;
     }
 }
 ```
 
 </details>
+
+**日本語フォント対応のポイント：**
+
+| ポイント | 説明 |
+|---------|------|
+| **フォント登録** | `builder.useFont(fontFile, fontFamily)` でフォントを登録 |
+| **CSS でフォント指定** | `font-family: Japanese, sans-serif;` で登録したフォントを参照 |
+| **システムフォント** | Windows は Yu Gothic、macOS はヒラギノなどを自動検出 |
+| **カスタムフォント** | `resources/fonts/` に TTF ファイルを配置して使用可能 |
+
+#### PDF 用 HTML テンプレート
+
+<details>
+<summary>コード例: reports/invoice-pdf.html</summary>
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>請求書</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            /* "Japanese" は PdfGeneratorService で登録したフォントファミリー名 */
+            font-family: Japanese, "Noto Sans JP", "Hiragino Sans", sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 24pt;
+            margin: 0;
+        }
+        .amount-box {
+            border: 2px solid #333;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .amount-box .value {
+            font-size: 20pt;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+        }
+        th {
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        td.number {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>請求書</h1>
+    </div>
+
+    <div class="meta">
+        <p>請求番号: <span th:text="${invoice.invoiceNumber}"></span></p>
+        <p>請求日: <span th:text="${#temporals.format(invoice.invoiceDate, 'yyyy年MM月dd日')}"></span></p>
+    </div>
+
+    <div class="customer">
+        <p><span th:text="${customerName}"></span> 御中</p>
+    </div>
+
+    <div class="amount-box">
+        <p class="label">ご請求金額</p>
+        <p class="value">¥<span th:text="${#numbers.formatDecimal(invoice.currentInvoiceAmount, 1, 'COMMA', 0, 'POINT')}"></span>-</p>
+    </div>
+
+    <!-- 請求明細テーブル -->
+    <table th:if="${invoice.details != null and !invoice.details.isEmpty()}">
+        <thead>
+            <tr>
+                <th>売上番号</th>
+                <th>売上日</th>
+                <th>売上金額</th>
+                <th>消費税</th>
+                <th>合計</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="detail : ${invoice.details}">
+                <td th:text="${detail.salesNumber}"></td>
+                <td th:text="${#temporals.format(detail.salesDate, 'yyyy/MM/dd')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(detail.salesAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(detail.taxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(detail.totalAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+```
+
+</details>
+
+#### Controller での PDF 出力
+
+<details>
+<summary>コード例: ReportWebController.java（PDF 出力）</summary>
+
+```java
+@Controller
+@RequestMapping("/reports")
+public class ReportWebController {
+
+    private final ReportService reportService;
+    private final PdfGeneratorService pdfGeneratorService;
+
+    /**
+     * 請求書を PDF 形式でエクスポート.
+     */
+    @GetMapping("/invoice/{invoiceNumber}/pdf")
+    public void exportInvoicePdf(@PathVariable String invoiceNumber, HttpServletResponse response)
+            throws IOException {
+
+        Invoice invoice = reportService.getInvoiceForReport(invoiceNumber);
+        String customerName = reportService.getCustomerName(invoice.getCustomerCode());
+
+        // テンプレート変数を設定
+        Map<String, Object> variables = Map.of(
+            "invoice", invoice,
+            "customerName", customerName
+        );
+
+        // PDFを生成
+        byte[] pdfBytes = pdfGeneratorService.generatePdf("reports/invoice-pdf", variables);
+
+        // レスポンスを設定
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition",
+            "attachment; filename=invoice_" + invoiceNumber + ".pdf");
+        response.setContentLength(pdfBytes.length);
+        response.getOutputStream().write(pdfBytes);
+    }
+}
+```
+
+</details>
+
+#### Thymeleaf + OpenHTMLtoPDF のメリット
+
+| 観点 | 説明 |
+|------|------|
+| **デザインの自由度** | HTML/CSS でレイアウトを定義できるため、複雑なデザインも容易 |
+| **保守性** | HTML テンプレートなので、プログラマー以外でも修正しやすい |
+| **再利用** | 同じテンプレートを Web 表示とPDF 出力で共有可能 |
+| **プレビュー** | ブラウザで HTML として確認後、PDF 出力できる |
+| **日本語対応** | CSS で日本語フォントを指定するだけで対応可能 |
 
 ---
 
@@ -1456,7 +1679,7 @@ LIMIT 10;
 | **ORM** | MyBatis |
 | **データベース** | PostgreSQL 16 |
 | **Excel** | Apache POI |
-| **PDF** | iText7 |
+| **PDF** | OpenHTMLtoPDF（Thymeleaf + HTML/CSS） |
 | **テスト** | JUnit 5, TestContainers |
 
 ### モノリスを選択すべき場面
