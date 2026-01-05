@@ -33,7 +33,7 @@ export default function (gulp) {
     /**
      * 前提条件をチェック
      */
-    gulp.task('heroku:check', (done) => {
+    gulp.task('heroku:sms:check', (done) => {
         console.log('Checking prerequisites...');
 
         const missing = [];
@@ -66,7 +66,7 @@ export default function (gulp) {
     /**
      * Heroku Container Registry にログイン（内部実装）
      */
-    gulp.task('heroku:login:exec', (done) => {
+    gulp.task('heroku:sms:login:exec', (done) => {
         try {
             console.log('Logging in to Heroku Container Registry...');
             execSync('heroku container:login', { stdio: 'inherit' });
@@ -82,12 +82,12 @@ export default function (gulp) {
     /**
      * Heroku Container Registry にログイン
      */
-    gulp.task('heroku:login', gulp.series('heroku:check', 'heroku:login:exec'));
+    gulp.task('heroku:sms:login', gulp.series('heroku:sms:check', 'heroku:sms:login:exec'));
 
     /**
      * Docker イメージをビルド（内部実装）
      */
-    gulp.task('heroku:build:exec', (done) => {
+    gulp.task('heroku:sms:build:exec', (done) => {
         try {
             console.log(`Building Docker image: ${REGISTRY_URL}`);
             console.log(`Build context: ${BACKEND_DIR}`);
@@ -109,12 +109,12 @@ export default function (gulp) {
     /**
      * Docker イメージをビルド
      */
-    gulp.task('heroku:build', gulp.series('heroku:check', 'heroku:build:exec'));
+    gulp.task('heroku:sms:build', gulp.series('heroku:sms:check', 'heroku:sms:build:exec'));
 
     /**
      * Docker イメージを Heroku にプッシュ（内部実装）
      */
-    gulp.task('heroku:push:exec', (done) => {
+    gulp.task('heroku:sms:push:exec', (done) => {
         try {
             console.log(`Pushing image to ${REGISTRY_URL}...`);
 
@@ -133,12 +133,12 @@ export default function (gulp) {
     /**
      * Docker イメージを Heroku にプッシュ
      */
-    gulp.task('heroku:push', gulp.series('heroku:login', 'heroku:push:exec'));
+    gulp.task('heroku:sms:push', gulp.series('heroku:sms:login', 'heroku:sms:push:exec'));
 
     /**
      * Heroku にリリース
      */
-    gulp.task('heroku:release', (done) => {
+    gulp.task('heroku:sms:release', (done) => {
         try {
             console.log(`Releasing to Heroku app: ${APP_NAME}...`);
 
@@ -158,16 +158,16 @@ export default function (gulp) {
     /**
      * ビルドからデプロイまで一括実行
      */
-    gulp.task('heroku:deploy', gulp.series(
-        'heroku:build',
-        'heroku:push',
-        'heroku:release'
+    gulp.task('heroku:sms:deploy', gulp.series(
+        'heroku:sms:build',
+        'heroku:sms:push',
+        'heroku:sms:release'
     ));
 
     /**
      * Heroku ログを表示
      */
-    gulp.task('heroku:logs', (done) => {
+    gulp.task('heroku:sms:logs', (done) => {
         try {
             console.log(`Fetching logs for ${APP_NAME}...`);
             execSync(`heroku logs --tail -a ${APP_NAME}`, {
@@ -187,7 +187,7 @@ export default function (gulp) {
     /**
      * Heroku アプリをブラウザで開く
      */
-    gulp.task('heroku:open', (done) => {
+    gulp.task('heroku:sms:open', (done) => {
         try {
             console.log(`Opening ${APP_NAME} in browser...`);
             execSync(`heroku open -a ${APP_NAME}`, {
@@ -203,7 +203,7 @@ export default function (gulp) {
     /**
      * Heroku Dyno を再起動（データリセット）
      */
-    gulp.task('heroku:restart', (done) => {
+    gulp.task('heroku:sms:restart', (done) => {
         try {
             console.log(`Restarting ${APP_NAME}...`);
             execSync(`heroku restart -a ${APP_NAME}`, {
@@ -220,7 +220,7 @@ export default function (gulp) {
     /**
      * Heroku アプリの情報を表示
      */
-    gulp.task('heroku:info', (done) => {
+    gulp.task('heroku:sms:info', (done) => {
         try {
             console.log(`\n=== ${APP_NAME} Info ===\n`);
             execSync(`heroku info -a ${APP_NAME}`, {
@@ -236,7 +236,7 @@ export default function (gulp) {
     /**
      * Heroku アプリを新規作成（内部実装）
      */
-    gulp.task('heroku:create:exec', (done) => {
+    gulp.task('heroku:sms:create:exec', (done) => {
         try {
             console.log(`Creating Heroku app: ${APP_NAME}...`);
 
@@ -269,33 +269,33 @@ export default function (gulp) {
     /**
      * Heroku アプリを新規作成
      */
-    gulp.task('heroku:create', gulp.series('heroku:check', 'heroku:create:exec'));
+    gulp.task('heroku:sms:create', gulp.series('heroku:sms:check', 'heroku:sms:create:exec'));
 
     /**
      * ヘルプを表示
      */
-    gulp.task('heroku:help', (done) => {
+    gulp.task('heroku:sms:help', (done) => {
         console.log(`
 Heroku SMS Deploy Tasks
 =======================
 
 Available tasks:
-  heroku:check    - Check prerequisites (docker, heroku CLI)
-  heroku:login    - Login to Heroku Container Registry
-  heroku:build    - Build Docker image
-  heroku:push     - Push image to Heroku Container Registry
-  heroku:release  - Release the pushed image
-  heroku:deploy   - Build, push, and release (all-in-one)
-  heroku:logs     - Show app logs (tail)
-  heroku:open     - Open app in browser
-  heroku:restart  - Restart dyno (reset data)
-  heroku:info     - Show app information
-  heroku:create   - Create new Heroku app
-  heroku:help     - Show this help
+  heroku:sms:check    - Check prerequisites (docker, heroku CLI)
+  heroku:sms:login    - Login to Heroku Container Registry
+  heroku:sms:build    - Build Docker image
+  heroku:sms:push     - Push image to Heroku Container Registry
+  heroku:sms:release  - Release the pushed image
+  heroku:sms:deploy   - Build, push, and release (all-in-one)
+  heroku:sms:logs     - Show app logs (tail)
+  heroku:sms:open     - Open app in browser
+  heroku:sms:restart  - Restart dyno (reset data)
+  heroku:sms:info     - Show app information
+  heroku:sms:create   - Create new Heroku app
+  heroku:sms:help     - Show this help
 
 Quick start:
-  1. gulp heroku:create  # First time only
-  2. gulp heroku:deploy  # Build and deploy
+  1. gulp heroku:sms:create  # First time only
+  2. gulp heroku:sms:deploy  # Build and deploy
 
 App: ${APP_NAME}
 URL: https://${APP_NAME}.herokuapp.com/
