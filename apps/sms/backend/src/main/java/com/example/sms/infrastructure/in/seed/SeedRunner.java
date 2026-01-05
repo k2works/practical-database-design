@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * アプリケーション起動時に Seed データを投入する.
- * default プロファイルが有効な場合のみ実行される.
+ * default または demo プロファイルが有効な場合に実行される.
  */
 @Component
-@Profile("default")
+@Profile({"default", "demo"})
 public class SeedRunner implements ApplicationRunner {
 
     private static final Logger LOG = LoggerFactory.getLogger(SeedRunner.class);
@@ -25,7 +25,7 @@ public class SeedRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        LOG.info("default プロファイルが有効です。Seed データを投入します...");
+        LOG.info("Seed データを投入します...");
         seedDataService.seedAll();
         LOG.info("Seed データの投入が完了しました。");
     }
