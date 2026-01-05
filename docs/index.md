@@ -4,6 +4,8 @@
 
 本プロジェクトは、基幹業務システム（販売管理・財務会計・生産管理）のデータベース設計を体系的に解説する技術書プロジェクトです。
 
+- [販売管理システムデモ](https://deploy-demo-sms-b33828d678a9.herokuapp.com/){:target="_blank"}
+
 ### 記事
 
 - [実践データベース設計：基幹業務システム編](./article/index.md) - 本プロジェクトのメインコンテンツ。全40章で構成。
@@ -44,4 +46,4 @@
 
 ### データベース
 
-- [SchemaSpy ER 図（SMS）](./assets/schemaspy-output/sms/index.html) - 販売管理システムのデータベース ER 図。テーブル構造やリレーションを可視化。
+- [SchemaSpy ER 図（SMS）](./assets/schemaspy-output/sms/index.html){:target="_blank"} - 販売管理システムのデータベース ER 図。テーブル構造やリレーションを可視化。
