@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>入出庫履歴</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">入出庫履歴</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/inventories}" class="btn btn-secondary">
+            在庫一覧に戻る
+        </a>
+    </div>
+
+    <!-- 検索フォーム -->
+    <div class="search-form">
+        <form th:action="@{/inventories/movements}" method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">倉庫コード</label>
+                <input type="text" name="warehouseCode" class="form-control"
+                       th:value="${selectedWarehouse}" placeholder="WH001">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">商品コード</label>
+                <input type="text" name="productCode" class="form-control"
+                       th:value="${selectedProduct}" placeholder="PRD001">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">表示件数</label>
+                <select name="size" class="form-select">
+                    <option value="10" th:selected="${currentSize == 10}">10件</option>
+                    <option value="25" th:selected="${currentSize == 25}">25件</option>
+                    <option value="50" th:selected="${currentSize == 50}">50件</option>
+                    <option value="100" th:selected="${currentSize == 100}">100件</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">検索</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 入出庫履歴テーブル -->
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>日時</th>
+                <th>倉庫</th>
+                <th>商品コード</th>
+                <th>移動区分</th>
+                <th class="text-end">移動数量</th>
+                <th class="text-end">移動前</th>
+                <th class="text-end">移動後</th>
+                <th>伝票番号</th>
+                <th>理由</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="movement : ${movements}">
+                <td th:text="${movement.movementDateTime != null ? #temporals.format(movement.movementDateTime, 'yyyy/MM/dd HH:mm') : '-'}"></td>
+                <td th:text="${movement.warehouseCode}"></td>
+                <td th:text="${movement.productCode}"></td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${movement.movementType.inbound ? 'bg-success' : 'bg-warning text-dark'}"
+                          th:text="${movement.movementType.displayName}"></span>
+                </td>
+                <td class="text-end">
+                    <span th:class="${movement.movementType.inbound ? 'text-success' : 'text-danger'}"
+                          th:text="${(movement.movementType.inbound ? '+' : '-') + #numbers.formatDecimal(movement.movementQuantity, 1, 0)}"></span>
+                </td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(movement.beforeQuantity, 1, 0)}"></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(movement.afterQuantity, 1, 0)}"></td>
+                <td th:text="${movement.documentNumber ?: '-'}"></td>
+                <td th:text="${movement.movementReason ?: '-'}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(movements)}">
+                <td colspan="9" class="text-center text-muted">入出庫履歴がありません</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 件数表示 -->
+    <div class="text-muted text-center mt-3">
+        <span th:if="${page.totalElements > 0}">
+            <span th:text="${page.page * page.size + 1}">1</span> -
+            <span th:text="${page.page * page.size + #lists.size(movements)}">10</span> 件
+            （全 <span th:text="${page.totalElements}">0</span> 件）
+        </span>
+        <span th:if="${page.totalElements == 0}">0 件</span>
+    </div>
+
+    <!-- ページネーション -->
+    <div class="d-flex justify-content-center mt-3">
+        <nav th:if="${page.totalPages > 1}" aria-label="ページナビゲーション">
+            <ul class="pagination mb-0">
+                <!-- 最初のページ -->
+                <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/inventories/movements(page=0, size=${currentSize}, warehouseCode=${selectedWarehouse}, productCode=${selectedProduct})}">&laquo;</a>
+                </li>
+
+                <!-- 前ページ -->
+                <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/inventories/movements(page=${page.page - 1}, size=${currentSize}, warehouseCode=${selectedWarehouse}, productCode=${selectedProduct})}">&lsaquo;</a>
+                </li>
+
+                <!-- ページ番号（前後2ページを表示） -->
+                <th:block th:with="startPage=${page.page > 2 ? page.page - 2 : 0},
+                               endPage=${page.page + 2 < page.totalPages - 1 ? page.page + 2 : page.totalPages - 1}">
+                    <li class="page-item" th:if="${startPage > 0}">
+                        <span class="page-link">...</span>
+                    </li>
+                    <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                        class="page-item"
+                        th:classappend="${i == page.page} ? 'active'">
+                        <a class="page-link"
+                           th:href="@{/inventories/movements(page=${i}, size=${currentSize}, warehouseCode=${selectedWarehouse}, productCode=${selectedProduct})}"
+                           th:text="${i + 1}">1</a>
+                    </li>
+                    <li class="page-item" th:if="${endPage < page.totalPages - 1}">
+                        <span class="page-link">...</span>
+                    </li>
+                </th:block>
+
+                <!-- 次ページ -->
+                <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/inventories/movements(page=${page.page + 1}, size=${currentSize}, warehouseCode=${selectedWarehouse}, productCode=${selectedProduct})}">&rsaquo;</a>
+                </li>
+
+                <!-- 最後のページ -->
+                <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/inventories/movements(page=${page.totalPages - 1}, size=${currentSize}, warehouseCode=${selectedWarehouse}, productCode=${selectedProduct})}">&raquo;</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

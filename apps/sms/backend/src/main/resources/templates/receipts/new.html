@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>入金登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">入金登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/receipts}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <form th:action="@{/receipts}" th:object="${form}" method="post">
+        <!-- 入金ヘッダー -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">入金情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- 入金日 -->
+                    <div class="col-md-3">
+                        <label class="form-label required">入金日</label>
+                        <input type="date" th:field="*{receiptDate}"
+                               class="form-control" th:classappend="${#fields.hasErrors('receiptDate')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('receiptDate')}"
+                             th:errors="*{receiptDate}"></div>
+                    </div>
+
+                    <!-- 顧客 -->
+                    <div class="col-md-4">
+                        <label class="form-label required">顧客</label>
+                        <select th:field="*{customerCode}"
+                                class="form-select" th:classappend="${#fields.hasErrors('customerCode')} ? 'is-invalid'">
+                            <option value="">選択してください</option>
+                            <option th:each="cust : ${customers}"
+                                    th:value="${cust.partnerCode}"
+                                    th:text="${cust.partnerCode + ' - ' + cust.partnerName}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('customerCode')}"
+                             th:errors="*{customerCode}"></div>
+                    </div>
+
+                    <!-- 顧客枝番 -->
+                    <div class="col-md-2">
+                        <label class="form-label">枝番</label>
+                        <input type="text" th:field="*{customerBranchNumber}"
+                               class="form-control" placeholder="00">
+                    </div>
+
+                    <!-- 入金方法 -->
+                    <div class="col-md-3">
+                        <label class="form-label required">入金方法</label>
+                        <select th:field="*{receiptMethod}"
+                                class="form-select" th:classappend="${#fields.hasErrors('receiptMethod')} ? 'is-invalid'">
+                            <option th:each="method : ${methods}"
+                                    th:value="${method.name()}"
+                                    th:text="${method.displayName}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('receiptMethod')}"
+                             th:errors="*{receiptMethod}"></div>
+                    </div>
+
+                    <!-- 入金額 -->
+                    <div class="col-md-3">
+                        <label class="form-label required">入金額</label>
+                        <input type="number" th:field="*{receiptAmount}"
+                               class="form-control text-end" step="1"
+                               th:classappend="${#fields.hasErrors('receiptAmount')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('receiptAmount')}"
+                             th:errors="*{receiptAmount}"></div>
+                    </div>
+
+                    <!-- 振込手数料 -->
+                    <div class="col-md-3">
+                        <label class="form-label">振込手数料</label>
+                        <input type="number" th:field="*{bankFee}"
+                               class="form-control text-end" step="1">
+                    </div>
+
+                    <!-- 振込人名 -->
+                    <div class="col-md-4">
+                        <label class="form-label">振込人名</label>
+                        <input type="text" th:field="*{payerName}" class="form-control">
+                    </div>
+
+                    <!-- 銀行名 -->
+                    <div class="col-md-3">
+                        <label class="form-label">銀行名</label>
+                        <input type="text" th:field="*{bankName}" class="form-control">
+                    </div>
+
+                    <!-- 口座番号 -->
+                    <div class="col-md-3">
+                        <label class="form-label">口座番号</label>
+                        <input type="text" th:field="*{accountNumber}" class="form-control">
+                    </div>
+
+                    <!-- 備考 -->
+                    <div class="col-md-12">
+                        <label class="form-label">備考</label>
+                        <textarea th:field="*{remarks}" class="form-control" rows="2"
+                                  th:classappend="${#fields.hasErrors('remarks')} ? 'is-invalid'"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('remarks')}"
+                             th:errors="*{remarks}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ボタン -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg">登録</button>
+            <a th:href="@{/receipts}" class="btn btn-outline-secondary btn-lg">キャンセル</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

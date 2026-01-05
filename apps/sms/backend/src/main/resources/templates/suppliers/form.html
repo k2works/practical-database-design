@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title th:text="${isNew} ? '仕入先登録' : '仕入先編集'">仕入先登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title" th:text="${isNew} ? '仕入先登録' : '仕入先編集'">仕入先登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/suppliers}" class="btn btn-secondary">一覧に戻る</a>
+    </div>
+
+    <!-- 登録/編集フォーム -->
+    <form th:action="${isNew} ? @{/suppliers} : @{/suppliers/{code}/{branch}(code=${supplier.supplierCode}, branch=${supplier.supplierBranchNumber})}"
+          th:object="${supplier}" method="post">
+
+        <!-- 基本情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">基本情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="supplierCode" class="form-label">仕入先コード <span class="text-danger">*</span></label>
+                        <select th:if="${isNew}" class="form-select" id="supplierCode"
+                                th:field="*{supplierCode}"
+                                required>
+                            <option value="">-- 取引先を選択 --</option>
+                            <option th:each="partner : ${partners}"
+                                    th:value="${partner.partnerCode}"
+                                    th:text="${partner.partnerCode} + ' - ' + ${partner.partnerName}"></option>
+                        </select>
+                        <input th:unless="${isNew}" type="text" class="form-control" id="supplierCodeReadonly"
+                               th:value="${supplier.supplierCode}"
+                               readonly>
+                        <input th:unless="${isNew}" type="hidden" th:field="*{supplierCode}"/>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="supplierBranchNumber" class="form-label">枝番</label>
+                        <input type="text" class="form-control" id="supplierBranchNumber"
+                               th:field="*{supplierBranchNumber}"
+                               th:readonly="${!isNew}"
+                               maxlength="10" value="00"
+                               placeholder="00">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="representativeName" class="form-label">担当者名</label>
+                        <input type="text" class="form-control" id="representativeName"
+                               th:field="*{representativeName}"
+                               maxlength="50"
+                               placeholder="例: 山田 太郎">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="departmentName" class="form-label">部門名</label>
+                        <input type="text" class="form-control" id="departmentName"
+                               th:field="*{departmentName}"
+                               maxlength="50"
+                               placeholder="例: 営業部">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 連絡先情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">連絡先情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="phone" class="form-label">電話番号</label>
+                        <input type="text" class="form-control" id="phone"
+                               th:field="*{phone}"
+                               maxlength="20"
+                               placeholder="03-1234-5678">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="fax" class="form-label">FAX番号</label>
+                        <input type="text" class="form-control" id="fax"
+                               th:field="*{fax}"
+                               maxlength="20">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="email" class="form-label">メールアドレス</label>
+                        <input type="email" class="form-control" id="email"
+                               th:field="*{email}"
+                               maxlength="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary" th:text="${isNew} ? '登録' : '更新'">登録</button>
+            <a th:href="@{/suppliers}" class="btn btn-outline-secondary ms-2">キャンセル</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

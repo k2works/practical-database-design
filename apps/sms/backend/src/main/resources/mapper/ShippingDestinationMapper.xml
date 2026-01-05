@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ShippingDestinationMapper">
+
+    <resultMap id="ShippingDestinationResultMap" type="com.example.sms.domain.model.partner.ShippingDestination">
+        <result property="partnerCode" column="取引先コード"/>
+        <result property="customerBranchNumber" column="顧客枝番"/>
+        <result property="shippingNumber" column="出荷先番号"/>
+        <result property="shippingName" column="出荷先名"/>
+        <result property="regionCode" column="地域コード"/>
+        <result property="postalCode" column="出荷先郵便番号"/>
+        <result property="address1" column="出荷先住所1"/>
+        <result property="address2" column="出荷先住所2"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者名"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.partner.ShippingDestination">
+        INSERT INTO "出荷先マスタ" (
+            "取引先コード", "顧客枝番", "出荷先番号", "出荷先名", "地域コード",
+            "出荷先郵便番号", "出荷先住所1", "出荷先住所2",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{partnerCode}, #{customerBranchNumber}, #{shippingNumber}, #{shippingName}, #{regionCode},
+            #{postalCode}, #{address1}, #{address2},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByKey" resultMap="ShippingDestinationResultMap">
+        SELECT * FROM "出荷先マスタ"
+        WHERE "取引先コード" = #{partnerCode}
+          AND "顧客枝番" = #{customerBranchNumber}
+          AND "出荷先番号" = #{shippingNumber}
+    </select>
+
+    <select id="findByCustomer" resultMap="ShippingDestinationResultMap">
+        SELECT * FROM "出荷先マスタ"
+        WHERE "取引先コード" = #{partnerCode}
+          AND "顧客枝番" = #{customerBranchNumber}
+        ORDER BY "出荷先番号"
+    </select>
+
+    <select id="findAll" resultMap="ShippingDestinationResultMap">
+        SELECT * FROM "出荷先マスタ"
+        ORDER BY "取引先コード", "顧客枝番", "出荷先番号"
+    </select>
+
+    <update id="update" parameterType="com.example.sms.domain.model.partner.ShippingDestination">
+        UPDATE "出荷先マスタ" SET
+            "出荷先名" = #{shippingName},
+            "地域コード" = #{regionCode},
+            "出荷先郵便番号" = #{postalCode},
+            "出荷先住所1" = #{address1},
+            "出荷先住所2" = #{address2},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "取引先コード" = #{partnerCode}
+          AND "顧客枝番" = #{customerBranchNumber}
+          AND "出荷先番号" = #{shippingNumber}
+    </update>
+
+    <delete id="deleteByKey">
+        DELETE FROM "出荷先マスタ"
+        WHERE "取引先コード" = #{partnerCode}
+          AND "顧客枝番" = #{customerBranchNumber}
+          AND "出荷先番号" = #{shippingNumber}
+    </delete>
+
+    <delete id="deleteByCustomer">
+        DELETE FROM "出荷先マスタ"
+        WHERE "取引先コード" = #{partnerCode}
+          AND "顧客枝番" = #{customerBranchNumber}
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "出荷先マスタ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "出荷先マスタ"
+    </delete>
+</mapper>

@@ -1,0 +1,142 @@
+package com.example.sms.infrastructure.in.web.controller;
+
+import com.example.sms.application.port.in.DepartmentUseCase;
+import com.example.sms.application.port.in.EmployeeUseCase;
+import com.example.sms.domain.exception.DepartmentNotFoundException;
+import com.example.sms.domain.model.common.PageResult;
+import com.example.sms.domain.model.department.Department;
+import com.example.sms.domain.model.employee.Employee;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDate;
+import java.util.List;
+
+/**
+ * 社員マスタ画面コントローラー.
+ */
+@Controller
+@RequestMapping("/employees")
+public class EmployeeWebController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(EmployeeWebController.class);
+    private static final int DEFAULT_PAGE_SIZE = 10;
+
+    private final EmployeeUseCase employeeUseCase;
+    private final DepartmentUseCase departmentUseCase;
+
+    public EmployeeWebController(EmployeeUseCase employeeUseCase, DepartmentUseCase departmentUseCase) {
+        this.employeeUseCase = employeeUseCase;
+        this.departmentUseCase = departmentUseCase;
+    }
+
+    /**
+     * 社員一覧画面を表示.
+     */
+    @GetMapping
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String departmentCode,
+            @RequestParam(required = false) String keyword,
+            Model model) {
+
+        PageResult<Employee> employeePage = employeeUseCase.getEmployees(page, size, departmentCode, keyword);
+        List<Department> departments = departmentUseCase.getAllDepartments();
+
+        model.addAttribute("employees", employeePage.getContent());
+        model.addAttribute("page", employeePage);
+        model.addAttribute("departments", departments);
+        model.addAttribute("selectedDepartmentCode", departmentCode);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("currentSize", size);
+        return "employees/list";
+    }
+
+    /**
+     * 社員詳細画面を表示.
+     */
+    @GetMapping("/{employeeCode}")
+    public String show(@PathVariable String employeeCode, Model model) {
+        Employee employee = employeeUseCase.getEmployeeByCode(employeeCode);
+
+        // 所属部門情報を取得
+        Department department = null;
+        if (employee.getDepartmentCode() != null) {
+            try {
+                department = departmentUseCase.getDepartmentByCode(employee.getDepartmentCode());
+            } catch (DepartmentNotFoundException e) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("部門が見つかりません: {}", employee.getDepartmentCode());
+                }
+            }
+        }
+
+        model.addAttribute("employee", employee);
+        model.addAttribute("department", department);
+        return "employees/show";
+    }
+
+    /**
+     * 社員登録画面を表示.
+     */
+    @GetMapping("/new")
+    public String newEmployee(
+            @RequestParam(required = false) String departmentCode,
+            @RequestParam(required = false) LocalDate departmentStartDate,
+            Model model) {
+        Employee employee = new Employee();
+        if (departmentCode != null && !departmentCode.isBlank()) {
+            employee.setDepartmentCode(departmentCode);
+            employee.setDepartmentStartDate(departmentStartDate);
+        }
+        model.addAttribute("employee", employee);
+        model.addAttribute("departments", departmentUseCase.getAllDepartments());
+        model.addAttribute("isNew", true);
+        return "employees/form";
+    }
+
+    /**
+     * 社員を登録.
+     */
+    @PostMapping
+    public String create(@ModelAttribute Employee employee, RedirectAttributes redirectAttributes) {
+        employeeUseCase.createEmployee(employee);
+        redirectAttributes.addFlashAttribute("successMessage", "社員を登録しました: " + employee.getEmployeeCode());
+        return "redirect:/employees";
+    }
+
+    /**
+     * 社員編集画面を表示.
+     */
+    @GetMapping("/{employeeCode}/edit")
+    public String edit(@PathVariable String employeeCode, Model model) {
+        Employee employee = employeeUseCase.getEmployeeByCode(employeeCode);
+        model.addAttribute("employee", employee);
+        model.addAttribute("departments", departmentUseCase.getAllDepartments());
+        model.addAttribute("isNew", false);
+        return "employees/form";
+    }
+
+    /**
+     * 社員を更新.
+     */
+    @PostMapping("/{employeeCode}")
+    public String update(@PathVariable String employeeCode,
+                         @ModelAttribute Employee employee,
+                         RedirectAttributes redirectAttributes) {
+        employee.setEmployeeCode(employeeCode);
+        employeeUseCase.updateEmployee(employee);
+        redirectAttributes.addFlashAttribute("successMessage", "社員を更新しました: " + employeeCode);
+        return "redirect:/employees/" + employeeCode;
+    }
+}

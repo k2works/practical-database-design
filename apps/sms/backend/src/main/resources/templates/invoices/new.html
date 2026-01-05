@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>請求登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">請求登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/invoices}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <form th:action="@{/invoices}" th:object="${form}" method="post">
+        <!-- 請求ヘッダー -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">請求情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- 請求日 -->
+                    <div class="col-md-3">
+                        <label class="form-label required">請求日</label>
+                        <input type="date" th:field="*{invoiceDate}"
+                               class="form-control" th:classappend="${#fields.hasErrors('invoiceDate')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('invoiceDate')}"
+                             th:errors="*{invoiceDate}"></div>
+                    </div>
+
+                    <!-- 締日 -->
+                    <div class="col-md-3">
+                        <label class="form-label">締日</label>
+                        <input type="date" th:field="*{closingDate}" class="form-control">
+                    </div>
+
+                    <!-- 顧客 -->
+                    <div class="col-md-4">
+                        <label class="form-label required">顧客</label>
+                        <select th:field="*{customerCode}"
+                                class="form-select" th:classappend="${#fields.hasErrors('customerCode')} ? 'is-invalid'">
+                            <option value="">選択してください</option>
+                            <option th:each="cust : ${customers}"
+                                    th:value="${cust.partnerCode}"
+                                    th:text="${cust.partnerCode + ' - ' + cust.partnerName}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('customerCode')}"
+                             th:errors="*{customerCode}"></div>
+                    </div>
+
+                    <!-- 顧客枝番 -->
+                    <div class="col-md-2">
+                        <label class="form-label">枝番</label>
+                        <input type="text" th:field="*{customerBranchNumber}"
+                               class="form-control" placeholder="00">
+                    </div>
+
+                    <!-- 支払期日 -->
+                    <div class="col-md-3">
+                        <label class="form-label">支払期日</label>
+                        <input type="date" th:field="*{dueDate}" class="form-control">
+                    </div>
+
+                    <!-- 前回請求残高 -->
+                    <div class="col-md-3">
+                        <label class="form-label">前回請求残高</label>
+                        <input type="number" th:field="*{previousBalance}"
+                               class="form-control text-end" step="1">
+                    </div>
+
+                    <!-- 入金額 -->
+                    <div class="col-md-3">
+                        <label class="form-label">入金額</label>
+                        <input type="number" th:field="*{receiptAmount}"
+                               class="form-control text-end" step="1">
+                    </div>
+
+                    <!-- 今回売上 -->
+                    <div class="col-md-3">
+                        <label class="form-label">今回売上</label>
+                        <input type="number" th:field="*{currentSalesAmount}"
+                               class="form-control text-end" step="1">
+                    </div>
+
+                    <!-- 今回消費税 -->
+                    <div class="col-md-3">
+                        <label class="form-label">今回消費税</label>
+                        <input type="number" th:field="*{currentTaxAmount}"
+                               class="form-control text-end" step="1">
+                    </div>
+
+                    <!-- 備考 -->
+                    <div class="col-md-12">
+                        <label class="form-label">備考</label>
+                        <textarea th:field="*{remarks}" class="form-control" rows="2"
+                                  th:classappend="${#fields.hasErrors('remarks')} ? 'is-invalid'"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('remarks')}"
+                             th:errors="*{remarks}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ボタン -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg">登録</button>
+            <a th:href="@{/invoices}" class="btn btn-outline-secondary btn-lg">キャンセル</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

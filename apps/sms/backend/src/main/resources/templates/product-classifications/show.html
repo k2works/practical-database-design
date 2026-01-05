@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>商品分類詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">商品分類詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/product-classifications}" class="btn btn-secondary">
+            一覧に戻る
+        </a>
+        <a th:href="@{/product-classifications/{code}/edit(code=${classification.classificationCode})}" class="btn btn-primary">
+            編集
+        </a>
+        <a th:href="@{/products/new(classificationCode=${classification.classificationCode})}"
+           class="btn btn-success">
+            この分類に商品を追加
+        </a>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">基本情報</h5>
+            <span class="badge"
+                  th:classappend="${classification.isLeaf() ? 'bg-success' : 'bg-info'}"
+                  th:text="${classification.isLeaf() ? '末端分類' : '親分類'}"></span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>分類コード</dt>
+                        <dd th:text="${classification.classificationCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>分類名</dt>
+                        <dd th:text="${classification.classificationName}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>階層レベル</dt>
+                        <dd>
+                            <span class="badge bg-secondary" th:text="${classification.hierarchyLevel}"></span>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>分類パス</dt>
+                        <dd th:text="${classification.classificationPath ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 所属商品一覧 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">所属商品</h5>
+            <span class="badge bg-primary" th:text="${#lists.size(products)} + '件'"></span>
+        </div>
+        <div class="card-body">
+            <div th:if="${#lists.isEmpty(products)}" class="text-muted">
+                この分類に所属する商品はありません。
+            </div>
+            <table th:unless="${#lists.isEmpty(products)}" class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>商品コード</th>
+                        <th>商品名</th>
+                        <th>区分</th>
+                        <th class="text-end">販売単価</th>
+                        <th class="text-end">仕入単価</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="product : ${products}">
+                        <td th:text="${product.productCode}"></td>
+                        <td th:text="${product.productName}"></td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${product.productCategory?.name() == 'PRODUCT' ? 'bg-primary' : (product.productCategory?.name() == 'SERVICE' ? 'bg-success' : 'bg-secondary')}"
+                                  th:text="${product.productCategory?.displayName}"></span>
+                        </td>
+                        <td class="text-end" th:text="${product.sellingPrice != null ? #numbers.formatDecimal(product.sellingPrice, 1, 'COMMA', 0, 'POINT') + ' 円' : '-'}"></td>
+                        <td class="text-end" th:text="${product.purchasePrice != null ? #numbers.formatDecimal(product.purchasePrice, 1, 'COMMA', 0, 'POINT') + ' 円' : '-'}"></td>
+                        <td>
+                            <a th:href="@{/products/{code}(code=${product.productCode})}"
+                               class="btn btn-sm btn-outline-primary">詳細</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">システム情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成日時</dt>
+                        <dd th:text="${classification.createdAt != null ? #temporals.format(classification.createdAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成者</dt>
+                        <dd th:text="${classification.createdBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新日時</dt>
+                        <dd th:text="${classification.updatedAt != null ? #temporals.format(classification.updatedAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新者</dt>
+                        <dd th:text="${classification.updatedBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

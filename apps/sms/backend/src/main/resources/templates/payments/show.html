@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>支払詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">支払詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/payments}" class="btn btn-secondary">
+            一覧に戻る
+        </a>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">基本情報</h5>
+            <span class="badge"
+                  th:classappend="${payment.status.name() == 'CANCELLED' ? 'bg-danger' :
+                                   payment.status.name() == 'PAID' ? 'bg-success' :
+                                   payment.status.name() == 'APPROVED' ? 'bg-info' :
+                                   payment.status.name() == 'PENDING_APPROVAL' ? 'bg-warning text-dark' : 'bg-secondary'}"
+                  th:text="${payment.status.displayName}"></span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>支払番号</dt>
+                        <dd th:text="${payment.paymentNumber}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>仕入先コード</dt>
+                        <dd th:text="${payment.supplierCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>支払締日</dt>
+                        <dd th:text="${payment.paymentClosingDate != null ? #temporals.format(payment.paymentClosingDate, 'yyyy/MM/dd') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>支払期日</dt>
+                        <dd th:text="${payment.paymentDueDate != null ? #temporals.format(payment.paymentDueDate, 'yyyy/MM/dd') : '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>支払方法</dt>
+                        <dd th:text="${payment.paymentMethod != null ? payment.paymentMethod.displayName : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>支払実行日</dt>
+                        <dd th:text="${payment.paymentExecutionDate != null ? #temporals.format(payment.paymentExecutionDate, 'yyyy/MM/dd') : '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row" th:if="${payment.remarks != null and !payment.remarks.isBlank()}">
+                <div class="col-12">
+                    <dl>
+                        <dt>備考</dt>
+                        <dd th:text="${payment.remarks}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 金額情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">金額情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>支払金額</dt>
+                        <dd class="fs-5" th:text="${#numbers.formatDecimal(payment.paymentAmount, 1, 0) + ' 円'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>消費税</dt>
+                        <dd class="fs-5" th:text="${#numbers.formatDecimal(payment.taxAmount, 1, 0) + ' 円'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>源泉徴収額</dt>
+                        <dd class="fs-5" th:text="${payment.withholdingAmount != null ? #numbers.formatDecimal(payment.withholdingAmount, 1, 0) + ' 円' : '0 円'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>差引支払額</dt>
+                        <dd class="fs-4 fw-bold text-primary" th:text="${#numbers.formatDecimal(payment.netPaymentAmount, 1, 0) + ' 円'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 振込先情報 -->
+    <div class="card mb-4" th:if="${payment.paymentMethod != null and payment.paymentMethod.requiresBankInfo()}">
+        <div class="card-header">
+            <h5 class="mb-0">振込先情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>銀行コード</dt>
+                        <dd th:text="${payment.bankCode ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>支店コード</dt>
+                        <dd th:text="${payment.branchCode ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>口座種別</dt>
+                        <dd th:text="${payment.accountType ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>口座番号</dt>
+                        <dd th:text="${payment.accountNumber ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>口座名義</dt>
+                        <dd th:text="${payment.accountName ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 明細一覧 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">支払明細</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>行番号</th>
+                        <th>仕入番号</th>
+                        <th>仕入日</th>
+                        <th class="text-end">仕入金額</th>
+                        <th class="text-end">消費税</th>
+                        <th class="text-end">支払対象額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detail : ${payment.details}">
+                        <td th:text="${detail.lineNumber}"></td>
+                        <td th:text="${detail.purchaseNumber}"></td>
+                        <td th:text="${detail.purchaseDate != null ? #temporals.format(detail.purchaseDate, 'yyyy/MM/dd') : '-'}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.purchaseAmount, 1, 0) + ' 円'}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.taxAmount, 1, 0) + ' 円'}"></td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(detail.paymentTargetAmount, 1, 0) + ' 円'}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(payment.details)}">
+                        <td colspan="6" class="text-center text-muted">明細がありません</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">システム情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成日時</dt>
+                        <dd th:text="${payment.createdAt != null ? #temporals.format(payment.createdAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成者</dt>
+                        <dd th:text="${payment.createdBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新日時</dt>
+                        <dd th:text="${payment.updatedAt != null ? #temporals.format(payment.updatedAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新者</dt>
+                        <dd th:text="${payment.updatedBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

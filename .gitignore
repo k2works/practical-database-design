@@ -76,7 +76,10 @@ web_modules/
 
 # Next.js build output
 .next
-out
+/out
+
+# Java source out directories should not be ignored
+!**/src/**/out/
 
 # Nuxt.js build / generate output
 .nuxt
@@ -140,3 +143,16 @@ vite.config.ts.timestamp-*
 
 # IDE
 .idea/
+
+# Gradle
+.gradle/
+**/build/
+!**/src/**/build/
+
+# Wiki submodule
+docs/wiki/
+/docs/assets/schemaspy-output/
+tmp
+
+site/
+.DS_Store

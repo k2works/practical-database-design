@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.StocktakingMapper">
+
+    <resultMap id="StocktakingResultMap" type="com.example.sms.domain.model.inventory.Stocktaking">
+        <id property="id" column="ID"/>
+        <result property="stocktakingNumber" column="棚卸番号"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="stocktakingDate" column="棚卸日"/>
+        <result property="startDateTime" column="棚卸開始日時"/>
+        <result property="endDateTime" column="棚卸終了日時"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <collection property="details" ofType="com.example.sms.domain.model.inventory.StocktakingDetail"
+                    select="findDetailsByStocktakingId" column="ID"/>
+    </resultMap>
+
+    <resultMap id="StocktakingDetailResultMap" type="com.example.sms.domain.model.inventory.StocktakingDetail">
+        <id property="id" column="ID"/>
+        <result property="stocktakingId" column="棚卸ID"/>
+        <result property="lineNumber" column="棚卸行番号"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="locationCode" column="ロケーションコード"/>
+        <result property="lotNumber" column="ロット番号"/>
+        <result property="bookQuantity" column="帳簿在庫数"/>
+        <result property="actualQuantity" column="実棚数"/>
+        <result property="differenceQuantity" column="差異数"/>
+        <result property="differenceReason" column="差異理由"/>
+        <result property="adjustedFlag" column="調整済フラグ"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 棚卸（ヘッダ）+ 棚卸明細のネスト ResultMap（JOINによる一括取得用） -->
+    <resultMap id="stocktakingWithDetailsResultMap" type="com.example.sms.domain.model.inventory.Stocktaking">
+        <id property="id" column="st_id"/>
+        <result property="stocktakingNumber" column="st_棚卸番号"/>
+        <result property="warehouseCode" column="st_倉庫コード"/>
+        <result property="stocktakingDate" column="st_棚卸日"/>
+        <result property="startDateTime" column="st_棚卸開始日時"/>
+        <result property="endDateTime" column="st_棚卸終了日時"/>
+        <result property="status" column="st_ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler"/>
+        <result property="remarks" column="st_備考"/>
+        <result property="version" column="st_バージョン"/>
+        <result property="createdAt" column="st_作成日時"/>
+        <result property="createdBy" column="st_作成者"/>
+        <result property="updatedAt" column="st_更新日時"/>
+        <result property="updatedBy" column="st_更新者"/>
+        <!-- 棚卸明細との1:N関連 -->
+        <collection property="details" ofType="com.example.sms.domain.model.inventory.StocktakingDetail"
+                    resultMap="stocktakingDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 棚卸明細のネスト ResultMap -->
+    <resultMap id="stocktakingDetailNestedResultMap" type="com.example.sms.domain.model.inventory.StocktakingDetail">
+        <id property="id" column="std_id"/>
+        <result property="stocktakingId" column="std_棚卸ID"/>
+        <result property="lineNumber" column="std_棚卸行番号"/>
+        <result property="productCode" column="std_商品コード"/>
+        <result property="locationCode" column="std_ロケーションコード"/>
+        <result property="lotNumber" column="std_ロット番号"/>
+        <result property="bookQuantity" column="std_帳簿在庫数"/>
+        <result property="actualQuantity" column="std_実棚数"/>
+        <result property="differenceQuantity" column="std_差異数"/>
+        <result property="differenceReason" column="std_差異理由"/>
+        <result property="adjustedFlag" column="std_調整済フラグ"/>
+        <result property="createdAt" column="std_作成日時"/>
+        <result property="updatedAt" column="std_更新日時"/>
+    </resultMap>
+
+    <select id="findWithPagination" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("棚卸番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+            <if test="status != null">
+                AND "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス
+            </if>
+        </where>
+        ORDER BY "棚卸日" DESC, "棚卸番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "棚卸データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("棚卸番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+            <if test="status != null">
+                AND "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス
+            </if>
+        </where>
+    </select>
+
+    <!-- ヘッダ登録 (PostgreSQL) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "棚卸データ" (
+            "棚卸番号", "倉庫コード", "棚卸日", "棚卸開始日時", "棚卸終了日時",
+            "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{stocktakingNumber}, #{warehouseCode}, #{stocktakingDate}, #{startDateTime}, #{endDateTime},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "棚卸データ" (
+            "棚卸番号", "倉庫コード", "棚卸日", "棚卸開始日時", "棚卸終了日時",
+            "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{stocktakingNumber}, #{warehouseCode}, #{stocktakingDate}, #{startDateTime}, #{endDateTime},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler},
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.inventory.StocktakingDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "棚卸明細データ" (
+            "棚卸ID", "棚卸行番号", "商品コード", "ロケーションコード", "ロット番号",
+            "帳簿在庫数", "実棚数", "差異理由", "調整済フラグ",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{stocktakingId}, #{lineNumber}, #{productCode}, #{locationCode}, #{lotNumber},
+            #{bookQuantity}, #{actualQuantity}, #{differenceReason}, #{adjustedFlag},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByStocktakingNumber" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ" WHERE "棚卸番号" = #{stocktakingNumber}
+    </select>
+
+    <select id="findByWarehouseCode" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ"
+        WHERE "倉庫コード" = #{warehouseCode}
+        ORDER BY "棚卸日" DESC, "棚卸番号"
+    </select>
+
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="StocktakingResultMap" databaseId="postgresql">
+        SELECT * FROM "棚卸データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス
+        ORDER BY "棚卸日" DESC, "棚卸番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="StocktakingResultMap" databaseId="h2">
+        SELECT * FROM "棚卸データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}
+        ORDER BY "棚卸日" DESC, "棚卸番号"
+    </select>
+
+    <select id="findByStocktakingDateBetween" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ"
+        WHERE "棚卸日" BETWEEN #{from} AND #{to}
+        ORDER BY "棚卸日" DESC, "棚卸番号"
+    </select>
+
+    <select id="findAll" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ" ORDER BY "棚卸日" DESC, "棚卸番号"
+    </select>
+
+    <select id="findDetailsByStocktakingId" resultMap="StocktakingDetailResultMap">
+        SELECT * FROM "棚卸明細データ"
+        WHERE "棚卸ID" = #{stocktakingId}
+        ORDER BY "棚卸行番号"
+    </select>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithDetailsByStocktakingNumber" resultMap="stocktakingWithDetailsResultMap">
+        SELECT
+            st."ID" AS st_id,
+            st."棚卸番号" AS st_棚卸番号,
+            st."倉庫コード" AS st_倉庫コード,
+            st."棚卸日" AS st_棚卸日,
+            st."棚卸開始日時" AS st_棚卸開始日時,
+            st."棚卸終了日時" AS st_棚卸終了日時,
+            st."ステータス" AS st_ステータス,
+            st."備考" AS st_備考,
+            st."バージョン" AS st_バージョン,
+            st."作成日時" AS st_作成日時,
+            st."作成者" AS st_作成者,
+            st."更新日時" AS st_更新日時,
+            st."更新者" AS st_更新者,
+            std."ID" AS std_id,
+            std."棚卸ID" AS std_棚卸ID,
+            std."棚卸行番号" AS std_棚卸行番号,
+            std."商品コード" AS std_商品コード,
+            std."ロケーションコード" AS std_ロケーションコード,
+            std."ロット番号" AS std_ロット番号,
+            std."帳簿在庫数" AS std_帳簿在庫数,
+            std."実棚数" AS std_実棚数,
+            std."差異数" AS std_差異数,
+            std."差異理由" AS std_差異理由,
+            std."調整済フラグ" AS std_調整済フラグ,
+            std."作成日時" AS std_作成日時,
+            std."更新日時" AS std_更新日時
+        FROM "棚卸データ" st
+        LEFT JOIN "棚卸明細データ" std
+            ON st."ID" = std."棚卸ID"
+        WHERE st."棚卸番号" = #{stocktakingNumber}
+        ORDER BY std."棚卸行番号"
+    </select>
+
+    <select id="findVersionById" resultType="java.lang.Integer">
+        SELECT "バージョン" FROM "棚卸データ" WHERE "ID" = #{id}
+    </select>
+
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking" databaseId="postgresql">
+        UPDATE "棚卸データ" SET
+            "倉庫コード" = #{warehouseCode},
+            "棚卸日" = #{stocktakingDate},
+            "棚卸開始日時" = #{startDateTime},
+            "棚卸終了日時" = #{endDateTime},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking" databaseId="h2">
+        UPDATE "棚卸データ" SET
+            "倉庫コード" = #{warehouseCode},
+            "棚卸日" = #{stocktakingDate},
+            "棚卸開始日時" = #{startDateTime},
+            "棚卸終了日時" = #{endDateTime},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 楽観ロック対応の更新 (PostgreSQL) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.inventory.Stocktaking" databaseId="postgresql">
+        UPDATE "棚卸データ" SET
+            "倉庫コード" = #{warehouseCode},
+            "棚卸日" = #{stocktakingDate},
+            "棚卸開始日時" = #{startDateTime},
+            "棚卸終了日時" = #{endDateTime},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- 楽観ロック対応の更新 (H2) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.inventory.Stocktaking" databaseId="h2">
+        UPDATE "棚卸データ" SET
+            "倉庫コード" = #{warehouseCode},
+            "棚卸日" = #{stocktakingDate},
+            "棚卸開始日時" = #{startDateTime},
+            "棚卸終了日時" = #{endDateTime},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <update id="updateDetail" parameterType="com.example.sms.domain.model.inventory.StocktakingDetail">
+        UPDATE "棚卸明細データ" SET
+            "商品コード" = #{productCode},
+            "ロケーションコード" = #{locationCode},
+            "ロット番号" = #{lotNumber},
+            "帳簿在庫数" = #{bookQuantity},
+            "実棚数" = #{actualQuantity},
+            "差異理由" = #{differenceReason},
+            "調整済フラグ" = #{adjustedFlag},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteDetailsByStocktakingId">
+        DELETE FROM "棚卸明細データ" WHERE "棚卸ID" = #{stocktakingId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "棚卸データ" WHERE "ID" = #{id}
+    </delete>
+
+    <!-- 全明細削除 (PostgreSQL) -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
+        TRUNCATE TABLE "棚卸明細データ" CASCADE
+    </delete>
+
+    <!-- 全明細削除 (H2) -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "棚卸明細データ"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "棚卸データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "棚卸データ"
+    </delete>
+</mapper>

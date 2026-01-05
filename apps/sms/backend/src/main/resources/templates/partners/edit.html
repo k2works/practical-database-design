@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>取引先編集</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">取引先編集</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/partners/{code}(code=${form.partnerCode})}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/partners/{code}(code=${form.partnerCode})}" th:object="${form}" method="post">
+                <!-- 取引先コード（読み取り専用） -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">取引先コード</label>
+                    <div class="col-md-4">
+                        <input type="text" th:value="${form.partnerCode}"
+                               class="form-control-plaintext" readonly>
+                        <input type="hidden" th:field="*{partnerCode}">
+                    </div>
+                </div>
+
+                <!-- 取引先名 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">取引先名</label>
+                    <div class="col-md-6">
+                        <input type="text" th:field="*{partnerName}"
+                               class="form-control" th:classappend="${#fields.hasErrors('partnerName')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('partnerName')}"
+                             th:errors="*{partnerName}"></div>
+                    </div>
+                </div>
+
+                <!-- 取引先名カナ -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">取引先名カナ</label>
+                    <div class="col-md-6">
+                        <input type="text" th:field="*{partnerNameKana}"
+                               class="form-control" th:classappend="${#fields.hasErrors('partnerNameKana')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('partnerNameKana')}"
+                             th:errors="*{partnerNameKana}"></div>
+                    </div>
+                </div>
+
+                <!-- 種別 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">種別</label>
+                    <div class="col-md-9">
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" th:field="*{isCustomer}"
+                                   class="form-check-input" id="isCustomer">
+                            <label class="form-check-label" for="isCustomer">顧客</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" th:field="*{isSupplier}"
+                                   class="form-check-input" id="isSupplier">
+                            <label class="form-check-label" for="isSupplier">仕入先</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 郵便番号 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">郵便番号</label>
+                    <div class="col-md-3">
+                        <input type="text" th:field="*{postalCode}"
+                               class="form-control" placeholder="000-0000"
+                               th:classappend="${#fields.hasErrors('postalCode')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('postalCode')}"
+                             th:errors="*{postalCode}"></div>
+                    </div>
+                </div>
+
+                <!-- 住所1 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">住所1</label>
+                    <div class="col-md-9">
+                        <input type="text" th:field="*{address1}"
+                               class="form-control" th:classappend="${#fields.hasErrors('address1')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('address1')}"
+                             th:errors="*{address1}"></div>
+                    </div>
+                </div>
+
+                <!-- 住所2 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">住所2</label>
+                    <div class="col-md-9">
+                        <input type="text" th:field="*{address2}"
+                               class="form-control" th:classappend="${#fields.hasErrors('address2')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('address2')}"
+                             th:errors="*{address2}"></div>
+                    </div>
+                </div>
+
+                <!-- 与信限度額 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">与信限度額</label>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="number" th:field="*{creditLimit}"
+                                   class="form-control text-end" step="1" min="0"
+                                   th:classappend="${#fields.hasErrors('creditLimit')} ? 'is-invalid'">
+                            <span class="input-group-text">円</span>
+                        </div>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('creditLimit')}"
+                             th:errors="*{creditLimit}"></div>
+                    </div>
+                </div>
+
+                <!-- 一時与信増額 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">一時与信増額</label>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="number" th:field="*{temporaryCreditIncrease}"
+                                   class="form-control text-end" step="1" min="0"
+                                   th:classappend="${#fields.hasErrors('temporaryCreditIncrease')} ? 'is-invalid'">
+                            <span class="input-group-text">円</span>
+                        </div>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('temporaryCreditIncrease')}"
+                             th:errors="*{temporaryCreditIncrease}"></div>
+                    </div>
+                </div>
+
+                <!-- 取引停止 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">取引停止</label>
+                    <div class="col-md-9">
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" th:field="*{isTradingProhibited}"
+                                   class="form-check-input" id="isTradingProhibited">
+                            <label class="form-check-label" for="isTradingProhibited">取引停止</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ボタン -->
+                <div class="row">
+                    <div class="col-md-9 offset-md-3">
+                        <button type="submit" class="btn btn-primary">更新</button>
+                        <a th:href="@{/partners/{code}(code=${form.partnerCode})}"
+                           class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

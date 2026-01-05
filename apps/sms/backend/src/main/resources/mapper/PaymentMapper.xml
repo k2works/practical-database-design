@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.PaymentMapper">
+
+    <!-- 支払（ヘッダ）の ResultMap -->
+    <resultMap id="PaymentResultMap" type="com.example.sms.domain.model.payment.Payment">
+        <id property="id" column="ID"/>
+        <result property="paymentNumber" column="支払番号"/>
+        <result property="supplierCode" column="仕入先コード"/>
+        <result property="paymentClosingDate" column="支払締日"/>
+        <result property="paymentDueDate" column="支払予定日"/>
+        <result property="paymentMethod" column="支払方法"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler"/>
+        <result property="paymentAmount" column="支払金額"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="withholdingAmount" column="源泉徴収額"/>
+        <result property="netPaymentAmount" column="差引支払額"/>
+        <result property="paymentExecutionDate" column="支払実行日"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler"/>
+        <result property="bankCode" column="振込先銀行コード"/>
+        <result property="branchCode" column="振込先支店コード"/>
+        <result property="accountType" column="振込先口座種別"/>
+        <result property="accountNumber" column="振込先口座番号"/>
+        <result property="accountName" column="振込先口座名義"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <!-- 支払（ヘッダ）+ 明細の ResultMap -->
+    <resultMap id="PaymentWithDetailsResultMap" type="com.example.sms.domain.model.payment.Payment">
+        <id property="id" column="p_id"/>
+        <result property="paymentNumber" column="p_支払番号"/>
+        <result property="supplierCode" column="p_仕入先コード"/>
+        <result property="paymentClosingDate" column="p_支払締日"/>
+        <result property="paymentDueDate" column="p_支払予定日"/>
+        <result property="paymentMethod" column="p_支払方法"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler"/>
+        <result property="paymentAmount" column="p_支払金額"/>
+        <result property="taxAmount" column="p_消費税額"/>
+        <result property="withholdingAmount" column="p_源泉徴収額"/>
+        <result property="netPaymentAmount" column="p_差引支払額"/>
+        <result property="paymentExecutionDate" column="p_支払実行日"/>
+        <result property="status" column="p_ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler"/>
+        <result property="version" column="p_バージョン"/>
+        <result property="createdAt" column="p_作成日時"/>
+        <result property="updatedAt" column="p_更新日時"/>
+        <collection property="details"
+                    ofType="com.example.sms.domain.model.payment.PaymentDetail"
+                    resultMap="PaymentDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 支払明細のネスト ResultMap -->
+    <resultMap id="PaymentDetailNestedResultMap" type="com.example.sms.domain.model.payment.PaymentDetail">
+        <id property="id" column="pd_id"/>
+        <result property="paymentId" column="pd_支払ID"/>
+        <result property="lineNumber" column="pd_支払行番号"/>
+        <result property="purchaseNumber" column="pd_仕入番号"/>
+        <result property="purchaseDate" column="pd_仕入日"/>
+        <result property="purchaseAmount" column="pd_仕入金額"/>
+        <result property="taxAmount" column="pd_消費税額"/>
+        <result property="paymentTargetAmount" column="pd_支払対象金額"/>
+    </resultMap>
+
+    <!-- 支払ヘッダ登録 (PostgreSQL) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.payment.Payment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "支払データ" (
+            "支払番号", "仕入先コード", "支払締日", "支払予定日",
+            "支払方法", "支払金額", "消費税額", "源泉徴収額", "差引支払額",
+            "ステータス", "振込先銀行コード", "振込先支店コード",
+            "振込先口座種別", "振込先口座番号", "振込先口座名義",
+            "備考", "作成者", "更新者"
+        ) VALUES (
+            #{paymentNumber}, #{supplierCode}, #{paymentClosingDate}, #{paymentDueDate},
+            #{paymentMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler}::支払方法,
+            #{paymentAmount}, #{taxAmount}, #{withholdingAmount}, #{netPaymentAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}::支払ステータス,
+            #{bankCode}, #{branchCode}, #{accountType}, #{accountNumber}, #{accountName},
+            #{remarks}, #{createdBy}, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 支払ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.payment.Payment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "支払データ" (
+            "支払番号", "仕入先コード", "支払締日", "支払予定日",
+            "支払方法", "支払金額", "消費税額", "源泉徴収額", "差引支払額",
+            "ステータス", "振込先銀行コード", "振込先支店コード",
+            "振込先口座種別", "振込先口座番号", "振込先口座名義",
+            "備考", "作成者", "更新者"
+        ) VALUES (
+            #{paymentNumber}, #{supplierCode}, #{paymentClosingDate}, #{paymentDueDate},
+            #{paymentMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler},
+            #{paymentAmount}, #{taxAmount}, #{withholdingAmount}, #{netPaymentAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler},
+            #{bankCode}, #{branchCode}, #{accountType}, #{accountNumber}, #{accountName},
+            #{remarks}, #{createdBy}, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 支払明細登録 -->
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.payment.PaymentDetail">
+        INSERT INTO "支払明細データ" (
+            "支払ID", "支払行番号", "仕入番号", "仕入日",
+            "仕入金額", "消費税額", "支払対象金額"
+        ) VALUES (
+            #{paymentId}, #{lineNumber}, #{purchaseNumber}, #{purchaseDate},
+            #{purchaseAmount}, #{taxAmount}, #{paymentTargetAmount}
+        )
+    </insert>
+
+    <!-- ID で検索 -->
+    <select id="findById" resultMap="PaymentResultMap">
+        SELECT * FROM "支払データ" WHERE "ID" = #{id}
+    </select>
+
+    <!-- 支払番号で検索 -->
+    <select id="findByPaymentNumber" resultMap="PaymentResultMap">
+        SELECT * FROM "支払データ" WHERE "支払番号" = #{paymentNumber}
+    </select>
+
+    <!-- 支払番号で明細付き検索（JOIN） -->
+    <select id="findWithDetailsByPaymentNumber" resultMap="PaymentWithDetailsResultMap">
+        SELECT
+            p."ID" AS p_id,
+            p."支払番号" AS p_支払番号,
+            p."仕入先コード" AS p_仕入先コード,
+            p."支払締日" AS p_支払締日,
+            p."支払予定日" AS p_支払予定日,
+            p."支払方法" AS p_支払方法,
+            p."支払金額" AS p_支払金額,
+            p."消費税額" AS p_消費税額,
+            p."源泉徴収額" AS p_源泉徴収額,
+            p."差引支払額" AS p_差引支払額,
+            p."支払実行日" AS p_支払実行日,
+            p."ステータス" AS p_ステータス,
+            p."バージョン" AS p_バージョン,
+            p."作成日時" AS p_作成日時,
+            p."更新日時" AS p_更新日時,
+            pd."ID" AS pd_id,
+            pd."支払ID" AS pd_支払ID,
+            pd."支払行番号" AS pd_支払行番号,
+            pd."仕入番号" AS pd_仕入番号,
+            pd."仕入日" AS pd_仕入日,
+            pd."仕入金額" AS pd_仕入金額,
+            pd."消費税額" AS pd_消費税額,
+            pd."支払対象金額" AS pd_支払対象金額
+        FROM "支払データ" p
+        LEFT JOIN "支払明細データ" pd ON p."ID" = pd."支払ID"
+        WHERE p."支払番号" = #{paymentNumber}
+        ORDER BY pd."支払行番号"
+    </select>
+
+    <!-- 仕入先コードで検索 -->
+    <select id="findBySupplierCode" resultMap="PaymentResultMap">
+        SELECT * FROM "支払データ" WHERE "仕入先コード" = #{supplierCode}
+    </select>
+
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="PaymentResultMap" databaseId="postgresql">
+        SELECT * FROM "支払データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}::支払ステータス
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="PaymentResultMap" databaseId="h2">
+        SELECT * FROM "支払データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}
+    </select>
+
+    <!-- 支払予定日範囲で検索 -->
+    <select id="findByPaymentDueDateBetween" resultMap="PaymentResultMap">
+        SELECT * FROM "支払データ"
+        WHERE "支払予定日" BETWEEN #{from} AND #{to}
+    </select>
+
+    <!-- 全件検索 -->
+    <select id="findAll" resultMap="PaymentResultMap">
+        SELECT * FROM "支払データ"
+    </select>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="PaymentResultMap">
+        SELECT * FROM "支払データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("支払番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "ID" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 検索条件に一致する件数 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "支払データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("支払番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 楽観ロック付き更新 (PostgreSQL) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.payment.Payment" databaseId="postgresql">
+        UPDATE "支払データ"
+        SET
+            "支払締日" = #{paymentClosingDate},
+            "支払予定日" = #{paymentDueDate},
+            "支払方法" = #{paymentMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler}::支払方法,
+            "支払金額" = #{paymentAmount},
+            "消費税額" = #{taxAmount},
+            "源泉徴収額" = #{withholdingAmount},
+            "差引支払額" = #{netPaymentAmount},
+            "支払実行日" = #{paymentExecutionDate},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}::支払ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- 楽観ロック付き更新 (H2) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.payment.Payment" databaseId="h2">
+        UPDATE "支払データ"
+        SET
+            "支払締日" = #{paymentClosingDate},
+            "支払予定日" = #{paymentDueDate},
+            "支払方法" = #{paymentMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler},
+            "支払金額" = #{paymentAmount},
+            "消費税額" = #{taxAmount},
+            "源泉徴収額" = #{withholdingAmount},
+            "差引支払額" = #{netPaymentAmount},
+            "支払実行日" = #{paymentExecutionDate},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- バージョン取得 -->
+    <select id="findVersionById" resultType="java.lang.Integer">
+        SELECT "バージョン" FROM "支払データ" WHERE "ID" = #{id}
+    </select>
+
+    <!-- 支払IDで明細削除 -->
+    <delete id="deleteDetailsByPaymentId">
+        DELETE FROM "支払明細データ" WHERE "支払ID" = #{paymentId}
+    </delete>
+
+    <!-- ID で削除 -->
+    <delete id="deleteById">
+        DELETE FROM "支払データ" WHERE "ID" = #{id}
+    </delete>
+
+    <!-- 全明細削除 -->
+    <delete id="deleteAllDetails">
+        DELETE FROM "支払明細データ"
+    </delete>
+
+    <!-- 全件削除 -->
+    <delete id="deleteAll">
+        DELETE FROM "支払データ"
+    </delete>
+
+</mapper>

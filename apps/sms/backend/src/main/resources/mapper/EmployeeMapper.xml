@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.EmployeeMapper">
+
+    <resultMap id="EmployeeResultMap" type="com.example.sms.domain.model.employee.Employee">
+        <result property="employeeCode" column="社員コード"/>
+        <result property="employeeName" column="社員名"/>
+        <result property="employeeNameKana" column="社員名カナ"/>
+        <result property="departmentCode" column="部門コード"/>
+        <result property="departmentStartDate" column="開始日"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者名"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.employee.Employee">
+        INSERT INTO "社員マスタ" (
+            "社員コード", "社員名", "社員名カナ", "部門コード", "開始日",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{employeeCode}, #{employeeName}, #{employeeNameKana}, #{departmentCode}, #{departmentStartDate},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByCode" resultMap="EmployeeResultMap">
+        SELECT * FROM "社員マスタ"
+        WHERE "社員コード" = #{employeeCode}
+    </select>
+
+    <select id="findAll" resultMap="EmployeeResultMap">
+        SELECT * FROM "社員マスタ"
+        ORDER BY "社員コード"
+    </select>
+
+    <select id="findByDepartmentCode" resultMap="EmployeeResultMap">
+        SELECT * FROM "社員マスタ"
+        WHERE "部門コード" = #{departmentCode}
+        ORDER BY "社員コード"
+    </select>
+
+    <select id="findWithPagination" resultMap="EmployeeResultMap">
+        SELECT * FROM "社員マスタ"
+        <where>
+            <if test="departmentCode != null and departmentCode != ''">
+                "部門コード" = #{departmentCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("社員コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("社員名") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("社員名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "社員コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "社員マスタ"
+        <where>
+            <if test="departmentCode != null and departmentCode != ''">
+                "部門コード" = #{departmentCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("社員コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("社員名") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("社員名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <update id="update" parameterType="com.example.sms.domain.model.employee.Employee">
+        UPDATE "社員マスタ" SET
+            "社員名" = #{employeeName},
+            "社員名カナ" = #{employeeNameKana},
+            "部門コード" = #{departmentCode},
+            "開始日" = #{departmentStartDate},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "社員コード" = #{employeeCode}
+    </update>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "社員マスタ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "社員マスタ"
+    </delete>
+</mapper>

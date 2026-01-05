@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.NumberingHistoryMapper">
+
+    <resultMap id="NumberingHistoryResultMap" type="com.example.sms.domain.model.common.NumberingHistory">
+        <id property="id" column="ID"/>
+        <result property="numberingCode" column="採番コード"/>
+        <result property="yearMonth" column="採番年月"/>
+        <result property="lastNumber" column="最終番号"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.sms.domain.model.common.NumberingHistory"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "採番履歴データ" (
+            "採番コード", "採番年月", "最終番号", "作成日時", "更新日時"
+        ) VALUES (
+            #{numberingCode}, #{yearMonth}, #{lastNumber},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="NumberingHistoryResultMap">
+        SELECT * FROM "採番履歴データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByCodeAndYearMonth" resultMap="NumberingHistoryResultMap">
+        SELECT * FROM "採番履歴データ"
+        WHERE "採番コード" = #{numberingCode}
+        AND "採番年月" = #{yearMonth}
+    </select>
+
+    <select id="findByNumberingCode" resultMap="NumberingHistoryResultMap">
+        SELECT * FROM "採番履歴データ"
+        WHERE "採番コード" = #{numberingCode}
+        ORDER BY "採番年月" DESC
+    </select>
+
+    <select id="findAll" resultMap="NumberingHistoryResultMap">
+        SELECT * FROM "採番履歴データ" ORDER BY "採番コード", "採番年月" DESC
+    </select>
+
+    <update id="incrementLastNumber">
+        UPDATE "採番履歴データ" SET
+            "最終番号" = "最終番号" + 1,
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <update id="update" parameterType="com.example.sms.domain.model.common.NumberingHistory">
+        UPDATE "採番履歴データ" SET
+            "採番年月" = #{yearMonth},
+            "最終番号" = #{lastNumber},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "採番履歴データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteByNumberingCode">
+        DELETE FROM "採番履歴データ" WHERE "採番コード" = #{numberingCode}
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "採番履歴データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "採番履歴データ"
+    </delete>
+</mapper>

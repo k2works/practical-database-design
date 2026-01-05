@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>商品詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">商品詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/products}" class="btn btn-outline-secondary">戻る</a>
+        <a th:href="@{/products/{code}/edit(code=${product.productCode})}"
+           class="btn btn-primary">編集</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">商品コード</div>
+                <div class="col-md-9" th:text="${product.productCode}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">商品正式名</div>
+                <div class="col-md-9" th:text="${product.productFullName}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">商品名</div>
+                <div class="col-md-9" th:text="${product.productName}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">商品名カナ</div>
+                <div class="col-md-9" th:text="${product.productNameKana}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">商品区分</div>
+                <div class="col-md-9">
+                    <span class="badge bg-secondary"
+                          th:text="${product.productCategory?.displayName}"></span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">型番</div>
+                <div class="col-md-9" th:text="${product.modelNumber}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">販売単価</div>
+                <div class="col-md-9 amount"
+                     th:text="${#numbers.formatDecimal(product.sellingPrice, 1, 'COMMA', 0, 'POINT')} + ' 円'"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">仕入単価</div>
+                <div class="col-md-9 amount"
+                     th:text="${#numbers.formatDecimal(product.purchasePrice, 1, 'COMMA', 0, 'POINT')} + ' 円'"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">税区分</div>
+                <div class="col-md-9" th:text="${product.taxCategory?.displayName}"></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">在庫管理</div>
+                <div class="col-md-9">
+                    <span th:if="${product.inventoryManaged}" class="badge bg-success">対象</span>
+                    <span th:unless="${product.inventoryManaged}" class="badge bg-secondary">対象外</span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">引当管理</div>
+                <div class="col-md-9">
+                    <span th:if="${product.inventoryAllocated}" class="badge bg-success">対象</span>
+                    <span th:unless="${product.inventoryAllocated}" class="badge bg-secondary">対象外</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顧客別販売単価 -->
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">顧客別販売単価</h5>
+            <a th:href="@{/products/{code}/customer-prices/new(code=${product.productCode})}"
+               class="btn btn-primary btn-sm">
+                <i class="bi bi-plus"></i> 追加
+            </a>
+        </div>
+        <div class="card-body">
+            <div th:if="${#lists.isEmpty(customerPrices)}" class="text-muted">
+                顧客別販売単価が登録されていません
+            </div>
+            <table th:unless="${#lists.isEmpty(customerPrices)}" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>取引先コード</th>
+                        <th>適用開始日</th>
+                        <th>適用終了日</th>
+                        <th class="text-end">販売単価</th>
+                        <th class="text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="cp : ${customerPrices}">
+                        <td th:text="${cp.partnerCode}"></td>
+                        <td th:text="${#temporals.format(cp.startDate, 'yyyy/MM/dd')}"></td>
+                        <td th:text="${cp.endDate != null} ? ${#temporals.format(cp.endDate, 'yyyy/MM/dd')} : '無期限'"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(cp.sellingPrice, 1, 'COMMA', 0, 'POINT')} + ' 円'"></td>
+                        <td class="text-center">
+                            <a th:href="@{/products/{code}/customer-prices/{partner}/{date}/edit(code=${product.productCode}, partner=${cp.partnerCode}, date=${#temporals.format(cp.startDate, 'yyyy-MM-dd')})}"
+                               class="btn btn-outline-primary btn-sm">編集</a>
+                            <form th:action="@{/products/{code}/customer-prices/{partner}/{date}/delete(code=${product.productCode}, partner=${cp.partnerCode}, date=${#temporals.format(cp.startDate, 'yyyy-MM-dd')})}"
+                                  method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                        onclick="return confirm('削除してもよろしいですか？')">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

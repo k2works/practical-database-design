@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.WarehouseMapper">
+
+    <resultMap id="WarehouseResultMap" type="com.example.sms.domain.model.inventory.Warehouse">
+        <id property="warehouseCode" column="倉庫コード"/>
+        <result property="warehouseName" column="倉庫名"/>
+        <result property="warehouseNameKana" column="倉庫名カナ"/>
+        <result property="warehouseType" column="倉庫区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.WarehouseTypeTypeHandler"/>
+        <result property="postalCode" column="郵便番号"/>
+        <result property="address" column="住所"/>
+        <result property="phoneNumber" column="電話番号"/>
+        <result property="activeFlag" column="有効フラグ"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者名"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <!-- 登録 (PostgreSQL) -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.inventory.Warehouse" databaseId="postgresql">
+        INSERT INTO "倉庫マスタ" (
+            "倉庫コード", "倉庫名", "倉庫名カナ", "倉庫区分",
+            "郵便番号", "住所", "電話番号", "有効フラグ",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{warehouseCode}, #{warehouseName}, #{warehouseNameKana},
+            #{warehouseType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.WarehouseTypeTypeHandler}::倉庫区分,
+            #{postalCode}, #{address}, #{phoneNumber}, #{activeFlag},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 登録 (H2) -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.inventory.Warehouse" databaseId="h2">
+        INSERT INTO "倉庫マスタ" (
+            "倉庫コード", "倉庫名", "倉庫名カナ", "倉庫区分",
+            "郵便番号", "住所", "電話番号", "有効フラグ",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{warehouseCode}, #{warehouseName}, #{warehouseNameKana},
+            #{warehouseType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.WarehouseTypeTypeHandler},
+            #{postalCode}, #{address}, #{phoneNumber}, #{activeFlag},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByCode" resultMap="WarehouseResultMap">
+        SELECT * FROM "倉庫マスタ" WHERE "倉庫コード" = #{warehouseCode}
+    </select>
+
+    <select id="findAll" resultMap="WarehouseResultMap">
+        SELECT * FROM "倉庫マスタ" ORDER BY "倉庫コード"
+    </select>
+
+    <select id="findActive" resultMap="WarehouseResultMap">
+        SELECT * FROM "倉庫マスタ"
+        WHERE "有効フラグ" = TRUE
+        ORDER BY "倉庫コード"
+    </select>
+
+    <select id="findWithPagination" resultMap="WarehouseResultMap">
+        SELECT * FROM "倉庫マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "倉庫コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "倉庫マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("倉庫コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫名") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("倉庫名カナ") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 更新 (PostgreSQL) -->
+    <update id="update" parameterType="com.example.sms.domain.model.inventory.Warehouse" databaseId="postgresql">
+        UPDATE "倉庫マスタ" SET
+            "倉庫名" = #{warehouseName},
+            "倉庫名カナ" = #{warehouseNameKana},
+            "倉庫区分" = #{warehouseType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.WarehouseTypeTypeHandler}::倉庫区分,
+            "郵便番号" = #{postalCode},
+            "住所" = #{address},
+            "電話番号" = #{phoneNumber},
+            "有効フラグ" = #{activeFlag},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "倉庫コード" = #{warehouseCode}
+    </update>
+
+    <!-- 更新 (H2) -->
+    <update id="update" parameterType="com.example.sms.domain.model.inventory.Warehouse" databaseId="h2">
+        UPDATE "倉庫マスタ" SET
+            "倉庫名" = #{warehouseName},
+            "倉庫名カナ" = #{warehouseNameKana},
+            "倉庫区分" = #{warehouseType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.WarehouseTypeTypeHandler},
+            "郵便番号" = #{postalCode},
+            "住所" = #{address},
+            "電話番号" = #{phoneNumber},
+            "有効フラグ" = #{activeFlag},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "倉庫コード" = #{warehouseCode}
+    </update>
+
+    <delete id="deleteByCode">
+        DELETE FROM "倉庫マスタ" WHERE "倉庫コード" = #{warehouseCode}
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "倉庫マスタ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "倉庫マスタ"
+    </delete>
+</mapper>

@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.PurchaseOrderMapper">
+
+    <resultMap id="PurchaseOrderResultMap" type="com.example.sms.domain.model.purchase.PurchaseOrder">
+        <id property="id" column="ID"/>
+        <result property="purchaseOrderNumber" column="発注番号"/>
+        <result property="supplierCode" column="仕入先コード"/>
+        <result property="supplierBranchNumber" column="仕入先枝番"/>
+        <result property="orderDate" column="発注日"/>
+        <result property="desiredDeliveryDate" column="希望納期"/>
+        <result property="status" column="発注ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler"/>
+        <result property="purchaserCode" column="発注担当者コード"/>
+        <result property="totalAmount" column="発注合計金額"/>
+        <result property="taxAmount" column="税額"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+        <collection property="details" ofType="com.example.sms.domain.model.purchase.PurchaseOrderDetail"
+                    select="findDetailsByPurchaseOrderId" column="ID"/>
+    </resultMap>
+
+    <resultMap id="PurchaseOrderDetailResultMap" type="com.example.sms.domain.model.purchase.PurchaseOrderDetail">
+        <id property="id" column="ID"/>
+        <result property="purchaseOrderId" column="発注ID"/>
+        <result property="lineNumber" column="発注行番号"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="orderQuantity" column="発注数量"/>
+        <result property="unitPrice" column="発注単価"/>
+        <result property="orderAmount" column="発注金額"/>
+        <result property="expectedDeliveryDate" column="入荷予定日"/>
+        <result property="receivedQuantity" column="入荷済数量"/>
+        <result property="remainingQuantity" column="残数量"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 発注（ヘッダ）+ 発注明細のネスト ResultMap（JOINによる一括取得用） -->
+    <resultMap id="purchaseOrderWithDetailsResultMap" type="com.example.sms.domain.model.purchase.PurchaseOrder">
+        <id property="id" column="po_id"/>
+        <result property="purchaseOrderNumber" column="po_発注番号"/>
+        <result property="supplierCode" column="po_仕入先コード"/>
+        <result property="supplierBranchNumber" column="po_仕入先枝番"/>
+        <result property="orderDate" column="po_発注日"/>
+        <result property="desiredDeliveryDate" column="po_希望納期"/>
+        <result property="status" column="po_発注ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler"/>
+        <result property="purchaserCode" column="po_発注担当者コード"/>
+        <result property="totalAmount" column="po_発注合計金額"/>
+        <result property="taxAmount" column="po_税額"/>
+        <result property="remarks" column="po_備考"/>
+        <result property="version" column="po_バージョン"/>
+        <result property="createdAt" column="po_作成日時"/>
+        <result property="createdBy" column="po_作成者"/>
+        <result property="updatedAt" column="po_更新日時"/>
+        <result property="updatedBy" column="po_更新者"/>
+        <!-- 発注明細との1:N関連 -->
+        <collection property="details" ofType="com.example.sms.domain.model.purchase.PurchaseOrderDetail"
+                    resultMap="purchaseOrderDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 発注明細のネスト ResultMap -->
+    <resultMap id="purchaseOrderDetailNestedResultMap" type="com.example.sms.domain.model.purchase.PurchaseOrderDetail">
+        <id property="id" column="pd_id"/>
+        <result property="purchaseOrderId" column="pd_発注ID"/>
+        <result property="lineNumber" column="pd_発注行番号"/>
+        <result property="productCode" column="pd_商品コード"/>
+        <result property="orderQuantity" column="pd_発注数量"/>
+        <result property="unitPrice" column="pd_発注単価"/>
+        <result property="orderAmount" column="pd_発注金額"/>
+        <result property="expectedDeliveryDate" column="pd_入荷予定日"/>
+        <result property="receivedQuantity" column="pd_入荷済数量"/>
+        <result property="remainingQuantity" column="pd_残数量"/>
+        <result property="remarks" column="pd_備考"/>
+        <result property="createdAt" column="pd_作成日時"/>
+        <result property="updatedAt" column="pd_更新日時"/>
+    </resultMap>
+
+    <!-- ヘッダ登録 (PostgreSQL) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "発注データ" (
+            "発注番号", "仕入先コード", "仕入先枝番", "発注日", "希望納期",
+            "発注ステータス", "発注担当者コード", "発注合計金額", "税額", "備考",
+            "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{purchaseOrderNumber}, #{supplierCode}, #{supplierBranchNumber}, #{orderDate}, #{desiredDeliveryDate},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            #{purchaserCode}, #{totalAmount}, #{taxAmount}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "発注データ" (
+            "発注番号", "仕入先コード", "仕入先枝番", "発注日", "希望納期",
+            "発注ステータス", "発注担当者コード", "発注合計金額", "税額", "備考",
+            "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{purchaseOrderNumber}, #{supplierCode}, #{supplierBranchNumber}, #{orderDate}, #{desiredDeliveryDate},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
+            #{purchaserCode}, #{totalAmount}, #{taxAmount}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.purchase.PurchaseOrderDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "発注明細データ" (
+            "発注ID", "発注行番号", "商品コード", "発注数量", "発注単価",
+            "発注金額", "入荷予定日", "入荷済数量", "備考",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{purchaseOrderId}, #{lineNumber}, #{productCode}, #{orderQuantity}, #{unitPrice},
+            #{orderAmount}, #{expectedDeliveryDate}, #{receivedQuantity}, #{remarks},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByPurchaseOrderNumber" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" WHERE "発注番号" = #{purchaseOrderNumber}
+    </select>
+
+    <select id="findBySupplierCode" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ"
+        WHERE "仕入先コード" = #{supplierCode}
+        ORDER BY "発注日" DESC, "発注番号"
+    </select>
+
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="PurchaseOrderResultMap" databaseId="postgresql">
+        SELECT * FROM "発注データ"
+        WHERE "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス
+        ORDER BY "発注日" DESC, "発注番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="PurchaseOrderResultMap" databaseId="h2">
+        SELECT * FROM "発注データ"
+        WHERE "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}
+        ORDER BY "発注日" DESC, "発注番号"
+    </select>
+
+    <select id="findByOrderDateBetween" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ"
+        WHERE "発注日" BETWEEN #{from} AND #{to}
+        ORDER BY "発注日" DESC, "発注番号"
+    </select>
+
+    <select id="findByDesiredDeliveryDateBetween" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ"
+        WHERE "希望納期" BETWEEN #{from} AND #{to}
+        ORDER BY "希望納期", "発注番号"
+    </select>
+
+    <select id="findAll" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" ORDER BY "発注日" DESC, "発注番号"
+    </select>
+
+    <select id="findWithPagination" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("発注番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "発注日" DESC, "発注番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "発注データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("発注番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("仕入先コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="findDetailsByPurchaseOrderId" resultMap="PurchaseOrderDetailResultMap">
+        SELECT * FROM "発注明細データ"
+        WHERE "発注ID" = #{purchaseOrderId}
+        ORDER BY "発注行番号"
+    </select>
+
+    <!-- JOIN による一括取得クエリ（発注番号指定） -->
+    <select id="findWithDetailsByPurchaseOrderNumber" resultMap="purchaseOrderWithDetailsResultMap">
+        SELECT
+            po."ID" AS po_id,
+            po."発注番号" AS po_発注番号,
+            po."仕入先コード" AS po_仕入先コード,
+            po."仕入先枝番" AS po_仕入先枝番,
+            po."発注日" AS po_発注日,
+            po."希望納期" AS po_希望納期,
+            po."発注ステータス" AS po_発注ステータス,
+            po."発注担当者コード" AS po_発注担当者コード,
+            po."発注合計金額" AS po_発注合計金額,
+            po."税額" AS po_税額,
+            po."備考" AS po_備考,
+            po."バージョン" AS po_バージョン,
+            po."作成日時" AS po_作成日時,
+            po."作成者" AS po_作成者,
+            po."更新日時" AS po_更新日時,
+            po."更新者" AS po_更新者,
+            pd."ID" AS pd_id,
+            pd."発注ID" AS pd_発注ID,
+            pd."発注行番号" AS pd_発注行番号,
+            pd."商品コード" AS pd_商品コード,
+            pd."発注数量" AS pd_発注数量,
+            pd."発注単価" AS pd_発注単価,
+            pd."発注金額" AS pd_発注金額,
+            pd."入荷予定日" AS pd_入荷予定日,
+            pd."入荷済数量" AS pd_入荷済数量,
+            pd."残数量" AS pd_残数量,
+            pd."備考" AS pd_備考,
+            pd."作成日時" AS pd_作成日時,
+            pd."更新日時" AS pd_更新日時
+        FROM "発注データ" po
+        LEFT JOIN "発注明細データ" pd
+            ON po."ID" = pd."発注ID"
+        WHERE po."発注番号" = #{purchaseOrderNumber}
+        ORDER BY pd."発注行番号"
+    </select>
+
+    <!-- JOIN による一括取得クエリ（ID指定） -->
+    <select id="findByIdWithDetails" resultMap="purchaseOrderWithDetailsResultMap">
+        SELECT
+            po."ID" AS po_id,
+            po."発注番号" AS po_発注番号,
+            po."仕入先コード" AS po_仕入先コード,
+            po."仕入先枝番" AS po_仕入先枝番,
+            po."発注日" AS po_発注日,
+            po."希望納期" AS po_希望納期,
+            po."発注ステータス" AS po_発注ステータス,
+            po."発注担当者コード" AS po_発注担当者コード,
+            po."発注合計金額" AS po_発注合計金額,
+            po."税額" AS po_税額,
+            po."備考" AS po_備考,
+            po."バージョン" AS po_バージョン,
+            po."作成日時" AS po_作成日時,
+            po."作成者" AS po_作成者,
+            po."更新日時" AS po_更新日時,
+            po."更新者" AS po_更新者,
+            pd."ID" AS pd_id,
+            pd."発注ID" AS pd_発注ID,
+            pd."発注行番号" AS pd_発注行番号,
+            pd."商品コード" AS pd_商品コード,
+            pd."発注数量" AS pd_発注数量,
+            pd."発注単価" AS pd_発注単価,
+            pd."発注金額" AS pd_発注金額,
+            pd."入荷予定日" AS pd_入荷予定日,
+            pd."入荷済数量" AS pd_入荷済数量,
+            pd."残数量" AS pd_残数量,
+            pd."備考" AS pd_備考,
+            pd."作成日時" AS pd_作成日時,
+            pd."更新日時" AS pd_更新日時
+        FROM "発注データ" po
+        LEFT JOIN "発注明細データ" pd
+            ON po."ID" = pd."発注ID"
+        WHERE po."ID" = #{id}
+        ORDER BY pd."発注行番号"
+    </select>
+
+    <!-- バージョン取得（楽観ロック用） -->
+    <select id="findVersionById" resultType="java.lang.Integer">
+        SELECT "バージョン" FROM "発注データ" WHERE "ID" = #{id}
+    </select>
+
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder" databaseId="postgresql">
+        UPDATE "発注データ" SET
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "発注日" = #{orderDate},
+            "希望納期" = #{desiredDeliveryDate},
+            "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            "発注担当者コード" = #{purchaserCode},
+            "発注合計金額" = #{totalAmount},
+            "税額" = #{taxAmount},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder" databaseId="h2">
+        UPDATE "発注データ" SET
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "発注日" = #{orderDate},
+            "希望納期" = #{desiredDeliveryDate},
+            "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
+            "発注担当者コード" = #{purchaserCode},
+            "発注合計金額" = #{totalAmount},
+            "税額" = #{taxAmount},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き）(PostgreSQL) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder" databaseId="postgresql">
+        UPDATE "発注データ" SET
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "発注日" = #{orderDate},
+            "希望納期" = #{desiredDeliveryDate},
+            "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            "発注担当者コード" = #{purchaserCode},
+            "発注合計金額" = #{totalAmount},
+            "税額" = #{taxAmount},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き）(H2) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder" databaseId="h2">
+        UPDATE "発注データ" SET
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "発注日" = #{orderDate},
+            "希望納期" = #{desiredDeliveryDate},
+            "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
+            "発注担当者コード" = #{purchaserCode},
+            "発注合計金額" = #{totalAmount},
+            "税額" = #{taxAmount},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <update id="updateDetail" parameterType="com.example.sms.domain.model.purchase.PurchaseOrderDetail">
+        UPDATE "発注明細データ" SET
+            "商品コード" = #{productCode},
+            "発注数量" = #{orderQuantity},
+            "発注単価" = #{unitPrice},
+            "発注金額" = #{orderAmount},
+            "入荷予定日" = #{expectedDeliveryDate},
+            "入荷済数量" = #{receivedQuantity},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteDetailsByPurchaseOrderId">
+        DELETE FROM "発注明細データ" WHERE "発注ID" = #{purchaseOrderId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "発注データ" WHERE "ID" = #{id}
+    </delete>
+
+    <!-- 全明細削除 (PostgreSQL) -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
+        TRUNCATE TABLE "発注明細データ" CASCADE
+    </delete>
+
+    <!-- 全明細削除 (H2) -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "発注明細データ"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "発注データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "発注データ"
+    </delete>
+</mapper>

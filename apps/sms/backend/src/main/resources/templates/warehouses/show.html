@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>倉庫詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">倉庫詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/warehouses}" class="btn btn-secondary">一覧に戻る</a>
+        <a th:href="@{/warehouses/{code}/edit(code=${warehouse.warehouseCode})}"
+           class="btn btn-primary">編集</a>
+        <form th:action="@{/warehouses/{code}/delete(code=${warehouse.warehouseCode})}"
+              method="post" style="display:inline;"
+              onsubmit="return confirm('この倉庫を削除しますか？');">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">基本情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>倉庫コード</dt>
+                        <dd th:text="${warehouse.warehouseCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>倉庫区分</dt>
+                        <dd>
+                            <span class="badge"
+                                  th:classappend="${warehouse.warehouseType?.name() == 'OWN' ? 'bg-primary' : (warehouse.warehouseType?.name() == 'EXTERNAL' ? 'bg-secondary' : 'bg-info')}"
+                                  th:text="${warehouse.warehouseType?.displayName}"></span>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>状態</dt>
+                        <dd>
+                            <span th:if="${warehouse.activeFlag}" class="badge bg-success">有効</span>
+                            <span th:unless="${warehouse.activeFlag}" class="badge bg-danger">無効</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>倉庫名</dt>
+                        <dd th:text="${warehouse.warehouseName}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl>
+                        <dt>倉庫名カナ</dt>
+                        <dd th:text="${warehouse.warehouseNameKana ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 所在地情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">所在地情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-2">
+                    <dl>
+                        <dt>郵便番号</dt>
+                        <dd th:text="${warehouse.postalCode ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl>
+                        <dt>住所</dt>
+                        <dd th:text="${warehouse.address ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-4">
+                    <dl>
+                        <dt>電話番号</dt>
+                        <dd th:text="${warehouse.phoneNumber ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">システム情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成日時</dt>
+                        <dd th:text="${warehouse.createdAt != null ? #temporals.format(warehouse.createdAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成者</dt>
+                        <dd th:text="${warehouse.createdBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新日時</dt>
+                        <dd th:text="${warehouse.updatedAt != null ? #temporals.format(warehouse.updatedAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新者</dt>
+                        <dd th:text="${warehouse.updatedBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

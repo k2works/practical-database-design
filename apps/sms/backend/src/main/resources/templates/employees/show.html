@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>社員詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">社員詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/employees}" class="btn btn-secondary">
+            一覧に戻る
+        </a>
+        <a th:href="@{/employees/{code}/edit(code=${employee.employeeCode})}" class="btn btn-primary">
+            編集
+        </a>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">基本情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>社員コード</dt>
+                        <dd th:text="${employee.employeeCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>氏名</dt>
+                        <dd th:text="${employee.employeeName}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>カナ</dt>
+                        <dd th:text="${employee.employeeNameKana ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 所属情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">所属情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>部門コード</dt>
+                        <dd>
+                            <a th:if="${employee.departmentCode != null}"
+                               th:href="@{/departments/{code}(code=${employee.departmentCode})}"
+                               th:text="${employee.departmentCode}"></a>
+                            <span th:if="${employee.departmentCode == null}">-</span>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>部門名</dt>
+                        <dd th:text="${department != null ? department.departmentName : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>部門開始日</dt>
+                        <dd th:text="${employee.departmentStartDate != null ? #temporals.format(employee.departmentStartDate, 'yyyy/MM/dd') : '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">システム情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成日時</dt>
+                        <dd th:text="${employee.createdAt != null ? #temporals.format(employee.createdAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成者</dt>
+                        <dd th:text="${employee.createdBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新日時</dt>
+                        <dd th:text="${employee.updatedAt != null ? #temporals.format(employee.updatedAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新者</dt>
+                        <dd th:text="${employee.updatedBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

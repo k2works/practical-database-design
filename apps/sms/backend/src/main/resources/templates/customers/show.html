@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>顧客詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">顧客詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/customers}" class="btn btn-secondary">一覧に戻る</a>
+        <a th:href="@{/customers/{code}/{branch}/edit(code=${customer.customerCode}, branch=${customer.customerBranchNumber})}"
+           class="btn btn-primary">編集</a>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">基本情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>顧客コード</dt>
+                        <dd th:text="${customer.customerCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>枝番</dt>
+                        <dd th:text="${customer.customerBranchNumber}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>顧客区分</dt>
+                        <dd th:text="${customer.customerCategory ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>請求区分</dt>
+                        <dd>
+                            <span class="badge"
+                                  th:classappend="${customer.billingType?.name() == 'PERIODIC' ? 'bg-primary' : 'bg-info'}"
+                                  th:text="${customer.billingType?.name() == 'PERIODIC' ? '締め' : '都度'}"></span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>顧客名</dt>
+                        <dd th:text="${customer.customerName}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl>
+                        <dt>顧客名カナ</dt>
+                        <dd th:text="${customer.customerNameKana ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 連絡先情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">連絡先情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>住所</dt>
+                        <dd>
+                            <span th:if="${customer.customerPostalCode}">〒<span th:text="${customer.customerPostalCode}"></span></span><br/>
+                            <span th:text="${customer.customerPrefecture}"></span>
+                            <span th:text="${customer.customerAddress1}"></span>
+                            <span th:text="${customer.customerAddress2}"></span>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>電話番号</dt>
+                        <dd th:text="${customer.customerPhone ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>FAX番号</dt>
+                        <dd th:text="${customer.customerFax ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>メールアドレス</dt>
+                        <dd th:text="${customer.customerEmail ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>担当者名</dt>
+                        <dd th:text="${customer.customerRepresentativeName ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>部門名</dt>
+                        <dd th:text="${customer.customerDepartmentName ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 請求・回収情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">請求・回収情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>請求先コード</dt>
+                        <dd th:text="${customer.billingCode ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>請求先枝番</dt>
+                        <dd th:text="${customer.billingBranchNumber ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>回収先コード</dt>
+                        <dd th:text="${customer.collectionCode ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>回収先枝番</dt>
+                        <dd th:text="${customer.collectionBranchNumber ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>支払条件1</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <dl>
+                                <dt>締日</dt>
+                                <dd th:text="${customer.closingDay1 != null ? customer.closingDay1 + '日' : '-'}"></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-4">
+                            <dl>
+                                <dt>支払月/日</dt>
+                                <dd th:text="${customer.paymentMonth1 != null ? customer.paymentMonth1 + 'ヶ月後' + customer.paymentDay1 + '日' : '-'}"></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-4">
+                            <dl>
+                                <dt>支払方法</dt>
+                                <dd th:text="${customer.paymentMethod1 ?: '-'}"></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6>支払条件2</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <dl>
+                                <dt>締日</dt>
+                                <dd th:text="${customer.closingDay2 != null ? customer.closingDay2 + '日' : '-'}"></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-4">
+                            <dl>
+                                <dt>支払月/日</dt>
+                                <dd th:text="${customer.paymentMonth2 != null ? customer.paymentMonth2 + 'ヶ月後' + customer.paymentDay2 + '日' : '-'}"></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-4">
+                            <dl>
+                                <dt>支払方法</dt>
+                                <dd th:text="${customer.paymentMethod2 ?: '-'}"></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 出荷先一覧 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">出荷先一覧</h5>
+            <a th:href="@{/customers/{code}/{branch}/shipping-destinations/new(code=${customer.customerCode}, branch=${customer.customerBranchNumber})}"
+               class="btn btn-sm btn-primary">出荷先追加</a>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>出荷先番号</th>
+                        <th>出荷先名</th>
+                        <th>郵便番号</th>
+                        <th>住所</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="dest : ${shippingDestinations}">
+                        <td th:text="${dest.shippingNumber}"></td>
+                        <td th:text="${dest.shippingName}"></td>
+                        <td th:text="${dest.postalCode ?: '-'}"></td>
+                        <td>
+                            <span th:text="${dest.address1}"></span>
+                            <span th:text="${dest.address2}"></span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a th:href="@{/customers/{code}/{branch}/shipping-destinations/{num}/edit(code=${customer.customerCode}, branch=${customer.customerBranchNumber}, num=${dest.shippingNumber})}"
+                                   class="btn btn-outline-secondary btn-sm">編集</a>
+                                <form th:action="@{/customers/{code}/{branch}/shipping-destinations/{num}/delete(code=${customer.customerCode}, branch=${customer.customerBranchNumber}, num=${dest.shippingNumber})}"
+                                      method="post" style="display:inline;"
+                                      onsubmit="return confirm('この出荷先を削除しますか？');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">削除</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(shippingDestinations)}">
+                        <td colspan="5" class="text-center text-muted">出荷先が登録されていません</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">システム情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成日時</dt>
+                        <dd th:text="${customer.createdAt != null ? #temporals.format(customer.createdAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成者</dt>
+                        <dd th:text="${customer.createdBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新日時</dt>
+                        <dd th:text="${customer.updatedAt != null ? #temporals.format(customer.updatedAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新者</dt>
+                        <dd th:text="${customer.updatedBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

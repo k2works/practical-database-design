@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>業務エラー</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="text-center py-5">
+        <h1 class="display-4 text-warning">業務エラー</h1>
+        <p class="lead mb-4" th:text="${errorMessage}">処理を完了できませんでした。</p>
+        <p class="text-muted mb-4" th:if="${errorCode}">エラーコード: <span th:text="${errorCode}"></span></p>
+        <button type="button" class="btn btn-outline-secondary" onclick="history.back()">戻る</button>
+        <a th:href="@{/}" class="btn btn-primary">ホームへ戻る</a>
+    </div>
+</div>
+</body>
+</html>

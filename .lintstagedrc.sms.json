@@ -1,0 +1,5 @@
+{
+  "apps/sms/backend/src/**/*.java": [
+    "bash -c 'cd apps/sms/backend && ./gradlew checkstyleMain checkstyleTest pmdMain spotbugsMain --no-daemon'"
+  ]
+}

@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.SalesMapper">
+
+    <resultMap id="SalesResultMap" type="com.example.sms.domain.model.sales.Sales">
+        <id property="id" column="ID"/>
+        <result property="salesNumber" column="売上番号"/>
+        <result property="salesDate" column="売上日"/>
+        <result property="orderId" column="受注ID"/>
+        <result property="shipmentId" column="出荷ID"/>
+        <result property="customerCode" column="顧客コード"/>
+        <result property="customerBranchNumber" column="顧客枝番"/>
+        <result property="representativeCode" column="担当者コード"/>
+        <result property="salesAmount" column="売上金額"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="totalAmount" column="売上合計"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler"/>
+        <result property="billingId" column="請求ID"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <collection property="details" ofType="com.example.sms.domain.model.sales.SalesDetail"
+                    select="findDetailsBySalesId" column="ID"/>
+    </resultMap>
+
+    <resultMap id="SalesDetailResultMap" type="com.example.sms.domain.model.sales.SalesDetail">
+        <id property="id" column="ID"/>
+        <result property="salesId" column="売上ID"/>
+        <result property="lineNumber" column="行番号"/>
+        <result property="orderDetailId" column="受注明細ID"/>
+        <result property="shipmentDetailId" column="出荷明細ID"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="productName" column="商品名"/>
+        <result property="salesQuantity" column="売上数量"/>
+        <result property="unit" column="単位"/>
+        <result property="unitPrice" column="単価"/>
+        <result property="amount" column="金額"/>
+        <result property="taxCategory" column="税区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler"/>
+        <result property="taxRate" column="消費税率"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="remarks" column="備考"/>
+    </resultMap>
+
+    <!-- ヘッダ登録 (PostgreSQL) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.Sales"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "売上データ" (
+            "売上番号", "売上日", "受注ID", "出荷ID", "顧客コード", "顧客枝番",
+            "担当者コード", "売上金額", "消費税額", "売上合計",
+            "ステータス", "請求ID", "備考",
+            "作成日時", "作成者", "更新日時", "更新者"
+        ) VALUES (
+            #{salesNumber}, #{salesDate}, #{orderId}, #{shipmentId}, #{customerCode}, #{customerBranchNumber},
+            #{representativeCode}, #{salesAmount}, #{taxAmount}, #{totalAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler}::売上ステータス,
+            #{billingId}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.Sales"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "売上データ" (
+            "売上番号", "売上日", "受注ID", "出荷ID", "顧客コード", "顧客枝番",
+            "担当者コード", "売上金額", "消費税額", "売上合計",
+            "ステータス", "請求ID", "備考",
+            "作成日時", "作成者", "更新日時", "更新者"
+        ) VALUES (
+            #{salesNumber}, #{salesDate}, #{orderId}, #{shipmentId}, #{customerCode}, #{customerBranchNumber},
+            #{representativeCode}, #{salesAmount}, #{taxAmount}, #{totalAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler},
+            #{billingId}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 明細登録 (PostgreSQL) -->
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.SalesDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "売上明細" (
+            "売上ID", "行番号", "受注明細ID", "出荷明細ID", "商品コード", "商品名",
+            "売上数量", "単位", "単価", "金額", "税区分",
+            "消費税率", "消費税額", "備考"
+        ) VALUES (
+            #{salesId}, #{lineNumber}, #{orderDetailId}, #{shipmentDetailId}, #{productCode}, #{productName},
+            #{salesQuantity}, #{unit}, #{unitPrice}, #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{taxRate}, #{taxAmount}, #{remarks}
+        )
+    </insert>
+
+    <!-- 明細登録 (H2) -->
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.SalesDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "売上明細" (
+            "売上ID", "行番号", "受注明細ID", "出荷明細ID", "商品コード", "商品名",
+            "売上数量", "単位", "単価", "金額", "税区分",
+            "消費税率", "消費税額", "備考"
+        ) VALUES (
+            #{salesId}, #{lineNumber}, #{orderDetailId}, #{shipmentDetailId}, #{productCode}, #{productName},
+            #{salesQuantity}, #{unit}, #{unitPrice}, #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
+            #{taxRate}, #{taxAmount}, #{remarks}
+        )
+    </insert>
+
+    <select id="findById" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findBySalesNumber" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ" WHERE "売上番号" = #{salesNumber}
+    </select>
+
+    <select id="findByOrderId" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ"
+        WHERE "受注ID" = #{orderId}
+        ORDER BY "売上日" DESC, "売上番号"
+    </select>
+
+    <select id="findByShipmentId" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ"
+        WHERE "出荷ID" = #{shipmentId}
+        ORDER BY "売上日" DESC, "売上番号"
+    </select>
+
+    <select id="findByCustomerCode" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ"
+        WHERE "顧客コード" = #{customerCode}
+        ORDER BY "売上日" DESC, "売上番号"
+    </select>
+
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="SalesResultMap" databaseId="postgresql">
+        SELECT * FROM "売上データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler}::売上ステータス
+        ORDER BY "売上日" DESC, "売上番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="SalesResultMap" databaseId="h2">
+        SELECT * FROM "売上データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler}
+        ORDER BY "売上日" DESC, "売上番号"
+    </select>
+
+    <select id="findBySalesDateBetween" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ"
+        WHERE "売上日" BETWEEN #{from} AND #{to}
+        ORDER BY "売上日" DESC, "売上番号"
+    </select>
+
+    <select id="findAll" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ" ORDER BY "売上日" DESC, "売上番号"
+    </select>
+
+    <select id="findWithPagination" resultMap="SalesResultMap">
+        SELECT * FROM "売上データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("売上番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "売上日" DESC, "売上番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "売上データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("売上番号") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("顧客コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="findDetailsBySalesId" resultMap="SalesDetailResultMap">
+        SELECT * FROM "売上明細"
+        WHERE "売上ID" = #{salesId}
+        ORDER BY "行番号"
+    </select>
+
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Sales" databaseId="postgresql">
+        UPDATE "売上データ" SET
+            "売上日" = #{salesDate},
+            "受注ID" = #{orderId},
+            "出荷ID" = #{shipmentId},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "担当者コード" = #{representativeCode},
+            "売上金額" = #{salesAmount},
+            "消費税額" = #{taxAmount},
+            "売上合計" = #{totalAmount},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler}::売上ステータス,
+            "請求ID" = #{billingId},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Sales" databaseId="h2">
+        UPDATE "売上データ" SET
+            "売上日" = #{salesDate},
+            "受注ID" = #{orderId},
+            "出荷ID" = #{shipmentId},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "担当者コード" = #{representativeCode},
+            "売上金額" = #{salesAmount},
+            "消費税額" = #{taxAmount},
+            "売上合計" = #{totalAmount},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler},
+            "請求ID" = #{billingId},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteDetailsBySalesId">
+        DELETE FROM "売上明細" WHERE "売上ID" = #{salesId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "売上データ" WHERE "ID" = #{id}
+    </delete>
+
+    <!-- 全明細削除 (PostgreSQL) -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
+        TRUNCATE TABLE "売上明細" CASCADE
+    </delete>
+
+    <!-- 全明細削除 (H2) -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "売上明細"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "売上データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "売上データ"
+    </delete>
+</mapper>

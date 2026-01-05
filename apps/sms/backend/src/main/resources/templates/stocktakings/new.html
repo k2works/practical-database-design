@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>棚卸登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">棚卸登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/stocktakings}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/stocktakings}" th:object="${form}" method="post">
+                <!-- 基本情報 -->
+                <h5 class="mb-3">基本情報</h5>
+
+                <!-- 倉庫 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">倉庫</label>
+                    <div class="col-md-4">
+                        <select th:field="*{warehouseCode}"
+                                class="form-select" th:classappend="${#fields.hasErrors('warehouseCode')} ? 'is-invalid'">
+                            <option value="">選択してください</option>
+                            <option th:each="warehouse : ${warehouses}"
+                                    th:value="${warehouse.warehouseCode}"
+                                    th:text="${warehouse.warehouseCode + ' - ' + warehouse.warehouseName}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('warehouseCode')}"
+                             th:errors="*{warehouseCode}"></div>
+                    </div>
+                </div>
+
+                <!-- 棚卸日 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">棚卸日</label>
+                    <div class="col-md-3">
+                        <input type="date" th:field="*{stocktakingDate}"
+                               class="form-control" th:classappend="${#fields.hasErrors('stocktakingDate')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('stocktakingDate')}"
+                             th:errors="*{stocktakingDate}"></div>
+                    </div>
+                </div>
+
+                <!-- 備考 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">備考</label>
+                    <div class="col-md-9">
+                        <textarea th:field="*{remarks}" class="form-control" rows="2"
+                                  th:classappend="${#fields.hasErrors('remarks')} ? 'is-invalid'"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('remarks')}"
+                             th:errors="*{remarks}"></div>
+                    </div>
+                </div>
+
+                <!-- 明細 -->
+                <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+                    <h5 class="mb-0">棚卸明細</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                            hx-get="/stocktakings/add-detail-row"
+                            hx-target="#detail-rows"
+                            hx-swap="beforeend"
+                            hx-vals='js:{"index": document.querySelectorAll("#detail-rows tr").length}'>
+                        行追加
+                    </button>
+                </div>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 22%">商品</th>
+                            <th style="width: 13%">ロケーション</th>
+                            <th style="width: 13%">帳簿数量</th>
+                            <th style="width: 13%">実棚数量</th>
+                            <th style="width: 29%">差異理由</th>
+                            <th style="width: 10%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-rows">
+                        <tr th:each="detail, stat : *{details}" th:id="'row-' + ${stat.index}">
+                            <td>
+                                <select th:field="*{details[__${stat.index}__].productCode}" class="form-select">
+                                    <option value="">選択してください</option>
+                                    <option th:each="product : ${products}"
+                                            th:value="${product.productCode}"
+                                            th:text="${product.productCode + ' - ' + product.productName}">
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" th:field="*{details[__${stat.index}__].locationCode}"
+                                       class="form-control" placeholder="A-01-01">
+                            </td>
+                            <td>
+                                <input type="number" th:field="*{details[__${stat.index}__].bookQuantity}"
+                                       class="form-control text-end" step="1" min="0">
+                            </td>
+                            <td>
+                                <input type="number" th:field="*{details[__${stat.index}__].actualQuantity}"
+                                       class="form-control text-end" step="1" min="0">
+                            </td>
+                            <td>
+                                <input type="text" th:field="*{details[__${stat.index}__].differenceReason}"
+                                       class="form-control">
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="removeRow(this)">削除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ボタン -->
+                <div class="row mt-4">
+                    <div class="col-md-9 offset-md-3">
+                        <button type="submit" class="btn btn-primary">登録</button>
+                        <a th:href="@{/stocktakings}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    // 行を削除
+    function removeRow(button) {
+        const tbody = document.getElementById('detail-rows');
+        if (tbody.querySelectorAll('tr').length > 1) {
+            button.closest('tr').remove();
+            reindexRows();
+        } else {
+            alert('最低1行は必要です');
+        }
+    }
+
+    // 行のインデックスを再設定
+    function reindexRows() {
+        document.querySelectorAll('#detail-rows tr').forEach((row, index) => {
+            row.id = 'row-' + index;
+            row.querySelectorAll('[name]').forEach(input => {
+                input.name = input.name.replace(/details\[\d+\]/, 'details[' + index + ']');
+            });
+        });
+    }
+</script>
+</th:block>
+</body>
+</html>

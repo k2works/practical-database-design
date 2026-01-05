@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>売上編集</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">売上編集</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/sales/{num}(num=${form.salesNumber})}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <form th:action="@{/sales/{num}(num=${form.salesNumber})}" th:object="${form}" method="post">
+        <input type="hidden" th:field="*{salesNumber}">
+
+        <!-- 売上ヘッダー -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">売上情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- 売上番号（表示のみ） -->
+                    <div class="col-md-3">
+                        <label class="form-label">売上番号</label>
+                        <input type="text" th:value="${form.salesNumber}"
+                               class="form-control" readonly>
+                    </div>
+
+                    <!-- 売上日（表示のみ） -->
+                    <div class="col-md-3">
+                        <label class="form-label">売上日</label>
+                        <input type="date" th:field="*{salesDate}"
+                               class="form-control" readonly>
+                    </div>
+
+                    <!-- 顧客（表示のみ） -->
+                    <div class="col-md-4">
+                        <label class="form-label">顧客</label>
+                        <input type="text" th:value="${form.customerCode}"
+                               class="form-control" readonly>
+                        <input type="hidden" th:field="*{customerCode}">
+                    </div>
+
+                    <!-- ステータス -->
+                    <div class="col-md-3">
+                        <label class="form-label">ステータス</label>
+                        <select th:field="*{status}" class="form-select">
+                            <option th:each="st : ${statuses}"
+                                    th:value="${st.name()}"
+                                    th:text="${st.displayName}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- 備考 -->
+                    <div class="col-md-12">
+                        <label class="form-label">備考</label>
+                        <textarea th:field="*{remarks}" class="form-control" rows="2"
+                                  th:classappend="${#fields.hasErrors('remarks')} ? 'is-invalid'"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('remarks')}"
+                             th:errors="*{remarks}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 売上明細（表示のみ） -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">売上明細</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>商品コード</th>
+                            <th>商品名</th>
+                            <th class="text-end">売上数量</th>
+                            <th>単位</th>
+                            <th class="text-end">単価</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detail, stat : ${form.details}">
+                            <td th:text="${stat.count}"></td>
+                            <td th:text="${detail.productCode}"></td>
+                            <td th:text="${detail.productName}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(detail.salesQuantity, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td th:text="${detail.unit}"></td>
+                            <td class="text-end amount" th:text="${#numbers.formatDecimal(detail.unitPrice, 1, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ボタン -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg">更新</button>
+            <a th:href="@{/sales/{num}(num=${form.salesNumber})}" class="btn btn-outline-secondary btn-lg">キャンセル</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

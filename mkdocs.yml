@@ -1,8 +1,8 @@
-site_name: Site Name
-site_description: Site Description
-site_author: Project Team
-repo_url: https://github.com/k2works/claude-code-booster
-repo_name: claude-code-booster
+site_name: 実践データベース設計：基幹業務システム編
+site_description: 基幹業務システム（販売管理・財務会計・生産管理）のデータベース設計を体系的に解説
+site_author: k2works
+repo_url: https://github.com/k2works/practical-database-design
+repo_name: practical-database-design
 
 theme:
   name: material
@@ -40,6 +40,7 @@ markdown_extensions:
         - PLANTUML_SERVER_URL
         - http://www.plantuml.com/plantuml
       format: svg
+  - attr_list
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js
@@ -49,8 +50,8 @@ extra:
   plantuml_url: http://www.plantuml.com/plantuml
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/k2works
-      name: GitHub Repository/claude-code-booster
+      link: https://github.com/k2works/practical-database-design
+      name: GitHub Repository
 
 plugins:
   - search
@@ -59,4 +60,82 @@ exclude_docs: |
   wiki
 
 nav:
-  - Home: index.md
+  - 実践データベース設計:
+      - 概要: article/index.md
+      - 技術スタック: article/techstack.md
+      - アウトライン: article/outline.md
+      - 執筆ワークフロー: article/workflow.md
+      - 第1部 基幹業務システムの全体像:
+          - 第1章 基幹業務システムとは: article/part1/chapter01.md
+          - 第2章 基幹業務システムの業務領域: article/part1/chapter02.md
+          - 第3章 業務フローの全体像: article/part1/chapter03.md
+      - 第2部 販売管理システム:
+          - 第4章 販売管理システムの全体像: article/part2/chapter04.md
+          - 第5章 マスタ情報の設計: article/part2/chapter05.md
+          - 第6章 受注・出荷・売上の設計: article/part2/chapter06.md
+          - 第7章 債権管理の設計: article/part2/chapter07.md
+          - 第8章 調達管理の設計: article/part2/chapter08.md
+          - 第9章 在庫管理の設計: article/part2/chapter09.md
+          - 第10章 債務管理の設計: article/part2/chapter10.md
+          - 第11章 共通処理の設計: article/part2/chapter11.md
+          - 第12章 販売管理データ設計（B社事例）: article/part2/chapter12.md
+          - 第13章 APIサービスの実装: article/part2/chapter13.md
+      - 第3部 財務会計システム:
+          - 第14章 財務会計システムの全体像: article/part3/chapter14.md
+          - 第15章 勘定科目の設計: article/part3/chapter15.md
+          - 第16章 仕訳の設計: article/part3/chapter16.md
+          - 第17章 自動仕訳の設計: article/part3/chapter17.md
+          - 第18章 勘定科目残高の設計: article/part3/chapter18.md
+          - 第19章 赤黒とログの設計: article/part3/chapter19.md
+          - 第20章 財務会計データ設計（D社事例）: article/part3/chapter20.md
+          - 第21章 APIサービスの実装: article/part3/chapter21.md
+      - 第4部 生産管理システム:
+          - 第22章 生産管理システムの全体像: article/part4/chapter22.md
+          - 第23章 マスタ情報の設計: article/part4/chapter23.md
+          - 第24章 生産計画の設計: article/part4/chapter24.md
+          - 第25章 購買管理の設計: article/part4/chapter25.md
+          - 第26章 外注委託管理の設計: article/part4/chapter26.md
+          - 第27章 工程管理の設計: article/part4/chapter27.md
+          - 第28章 在庫管理の設計: article/part4/chapter28.md
+          - 第29章 品質管理の設計: article/part4/chapter29.md
+          - 第30章 製造原価管理の設計: article/part4/chapter30.md
+          - 第31章 生産管理データ設計（E社事例）: article/part4/chapter31.md
+          - 第32章 APIサービスの実装: article/part4/chapter32.md
+      - 第5部 エンタープライズインテグレーション:
+          - 第33章 システム統合の概要: article/part5/chapter33.md
+          - 第34章 メッセージングパターン: article/part5/chapter34.md
+          - 第35章 システム間連携パターン: article/part5/chapter35.md
+          - 第36章 マスタデータ管理（MDM）: article/part5/chapter36.md
+          - 第37章 イベント駆動アーキテクチャ: article/part5/chapter37.md
+          - 第38章 API設計とサービス連携: article/part5/chapter38.md
+          - 第39章 データ連携の実装パターン: article/part5/chapter39.md
+      - 研究 販売管理システム実装編:
+          - 研究1 モノリスサービスの実装: article/study/study2-1.md
+          - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study2-2.md
+          - 研究3 gRPCサービスの実装: article/study/study2-3.md
+          - 研究4 GraphQLサービスの実装: article/study/study2-4.md
+      - 研究 財務会計システム実装編:
+          - 研究1 モノリスサービスの実装: article/study/study3-1.md
+          - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study3-2.md
+          - 研究3 gRPCサービスの実装: article/study/study3-3.md
+          - 研究4 GraphQLサービスの実装: article/study/study3-4.md
+      - 研究 生産管理システム実装編:
+          - 研究1 モノリスサービスの実装: article/study/study4-1.md
+          - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study4-2.md
+          - 研究3 gRPCサービスの実装: article/study/study4-3.md
+          - 研究4 GraphQLサービスの実装: article/study/study4-4.md
+      - 研究 財務会計システムORM実装編:
+          - 第14章 財務会計システムの全体像【ORM版】: article/part3-orm/chapter14-orm.md
+          - 第15章 勘定科目の設計【ORM版】: article/part3-orm/chapter15-orm.md
+          - 第16章 仕訳の設計【ORM版】: article/part3-orm/chapter16-orm.md
+          - 第17章 自動仕訳の設計【ORM版】: article/part3-orm/chapter17-orm.md
+          - 第18章 勘定科目残高の設計【ORM版】: article/part3-orm/chapter18-orm.md
+          - 第19章 赤黒とログの設計【ORM版】: article/part3-orm/chapter19-orm.md
+          - 第20章 財務会計データ設計（D社事例）【ORM版】: article/part3-orm/chapter20-orm.md
+          - 第21章 APIサービスの実装【ORM版】: article/part3-orm/chapter21-orm.md
+      - 付録:
+          - A 全体ER図: article/appendix/er-diagrams.md
+          - B テーブル定義一覧: article/appendix/table-definitions.md
+          - C 用語集: article/appendix/glossary.md
+      - データベース:
+          - SchemaSpy ER図（SMS）: assets/schemaspy-output/sms/index.html

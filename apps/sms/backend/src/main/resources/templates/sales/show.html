@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>売上詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">売上詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/sales}" class="btn btn-outline-secondary">戻る</a>
+        <a th:if="${sales.status.name() == 'RECORDED'}"
+           th:href="@{/sales/{num}/edit(num=${sales.salesNumber})}"
+           class="btn btn-primary">編集</a>
+        <form th:if="${sales.status.name() == 'RECORDED'}"
+              th:action="@{/sales/{num}/cancel(num=${sales.salesNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この売上をキャンセルしますか？');">
+            <button type="submit" class="btn btn-warning">キャンセル</button>
+        </form>
+        <form th:if="${sales.status.name() == 'RECORDED'}"
+              th:action="@{/sales/{num}/delete(num=${sales.salesNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この売上を削除しますか？');">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 売上ヘッダー情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">売上情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">売上番号</div>
+                        <div class="col-8" th:text="${sales.salesNumber}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">売上日</div>
+                        <div class="col-8" th:text="${#temporals.format(sales.salesDate, 'yyyy/MM/dd')}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">顧客</div>
+                        <div class="col-8">
+                            <span th:text="${sales.customerCode}"></span>
+                            <span th:if="${sales.customerBranchNumber}" th:text="' - ' + ${sales.customerBranchNumber}"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">ステータス</div>
+                        <div class="col-8">
+                            <span class="badge"
+                                  th:classappend="${sales.status.name() == 'CANCELLED' ? 'bg-danger' :
+                                                   sales.status.name() == 'PAID' ? 'bg-success' :
+                                                   sales.status.name() == 'RECORDED' ? 'bg-secondary' : 'bg-primary'}"
+                                  th:text="${sales.status.displayName}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">出荷ID</div>
+                        <div class="col-8" th:text="${sales.shipmentId ?: '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">受注ID</div>
+                        <div class="col-8" th:text="${sales.orderId ?: '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">請求ID</div>
+                        <div class="col-8" th:text="${sales.billingId ?: '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">備考</div>
+                        <div class="col-8" th:text="${sales.remarks ?: '-'}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 売上明細 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">売上明細</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>商品コード</th>
+                        <th>商品名</th>
+                        <th class="text-end">売上数量</th>
+                        <th>単位</th>
+                        <th class="text-end">単価</th>
+                        <th class="text-end">金額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detail, stat : ${sales.details}">
+                        <td th:text="${stat.count}"></td>
+                        <td th:text="${detail.productCode}"></td>
+                        <td th:text="${detail.productName}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.salesQuantity, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td th:text="${detail.unit}"></td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(detail.unitPrice, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(detail.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <td colspan="6" class="text-end fw-bold">小計</td>
+                        <td class="text-end amount fw-bold" th:text="${#numbers.formatDecimal(sales.salesAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-light">
+                        <td colspan="6" class="text-end fw-bold">消費税</td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(sales.taxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-primary">
+                        <td colspan="6" class="text-end fw-bold">合計</td>
+                        <td class="text-end amount fw-bold" th:text="${#numbers.formatDecimal(sales.totalAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

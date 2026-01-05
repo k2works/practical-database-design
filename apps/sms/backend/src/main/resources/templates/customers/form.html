@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title th:text="${isNew} ? '顧客登録' : '顧客編集'">顧客登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title" th:text="${isNew} ? '顧客登録' : '顧客編集'">顧客登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/customers}" class="btn btn-secondary">一覧に戻る</a>
+    </div>
+
+    <!-- 登録/編集フォーム -->
+    <form th:action="${isNew} ? @{/customers} : @{/customers/{code}/{branch}(code=${customer.customerCode}, branch=${customer.customerBranchNumber})}"
+          th:object="${customer}" method="post">
+
+        <!-- 基本情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">基本情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="customerCode" class="form-label">顧客コード <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="customerCode"
+                               th:field="*{customerCode}"
+                               th:readonly="${!isNew}"
+                               required maxlength="20"
+                               placeholder="例: CUST001">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="customerBranchNumber" class="form-label">枝番</label>
+                        <input type="text" class="form-control" id="customerBranchNumber"
+                               th:field="*{customerBranchNumber}"
+                               th:readonly="${!isNew}"
+                               maxlength="10" value="00"
+                               placeholder="00">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="customerCategory" class="form-label">顧客区分</label>
+                        <input type="text" class="form-control" id="customerCategory"
+                               th:field="*{customerCategory}"
+                               maxlength="10">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="billingType" class="form-label">請求区分</label>
+                        <select class="form-select" id="billingType" th:field="*{billingType}">
+                            <option value="">選択してください</option>
+                            <option th:each="type : ${billingTypes}"
+                                    th:value="${type}"
+                                    th:text="${type.name() == 'PERIODIC' ? '締め' : '都度'}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="customerName" class="form-label">顧客名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="customerName"
+                               th:field="*{customerName}"
+                               required maxlength="100"
+                               placeholder="例: 株式会社サンプル">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="customerNameKana" class="form-label">顧客名カナ</label>
+                        <input type="text" class="form-control" id="customerNameKana"
+                               th:field="*{customerNameKana}"
+                               maxlength="200"
+                               placeholder="例: カブシキガイシャサンプル">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 連絡先情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">連絡先情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <label for="customerPostalCode" class="form-label">郵便番号</label>
+                        <input type="text" class="form-control" id="customerPostalCode"
+                               th:field="*{customerPostalCode}"
+                               maxlength="10"
+                               placeholder="123-4567">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="customerPrefecture" class="form-label">都道府県</label>
+                        <input type="text" class="form-control" id="customerPrefecture"
+                               th:field="*{customerPrefecture}"
+                               maxlength="10">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="customerAddress1" class="form-label">住所1</label>
+                        <input type="text" class="form-control" id="customerAddress1"
+                               th:field="*{customerAddress1}"
+                               maxlength="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="customerAddress2" class="form-label">住所2</label>
+                        <input type="text" class="form-control" id="customerAddress2"
+                               th:field="*{customerAddress2}"
+                               maxlength="100">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="customerPhone" class="form-label">電話番号</label>
+                        <input type="text" class="form-control" id="customerPhone"
+                               th:field="*{customerPhone}"
+                               maxlength="20"
+                               placeholder="03-1234-5678">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="customerFax" class="form-label">FAX番号</label>
+                        <input type="text" class="form-control" id="customerFax"
+                               th:field="*{customerFax}"
+                               maxlength="20">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="customerEmail" class="form-label">メールアドレス</label>
+                        <input type="email" class="form-control" id="customerEmail"
+                               th:field="*{customerEmail}"
+                               maxlength="100">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="customerRepresentativeName" class="form-label">顧客担当者名</label>
+                        <input type="text" class="form-control" id="customerRepresentativeName"
+                               th:field="*{customerRepresentativeName}"
+                               maxlength="50">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="customerDepartmentName" class="form-label">顧客部門名</label>
+                        <input type="text" class="form-control" id="customerDepartmentName"
+                               th:field="*{customerDepartmentName}"
+                               maxlength="50">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="ourRepresentativeCode" class="form-label">自社担当者コード</label>
+                        <input type="text" class="form-control" id="ourRepresentativeCode"
+                               th:field="*{ourRepresentativeCode}"
+                               maxlength="10">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 請求・回収情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">請求・回収情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="billingCode" class="form-label">請求先コード</label>
+                        <input type="text" class="form-control" id="billingCode"
+                               th:field="*{billingCode}"
+                               maxlength="20">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="billingBranchNumber" class="form-label">請求先枝番</label>
+                        <input type="text" class="form-control" id="billingBranchNumber"
+                               th:field="*{billingBranchNumber}"
+                               maxlength="10">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="collectionCode" class="form-label">回収先コード</label>
+                        <input type="text" class="form-control" id="collectionCode"
+                               th:field="*{collectionCode}"
+                               maxlength="20">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="collectionBranchNumber" class="form-label">回収先枝番</label>
+                        <input type="text" class="form-control" id="collectionBranchNumber"
+                               th:field="*{collectionBranchNumber}"
+                               maxlength="10">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>支払条件1</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="closingDay1" class="form-label">締日</label>
+                                <input type="number" class="form-control" id="closingDay1"
+                                       th:field="*{closingDay1}"
+                                       min="1" max="31">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="paymentMonth1" class="form-label">支払月</label>
+                                <input type="number" class="form-control" id="paymentMonth1"
+                                       th:field="*{paymentMonth1}"
+                                       min="0" max="12">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="paymentDay1" class="form-label">支払日</label>
+                                <input type="number" class="form-control" id="paymentDay1"
+                                       th:field="*{paymentDay1}"
+                                       min="1" max="31">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="paymentMethod1" class="form-label">支払方法</label>
+                                <select class="form-select" id="paymentMethod1" th:field="*{paymentMethod1}">
+                                    <option value="">選択</option>
+                                    <option th:each="method : ${paymentMethods}"
+                                            th:value="${method}"
+                                            th:text="${method}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>支払条件2</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="closingDay2" class="form-label">締日</label>
+                                <input type="number" class="form-control" id="closingDay2"
+                                       th:field="*{closingDay2}"
+                                       min="1" max="31">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="paymentMonth2" class="form-label">支払月</label>
+                                <input type="number" class="form-control" id="paymentMonth2"
+                                       th:field="*{paymentMonth2}"
+                                       min="0" max="12">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="paymentDay2" class="form-label">支払日</label>
+                                <input type="number" class="form-control" id="paymentDay2"
+                                       th:field="*{paymentDay2}"
+                                       min="1" max="31">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="paymentMethod2" class="form-label">支払方法</label>
+                                <select class="form-select" id="paymentMethod2" th:field="*{paymentMethod2}">
+                                    <option value="">選択</option>
+                                    <option th:each="method : ${paymentMethods}"
+                                            th:value="${method}"
+                                            th:text="${method}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary" th:text="${isNew} ? '登録' : '更新'">登録</button>
+            <a th:href="@{/customers}" class="btn btn-outline-secondary ms-2">キャンセル</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

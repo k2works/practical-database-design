@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-sms}
+      TZ: 'Asia/Tokyo'
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  schemaspy:
+    build:
+      context: ./ops/docker/schemaspy
+      dockerfile: Dockerfile
+    container_name: sms-schemaspy
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      -t pgsql11
+      -host postgres
+      -port 5432
+      -db ${POSTGRES_DB:-sms}
+      -u ${POSTGRES_USER:-postgres}
+      -p ${POSTGRES_PASSWORD:-postgres}
+      -s public
+      -connprops useSSL\\=false
+    volumes:
+      - ../../docs/assets/schemaspy-output/sms:/output
+    profiles:
+      - schemaspy
+
+volumes:
+  postgres_data:

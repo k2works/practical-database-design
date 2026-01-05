@@ -1,18 +1,23 @@
 {
-  "name": "",
+  "name": "practical-database-design",
   "version": "0.0.0",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "start": "gulp dev",
     "journal": "gulp journal:generate",
     "docs:serve": "gulp mkdocs:serve",
     "docs:stop": "gulp mkdocs:stop",
-    "docs:build": "gulp mkdocs:build",
-    "claude:yol": "claude --dangerously-skip-permissions"
+    "docs:build": "gulp docker:sms:up && gulp schemaspy:sms:generate && gulp mkdocs:build",
+    "schemaspy:sms": "gulp schemaspy:sms:generate",
+    "docker:sms:up": "gulp docker:sms:up",
+    "docker:sms:down": "gulp docker:sms:down",
+    "claude:yol": "claude --dangerously-skip-permissions",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/k2works/{project_name}.git"
+    "url": "git+https://github.com/k2works/practical-database-design.git"
   },
   "keywords": [
     "ai",
@@ -22,11 +27,20 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/k2works/{project_name}/issues"
+    "url": "https://github.com/k2works/practical-database-design/issues"
   },
-  "homepage": "https://github.com/k2works/{project_name}#readme",
+  "homepage": "https://github.com/k2works/practical-database-design#readme",
   "type": "module",
   "dependencies": {
     "gulp": "^5.0.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11"
+  },
+  "lint-staged-sms": {
+    "apps/sms/backend/src/**/*.java": [
+      "bash -c 'cd apps/sms/backend && ./gradlew checkstyleMain checkstyleTest pmdMain spotbugsMain --no-daemon'"
+    ]
   }
 }

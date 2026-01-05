@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>入荷詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">入荷詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/receivings}" class="btn btn-secondary">
+            一覧に戻る
+        </a>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">基本情報</h5>
+            <span class="badge"
+                  th:classappend="${receiving.status.name() == 'RETURNED' ? 'bg-danger' :
+                                   receiving.status.name() == 'PURCHASE_RECORDED' ? 'bg-success' :
+                                   receiving.status.name() == 'INSPECTION_COMPLETED' ? 'bg-info' :
+                                   receiving.status.name() == 'INSPECTING' ? 'bg-primary' : 'bg-secondary'}"
+                  th:text="${receiving.status.displayName}"></span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>入荷番号</dt>
+                        <dd th:text="${receiving.receivingNumber}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>仕入先コード</dt>
+                        <dd th:text="${receiving.supplierCode}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>倉庫コード</dt>
+                        <dd th:text="${receiving.warehouseCode ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>入荷日</dt>
+                        <dd th:text="${receiving.receivingDate != null ? #temporals.format(receiving.receivingDate, 'yyyy/MM/dd') : '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="row" th:if="${receiving.remarks != null and !receiving.remarks.isBlank()}">
+                <div class="col-12">
+                    <dl>
+                        <dt>備考</dt>
+                        <dd th:text="${receiving.remarks}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 明細一覧 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">入荷明細</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>行番号</th>
+                        <th>商品コード</th>
+                        <th class="text-end">入荷数量</th>
+                        <th class="text-end">検品数量</th>
+                        <th class="text-end">合格数量</th>
+                        <th class="text-end">不合格数量</th>
+                        <th class="text-end">単価</th>
+                        <th class="text-end">金額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detail : ${receiving.details}">
+                        <td th:text="${detail.lineNumber}"></td>
+                        <td th:text="${detail.productCode}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.receivingQuantity, 1, 0)}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.inspectedQuantity, 1, 0)}"></td>
+                        <td class="text-end text-success" th:text="${#numbers.formatDecimal(detail.acceptedQuantity, 1, 0)}"></td>
+                        <td class="text-end">
+                            <span th:class="${detail.rejectedQuantity.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'text-danger fw-bold' : ''}"
+                                  th:text="${#numbers.formatDecimal(detail.rejectedQuantity, 1, 0)}"></span>
+                        </td>
+                        <td class="text-end" th:text="${detail.unitPrice != null ? #numbers.formatDecimal(detail.unitPrice, 1, 0) + ' 円' : '-'}"></td>
+                        <td class="text-end" th:text="${detail.amount != null ? #numbers.formatDecimal(detail.amount, 1, 0) + ' 円' : '-'}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(receiving.details)}">
+                        <td colspan="8" class="text-center text-muted">明細がありません</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">システム情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成日時</dt>
+                        <dd th:text="${receiving.createdAt != null ? #temporals.format(receiving.createdAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>作成者</dt>
+                        <dd th:text="${receiving.createdBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新日時</dt>
+                        <dd th:text="${receiving.updatedAt != null ? #temporals.format(receiving.updatedAt, 'yyyy/MM/dd HH:mm') : '-'}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>更新者</dt>
+                        <dd th:text="${receiving.updatedBy ?: '-'}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

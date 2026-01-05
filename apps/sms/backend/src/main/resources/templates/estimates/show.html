@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>見積詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="page-title">見積詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+        <a th:href="@{/estimates}" class="btn btn-outline-secondary">戻る</a>
+        <a th:if="${quotation.status.name() == 'NEGOTIATING'}"
+           th:href="@{/estimates/{num}/edit(num=${quotation.quotationNumber})}"
+           class="btn btn-primary">編集</a>
+        <form th:if="${quotation.status.name() == 'NEGOTIATING'}"
+              th:action="@{/estimates/{num}/confirm(num=${quotation.quotationNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この見積を受注確定しますか？');">
+            <input type="hidden" name="version" th:value="${quotation.version}">
+            <button type="submit" class="btn btn-success">受注確定</button>
+        </form>
+        <form th:if="${quotation.status.name() == 'NEGOTIATING'}"
+              th:action="@{/estimates/{num}/lose(num=${quotation.quotationNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この見積を失注にしますか？');">
+            <input type="hidden" name="version" th:value="${quotation.version}">
+            <button type="submit" class="btn btn-warning">失注</button>
+        </form>
+        <form th:if="${quotation.status.name() == 'NEGOTIATING'}"
+              th:action="@{/estimates/{num}/delete(num=${quotation.quotationNumber})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('この見積を削除しますか？');">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 見積ヘッダー情報 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">見積情報</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">見積番号</div>
+                        <div class="col-8" th:text="${quotation.quotationNumber}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">見積日</div>
+                        <div class="col-8" th:text="${#temporals.format(quotation.quotationDate, 'yyyy/MM/dd')}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">顧客</div>
+                        <div class="col-8">
+                            <span th:text="${quotation.customerCode}"></span>
+                            <span th:if="${quotation.customerBranchNumber}" th:text="' - ' + ${quotation.customerBranchNumber}"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">ステータス</div>
+                        <div class="col-8">
+                            <span class="badge"
+                                  th:classappend="${quotation.status.name() == 'LOST' ? 'bg-danger' :
+                                                   quotation.status.name() == 'EXPIRED' ? 'bg-secondary' :
+                                                   quotation.status.name() == 'ORDERED' ? 'bg-success' : 'bg-primary'}"
+                                  th:text="${quotation.status.displayName}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">有効期限</div>
+                        <div class="col-8" th:text="${quotation.validUntil != null ? #temporals.format(quotation.validUntil, 'yyyy/MM/dd') : '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">件名</div>
+                        <div class="col-8" th:text="${quotation.subject ?: '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">担当者</div>
+                        <div class="col-8" th:text="${quotation.salesRepCode ?: '-'}"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4 fw-bold">備考</div>
+                        <div class="col-8" th:text="${quotation.remarks ?: '-'}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 見積明細 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">見積明細</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>商品コード</th>
+                        <th>商品名</th>
+                        <th class="text-end">数量</th>
+                        <th>単位</th>
+                        <th class="text-end">単価</th>
+                        <th class="text-end">金額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detail, stat : ${quotation.details}">
+                        <td th:text="${stat.count}"></td>
+                        <td th:text="${detail.productCode}"></td>
+                        <td th:text="${detail.productName}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.quantity, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td th:text="${detail.unit}"></td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(detail.unitPrice, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(detail.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <td colspan="6" class="text-end fw-bold">小計</td>
+                        <td class="text-end amount fw-bold" th:text="${#numbers.formatDecimal(quotation.subtotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-light">
+                        <td colspan="6" class="text-end fw-bold">消費税</td>
+                        <td class="text-end amount" th:text="${#numbers.formatDecimal(quotation.taxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-primary">
+                        <td colspan="6" class="text-end fw-bold">合計</td>
+                        <td class="text-end amount fw-bold" th:text="${#numbers.formatDecimal(quotation.totalAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.StockMovementMapper">
+
+    <resultMap id="StockMovementResultMap" type="com.example.sms.domain.model.inventory.StockMovement">
+        <id property="id" column="ID"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="productCode" column="商品コード"/>
+        <result property="movementDateTime" column="移動日時"/>
+        <result property="movementType" column="移動区分"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.MovementTypeTypeHandler"/>
+        <result property="movementQuantity" column="移動数量"/>
+        <result property="beforeQuantity" column="移動前在庫数"/>
+        <result property="afterQuantity" column="移動後在庫数"/>
+        <result property="documentNumber" column="伝票番号"/>
+        <result property="documentType" column="伝票種別"/>
+        <result property="movementReason" column="移動理由"/>
+        <result property="locationCode" column="ロケーションコード"/>
+        <result property="lotNumber" column="ロット番号"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+    </resultMap>
+
+    <select id="findWithPagination" resultMap="StockMovementResultMap">
+        SELECT * FROM "入出庫履歴データ"
+        <where>
+            <if test="warehouseCode != null and warehouseCode != ''">
+                "倉庫コード" = #{warehouseCode}
+            </if>
+            <if test="productCode != null and productCode != ''">
+                AND "商品コード" = #{productCode}
+            </if>
+        </where>
+        ORDER BY "移動日時" DESC, "ID" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "入出庫履歴データ"
+        <where>
+            <if test="warehouseCode != null and warehouseCode != ''">
+                "倉庫コード" = #{warehouseCode}
+            </if>
+            <if test="productCode != null and productCode != ''">
+                AND "商品コード" = #{productCode}
+            </if>
+        </where>
+    </select>
+
+    <!-- PostgreSQL 用 INSERT -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.inventory.StockMovement"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "入出庫履歴データ" (
+            "倉庫コード", "商品コード", "移動日時", "移動区分", "移動数量",
+            "移動前在庫数", "移動後在庫数", "伝票番号", "伝票種別", "移動理由",
+            "ロケーションコード", "ロット番号", "作成日時", "作成者"
+        ) VALUES (
+            #{warehouseCode}, #{productCode}, #{movementDateTime},
+            #{movementType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.MovementTypeTypeHandler}::移動区分,
+            #{movementQuantity}, #{beforeQuantity}, #{afterQuantity},
+            #{documentNumber}, #{documentType}, #{movementReason},
+            #{locationCode}, #{lotNumber}, CURRENT_TIMESTAMP, #{createdBy}
+        )
+    </insert>
+
+    <!-- H2 用 INSERT -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.inventory.StockMovement"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "入出庫履歴データ" (
+            "倉庫コード", "商品コード", "移動日時", "移動区分", "移動数量",
+            "移動前在庫数", "移動後在庫数", "伝票番号", "伝票種別", "移動理由",
+            "ロケーションコード", "ロット番号", "作成日時", "作成者"
+        ) VALUES (
+            #{warehouseCode}, #{productCode}, #{movementDateTime},
+            #{movementType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.MovementTypeTypeHandler},
+            #{movementQuantity}, #{beforeQuantity}, #{afterQuantity},
+            #{documentNumber}, #{documentType}, #{movementReason},
+            #{locationCode}, #{lotNumber}, CURRENT_TIMESTAMP, #{createdBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="StockMovementResultMap">
+        SELECT * FROM "入出庫履歴データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByWarehouseCode" resultMap="StockMovementResultMap">
+        SELECT * FROM "入出庫履歴データ"
+        WHERE "倉庫コード" = #{warehouseCode}
+        ORDER BY "移動日時" DESC
+    </select>
+
+    <select id="findByProductCode" resultMap="StockMovementResultMap">
+        SELECT * FROM "入出庫履歴データ"
+        WHERE "商品コード" = #{productCode}
+        ORDER BY "移動日時" DESC
+    </select>
+
+    <select id="findByWarehouseAndProduct" resultMap="StockMovementResultMap">
+        SELECT * FROM "入出庫履歴データ"
+        WHERE "倉庫コード" = #{warehouseCode}
+        AND "商品コード" = #{productCode}
+        ORDER BY "移動日時" DESC
+    </select>
+
+    <!-- PostgreSQL 用 findByMovementType -->
+    <select id="findByMovementType" resultMap="StockMovementResultMap" databaseId="postgresql">
+        SELECT * FROM "入出庫履歴データ"
+        WHERE "移動区分" = #{movementType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.MovementTypeTypeHandler}::移動区分
+        ORDER BY "移動日時" DESC
+    </select>
+
+    <!-- H2 用 findByMovementType -->
+    <select id="findByMovementType" resultMap="StockMovementResultMap" databaseId="h2">
+        SELECT * FROM "入出庫履歴データ"
+        WHERE "移動区分" = #{movementType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.MovementTypeTypeHandler}
+        ORDER BY "移動日時" DESC
+    </select>
+
+    <select id="findByMovementDateTimeBetween" resultMap="StockMovementResultMap">
+        SELECT * FROM "入出庫履歴データ"
+        WHERE "移動日時" BETWEEN #{from} AND #{to}
+        ORDER BY "移動日時" DESC
+    </select>
+
+    <select id="findAll" resultMap="StockMovementResultMap">
+        SELECT * FROM "入出庫履歴データ"
+        ORDER BY "移動日時" DESC
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM "入出庫履歴データ" WHERE "ID" = #{id}
+    </delete>
+
+    <!-- PostgreSQL 用 TRUNCATE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "入出庫履歴データ" CASCADE
+    </delete>
+
+    <!-- H2 用 DELETE ALL -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "入出庫履歴データ"
+    </delete>
+
+</mapper>
