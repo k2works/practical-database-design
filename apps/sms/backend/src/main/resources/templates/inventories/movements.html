@@ -85,20 +85,20 @@
         </tbody>
     </table>
 
-    <!-- 件数表示とページネーション -->
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <div class="text-muted">
-            <span th:if="${page.totalElements > 0}">
-                <span th:text="${page.page * page.size + 1}">1</span> -
-                <span th:text="${page.page * page.size + #lists.size(movements)}">10</span> 件
-                （全 <span th:text="${page.totalElements}">0</span> 件）
-            </span>
-            <span th:if="${page.totalElements == 0}">0 件</span>
-        </div>
+    <!-- 件数表示 -->
+    <div class="text-muted text-center mt-3">
+        <span th:if="${page.totalElements > 0}">
+            <span th:text="${page.page * page.size + 1}">1</span> -
+            <span th:text="${page.page * page.size + #lists.size(movements)}">10</span> 件
+            （全 <span th:text="${page.totalElements}">0</span> 件）
+        </span>
+        <span th:if="${page.totalElements == 0}">0 件</span>
+    </div>
 
-        <!-- ページネーション -->
+    <!-- ページネーション -->
+    <div class="d-flex justify-content-center mt-3">
         <nav th:if="${page.totalPages > 1}" aria-label="ページナビゲーション">
-            <ul class="pagination justify-content-center mb-0">
+            <ul class="pagination mb-0">
                 <!-- 最初のページ -->
                 <li class="page-item" th:classappend="${page.first} ? 'disabled'">
                     <a class="page-link"
