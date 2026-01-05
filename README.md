@@ -126,8 +126,8 @@ npm start
 
 以下が自動実行されます：
 1. MkDocs サーバー起動 & ブラウザで開く
-2. PostgreSQL コンテナ起動
-3. SchemaSpy ER 図生成
+2. SMS・FAS PostgreSQL コンテナ起動（並列）
+3. SMS・FAS SchemaSpy ER 図生成（並列）
 
 ブラウザで http://localhost:8000 にアクセスして記事をプレビューできます。
 
@@ -204,9 +204,23 @@ claude mcp add github npx -y @modelcontextprotocol/server-github -s project
 |---------|------|
 | `npm run docker:sms:up` | PostgreSQL コンテナ起動 |
 | `npm run docker:sms:down` | PostgreSQL コンテナ停止 |
+| `gulp docker:sms:build` | 全イメージビルド（backend, schemaspy） |
 | `gulp docker:sms:clean` | コンテナ停止 & ボリューム削除（データリセット） |
 | `gulp docker:sms:status` | コンテナ状態確認 |
 | `gulp docker:sms:logs` | PostgreSQL ログ表示 |
+| `gulp docker:sms:restart` | コンテナ再起動 |
+
+##### FAS Docker タスク
+
+| コマンド | 説明 |
+|---------|------|
+| `npm run docker:fas:up` | PostgreSQL コンテナ起動 |
+| `npm run docker:fas:down` | PostgreSQL コンテナ停止 |
+| `gulp docker:fas:build` | 全イメージビルド（backend, schemaspy） |
+| `gulp docker:fas:clean` | コンテナ停止 & ボリューム削除（データリセット） |
+| `gulp docker:fas:status` | コンテナ状態確認 |
+| `gulp docker:fas:logs` | PostgreSQL ログ表示 |
+| `gulp docker:fas:restart` | コンテナ再起動 |
 
 ##### SMS SchemaSpy タスク
 
@@ -215,6 +229,14 @@ claude mcp add github npx -y @modelcontextprotocol/server-github -s project
 | `npm run schemaspy:sms` | SchemaSpy ER 図生成 |
 | `gulp schemaspy:sms:open` | 生成済み ER 図をブラウザで開く |
 | `gulp schemaspy:sms:clean` | ER 図出力ディレクトリをクリーン |
+
+##### FAS SchemaSpy タスク
+
+| コマンド | 説明 |
+|---------|------|
+| `npm run schemaspy:fas` | SchemaSpy ER 図生成 |
+| `gulp schemaspy:fas:open` | 生成済み ER 図をブラウザで開く |
+| `gulp schemaspy:fas:clean` | ER 図出力ディレクトリをクリーン |
 
 ##### SMS Heroku デプロイタスク
 
@@ -228,6 +250,19 @@ claude mcp add github npx -y @modelcontextprotocol/server-github -s project
 | `gulp heroku:sms:logs` | Heroku ログ表示 |
 | `gulp heroku:sms:open` | ブラウザでアプリを開く |
 | `gulp heroku:sms:restart` | Dyno 再起動（データリセット） |
+
+##### FAS Heroku デプロイタスク
+
+| コマンド | 説明 |
+|---------|------|
+| `gulp heroku:fas:create` | Heroku アプリ新規作成 |
+| `gulp heroku:fas:deploy` | ビルド → プッシュ → リリース（一括） |
+| `gulp heroku:fas:build` | Docker イメージビルド |
+| `gulp heroku:fas:push` | イメージを Heroku にプッシュ |
+| `gulp heroku:fas:release` | リリース実行 |
+| `gulp heroku:fas:logs` | Heroku ログ表示 |
+| `gulp heroku:fas:open` | ブラウザでアプリを開く |
+| `gulp heroku:fas:restart` | Dyno 再起動（データリセット） |
 
 ##### 作業履歴（ジャーナル）タスク
 
@@ -291,7 +326,10 @@ practical-database-design/
 │   ├── reference/         # 参照ドキュメント
 │   └── wiki/              # 参照元記事（wiki サブモジュール）
 ├── apps/                  # アプリケーション実装
-│   └── sms/               # 販売管理システム（Spring Boot）
+│   ├── sms/               # 販売管理システム（Spring Boot）
+│   │   ├── backend/       # バックエンド API
+│   │   └── docker-compose.yml
+│   └── fas/               # 財務会計システム（Spring Boot）
 │       ├── backend/       # バックエンド API
 │       └── docker-compose.yml
 ├── ops/                   # 運用スクリプト

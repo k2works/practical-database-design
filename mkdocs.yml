@@ -65,6 +65,7 @@ nav:
       - 技術スタック: article/techstack.md
       - アウトライン: article/outline.md
       - 執筆ワークフロー: article/workflow.md
+      - 運用ガイド: article/ops.md
       - デプロイ:
           - SMS デモデプロイ: article/deploy-sms.md
           - FAS デモデプロイ: article/deploy-fas.md
