@@ -1,7 +1,7 @@
 package com.example.sms.application.service;
 
 import com.example.sms.application.port.in.ReportUseCase;
-import com.example.sms.application.port.in.dto.InventoryReportData;
+import com.example.sms.infrastructure.in.web.dto.InventoryReportData;
 import com.example.sms.application.port.out.InventoryRepository;
 import com.example.sms.application.port.out.InvoiceRepository;
 import com.example.sms.application.port.out.PartnerRepository;

@@ -1,4 +1,4 @@
-package com.example.sms.application.port.in.dto;
+package com.example.sms.infrastructure.in.web.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

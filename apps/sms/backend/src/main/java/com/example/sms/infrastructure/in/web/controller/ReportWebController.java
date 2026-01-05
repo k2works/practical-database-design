@@ -1,6 +1,6 @@
 package com.example.sms.infrastructure.in.web.controller;
 
-import com.example.sms.application.port.in.dto.InventoryReportData;
+import com.example.sms.infrastructure.in.web.dto.InventoryReportData;
 import com.example.sms.application.service.ReportService;
 import com.example.sms.domain.model.invoice.Invoice;
 import com.example.sms.domain.model.purchase.PurchaseOrder;
