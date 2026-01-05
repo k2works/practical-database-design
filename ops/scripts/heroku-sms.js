@@ -69,7 +69,12 @@ export default function (gulp) {
     gulp.task('heroku:sms:login:exec', (done) => {
         try {
             console.log('Logging in to Heroku Container Registry...');
-            execSync('heroku container:login', { stdio: 'inherit' });
+
+            // DOCKER_HOST 環境変数をクリアして実行（Docker Desktop との互換性のため）
+            const env = { ...process.env };
+            delete env.DOCKER_HOST;
+
+            execSync('heroku container:login', { stdio: 'inherit', env });
             console.log('Login successful!');
             done();
         } catch (error) {
