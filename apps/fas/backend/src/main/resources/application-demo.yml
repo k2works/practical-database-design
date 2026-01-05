@@ -2,10 +2,9 @@ spring:
   application:
     name: fas-backend
 
-  # Flyway 自動構成を除外（H2 では不要）
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+  # Flyway を無効化（H2 では SQL init を使用）
+  flyway:
+    enabled: false
 
   # H2 インメモリデータベース
   datasource:

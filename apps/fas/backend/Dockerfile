@@ -9,4 +9,8 @@ FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8081
-CMD ["java", "-Dserver.port=${PORT:-8081}", "-Dspring.profiles.active=demo", "-jar", "app.jar"]
+
+# デフォルトは demo プロファイル（Heroku 用）
+# docker-compose では SPRING_PROFILES_ACTIVE=default で上書き
+ENV SPRING_PROFILES_ACTIVE=demo
+CMD java -Dserver.port=${PORT:-8081} -jar app.jar
