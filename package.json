@@ -10,6 +10,8 @@
     "docs:stop": "gulp mkdocs:stop",
     "docs:build": "gulp mkdocs:build",
     "schemaspy:sms": "gulp schemaspy:sms:generate",
+    "docker:sms:up": "gulp docker:sms:up",
+    "docker:sms:down": "gulp docker:sms:down",
     "claude:yol": "claude --dangerously-skip-permissions",
     "prepare": "husky"
   },
