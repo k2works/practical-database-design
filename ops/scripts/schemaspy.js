@@ -25,6 +25,15 @@ function getDockerEnv() {
 }
 
 /**
+ * 指定秒数待機する（クロスプラットフォーム対応）
+ * @param {number} seconds
+ * @returns {Promise<void>}
+ */
+function sleep(seconds) {
+    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+}
+
+/**
  * SchemaSpy関連のGulpタスクを登録する
  * @param {import('gulp').Gulp} gulp
  */
@@ -36,84 +45,78 @@ export default function (gulp) {
     /**
      * バックエンドを起動してマイグレーションを実行
      */
-    gulp.task('schemaspy:sms:migrate', (done) => {
-        try {
-            console.log('Starting backend for database migration...');
+    gulp.task('schemaspy:sms:migrate', async () => {
+        console.log('Starting backend for database migration...');
 
-            // 出力ディレクトリを作成（存在しない場合）
-            if (!fs.existsSync(OUTPUT_DIR)) {
-                fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-                console.log(`Created output directory: ${OUTPUT_DIR}`);
-            }
+        // 出力ディレクトリを作成（存在しない場合）
+        if (!fs.existsSync(OUTPUT_DIR)) {
+            fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+            console.log(`Created output directory: ${OUTPUT_DIR}`);
+        }
 
-            // PostgreSQL を起動
-            console.log('Starting PostgreSQL...');
-            execSync('docker compose up -d postgres', {
-                cwd: PROJECT_DIR,
-                stdio: 'inherit',
-                env: getDockerEnv()
-            });
+        // PostgreSQL を起動
+        console.log('Starting PostgreSQL...');
+        execSync('docker compose up -d postgres', {
+            cwd: PROJECT_DIR,
+            stdio: 'inherit',
+            env: getDockerEnv()
+        });
 
-            // PostgreSQL の準備完了を待つ
-            console.log('Waiting for PostgreSQL to be ready...');
-            let retries = 30;
-            while (retries > 0) {
-                try {
-                    execSync('docker compose exec -T postgres pg_isready -U postgres', {
-                        cwd: PROJECT_DIR,
-                        stdio: 'pipe',
-                        env: getDockerEnv()
-                    });
-                    break;
-                } catch (e) {
-                    retries--;
-                    if (retries === 0) {
-                        throw new Error('PostgreSQL failed to become ready');
-                    }
-                    execSync('sleep 1 || timeout /t 1 /nobreak >nul', { stdio: 'pipe', shell: true });
-                }
-            }
-
-            // バックエンドを起動（マイグレーション実行）
-            console.log('\nStarting backend (running Flyway migrations)...');
-            execSync('docker compose --profile backend up -d backend', {
-                cwd: PROJECT_DIR,
-                stdio: 'inherit',
-                env: getDockerEnv()
-            });
-
-            // バックエンドのヘルスチェックを待つ（最大120秒）
-            console.log('Waiting for backend to be healthy (migrations to complete)...');
-            retries = 24; // 24 * 5秒 = 120秒
-            while (retries > 0) {
-                try {
-                    const result = execSync('docker compose --profile backend ps backend --format json', {
-                        cwd: PROJECT_DIR,
-                        stdio: 'pipe',
-                        env: getDockerEnv()
-                    }).toString();
-
-                    if (result.includes('"Health":"healthy"') || result.includes('"Health": "healthy"')) {
-                        console.log('Backend is healthy!');
-                        break;
-                    }
-                } catch (e) {
-                    // ignore
-                }
+        // PostgreSQL の準備完了を待つ
+        console.log('Waiting for PostgreSQL to be ready...');
+        let retries = 30;
+        while (retries > 0) {
+            try {
+                execSync('docker compose exec -T postgres pg_isready -U postgres', {
+                    cwd: PROJECT_DIR,
+                    stdio: 'pipe',
+                    env: getDockerEnv()
+                });
+                break;
+            } catch (e) {
                 retries--;
                 if (retries === 0) {
-                    throw new Error('Backend failed to become healthy within timeout');
+                    throw new Error('PostgreSQL failed to become ready');
                 }
-                console.log(`  Waiting... (${retries * 5}s remaining)`);
-                execSync('sleep 5 || timeout /t 5 /nobreak >nul', { stdio: 'pipe', shell: true });
+                await sleep(1);
             }
-
-            console.log('\nDatabase migration completed!');
-            done();
-        } catch (error) {
-            console.error('Error during migration:', error.message);
-            done(error);
         }
+
+        // バックエンドを起動（マイグレーション実行）
+        console.log('\nStarting backend (running Flyway migrations)...');
+        execSync('docker compose --profile backend up -d backend', {
+            cwd: PROJECT_DIR,
+            stdio: 'inherit',
+            env: getDockerEnv()
+        });
+
+        // バックエンドのヘルスチェックを待つ（最大120秒）
+        console.log('Waiting for backend to be healthy (migrations to complete)...');
+        retries = 24; // 24 * 5秒 = 120秒
+        while (retries > 0) {
+            try {
+                const result = execSync('docker compose --profile backend ps backend --format json', {
+                    cwd: PROJECT_DIR,
+                    stdio: 'pipe',
+                    env: getDockerEnv()
+                }).toString();
+
+                if (result.includes('"Health":"healthy"') || result.includes('"Health": "healthy"')) {
+                    console.log('Backend is healthy!');
+                    break;
+                }
+            } catch (e) {
+                // ignore
+            }
+            retries--;
+            if (retries === 0) {
+                throw new Error('Backend failed to become healthy within timeout');
+            }
+            console.log(`  Waiting... (${retries * 5}s remaining)`);
+            await sleep(5);
+        }
+
+        console.log('\nDatabase migration completed!');
     });
 
     /**
