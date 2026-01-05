@@ -9,6 +9,16 @@ import path from 'path';
  */
 const isWindows = process.platform === 'win32';
 
+/**
+ * DOCKER_HOST をクリアした環境変数を取得（Docker Desktop との互換性のため）
+ * @returns {NodeJS.ProcessEnv}
+ */
+function getDockerEnv() {
+    const env = { ...process.env };
+    delete env.DOCKER_HOST;
+    return env;
+}
+
 // Function to register the mkdocs:serve task
 export default function (gulp) {
     // Helper function to remove site directory
@@ -26,14 +36,8 @@ export default function (gulp) {
         try {
             console.log('Starting MkDocs server using Docker Compose...');
 
-            // Normalize DOCKER_HOST on Windows if it's incorrect
-            const env = { ...process.env };
-            if (isWindows && env.DOCKER_HOST === 'npipe://./pipe/docker_engine') {
-                env.DOCKER_HOST = 'npipe:////./pipe/docker_engine';
-            }
-
             // Execute docker-compose up command to start mkdocs service
-            execSync('docker compose up -d mkdocs', {stdio: 'inherit', env});
+            execSync('docker compose up -d mkdocs', {stdio: 'inherit', env: getDockerEnv()});
 
             console.log('\nMkDocs server started successfully!');
             console.log('Documentation is now available at http://localhost:8000');
@@ -51,17 +55,11 @@ export default function (gulp) {
         try {
             console.log('Building MkDocs documentation...');
 
-            // Normalize DOCKER_HOST on Windows if it's incorrect
-            const env = { ...process.env };
-            if (isWindows && env.DOCKER_HOST === 'npipe://./pipe/docker_engine') {
-                env.DOCKER_HOST = 'npipe:////./pipe/docker_engine';
-            }
-
             // Remove existing site directory before building
             removeSiteDirectory();
 
             // Execute docker-compose run command to build mkdocs documentation
-            execSync('docker compose run --rm mkdocs mkdocs build', {stdio: 'inherit', env});
+            execSync('docker compose run --rm mkdocs mkdocs build', {stdio: 'inherit', env: getDockerEnv()});
 
             console.log('\nMkDocs documentation built successfully!');
 
@@ -77,14 +75,8 @@ export default function (gulp) {
         try {
             console.log('Stopping MkDocs server...');
 
-            // Normalize DOCKER_HOST on Windows if it's incorrect
-            const env = { ...process.env };
-            if (isWindows && env.DOCKER_HOST === 'npipe://./pipe/docker_engine') {
-                env.DOCKER_HOST = 'npipe:////./pipe/docker_engine';
-            }
-
             // Execute docker-compose down command to stop mkdocs service
-            execSync('docker compose down', {stdio: 'inherit', env});
+            execSync('docker compose down', {stdio: 'inherit', env: getDockerEnv()});
 
             console.log('MkDocs server stopped successfully!');
 
