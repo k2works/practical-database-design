@@ -15,6 +15,10 @@
         <a th:href="@{/purchase-orders}" class="btn btn-secondary">
             一覧に戻る
         </a>
+        <a th:href="@{/reports/purchase-order/{num}/pdf(num=${purchaseOrder.purchaseOrderNumber})}"
+           class="btn btn-info">
+            PDF ダウンロード
+        </a>
     </div>
 
     <!-- 基本情報 -->

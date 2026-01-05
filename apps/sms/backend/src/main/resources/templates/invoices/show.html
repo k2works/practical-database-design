@@ -29,6 +29,8 @@
               onsubmit="return confirm('この請求を削除しますか？');">
             <button type="submit" class="btn btn-danger">削除</button>
         </form>
+        <a th:href="@{/reports/invoice/{num}/pdf(num=${invoice.invoiceNumber})}"
+           class="btn btn-info">PDF ダウンロード</a>
     </div>
 
     <!-- 請求ヘッダー情報 -->

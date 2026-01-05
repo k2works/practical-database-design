@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>見積書</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            font-family: Japanese, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 24pt;
+            margin: 0;
+        }
+        .meta {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .meta p {
+            margin: 2px 0;
+        }
+        .customer {
+            font-size: 14pt;
+            margin-bottom: 20px;
+        }
+        .subject {
+            font-size: 12pt;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f8f8;
+        }
+        .amount-box {
+            border: 2px solid #333;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .amount-box .label {
+            font-size: 12pt;
+        }
+        .amount-box .value {
+            font-size: 20pt;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+        }
+        th {
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        td.number {
+            text-align: right;
+        }
+        td.center {
+            text-align: center;
+        }
+        .summary-table {
+            width: 50%;
+            margin-left: auto;
+        }
+        .summary-table th {
+            text-align: right;
+            background-color: #fff;
+            font-weight: normal;
+        }
+        .summary-table .total {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .company-info {
+            margin-top: 40px;
+            text-align: right;
+        }
+        .company-info p {
+            margin: 2px 0;
+        }
+        .validity {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff8e1;
+            border: 1px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>御見積書</h1>
+    </div>
+
+    <div class="meta">
+        <p>見積番号: <span th:text="${quotation.quotationNumber}"></span></p>
+        <p>見積日: <span th:text="${quotation.quotationDate != null ? #temporals.format(quotation.quotationDate, 'yyyy年MM月dd日') : '-'}"></span></p>
+    </div>
+
+    <div class="customer">
+        <p><span th:text="${customerName}"></span> 御中</p>
+    </div>
+
+    <div class="subject" th:if="${quotation.subject != null and !quotation.subject.isEmpty()}">
+        <strong>件名:</strong> <span th:text="${quotation.subject}"></span>
+    </div>
+
+    <div class="amount-box">
+        <p class="label">御見積金額（税込）</p>
+        <p class="value">¥<span th:text="${#numbers.formatDecimal(quotation.totalAmount, 1, 'COMMA', 0, 'POINT')}"></span>-</p>
+    </div>
+
+    <!-- 見積明細 -->
+    <div th:if="${quotation.details != null and !quotation.details.isEmpty()}">
+        <h3>見積明細</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 6%;">No.</th>
+                    <th style="width: 14%;">商品コード</th>
+                    <th style="width: 24%;">商品名</th>
+                    <th style="width: 10%;">数量</th>
+                    <th style="width: 8%;">単位</th>
+                    <th style="width: 14%;">単価</th>
+                    <th style="width: 14%;">金額</th>
+                    <th style="width: 10%;">備考</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="detail, stat : ${quotation.details}">
+                    <td class="center" th:text="${stat.count}"></td>
+                    <td th:text="${detail.productCode}"></td>
+                    <td th:text="${detail.productName}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.quantity, 1, 'COMMA', 0, 'POINT')}"></td>
+                    <td class="center" th:text="${detail.unit ?: ''}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.unitPrice, 1, 'COMMA', 0, 'POINT')}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    <td th:text="${detail.remarks ?: ''}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 金額サマリー -->
+    <h3>金額内訳</h3>
+    <table class="summary-table">
+        <tr>
+            <th>小計（税抜）</th>
+            <td class="number" th:text="${#numbers.formatDecimal(quotation.subtotal, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr>
+            <th>消費税</th>
+            <td class="number" th:text="${#numbers.formatDecimal(quotation.taxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr class="total">
+            <th>合計（税込）</th>
+            <td class="number" th:text="${#numbers.formatDecimal(quotation.totalAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+    </table>
+
+    <div class="validity" th:if="${quotation.validUntil != null}">
+        <strong>見積有効期限:</strong> <span th:text="${#temporals.format(quotation.validUntil, 'yyyy年MM月dd日')}"></span> まで
+    </div>
+
+    <div class="footer" th:if="${quotation.remarks != null and !quotation.remarks.isEmpty()}">
+        <p><strong>備考:</strong> <span th:text="${quotation.remarks}"></span></p>
+    </div>
+
+    <div class="company-info">
+        <p>株式会社サンプル</p>
+        <p>〒100-0001 東京都千代田区千代田1-1</p>
+        <p>TEL: 03-1234-5678</p>
+        <p th:if="${quotation.salesRepCode != null}">担当: <span th:text="${quotation.salesRepCode}"></span></p>
+    </div>
+</body>
+</html>

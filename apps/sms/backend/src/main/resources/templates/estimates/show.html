@@ -13,6 +13,8 @@
     <!-- アクションボタン -->
     <div class="action-buttons">
         <a th:href="@{/estimates}" class="btn btn-outline-secondary">戻る</a>
+        <a th:href="@{/reports/quotation/{num}/pdf(num=${quotation.quotationNumber})}"
+           class="btn btn-info">PDF ダウンロード</a>
         <a th:if="${quotation.status.name() == 'NEGOTIATING'}"
            th:href="@{/estimates/{num}/edit(num=${quotation.quotationNumber})}"
            class="btn btn-primary">編集</a>

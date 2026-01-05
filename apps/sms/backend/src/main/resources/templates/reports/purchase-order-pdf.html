@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>発注書</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            font-family: Japanese, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 24pt;
+            margin: 0;
+        }
+        .meta {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .meta p {
+            margin: 2px 0;
+        }
+        .supplier {
+            font-size: 14pt;
+            margin-bottom: 20px;
+        }
+        .amount-box {
+            border: 2px solid #333;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .amount-box .label {
+            font-size: 12pt;
+        }
+        .amount-box .value {
+            font-size: 20pt;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+        }
+        th {
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        td.number {
+            text-align: right;
+        }
+        td.center {
+            text-align: center;
+        }
+        .summary-table {
+            width: 50%;
+            margin-left: auto;
+        }
+        .summary-table th {
+            text-align: right;
+            background-color: #fff;
+            font-weight: normal;
+        }
+        .summary-table .total {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .company-info {
+            margin-top: 40px;
+            text-align: right;
+        }
+        .company-info p {
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>発注書</h1>
+    </div>
+
+    <div class="meta">
+        <p>発注番号: <span th:text="${purchaseOrder.purchaseOrderNumber}"></span></p>
+        <p>発注日: <span th:text="${purchaseOrder.orderDate != null ? #temporals.format(purchaseOrder.orderDate, 'yyyy年MM月dd日') : '-'}"></span></p>
+    </div>
+
+    <div class="supplier">
+        <p><span th:text="${supplierName}"></span> 御中</p>
+    </div>
+
+    <div class="amount-box">
+        <p class="label">発注金額（税込）</p>
+        <p class="value">¥<span th:text="${#numbers.formatDecimal(purchaseOrder.totalAmount + purchaseOrder.taxAmount, 1, 'COMMA', 0, 'POINT')}"></span>-</p>
+    </div>
+
+    <!-- 発注明細 -->
+    <div th:if="${purchaseOrder.details != null and !purchaseOrder.details.isEmpty()}">
+        <h3>発注明細</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 8%;">行番号</th>
+                    <th style="width: 20%;">商品コード</th>
+                    <th style="width: 12%;">数量</th>
+                    <th style="width: 15%;">単価</th>
+                    <th style="width: 15%;">金額</th>
+                    <th style="width: 15%;">希望納期</th>
+                    <th style="width: 15%;">備考</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="detail : ${purchaseOrder.details}">
+                    <td class="center" th:text="${detail.lineNumber}"></td>
+                    <td th:text="${detail.productCode}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.orderQuantity, 1, 'COMMA', 0, 'POINT')}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.unitPrice, 1, 'COMMA', 0, 'POINT')}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.orderAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    <td class="center" th:text="${detail.expectedDeliveryDate != null ? #temporals.format(detail.expectedDeliveryDate, 'yyyy/MM/dd') : '-'}"></td>
+                    <td th:text="${detail.remarks ?: ''}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 金額サマリー -->
+    <h3>金額内訳</h3>
+    <table class="summary-table">
+        <tr>
+            <th>発注金額（税抜）</th>
+            <td class="number" th:text="${#numbers.formatDecimal(purchaseOrder.totalAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr>
+            <th>消費税（10%）</th>
+            <td class="number" th:text="${#numbers.formatDecimal(purchaseOrder.taxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr class="total">
+            <th>発注金額（税込）</th>
+            <td class="number" th:text="${#numbers.formatDecimal(purchaseOrder.totalAmount + purchaseOrder.taxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        <p th:if="${purchaseOrder.desiredDeliveryDate != null}">
+            希望納期: <span th:text="${#temporals.format(purchaseOrder.desiredDeliveryDate, 'yyyy年MM月dd日')}"></span>
+        </p>
+        <p th:if="${purchaseOrder.remarks != null and !purchaseOrder.remarks.isEmpty()}">
+            備考: <span th:text="${purchaseOrder.remarks}"></span>
+        </p>
+    </div>
+
+    <div class="company-info">
+        <p>株式会社サンプル</p>
+        <p>〒100-0001 東京都千代田区千代田1-1</p>
+        <p>TEL: 03-1234-5678</p>
+    </div>
+</body>
+</html>

@@ -28,7 +28,7 @@ val springdocVersion = "2.8.3"
 val thymeleafLayoutVersion = "3.4.0"
 val bootstrapVersion = "5.3.3"
 val poiVersion = "5.3.0"
-val itextVersion = "8.0.5"
+val openhtmltopdfVersion = "1.1.22"
 
 dependencies {
     // === implementation ===
@@ -48,7 +48,8 @@ dependencies {
 
     // 帳票出力
     implementation("org.apache.poi:poi-ooxml:$poiVersion")
-    implementation("com.itextpdf:itext-core:$itextVersion")
+    implementation("io.github.openhtmltopdf:openhtmltopdf-pdfbox:$openhtmltopdfVersion")
+    implementation("io.github.openhtmltopdf:openhtmltopdf-slf4j:$openhtmltopdfVersion")
 
     // OpenAPI/Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")

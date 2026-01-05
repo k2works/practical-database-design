@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>請求書</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            font-family: Japanese, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 24pt;
+            margin: 0;
+        }
+        .meta {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .meta p {
+            margin: 2px 0;
+        }
+        .customer {
+            font-size: 14pt;
+            margin-bottom: 20px;
+        }
+        .amount-box {
+            border: 2px solid #333;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .amount-box .label {
+            font-size: 12pt;
+        }
+        .amount-box .value {
+            font-size: 20pt;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+        }
+        th {
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        td.number {
+            text-align: right;
+        }
+        .summary-table {
+            width: 50%;
+            margin-left: auto;
+        }
+        .summary-table th {
+            text-align: right;
+            background-color: #fff;
+            font-weight: normal;
+        }
+        .summary-table .total {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>請求書</h1>
+    </div>
+
+    <div class="meta">
+        <p>請求番号: <span th:text="${invoice.invoiceNumber}"></span></p>
+        <p>請求日: <span th:text="${#temporals.format(invoice.invoiceDate, 'yyyy年MM月dd日')}"></span></p>
+    </div>
+
+    <div class="customer">
+        <p><span th:text="${customerName}"></span> 御中</p>
+    </div>
+
+    <div class="amount-box">
+        <p class="label">ご請求金額</p>
+        <p class="value">¥<span th:text="${#numbers.formatDecimal(invoice.currentInvoiceAmount, 1, 'COMMA', 0, 'POINT')}"></span>-</p>
+    </div>
+
+    <!-- 請求明細（明細がある場合のみ表示） -->
+    <div th:if="${invoice.details != null and !invoice.details.isEmpty()}">
+        <h3>請求明細</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>売上番号</th>
+                    <th>売上日</th>
+                    <th>売上金額</th>
+                    <th>消費税</th>
+                    <th>合計</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="detail : ${invoice.details}">
+                    <td th:text="${detail.salesNumber}"></td>
+                    <td th:text="${detail.salesDate != null ? #temporals.format(detail.salesDate, 'yyyy/MM/dd') : '-'}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.salesAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.taxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    <td class="number" th:text="${#numbers.formatDecimal(detail.totalAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 請求金額サマリー -->
+    <h3>請求金額内訳</h3>
+    <table class="summary-table">
+        <tr>
+            <th>前回請求残高</th>
+            <td class="number" th:text="${#numbers.formatDecimal(invoice.previousBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr>
+            <th>入金額</th>
+            <td class="number" th:text="${#numbers.formatDecimal(invoice.receiptAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr>
+            <th>繰越残高</th>
+            <td class="number" th:text="${#numbers.formatDecimal(invoice.carriedBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr>
+            <th>今回売上額</th>
+            <td class="number" th:text="${#numbers.formatDecimal(invoice.currentSalesAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr>
+            <th>消費税</th>
+            <td class="number" th:text="${#numbers.formatDecimal(invoice.currentTaxAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr class="total">
+            <th>今回請求額</th>
+            <td class="number" th:text="${#numbers.formatDecimal(invoice.currentInvoiceAmount, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+        <tr class="total">
+            <th>請求残高</th>
+            <td class="number" th:text="${#numbers.formatDecimal(invoice.invoiceBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        <p th:if="${invoice.dueDate != null}">
+            お支払期日: <span th:text="${#temporals.format(invoice.dueDate, 'yyyy年MM月dd日')}"></span>
+        </p>
+        <p th:if="${invoice.remarks != null and !invoice.remarks.isEmpty()}">
+            備考: <span th:text="${invoice.remarks}"></span>
+        </p>
+    </div>
+</body>
+</html>
