@@ -50,74 +50,74 @@ class PaymentRepositoryTest extends BaseIntegrationTest {
 
         // 取引先マスタに仕入先を登録
         jdbcTemplate.update(
-                "INSERT INTO \"取引先マスタ\" (\"取引先コード\", \"取引先名\", \"仕入先区分\") " +
-                "VALUES (?, ?, ?) " +
-                "ON CONFLICT (\"取引先コード\") DO NOTHING",
+                "INSERT INTO \"取引先マスタ\" (\"取引先コード\", \"取引先名\", \"仕入先区分\") "
+                        + "VALUES (?, ?, ?) "
+                        + "ON CONFLICT (\"取引先コード\") DO NOTHING",
                 "SUP001", "テスト仕入先", true);
 
         // 仕入先マスタを登録
         jdbcTemplate.update(
-                "INSERT INTO \"仕入先マスタ\" (\"仕入先コード\", \"仕入先枝番\") " +
-                "VALUES (?, ?) " +
-                "ON CONFLICT (\"仕入先コード\", \"仕入先枝番\") DO NOTHING",
+                "INSERT INTO \"仕入先マスタ\" (\"仕入先コード\", \"仕入先枝番\") "
+                        + "VALUES (?, ?) "
+                        + "ON CONFLICT (\"仕入先コード\", \"仕入先枝番\") DO NOTHING",
                 "SUP001", "00");
 
         // 倉庫マスタを登録
         jdbcTemplate.update(
-                "INSERT INTO \"倉庫マスタ\" (\"倉庫コード\", \"倉庫名\") " +
-                "VALUES (?, ?) " +
-                "ON CONFLICT (\"倉庫コード\") DO NOTHING",
+                "INSERT INTO \"倉庫マスタ\" (\"倉庫コード\", \"倉庫名\") "
+                        + "VALUES (?, ?) "
+                        + "ON CONFLICT (\"倉庫コード\") DO NOTHING",
                 "WH001", "テスト倉庫");
 
         // 商品マスタを登録（発注明細で必要）
         jdbcTemplate.update(
-                "INSERT INTO \"商品マスタ\" (\"商品コード\", \"商品正式名\", \"商品名\", \"販売単価\", \"仕入単価\") " +
-                "VALUES (?, ?, ?, ?, ?) " +
-                "ON CONFLICT (\"商品コード\") DO NOTHING",
+                "INSERT INTO \"商品マスタ\" (\"商品コード\", \"商品正式名\", \"商品名\", \"販売単価\", \"仕入単価\") "
+                        + "VALUES (?, ?, ?, ?, ?) "
+                        + "ON CONFLICT (\"商品コード\") DO NOTHING",
                 "PRD001", "テスト商品", "テスト", new BigDecimal("1000"), new BigDecimal("800"));
 
         // 発注データを登録
         jdbcTemplate.update(
-                "INSERT INTO \"発注データ\" (\"ID\", \"発注番号\", \"発注日\", \"仕入先コード\", \"仕入先枝番\", " +
-                "\"発注担当者コード\", \"発注合計金額\", \"税額\", \"希望納期\", \"発注ステータス\", \"作成者\", \"更新者\") " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::発注ステータス, ?, ?) " +
-                "ON CONFLICT (\"発注番号\") DO NOTHING",
+                "INSERT INTO \"発注データ\" (\"ID\", \"発注番号\", \"発注日\", \"仕入先コード\", \"仕入先枝番\", "
+                        + "\"発注担当者コード\", \"発注合計金額\", \"税額\", \"希望納期\", \"発注ステータス\", \"作成者\", \"更新者\") "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::発注ステータス, ?, ?) "
+                        + "ON CONFLICT (\"発注番号\") DO NOTHING",
                 1, "PO-202501-0001", LocalDate.of(2025, 1, 10), "SUP001", "00",
                 "EMP001", new BigDecimal("100000"), new BigDecimal("10000"),
                 LocalDate.of(2025, 1, 20), "確定", "test-user", "test-user");
 
         // 入荷データを登録
         jdbcTemplate.update(
-                "INSERT INTO \"入荷データ\" (\"ID\", \"入荷番号\", \"発注ID\", \"仕入先コード\", \"仕入先枝番\", " +
-                "\"入荷日\", \"入荷ステータス\", \"倉庫コード\", \"作成者\", \"更新者\") " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?::入荷ステータス, ?, ?, ?) " +
-                "ON CONFLICT (\"入荷番号\") DO NOTHING",
+                "INSERT INTO \"入荷データ\" (\"ID\", \"入荷番号\", \"発注ID\", \"仕入先コード\", \"仕入先枝番\", "
+                        + "\"入荷日\", \"入荷ステータス\", \"倉庫コード\", \"作成者\", \"更新者\") "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?::入荷ステータス, ?, ?, ?) "
+                        + "ON CONFLICT (\"入荷番号\") DO NOTHING",
                 1, "RCV-202501-0001", 1, "SUP001", "00",
                 LocalDate.of(2025, 1, 15), "検品完了", "WH001", "test-user", "test-user");
 
         // 仕入データを登録
         jdbcTemplate.update(
-                "INSERT INTO \"仕入データ\" (\"仕入番号\", \"入荷ID\", \"仕入先コード\", \"仕入先枝番\", \"仕入日\", " +
-                "\"仕入合計金額\", \"税額\", \"作成者\", \"更新者\") " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (\"仕入番号\") DO NOTHING",
+                "INSERT INTO \"仕入データ\" (\"仕入番号\", \"入荷ID\", \"仕入先コード\", \"仕入先枝番\", \"仕入日\", "
+                        + "\"仕入合計金額\", \"税額\", \"作成者\", \"更新者\") "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "ON CONFLICT (\"仕入番号\") DO NOTHING",
                 "PUR-202501-0001", 1, "SUP001", "00", LocalDate.of(2025, 1, 15),
                 new BigDecimal("100000"), new BigDecimal("10000"), "test-user", "test-user");
 
         // 2件目の仕入データを登録（明細テスト用）
         jdbcTemplate.update(
-                "INSERT INTO \"入荷データ\" (\"ID\", \"入荷番号\", \"発注ID\", \"仕入先コード\", \"仕入先枝番\", " +
-                "\"入荷日\", \"入荷ステータス\", \"倉庫コード\", \"作成者\", \"更新者\") " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?::入荷ステータス, ?, ?, ?) " +
-                "ON CONFLICT (\"入荷番号\") DO NOTHING",
+                "INSERT INTO \"入荷データ\" (\"ID\", \"入荷番号\", \"発注ID\", \"仕入先コード\", \"仕入先枝番\", "
+                        + "\"入荷日\", \"入荷ステータス\", \"倉庫コード\", \"作成者\", \"更新者\") "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?::入荷ステータス, ?, ?, ?) "
+                        + "ON CONFLICT (\"入荷番号\") DO NOTHING",
                 2, "RCV-202501-0002", 1, "SUP001", "00",
                 LocalDate.of(2025, 1, 20), "検品完了", "WH001", "test-user", "test-user");
 
         jdbcTemplate.update(
-                "INSERT INTO \"仕入データ\" (\"仕入番号\", \"入荷ID\", \"仕入先コード\", \"仕入先枝番\", \"仕入日\", " +
-                "\"仕入合計金額\", \"税額\", \"作成者\", \"更新者\") " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (\"仕入番号\") DO NOTHING",
+                "INSERT INTO \"仕入データ\" (\"仕入番号\", \"入荷ID\", \"仕入先コード\", \"仕入先枝番\", \"仕入日\", "
+                        + "\"仕入合計金額\", \"税額\", \"作成者\", \"更新者\") "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "ON CONFLICT (\"仕入番号\") DO NOTHING",
                 "PUR-202501-0002", 2, "SUP001", "00", LocalDate.of(2025, 1, 20),
                 new BigDecimal("50000"), new BigDecimal("5000"), "test-user", "test-user");
     }

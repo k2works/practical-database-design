@@ -14,14 +14,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
+
 import java.math.BigDecimal;
 import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 
 /**
  * 取引先マスタ画面コントローラーテスト.
@@ -46,7 +43,9 @@ class PartnerWebControllerTest {
         void shouldDisplayPartnerList() throws Exception {
             Partner partner = createTestPartner("WEB-P001", "Webテスト取引先", true, false);
             PageResult<Partner> pageResult = new PageResult<>(List.of(partner), 0, 10, 1);
-            when(partnerUseCase.getPartners(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
+            Mockito.when(partnerUseCase.getPartners(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -60,7 +59,9 @@ class PartnerWebControllerTest {
         void shouldFilterByCustomerType() throws Exception {
             Partner customer = createTestPartner("WEB-C001", "顧客", true, false);
             PageResult<Partner> pageResult = new PageResult<>(List.of(customer), 0, 10, 1);
-            when(partnerUseCase.getPartners(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
+            Mockito.when(partnerUseCase.getPartners(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners")
                     .param("type", "customer"))
@@ -74,7 +75,9 @@ class PartnerWebControllerTest {
         void shouldFilterBySupplierType() throws Exception {
             Partner supplier = createTestPartner("WEB-S002", "仕入先", false, true);
             PageResult<Partner> pageResult = new PageResult<>(List.of(supplier), 0, 10, 1);
-            when(partnerUseCase.getPartners(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
+            Mockito.when(partnerUseCase.getPartners(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners")
                     .param("type", "supplier"))
@@ -88,7 +91,9 @@ class PartnerWebControllerTest {
         void shouldSearchByKeyword() throws Exception {
             Partner partner = createTestPartner("WEB-P002", "検索テスト取引先", true, false);
             PageResult<Partner> pageResult = new PageResult<>(List.of(partner), 0, 10, 1);
-            when(partnerUseCase.getPartners(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
+            Mockito.when(partnerUseCase.getPartners(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners")
                     .param("keyword", "検索"))
@@ -106,7 +111,7 @@ class PartnerWebControllerTest {
         @DisplayName("取引先詳細画面を表示できる")
         void shouldDisplayPartnerDetail() throws Exception {
             Partner partner = createTestPartner("WEB-P003", "詳細取引先", true, false);
-            when(partnerUseCase.getPartnerByCode("WEB-P003")).thenReturn(partner);
+            Mockito.when(partnerUseCase.getPartnerByCode("WEB-P003")).thenReturn(partner);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners/WEB-P003"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -137,7 +142,7 @@ class PartnerWebControllerTest {
         @DisplayName("取引先を登録できる")
         void shouldCreatePartner() throws Exception {
             Partner created = createTestPartner("NEW-WEB-P001", "新規取引先", true, false);
-            when(partnerUseCase.createPartner(any())).thenReturn(created);
+            Mockito.when(partnerUseCase.createPartner(ArgumentMatchers.any())).thenReturn(created);
 
             mockMvc.perform(MockMvcRequestBuilders.post("/partners")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -176,7 +181,7 @@ class PartnerWebControllerTest {
         @DisplayName("取引先編集フォームを表示できる")
         void shouldDisplayEditPartnerForm() throws Exception {
             Partner partner = createTestPartner("WEB-EDIT-P001", "編集取引先", true, false);
-            when(partnerUseCase.getPartnerByCode("WEB-EDIT-P001")).thenReturn(partner);
+            Mockito.when(partnerUseCase.getPartnerByCode("WEB-EDIT-P001")).thenReturn(partner);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/partners/WEB-EDIT-P001/edit"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -193,7 +198,8 @@ class PartnerWebControllerTest {
         @DisplayName("取引先を更新できる")
         void shouldUpdatePartner() throws Exception {
             Partner updated = createTestPartner("WEB-UPD-P001", "更新後取引先", true, false);
-            when(partnerUseCase.updatePartner(anyString(), any())).thenReturn(updated);
+            Mockito.when(partnerUseCase.updatePartner(
+                ArgumentMatchers.anyString(), ArgumentMatchers.any())).thenReturn(updated);
 
             mockMvc.perform(MockMvcRequestBuilders.post("/partners/WEB-UPD-P001")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -217,7 +223,7 @@ class PartnerWebControllerTest {
         @Test
         @DisplayName("取引先を削除できる")
         void shouldDeletePartner() throws Exception {
-            doNothing().when(partnerUseCase).deletePartner("WEB-DEL-P001");
+            Mockito.doNothing().when(partnerUseCase).deletePartner("WEB-DEL-P001");
 
             mockMvc.perform(MockMvcRequestBuilders.post("/partners/WEB-DEL-P001/delete"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())

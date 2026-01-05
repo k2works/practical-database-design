@@ -20,15 +20,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
+
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 
 /**
  * 商品マスタ画面コントローラーテスト.
@@ -64,7 +61,9 @@ class ProductWebControllerTest {
         void shouldDisplayProductList() throws Exception {
             Product product = createTestProduct("WEB-001", "Web商品");
             PageResult<Product> pageResult = new PageResult<>(List.of(product), 0, 10, 1);
-            when(productUseCase.getProducts(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
+            Mockito.when(productUseCase.getProducts(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -79,7 +78,9 @@ class ProductWebControllerTest {
         void shouldFilterByCategory() throws Exception {
             Product product = createTestProduct("WEB-002", "商品商品");
             PageResult<Product> pageResult = new PageResult<>(List.of(product), 0, 10, 1);
-            when(productUseCase.getProducts(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
+            Mockito.when(productUseCase.getProducts(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products")
                     .param("category", "PRODUCT"))
@@ -93,7 +94,9 @@ class ProductWebControllerTest {
         void shouldSearchByKeyword() throws Exception {
             Product product = createTestProduct("WEB-003", "検索テスト商品");
             PageResult<Product> pageResult = new PageResult<>(List.of(product), 0, 10, 1);
-            when(productUseCase.getProducts(anyInt(), anyInt(), any(), any())).thenReturn(pageResult);
+            Mockito.when(productUseCase.getProducts(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products")
                     .param("keyword", "検索"))
@@ -111,8 +114,8 @@ class ProductWebControllerTest {
         @DisplayName("商品詳細画面を表示できる")
         void shouldDisplayProductDetail() throws Exception {
             Product product = createTestProduct("WEB-004", "詳細商品");
-            when(productUseCase.getProductByCode("WEB-004")).thenReturn(product);
-            when(customerProductPriceUseCase.getPricesByProduct("WEB-004"))
+            Mockito.when(productUseCase.getProductByCode("WEB-004")).thenReturn(product);
+            Mockito.when(customerProductPriceUseCase.getPricesByProduct("WEB-004"))
                 .thenReturn(Collections.emptyList());
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products/WEB-004"))
@@ -130,7 +133,7 @@ class ProductWebControllerTest {
         @Test
         @DisplayName("商品登録フォームを表示できる")
         void shouldDisplayNewProductForm() throws Exception {
-            when(classificationUseCase.getAllClassifications())
+            Mockito.when(classificationUseCase.getAllClassifications())
                 .thenReturn(List.of(createTestClassification()));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products/new"))
@@ -151,7 +154,7 @@ class ProductWebControllerTest {
         @DisplayName("商品を登録できる")
         void shouldCreateProduct() throws Exception {
             Product created = createTestProduct("NEW-WEB-001", "新規商品");
-            when(productUseCase.createProduct(any())).thenReturn(created);
+            Mockito.when(productUseCase.createProduct(ArgumentMatchers.any())).thenReturn(created);
 
             mockMvc.perform(MockMvcRequestBuilders.post("/products")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -172,7 +175,7 @@ class ProductWebControllerTest {
         @Test
         @DisplayName("バリデーションエラー時は登録フォームに戻る")
         void shouldReturnToFormOnValidationError() throws Exception {
-            when(classificationUseCase.getAllClassifications())
+            Mockito.when(classificationUseCase.getAllClassifications())
                 .thenReturn(List.of(createTestClassification()));
 
             mockMvc.perform(MockMvcRequestBuilders.post("/products")
@@ -193,8 +196,8 @@ class ProductWebControllerTest {
         @DisplayName("商品編集フォームを表示できる")
         void shouldDisplayEditProductForm() throws Exception {
             Product product = createTestProduct("WEB-EDIT-001", "編集商品");
-            when(productUseCase.getProductByCode("WEB-EDIT-001")).thenReturn(product);
-            when(classificationUseCase.getAllClassifications())
+            Mockito.when(productUseCase.getProductByCode("WEB-EDIT-001")).thenReturn(product);
+            Mockito.when(classificationUseCase.getAllClassifications())
                 .thenReturn(List.of(createTestClassification()));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/products/WEB-EDIT-001/edit"))
@@ -215,7 +218,8 @@ class ProductWebControllerTest {
         @DisplayName("商品を更新できる")
         void shouldUpdateProduct() throws Exception {
             Product updated = createTestProduct("WEB-UPD-001", "更新後商品");
-            when(productUseCase.updateProduct(anyString(), any())).thenReturn(updated);
+            Mockito.when(productUseCase.updateProduct(
+                ArgumentMatchers.anyString(), ArgumentMatchers.any())).thenReturn(updated);
 
             mockMvc.perform(MockMvcRequestBuilders.post("/products/WEB-UPD-001")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -241,7 +245,7 @@ class ProductWebControllerTest {
         @Test
         @DisplayName("商品を削除できる")
         void shouldDeleteProduct() throws Exception {
-            doNothing().when(productUseCase).deleteProduct("WEB-DEL-001");
+            Mockito.doNothing().when(productUseCase).deleteProduct("WEB-DEL-001");
 
             mockMvc.perform(MockMvcRequestBuilders.post("/products/WEB-DEL-001/delete"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())

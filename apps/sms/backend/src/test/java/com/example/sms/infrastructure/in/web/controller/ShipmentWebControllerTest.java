@@ -22,16 +22,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 
 /**
  * 出荷画面コントローラーテスト.
@@ -66,7 +62,9 @@ class ShipmentWebControllerTest {
             Shipment shipment = createTestShipment("SHIP-WEB-001");
             PageResult<Shipment> pageResult = new PageResult<>(
                 List.of(shipment), 0, 10, 1L);
-            when(shipmentUseCase.getShipments(anyInt(), anyInt(), isNull())).thenReturn(pageResult);
+            Mockito.when(shipmentUseCase.getShipments(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.isNull())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -83,7 +81,9 @@ class ShipmentWebControllerTest {
             Shipment shipment = createTestShipment("SHIP-WEB-002");
             PageResult<Shipment> pageResult = new PageResult<>(
                 List.of(shipment), 0, 10, 1L);
-            when(shipmentUseCase.getShipments(anyInt(), anyInt(), anyString())).thenReturn(pageResult);
+            Mockito.when(shipmentUseCase.getShipments(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.anyString())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments")
                     .param("keyword", "SHIP-WEB"))
@@ -98,7 +98,9 @@ class ShipmentWebControllerTest {
             Shipment shipment = createTestShipment("SHIP-WEB-003");
             PageResult<Shipment> pageResult = new PageResult<>(
                 List.of(shipment), 1, 25, 30L);
-            when(shipmentUseCase.getShipments(anyInt(), anyInt(), isNull())).thenReturn(pageResult);
+            Mockito.when(shipmentUseCase.getShipments(
+                ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(),
+                ArgumentMatchers.isNull())).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments")
                     .param("page", "1")
@@ -117,7 +119,7 @@ class ShipmentWebControllerTest {
         @DisplayName("出荷詳細画面を表示できる")
         void shouldDisplayShipmentDetail() throws Exception {
             Shipment shipment = createTestShipment("SHIP-WEB-003");
-            when(shipmentUseCase.getShipmentByNumber("SHIP-WEB-003")).thenReturn(shipment);
+            Mockito.when(shipmentUseCase.getShipmentByNumber("SHIP-WEB-003")).thenReturn(shipment);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments/SHIP-WEB-003"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -133,9 +135,9 @@ class ShipmentWebControllerTest {
         @Test
         @DisplayName("出荷登録フォームを表示できる")
         void shouldDisplayNewShipmentForm() throws Exception {
-            when(partnerUseCase.getCustomers()).thenReturn(List.of());
-            when(productUseCase.getAllProducts()).thenReturn(List.of());
-            when(orderUseCase.getAllOrders()).thenReturn(List.of());
+            Mockito.when(partnerUseCase.getCustomers()).thenReturn(List.of());
+            Mockito.when(productUseCase.getAllProducts()).thenReturn(List.of());
+            Mockito.when(orderUseCase.getAllOrders()).thenReturn(List.of());
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments/new"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -155,7 +157,7 @@ class ShipmentWebControllerTest {
         @DisplayName("出荷を登録できる")
         void shouldCreateShipment() throws Exception {
             Shipment created = createTestShipment("SHIP-NEW-001");
-            when(shipmentUseCase.createShipment(any())).thenReturn(created);
+            Mockito.when(shipmentUseCase.createShipment(ArgumentMatchers.any())).thenReturn(created);
 
             mockMvc.perform(MockMvcRequestBuilders.post("/shipments")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -181,7 +183,7 @@ class ShipmentWebControllerTest {
         @DisplayName("出荷を確定できる")
         void shouldConfirmShipment() throws Exception {
             Shipment confirmed = createTestShipment("SHIP-WEB-CONFIRM-001");
-            when(shipmentUseCase.confirmShipment(anyString())).thenReturn(confirmed);
+            Mockito.when(shipmentUseCase.confirmShipment(ArgumentMatchers.anyString())).thenReturn(confirmed);
 
             mockMvc.perform(MockMvcRequestBuilders.post("/shipments/SHIP-WEB-CONFIRM-001/confirm"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
@@ -197,7 +199,7 @@ class ShipmentWebControllerTest {
         @Test
         @DisplayName("出荷を削除できる")
         void shouldDeleteShipment() throws Exception {
-            doNothing().when(shipmentUseCase).deleteShipment("SHIP-WEB-DEL-001");
+            Mockito.doNothing().when(shipmentUseCase).deleteShipment("SHIP-WEB-DEL-001");
 
             mockMvc.perform(MockMvcRequestBuilders.post("/shipments/SHIP-WEB-DEL-001/delete"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
@@ -213,7 +215,7 @@ class ShipmentWebControllerTest {
         @Test
         @DisplayName("明細行フラグメントを取得できる")
         void shouldGetDetailRowFragment() throws Exception {
-            when(productUseCase.getAllProducts()).thenReturn(List.of());
+            Mockito.when(productUseCase.getAllProducts()).thenReturn(List.of());
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments/add-detail-row")
                     .param("index", "0"))
@@ -233,7 +235,7 @@ class ShipmentWebControllerTest {
         @DisplayName("商品情報をJSONで取得できる")
         void shouldGetProductInfoAsJson() throws Exception {
             Product product = createTestProduct("PROD-001", "テスト商品");
-            when(productUseCase.getProductByCode("PROD-001")).thenReturn(product);
+            Mockito.when(productUseCase.getProductByCode("PROD-001")).thenReturn(product);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/shipments/product-info")
                     .param("productCode", "PROD-001"))
