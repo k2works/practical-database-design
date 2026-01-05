@@ -91,8 +91,9 @@
         <result property="totalAmount" column="d_合計金額"/>
     </resultMap>
 
+    <!-- PostgreSQL用 insertHeader -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.invoice.Invoice"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "請求データ" (
             "請求番号", "請求日", "請求先コード", "顧客コード", "顧客枝番",
             "締日", "請求区分", "前回請求残高", "入金額", "繰越残高",
@@ -105,6 +106,25 @@
             #{previousBalance}, #{receiptAmount}, #{carriedBalance},
             #{currentSalesAmount}, #{currentTaxAmount}, #{currentInvoiceAmount}, #{invoiceBalance}, #{dueDate},
             #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス,
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <!-- H2用 insertHeader -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.invoice.Invoice"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "請求データ" (
+            "請求番号", "請求日", "請求先コード", "顧客コード", "顧客枝番",
+            "締日", "請求区分", "前回請求残高", "入金額", "繰越残高",
+            "今回売上額", "今回消費税額", "今回請求額", "請求残高", "回収予定日",
+            "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{invoiceNumber}, #{invoiceDate}, #{billingCode}, #{customerCode}, #{customerBranchNumber},
+            #{closingDate},
+            #{invoiceType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceTypeTypeHandler},
+            #{previousBalance}, #{receiptAmount}, #{carriedBalance},
+            #{currentSalesAmount}, #{currentTaxAmount}, #{currentInvoiceAmount}, #{invoiceBalance}, #{dueDate},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler},
             #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
         )
     </insert>
@@ -134,9 +154,17 @@
         ORDER BY "請求日" DESC, "請求番号"
     </select>
 
-    <select id="findByStatus" resultMap="InvoiceResultMap">
+    <!-- PostgreSQL用 findByStatus -->
+    <select id="findByStatus" resultMap="InvoiceResultMap" databaseId="postgresql">
         SELECT * FROM "請求データ"
         WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス
+        ORDER BY "請求日" DESC, "請求番号"
+    </select>
+
+    <!-- H2用 findByStatus -->
+    <select id="findByStatus" resultMap="InvoiceResultMap" databaseId="h2">
+        SELECT * FROM "請求データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}
         ORDER BY "請求日" DESC, "請求番号"
     </select>
 
@@ -281,7 +309,8 @@
         SELECT "バージョン" FROM "請求データ" WHERE "ID" = #{id}
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.invoice.Invoice">
+    <!-- PostgreSQL用 updateHeader -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.invoice.Invoice" databaseId="postgresql">
         UPDATE "請求データ" SET
             "請求日" = #{invoiceDate},
             "請求先コード" = #{billingCode},
@@ -305,8 +334,33 @@
         WHERE "ID" = #{id}
     </update>
 
-    <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
-    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.invoice.Invoice">
+    <!-- H2用 updateHeader -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.invoice.Invoice" databaseId="h2">
+        UPDATE "請求データ" SET
+            "請求日" = #{invoiceDate},
+            "請求先コード" = #{billingCode},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "締日" = #{closingDate},
+            "請求区分" = #{invoiceType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceTypeTypeHandler},
+            "前回請求残高" = #{previousBalance},
+            "入金額" = #{receiptAmount},
+            "繰越残高" = #{carriedBalance},
+            "今回売上額" = #{currentSalesAmount},
+            "今回消費税額" = #{currentTaxAmount},
+            "今回請求額" = #{currentInvoiceAmount},
+            "請求残高" = #{invoiceBalance},
+            "回収予定日" = #{dueDate},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- PostgreSQL用 updateWithOptimisticLock（バージョンチェック付き） -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.invoice.Invoice" databaseId="postgresql">
         UPDATE "請求データ" SET
             "請求日" = #{invoiceDate},
             "請求先コード" = #{billingCode},
@@ -331,6 +385,32 @@
         AND "バージョン" = #{version}
     </update>
 
+    <!-- H2用 updateWithOptimisticLock（バージョンチェック付き） -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.invoice.Invoice" databaseId="h2">
+        UPDATE "請求データ" SET
+            "請求日" = #{invoiceDate},
+            "請求先コード" = #{billingCode},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "締日" = #{closingDate},
+            "請求区分" = #{invoiceType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceTypeTypeHandler},
+            "前回請求残高" = #{previousBalance},
+            "入金額" = #{receiptAmount},
+            "繰越残高" = #{carriedBalance},
+            "今回売上額" = #{currentSalesAmount},
+            "今回消費税額" = #{currentTaxAmount},
+            "今回請求額" = #{currentInvoiceAmount},
+            "請求残高" = #{invoiceBalance},
+            "回収予定日" = #{dueDate},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
     <update id="updateReceiptAmount">
         UPDATE "請求データ" SET
             "入金額" = "入金額" + #{amount},
@@ -340,9 +420,19 @@
         WHERE "ID" = #{invoiceId}
     </update>
 
-    <update id="updateStatus">
+    <!-- PostgreSQL用 updateStatus -->
+    <update id="updateStatus" databaseId="postgresql">
         UPDATE "請求データ" SET
             "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler}::請求ステータス,
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{invoiceId}
+    </update>
+
+    <!-- H2用 updateStatus -->
+    <update id="updateStatus" databaseId="h2">
+        UPDATE "請求データ" SET
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InvoiceStatusTypeHandler},
             "更新日時" = CURRENT_TIMESTAMP,
             "バージョン" = "バージョン" + 1
         WHERE "ID" = #{invoiceId}
@@ -356,11 +446,23 @@
         DELETE FROM "請求データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllDetails">
+    <!-- PostgreSQL用 deleteAllDetails -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
         TRUNCATE TABLE "請求明細" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <!-- H2用 deleteAllDetails -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "請求明細"
+    </delete>
+
+    <!-- PostgreSQL用 deleteAll -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "請求データ" CASCADE
+    </delete>
+
+    <!-- H2用 deleteAll -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "請求データ"
     </delete>
 </mapper>

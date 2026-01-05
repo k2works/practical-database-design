@@ -69,9 +69,9 @@
         <result property="paymentTargetAmount" column="pd_支払対象金額"/>
     </resultMap>
 
-    <!-- 支払ヘッダ登録 -->
+    <!-- 支払ヘッダ登録 (PostgreSQL) -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.payment.Payment"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "支払データ" (
             "支払番号", "仕入先コード", "支払締日", "支払予定日",
             "支払方法", "支払金額", "消費税額", "源泉徴収額", "差引支払額",
@@ -83,6 +83,25 @@
             #{paymentMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler}::支払方法,
             #{paymentAmount}, #{taxAmount}, #{withholdingAmount}, #{netPaymentAmount},
             #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}::支払ステータス,
+            #{bankCode}, #{branchCode}, #{accountType}, #{accountNumber}, #{accountName},
+            #{remarks}, #{createdBy}, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 支払ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.payment.Payment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "支払データ" (
+            "支払番号", "仕入先コード", "支払締日", "支払予定日",
+            "支払方法", "支払金額", "消費税額", "源泉徴収額", "差引支払額",
+            "ステータス", "振込先銀行コード", "振込先支店コード",
+            "振込先口座種別", "振込先口座番号", "振込先口座名義",
+            "備考", "作成者", "更新者"
+        ) VALUES (
+            #{paymentNumber}, #{supplierCode}, #{paymentClosingDate}, #{paymentDueDate},
+            #{paymentMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler},
+            #{paymentAmount}, #{taxAmount}, #{withholdingAmount}, #{netPaymentAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler},
             #{bankCode}, #{branchCode}, #{accountType}, #{accountNumber}, #{accountName},
             #{remarks}, #{createdBy}, #{updatedBy}
         )
@@ -146,10 +165,16 @@
         SELECT * FROM "支払データ" WHERE "仕入先コード" = #{supplierCode}
     </select>
 
-    <!-- ステータスで検索 -->
-    <select id="findByStatus" resultMap="PaymentResultMap">
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="PaymentResultMap" databaseId="postgresql">
         SELECT * FROM "支払データ"
         WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}::支払ステータス
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="PaymentResultMap" databaseId="h2">
+        SELECT * FROM "支払データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}
     </select>
 
     <!-- 支払予定日範囲で検索 -->
@@ -187,8 +212,8 @@
         </where>
     </select>
 
-    <!-- 楽観ロック付き更新 -->
-    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.payment.Payment">
+    <!-- 楽観ロック付き更新 (PostgreSQL) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.payment.Payment" databaseId="postgresql">
         UPDATE "支払データ"
         SET
             "支払締日" = #{paymentClosingDate},
@@ -200,6 +225,27 @@
             "差引支払額" = #{netPaymentAmount},
             "支払実行日" = #{paymentExecutionDate},
             "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler}::支払ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- 楽観ロック付き更新 (H2) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.payment.Payment" databaseId="h2">
+        UPDATE "支払データ"
+        SET
+            "支払締日" = #{paymentClosingDate},
+            "支払予定日" = #{paymentDueDate},
+            "支払方法" = #{paymentMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentPaymentMethodTypeHandler},
+            "支払金額" = #{paymentAmount},
+            "消費税額" = #{taxAmount},
+            "源泉徴収額" = #{withholdingAmount},
+            "差引支払額" = #{netPaymentAmount},
+            "支払実行日" = #{paymentExecutionDate},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentStatusTypeHandler},
             "備考" = #{remarks},
             "更新日時" = CURRENT_TIMESTAMP,
             "更新者" = #{updatedBy},

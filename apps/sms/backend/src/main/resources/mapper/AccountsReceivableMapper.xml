@@ -72,7 +72,13 @@
         DELETE FROM "売掛金残高" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- PostgreSQL用: CASCADEで外部キー参照元も自動削除 -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "売掛金残高" CASCADE
+    </delete>
+
+    <!-- H2用: シンプルなDELETE文 -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "売掛金残高"
     </delete>
 </mapper>

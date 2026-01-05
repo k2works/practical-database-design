@@ -75,7 +75,13 @@
         WHERE "商品分類コード" = #{classificationCode}
     </update>
 
-    <delete id="deleteAll">
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "商品分類マスタ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "商品分類マスタ"
     </delete>
 </mapper>

@@ -184,7 +184,13 @@
         DELETE FROM "在庫データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "在庫データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "在庫データ"
     </delete>
 </mapper>

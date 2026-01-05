@@ -44,8 +44,9 @@
         <result property="remarks" column="備考"/>
     </resultMap>
 
+    <!-- PostgreSQL 用 INSERT -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.Quotation"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "見積データ" (
             "見積番号", "見積日", "見積有効期限", "顧客コード", "顧客枝番",
             "担当者コード", "件名", "見積金額", "消費税額", "見積合計",
@@ -58,8 +59,24 @@
         )
     </insert>
 
+    <!-- H2 用 INSERT -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.Quotation"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "見積データ" (
+            "見積番号", "見積日", "見積有効期限", "顧客コード", "顧客枝番",
+            "担当者コード", "件名", "見積金額", "消費税額", "見積合計",
+            "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者"
+        ) VALUES (
+            #{quotationNumber}, #{quotationDate}, #{validUntil}, #{customerCode}, #{customerBranchNumber},
+            #{salesRepCode}, #{subject}, #{subtotal}, #{taxAmount}, #{totalAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler},
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- PostgreSQL 用 INSERT Detail -->
     <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.QuotationDetail"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "見積明細" (
             "見積ID", "行番号", "商品コード", "商品名", "数量",
             "単位", "単価", "金額", "税区分", "消費税率", "消費税額", "備考"
@@ -67,6 +84,20 @@
             #{quotationId}, #{lineNumber}, #{productCode}, #{productName}, #{quantity},
             #{unit}, #{unitPrice}, #{amount},
             #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{taxRate}, #{taxAmount}, #{remarks}
+        )
+    </insert>
+
+    <!-- H2 用 INSERT Detail -->
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.QuotationDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "見積明細" (
+            "見積ID", "行番号", "商品コード", "商品名", "数量",
+            "単位", "単価", "金額", "税区分", "消費税率", "消費税額", "備考"
+        ) VALUES (
+            #{quotationId}, #{lineNumber}, #{productCode}, #{productName}, #{quantity},
+            #{unit}, #{unitPrice}, #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
             #{taxRate}, #{taxAmount}, #{remarks}
         )
     </insert>
@@ -85,9 +116,17 @@
         ORDER BY "見積日" DESC, "見積番号"
     </select>
 
-    <select id="findByStatus" resultMap="QuotationResultMap">
+    <!-- PostgreSQL 用 findByStatus -->
+    <select id="findByStatus" resultMap="QuotationResultMap" databaseId="postgresql">
         SELECT * FROM "見積データ"
         WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler}::見積ステータス
+        ORDER BY "見積日" DESC, "見積番号"
+    </select>
+
+    <!-- H2 用 findByStatus -->
+    <select id="findByStatus" resultMap="QuotationResultMap" databaseId="h2">
+        SELECT * FROM "見積データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler}
         ORDER BY "見積日" DESC, "見積番号"
     </select>
 
@@ -131,7 +170,8 @@
         ORDER BY "行番号"
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Quotation">
+    <!-- PostgreSQL 用 UPDATE -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Quotation" databaseId="postgresql">
         UPDATE "見積データ" SET
             "見積日" = #{quotationDate},
             "見積有効期限" = #{validUntil},
@@ -149,6 +189,25 @@
         WHERE "ID" = #{id}
     </update>
 
+    <!-- H2 用 UPDATE -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Quotation" databaseId="h2">
+        UPDATE "見積データ" SET
+            "見積日" = #{quotationDate},
+            "見積有効期限" = #{validUntil},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "担当者コード" = #{salesRepCode},
+            "件名" = #{subject},
+            "見積金額" = #{subtotal},
+            "消費税額" = #{taxAmount},
+            "見積合計" = #{totalAmount},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.QuotationStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
     <delete id="deleteDetailsByQuotationId">
         DELETE FROM "見積明細" WHERE "見積ID" = #{quotationId}
     </delete>
@@ -157,11 +216,21 @@
         DELETE FROM "見積データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllDetails">
+    <!-- PostgreSQL 用 TRUNCATE -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
         TRUNCATE TABLE "見積明細" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "見積データ" CASCADE
+    </delete>
+
+    <!-- H2 用 TRUNCATE -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "見積明細"
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "見積データ"
     </delete>
 </mapper>

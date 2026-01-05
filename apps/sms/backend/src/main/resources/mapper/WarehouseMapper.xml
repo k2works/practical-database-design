@@ -20,7 +20,8 @@
         <result property="updatedBy" column="更新者名"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.sms.domain.model.inventory.Warehouse">
+    <!-- 登録 (PostgreSQL) -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.inventory.Warehouse" databaseId="postgresql">
         INSERT INTO "倉庫マスタ" (
             "倉庫コード", "倉庫名", "倉庫名カナ", "倉庫区分",
             "郵便番号", "住所", "電話番号", "有効フラグ",
@@ -28,6 +29,20 @@
         ) VALUES (
             #{warehouseCode}, #{warehouseName}, #{warehouseNameKana},
             #{warehouseType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.WarehouseTypeTypeHandler}::倉庫区分,
+            #{postalCode}, #{address}, #{phoneNumber}, #{activeFlag},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 登録 (H2) -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.inventory.Warehouse" databaseId="h2">
+        INSERT INTO "倉庫マスタ" (
+            "倉庫コード", "倉庫名", "倉庫名カナ", "倉庫区分",
+            "郵便番号", "住所", "電話番号", "有効フラグ",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{warehouseCode}, #{warehouseName}, #{warehouseNameKana},
+            #{warehouseType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.WarehouseTypeTypeHandler},
             #{postalCode}, #{address}, #{phoneNumber}, #{activeFlag},
             CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
         )
@@ -71,7 +86,8 @@
         </where>
     </select>
 
-    <update id="update" parameterType="com.example.sms.domain.model.inventory.Warehouse">
+    <!-- 更新 (PostgreSQL) -->
+    <update id="update" parameterType="com.example.sms.domain.model.inventory.Warehouse" databaseId="postgresql">
         UPDATE "倉庫マスタ" SET
             "倉庫名" = #{warehouseName},
             "倉庫名カナ" = #{warehouseNameKana},
@@ -85,11 +101,32 @@
         WHERE "倉庫コード" = #{warehouseCode}
     </update>
 
+    <!-- 更新 (H2) -->
+    <update id="update" parameterType="com.example.sms.domain.model.inventory.Warehouse" databaseId="h2">
+        UPDATE "倉庫マスタ" SET
+            "倉庫名" = #{warehouseName},
+            "倉庫名カナ" = #{warehouseNameKana},
+            "倉庫区分" = #{warehouseType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.WarehouseTypeTypeHandler},
+            "郵便番号" = #{postalCode},
+            "住所" = #{address},
+            "電話番号" = #{phoneNumber},
+            "有効フラグ" = #{activeFlag},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "倉庫コード" = #{warehouseCode}
+    </update>
+
     <delete id="deleteByCode">
         DELETE FROM "倉庫マスタ" WHERE "倉庫コード" = #{warehouseCode}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "倉庫マスタ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "倉庫マスタ"
     </delete>
 </mapper>

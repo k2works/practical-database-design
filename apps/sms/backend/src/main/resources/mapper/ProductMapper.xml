@@ -28,7 +28,8 @@
         <result property="updatedBy" column="更新者名"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.sms.domain.model.product.Product">
+    <!-- PostgreSQL version -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.product.Product" databaseId="postgresql">
         INSERT INTO "商品マスタ" (
             "商品コード", "商品正式名", "商品名", "商品名カナ", "商品区分",
             "製品型番", "販売単価", "仕入単価", "税区分", "商品分類コード",
@@ -46,6 +47,25 @@
         )
     </insert>
 
+    <!-- H2 version -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.product.Product" databaseId="h2">
+        INSERT INTO "商品マスタ" (
+            "商品コード", "商品正式名", "商品名", "商品名カナ", "商品区分",
+            "製品型番", "販売単価", "仕入単価", "税区分", "商品分類コード",
+            "雑区分", "在庫管理対象区分", "在庫引当区分", "仕入先コード", "仕入先枝番",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{productCode}, #{productFullName}, #{productName}, #{productNameKana},
+            #{productCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler},
+            #{modelNumber}, #{sellingPrice}, #{purchasePrice},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
+            #{classificationCode},
+            #{isMiscellaneous}, #{isInventoryManaged}, #{isInventoryAllocated},
+            #{supplierCode}, #{supplierBranchNumber},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
     <select id="findByCode" resultMap="ProductResultMap">
         SELECT * FROM "商品マスタ"
         WHERE "商品コード" = #{productCode}
@@ -56,9 +76,17 @@
         ORDER BY "商品コード"
     </select>
 
-    <select id="findByCategory" resultMap="ProductResultMap">
+    <!-- PostgreSQL version -->
+    <select id="findByCategory" resultMap="ProductResultMap" databaseId="postgresql">
         SELECT * FROM "商品マスタ"
         WHERE "商品区分" = #{category}::商品区分
+        ORDER BY "商品コード"
+    </select>
+
+    <!-- H2 version -->
+    <select id="findByCategory" resultMap="ProductResultMap" databaseId="h2">
+        SELECT * FROM "商品マスタ"
+        WHERE "商品区分" = #{category}
         ORDER BY "商品コード"
     </select>
 
@@ -68,7 +96,8 @@
         ORDER BY "商品コード"
     </select>
 
-    <select id="findWithPagination" resultMap="ProductResultMap">
+    <!-- PostgreSQL version -->
+    <select id="findWithPagination" resultMap="ProductResultMap" databaseId="postgresql">
         SELECT * FROM "商品マスタ"
         <where>
             <if test="category != null and category != ''">
@@ -83,7 +112,24 @@
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
-    <select id="count" resultType="long">
+    <!-- H2 version -->
+    <select id="findWithPagination" resultMap="ProductResultMap" databaseId="h2">
+        SELECT * FROM "商品マスタ"
+        <where>
+            <if test="category != null and category != ''">
+                "商品区分" = #{category}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("商品コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("商品名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "商品コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- PostgreSQL version -->
+    <select id="count" resultType="long" databaseId="postgresql">
         SELECT COUNT(*) FROM "商品マスタ"
         <where>
             <if test="category != null and category != ''">
@@ -96,7 +142,22 @@
         </where>
     </select>
 
-    <update id="update" parameterType="com.example.sms.domain.model.product.Product">
+    <!-- H2 version -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "商品マスタ"
+        <where>
+            <if test="category != null and category != ''">
+                "商品区分" = #{category}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("商品コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("商品名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- PostgreSQL version -->
+    <update id="update" parameterType="com.example.sms.domain.model.product.Product" databaseId="postgresql">
         UPDATE "商品マスタ" SET
             "商品正式名" = #{productFullName},
             "商品名" = #{productName},
@@ -117,12 +178,40 @@
         WHERE "商品コード" = #{productCode}
     </update>
 
+    <!-- H2 version -->
+    <update id="update" parameterType="com.example.sms.domain.model.product.Product" databaseId="h2">
+        UPDATE "商品マスタ" SET
+            "商品正式名" = #{productFullName},
+            "商品名" = #{productName},
+            "商品名カナ" = #{productNameKana},
+            "商品区分" = #{productCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler},
+            "製品型番" = #{modelNumber},
+            "販売単価" = #{sellingPrice},
+            "仕入単価" = #{purchasePrice},
+            "税区分" = #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
+            "商品分類コード" = #{classificationCode},
+            "雑区分" = #{isMiscellaneous},
+            "在庫管理対象区分" = #{isInventoryManaged},
+            "在庫引当区分" = #{isInventoryAllocated},
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "商品コード" = #{productCode}
+    </update>
+
     <delete id="deleteByCode">
         DELETE FROM "商品マスタ"
         WHERE "商品コード" = #{productCode}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- PostgreSQL version -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "商品マスタ" CASCADE
+    </delete>
+
+    <!-- H2 version -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "商品マスタ"
     </delete>
 </mapper>

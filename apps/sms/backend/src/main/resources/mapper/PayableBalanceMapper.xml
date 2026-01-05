@@ -71,7 +71,13 @@
         DELETE FROM "買掛金残高データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "買掛金残高データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "買掛金残高データ"
     </delete>
 </mapper>

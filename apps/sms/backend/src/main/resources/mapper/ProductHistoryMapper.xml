@@ -19,8 +19,9 @@
         <result property="createdBy" column="作成者"/>
     </resultMap>
 
+    <!-- 登録 (PostgreSQL) -->
     <insert id="insert" parameterType="com.example.sms.domain.model.common.ProductHistory"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "商品マスタ履歴" (
             "商品コード", "有効開始日", "有効終了日", "商品名",
             "商品区分", "単価", "税区分", "作成日時", "作成者"
@@ -29,6 +30,21 @@
             #{productCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler}::商品区分,
             #{unitPrice},
             #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            CURRENT_TIMESTAMP, #{createdBy}
+        )
+    </insert>
+
+    <!-- 登録 (H2) -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.common.ProductHistory"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "商品マスタ履歴" (
+            "商品コード", "有効開始日", "有効終了日", "商品名",
+            "商品区分", "単価", "税区分", "作成日時", "作成者"
+        ) VALUES (
+            #{productCode}, #{validFromDate}, #{validToDate}, #{productName},
+            #{productCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler},
+            #{unitPrice},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
             CURRENT_TIMESTAMP, #{createdBy}
         )
     </insert>
@@ -56,13 +72,25 @@
         SELECT * FROM "商品マスタ履歴" ORDER BY "商品コード", "有効開始日" DESC
     </select>
 
-    <update id="update" parameterType="com.example.sms.domain.model.common.ProductHistory">
+    <!-- 更新 (PostgreSQL) -->
+    <update id="update" parameterType="com.example.sms.domain.model.common.ProductHistory" databaseId="postgresql">
         UPDATE "商品マスタ履歴" SET
             "有効終了日" = #{validToDate},
             "商品名" = #{productName},
             "商品区分" = #{productCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler}::商品区分,
             "単価" = #{unitPrice},
             "税区分" = #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 更新 (H2) -->
+    <update id="update" parameterType="com.example.sms.domain.model.common.ProductHistory" databaseId="h2">
+        UPDATE "商品マスタ履歴" SET
+            "有効終了日" = #{validToDate},
+            "商品名" = #{productName},
+            "商品区分" = #{productCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ProductCategoryTypeHandler},
+            "単価" = #{unitPrice},
+            "税区分" = #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}
         WHERE "ID" = #{id}
     </update>
 
@@ -74,7 +102,13 @@
         DELETE FROM "商品マスタ履歴" WHERE "商品コード" = #{productCode}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "商品マスタ履歴" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "商品マスタ履歴"
     </delete>
 </mapper>

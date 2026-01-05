@@ -85,8 +85,9 @@
         <result property="createdAt" column="a_作成日時"/>
     </resultMap>
 
+    <!-- ヘッダ登録 (PostgreSQL) -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.receipt.Receipt"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "入金データ" (
             "入金番号", "入金日", "顧客コード", "顧客枝番", "入金方法",
             "入金金額", "消込済金額", "未消込金額", "手数料",
@@ -98,6 +99,24 @@
             #{receiptAmount}, #{appliedAmount}, #{unappliedAmount}, #{bankFee},
             #{payerName}, #{bankName}, #{accountNumber},
             #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptStatusTypeHandler}::入金ステータス,
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.receipt.Receipt"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "入金データ" (
+            "入金番号", "入金日", "顧客コード", "顧客枝番", "入金方法",
+            "入金金額", "消込済金額", "未消込金額", "手数料",
+            "振込名義", "銀行名", "口座番号", "ステータス", "備考",
+            "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{receiptNumber}, #{receiptDate}, #{customerCode}, #{customerBranchNumber},
+            #{receiptMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptMethodTypeHandler},
+            #{receiptAmount}, #{appliedAmount}, #{unappliedAmount}, #{bankFee},
+            #{payerName}, #{bankName}, #{accountNumber},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptStatusTypeHandler},
             #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
         )
     </insert>
@@ -127,9 +146,17 @@
         ORDER BY "入金日" DESC, "入金番号"
     </select>
 
-    <select id="findByStatus" resultMap="ReceiptResultMap">
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="ReceiptResultMap" databaseId="postgresql">
         SELECT * FROM "入金データ"
         WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptStatusTypeHandler}::入金ステータス
+        ORDER BY "入金日" DESC, "入金番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="ReceiptResultMap" databaseId="h2">
+        SELECT * FROM "入金データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptStatusTypeHandler}
         ORDER BY "入金日" DESC, "入金番号"
     </select>
 
@@ -263,7 +290,8 @@
         SELECT "バージョン" FROM "入金データ" WHERE "ID" = #{id}
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.receipt.Receipt">
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.receipt.Receipt" databaseId="postgresql">
         UPDATE "入金データ" SET
             "入金日" = #{receiptDate},
             "顧客コード" = #{customerCode},
@@ -284,8 +312,30 @@
         WHERE "ID" = #{id}
     </update>
 
-    <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
-    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.receipt.Receipt">
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.receipt.Receipt" databaseId="h2">
+        UPDATE "入金データ" SET
+            "入金日" = #{receiptDate},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "入金方法" = #{receiptMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptMethodTypeHandler},
+            "入金金額" = #{receiptAmount},
+            "消込済金額" = #{appliedAmount},
+            "未消込金額" = #{unappliedAmount},
+            "手数料" = #{bankFee},
+            "振込名義" = #{payerName},
+            "銀行名" = #{bankName},
+            "口座番号" = #{accountNumber},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き）(PostgreSQL) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.receipt.Receipt" databaseId="postgresql">
         UPDATE "入金データ" SET
             "入金日" = #{receiptDate},
             "顧客コード" = #{customerCode},
@@ -307,6 +357,29 @@
         AND "バージョン" = #{version}
     </update>
 
+    <!-- 楽観ロック対応の更新（バージョンチェック付き）(H2) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.receipt.Receipt" databaseId="h2">
+        UPDATE "入金データ" SET
+            "入金日" = #{receiptDate},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "入金方法" = #{receiptMethod, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptMethodTypeHandler},
+            "入金金額" = #{receiptAmount},
+            "消込済金額" = #{appliedAmount},
+            "未消込金額" = #{unappliedAmount},
+            "手数料" = #{bankFee},
+            "振込名義" = #{payerName},
+            "銀行名" = #{bankName},
+            "口座番号" = #{accountNumber},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
     <update id="updateAmounts">
         UPDATE "入金データ" SET
             "消込済金額" = #{appliedAmount},
@@ -316,9 +389,19 @@
         WHERE "ID" = #{receiptId}
     </update>
 
-    <update id="updateStatus">
+    <!-- ステータス更新 (PostgreSQL) -->
+    <update id="updateStatus" databaseId="postgresql">
         UPDATE "入金データ" SET
             "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptStatusTypeHandler}::入金ステータス,
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{receiptId}
+    </update>
+
+    <!-- ステータス更新 (H2) -->
+    <update id="updateStatus" databaseId="h2">
+        UPDATE "入金データ" SET
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceiptStatusTypeHandler},
             "更新日時" = CURRENT_TIMESTAMP,
             "バージョン" = "バージョン" + 1
         WHERE "ID" = #{receiptId}
@@ -332,11 +415,23 @@
         DELETE FROM "入金データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllApplications">
+    <!-- 全消込明細削除 (PostgreSQL) -->
+    <delete id="deleteAllApplications" databaseId="postgresql">
         TRUNCATE TABLE "入金消込明細" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全消込明細削除 (H2) -->
+    <delete id="deleteAllApplications" databaseId="h2">
+        DELETE FROM "入金消込明細"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "入金データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "入金データ"
     </delete>
 </mapper>

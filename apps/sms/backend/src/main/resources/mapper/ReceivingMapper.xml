@@ -83,8 +83,9 @@
         <result property="updatedAt" column="rd_更新日時"/>
     </resultMap>
 
+    <!-- ヘッダ登録 (PostgreSQL) -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.purchase.Receiving"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "入荷データ" (
             "入荷番号", "発注ID", "仕入先コード", "仕入先枝番", "入荷日",
             "入荷ステータス", "入荷担当者コード", "倉庫コード", "備考",
@@ -92,6 +93,21 @@
         ) VALUES (
             #{receivingNumber}, #{purchaseOrderId}, #{supplierCode}, #{supplierBranchNumber}, #{receivingDate},
             #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler}::入荷ステータス,
+            #{receiverCode}, #{warehouseCode}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.purchase.Receiving"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "入荷データ" (
+            "入荷番号", "発注ID", "仕入先コード", "仕入先枝番", "入荷日",
+            "入荷ステータス", "入荷担当者コード", "倉庫コード", "備考",
+            "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{receivingNumber}, #{purchaseOrderId}, #{supplierCode}, #{supplierBranchNumber}, #{receivingDate},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler},
             #{receiverCode}, #{warehouseCode}, #{remarks},
             CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
         )
@@ -130,9 +146,17 @@
         ORDER BY "入荷日" DESC, "入荷番号"
     </select>
 
-    <select id="findByStatus" resultMap="ReceivingResultMap">
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="ReceivingResultMap" databaseId="postgresql">
         SELECT * FROM "入荷データ"
         WHERE "入荷ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler}::入荷ステータス
+        ORDER BY "入荷日" DESC, "入荷番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="ReceivingResultMap" databaseId="h2">
+        SELECT * FROM "入荷データ"
+        WHERE "入荷ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler}
         ORDER BY "入荷日" DESC, "入荷番号"
     </select>
 
@@ -259,7 +283,8 @@
         SELECT "バージョン" FROM "入荷データ" WHERE "ID" = #{id}
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.Receiving">
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.Receiving" databaseId="postgresql">
         UPDATE "入荷データ" SET
             "発注ID" = #{purchaseOrderId},
             "仕入先コード" = #{supplierCode},
@@ -275,14 +300,49 @@
         WHERE "ID" = #{id}
     </update>
 
-    <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
-    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.Receiving">
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.Receiving" databaseId="h2">
+        UPDATE "入荷データ" SET
+            "発注ID" = #{purchaseOrderId},
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "入荷日" = #{receivingDate},
+            "入荷ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler},
+            "入荷担当者コード" = #{receiverCode},
+            "倉庫コード" = #{warehouseCode},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き）(PostgreSQL) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.Receiving" databaseId="postgresql">
         UPDATE "入荷データ" SET
             "発注ID" = #{purchaseOrderId},
             "仕入先コード" = #{supplierCode},
             "仕入先枝番" = #{supplierBranchNumber},
             "入荷日" = #{receivingDate},
             "入荷ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler}::入荷ステータス,
+            "入荷担当者コード" = #{receiverCode},
+            "倉庫コード" = #{warehouseCode},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き）(H2) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.Receiving" databaseId="h2">
+        UPDATE "入荷データ" SET
+            "発注ID" = #{purchaseOrderId},
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "入荷日" = #{receivingDate},
+            "入荷ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ReceivingStatusTypeHandler},
             "入荷担当者コード" = #{receiverCode},
             "倉庫コード" = #{warehouseCode},
             "備考" = #{remarks},
@@ -316,11 +376,23 @@
         DELETE FROM "入荷データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllDetails">
+    <!-- 全明細削除 (PostgreSQL) -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
         TRUNCATE TABLE "入荷明細データ" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全明細削除 (H2) -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "入荷明細データ"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "入荷データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "入荷データ"
     </delete>
 </mapper>

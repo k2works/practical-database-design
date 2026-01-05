@@ -120,7 +120,13 @@
         WHERE "取引先コード" = #{partnerCode}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "取引先マスタ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "取引先マスタ"
     </delete>
 </mapper>

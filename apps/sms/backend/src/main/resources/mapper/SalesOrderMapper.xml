@@ -107,8 +107,9 @@
         <result property="version" column="d_バージョン"/>
     </resultMap>
 
+    <!-- PostgreSQL 用 INSERT Header -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.SalesOrder"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "受注データ" (
             "受注番号", "受注日", "顧客コード", "顧客枝番", "出荷先番号",
             "担当者コード", "希望納期", "出荷予定日", "受注金額", "消費税額",
@@ -124,8 +125,27 @@
         )
     </insert>
 
+    <!-- H2 用 INSERT Header -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.SalesOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "受注データ" (
+            "受注番号", "受注日", "顧客コード", "顧客枝番", "出荷先番号",
+            "担当者コード", "希望納期", "出荷予定日", "受注金額", "消費税額",
+            "受注合計", "ステータス", "見積ID", "顧客注文番号", "備考",
+            "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{orderNumber}, #{orderDate}, #{customerCode}, #{customerBranchNumber}, #{shippingDestinationNumber},
+            #{representativeCode}, #{requestedDeliveryDate}, #{scheduledShippingDate}, #{orderAmount}, #{taxAmount},
+            #{totalAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler},
+            #{quotationId}, #{customerOrderNumber}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <!-- PostgreSQL 用 INSERT Detail -->
     <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.SalesOrderDetail"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "受注明細" (
             "受注ID", "行番号", "商品コード", "商品名", "受注数量",
             "引当数量", "出荷数量", "残数量", "単位", "単価",
@@ -135,6 +155,22 @@
             #{allocatedQuantity}, #{shippedQuantity}, #{remainingQuantity}, #{unit}, #{unitPrice},
             #{amount},
             #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{taxRate}, #{taxAmount}, #{warehouseCode}, #{requestedDeliveryDate}, #{remarks}, 1
+        )
+    </insert>
+
+    <!-- H2 用 INSERT Detail -->
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.SalesOrderDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "受注明細" (
+            "受注ID", "行番号", "商品コード", "商品名", "受注数量",
+            "引当数量", "出荷数量", "残数量", "単位", "単価",
+            "金額", "税区分", "消費税率", "消費税額", "倉庫コード", "希望納期", "備考", "バージョン"
+        ) VALUES (
+            #{orderId}, #{lineNumber}, #{productCode}, #{productName}, #{orderQuantity},
+            #{allocatedQuantity}, #{shippedQuantity}, #{remainingQuantity}, #{unit}, #{unitPrice},
+            #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
             #{taxRate}, #{taxAmount}, #{warehouseCode}, #{requestedDeliveryDate}, #{remarks}, 1
         )
     </insert>
@@ -153,9 +189,17 @@
         ORDER BY "受注日" DESC, "受注番号"
     </select>
 
-    <select id="findByStatus" resultMap="SalesOrderResultMap">
+    <!-- PostgreSQL 用 findByStatus -->
+    <select id="findByStatus" resultMap="SalesOrderResultMap" databaseId="postgresql">
         SELECT * FROM "受注データ"
         WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler}::受注ステータス
+        ORDER BY "受注日" DESC, "受注番号"
+    </select>
+
+    <!-- H2 用 findByStatus -->
+    <select id="findByStatus" resultMap="SalesOrderResultMap" databaseId="h2">
+        SELECT * FROM "受注データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler}
         ORDER BY "受注日" DESC, "受注番号"
     </select>
 
@@ -310,7 +354,8 @@
         SELECT "バージョン" FROM "受注データ" WHERE "ID" = #{id}
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.SalesOrder">
+    <!-- PostgreSQL 用 UPDATE Header -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.SalesOrder" databaseId="postgresql">
         UPDATE "受注データ" SET
             "受注日" = #{orderDate},
             "顧客コード" = #{customerCode},
@@ -332,8 +377,31 @@
         WHERE "ID" = #{id}
     </update>
 
-    <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
-    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.sales.SalesOrder">
+    <!-- H2 用 UPDATE Header -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.SalesOrder" databaseId="h2">
+        UPDATE "受注データ" SET
+            "受注日" = #{orderDate},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "出荷先番号" = #{shippingDestinationNumber},
+            "担当者コード" = #{representativeCode},
+            "希望納期" = #{requestedDeliveryDate},
+            "出荷予定日" = #{scheduledShippingDate},
+            "受注金額" = #{orderAmount},
+            "消費税額" = #{taxAmount},
+            "受注合計" = #{totalAmount},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler},
+            "見積ID" = #{quotationId},
+            "顧客注文番号" = #{customerOrderNumber},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- PostgreSQL 用 楽観ロック対応の更新 -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.sales.SalesOrder" databaseId="postgresql">
         UPDATE "受注データ" SET
             "受注日" = #{orderDate},
             "顧客コード" = #{customerCode},
@@ -356,7 +424,32 @@
         AND "バージョン" = #{version}
     </update>
 
-    <update id="updateDetail" parameterType="com.example.sms.domain.model.sales.SalesOrderDetail">
+    <!-- H2 用 楽観ロック対応の更新 -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.sales.SalesOrder" databaseId="h2">
+        UPDATE "受注データ" SET
+            "受注日" = #{orderDate},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "出荷先番号" = #{shippingDestinationNumber},
+            "担当者コード" = #{representativeCode},
+            "希望納期" = #{requestedDeliveryDate},
+            "出荷予定日" = #{scheduledShippingDate},
+            "受注金額" = #{orderAmount},
+            "消費税額" = #{taxAmount},
+            "受注合計" = #{totalAmount},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.OrderStatusTypeHandler},
+            "見積ID" = #{quotationId},
+            "顧客注文番号" = #{customerOrderNumber},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- PostgreSQL 用 UPDATE Detail -->
+    <update id="updateDetail" parameterType="com.example.sms.domain.model.sales.SalesOrderDetail" databaseId="postgresql">
         UPDATE "受注明細" SET
             "商品コード" = #{productCode},
             "商品名" = #{productName},
@@ -377,6 +470,28 @@
         WHERE "ID" = #{id}
     </update>
 
+    <!-- H2 用 UPDATE Detail -->
+    <update id="updateDetail" parameterType="com.example.sms.domain.model.sales.SalesOrderDetail" databaseId="h2">
+        UPDATE "受注明細" SET
+            "商品コード" = #{productCode},
+            "商品名" = #{productName},
+            "受注数量" = #{orderQuantity},
+            "引当数量" = #{allocatedQuantity},
+            "出荷数量" = #{shippedQuantity},
+            "残数量" = #{remainingQuantity},
+            "単位" = #{unit},
+            "単価" = #{unitPrice},
+            "金額" = #{amount},
+            "税区分" = #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
+            "消費税率" = #{taxRate},
+            "消費税額" = #{taxAmount},
+            "倉庫コード" = #{warehouseCode},
+            "希望納期" = #{requestedDeliveryDate},
+            "備考" = #{remarks},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
     <delete id="deleteDetailsByOrderId">
         DELETE FROM "受注明細" WHERE "受注ID" = #{orderId}
     </delete>
@@ -385,11 +500,21 @@
         DELETE FROM "受注データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllDetails">
+    <!-- PostgreSQL 用 TRUNCATE -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
         TRUNCATE TABLE "受注明細" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "受注データ" CASCADE
+    </delete>
+
+    <!-- H2 用 DELETE ALL -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "受注明細"
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "受注データ"
     </delete>
 </mapper>

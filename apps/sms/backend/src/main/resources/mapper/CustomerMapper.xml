@@ -42,7 +42,8 @@
         <result property="updatedBy" column="更新者名"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.sms.domain.model.partner.Customer">
+    <!-- PostgreSQL 用 INSERT -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.partner.Customer" databaseId="postgresql">
         INSERT INTO "顧客マスタ" (
             "顧客コード", "顧客枝番", "顧客区分", "請求先コード", "請求先枝番",
             "回収先コード", "回収先枝番", "顧客名", "顧客名カナ", "自社担当者コード",
@@ -61,6 +62,30 @@
             #{paymentMethod1, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentMethodTypeHandler}::支払方法,
             #{closingDay2}, #{paymentMonth2}, #{paymentDay2},
             #{paymentMethod2, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentMethodTypeHandler}::支払方法,
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- H2 用 INSERT -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.partner.Customer" databaseId="h2">
+        INSERT INTO "顧客マスタ" (
+            "顧客コード", "顧客枝番", "顧客区分", "請求先コード", "請求先枝番",
+            "回収先コード", "回収先枝番", "顧客名", "顧客名カナ", "自社担当者コード",
+            "顧客担当者名", "顧客部門名", "顧客郵便番号", "顧客都道府県", "顧客住所1",
+            "顧客住所2", "顧客電話番号", "顧客FAX番号", "顧客メールアドレス", "顧客請求区分",
+            "顧客締日1", "顧客支払月1", "顧客支払日1", "顧客支払方法1",
+            "顧客締日2", "顧客支払月2", "顧客支払日2", "顧客支払方法2",
+            "作成日時", "作成者名", "更新日時", "更新者名"
+        ) VALUES (
+            #{customerCode}, #{customerBranchNumber}, #{customerCategory}, #{billingCode}, #{billingBranchNumber},
+            #{collectionCode}, #{collectionBranchNumber}, #{customerName}, #{customerNameKana}, #{ourRepresentativeCode},
+            #{customerRepresentativeName}, #{customerDepartmentName}, #{customerPostalCode}, #{customerPrefecture}, #{customerAddress1},
+            #{customerAddress2}, #{customerPhone}, #{customerFax}, #{customerEmail},
+            #{billingType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.BillingTypeTypeHandler},
+            #{closingDay1}, #{paymentMonth1}, #{paymentDay1},
+            #{paymentMethod1, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentMethodTypeHandler},
+            #{closingDay2}, #{paymentMonth2}, #{paymentDay2},
+            #{paymentMethod2, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentMethodTypeHandler},
             CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
         )
     </insert>
@@ -106,7 +131,8 @@
         </where>
     </select>
 
-    <update id="update" parameterType="com.example.sms.domain.model.partner.Customer">
+    <!-- PostgreSQL 用 UPDATE -->
+    <update id="update" parameterType="com.example.sms.domain.model.partner.Customer" databaseId="postgresql">
         UPDATE "顧客マスタ" SET
             "顧客区分" = #{customerCategory},
             "請求先コード" = #{billingCode},
@@ -140,13 +166,54 @@
           AND "顧客枝番" = #{customerBranchNumber}
     </update>
 
+    <!-- H2 用 UPDATE -->
+    <update id="update" parameterType="com.example.sms.domain.model.partner.Customer" databaseId="h2">
+        UPDATE "顧客マスタ" SET
+            "顧客区分" = #{customerCategory},
+            "請求先コード" = #{billingCode},
+            "請求先枝番" = #{billingBranchNumber},
+            "回収先コード" = #{collectionCode},
+            "回収先枝番" = #{collectionBranchNumber},
+            "顧客名" = #{customerName},
+            "顧客名カナ" = #{customerNameKana},
+            "自社担当者コード" = #{ourRepresentativeCode},
+            "顧客担当者名" = #{customerRepresentativeName},
+            "顧客部門名" = #{customerDepartmentName},
+            "顧客郵便番号" = #{customerPostalCode},
+            "顧客都道府県" = #{customerPrefecture},
+            "顧客住所1" = #{customerAddress1},
+            "顧客住所2" = #{customerAddress2},
+            "顧客電話番号" = #{customerPhone},
+            "顧客FAX番号" = #{customerFax},
+            "顧客メールアドレス" = #{customerEmail},
+            "顧客請求区分" = #{billingType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.BillingTypeTypeHandler},
+            "顧客締日1" = #{closingDay1},
+            "顧客支払月1" = #{paymentMonth1},
+            "顧客支払日1" = #{paymentDay1},
+            "顧客支払方法1" = #{paymentMethod1, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentMethodTypeHandler},
+            "顧客締日2" = #{closingDay2},
+            "顧客支払月2" = #{paymentMonth2},
+            "顧客支払日2" = #{paymentDay2},
+            "顧客支払方法2" = #{paymentMethod2, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PaymentMethodTypeHandler},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "顧客コード" = #{customerCode}
+          AND "顧客枝番" = #{customerBranchNumber}
+    </update>
+
     <delete id="deleteByCodeAndBranch">
         DELETE FROM "顧客マスタ"
         WHERE "顧客コード" = #{customerCode}
           AND "顧客枝番" = #{branchNumber}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- PostgreSQL 用 TRUNCATE -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "顧客マスタ" CASCADE
+    </delete>
+
+    <!-- H2 用 DELETE ALL -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "顧客マスタ"
     </delete>
 </mapper>

@@ -70,7 +70,13 @@
         DELETE FROM "赤黒処理履歴データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "赤黒処理履歴データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "赤黒処理履歴データ"
     </delete>
 </mapper>

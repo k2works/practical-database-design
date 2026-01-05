@@ -47,8 +47,9 @@
         <result property="remarks" column="備考"/>
     </resultMap>
 
+    <!-- ヘッダ登録 (PostgreSQL) -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.Sales"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "売上データ" (
             "売上番号", "売上日", "受注ID", "出荷ID", "顧客コード", "顧客枝番",
             "担当者コード", "売上金額", "消費税額", "売上合計",
@@ -63,8 +64,26 @@
         )
     </insert>
 
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.sales.Sales"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "売上データ" (
+            "売上番号", "売上日", "受注ID", "出荷ID", "顧客コード", "顧客枝番",
+            "担当者コード", "売上金額", "消費税額", "売上合計",
+            "ステータス", "請求ID", "備考",
+            "作成日時", "作成者", "更新日時", "更新者"
+        ) VALUES (
+            #{salesNumber}, #{salesDate}, #{orderId}, #{shipmentId}, #{customerCode}, #{customerBranchNumber},
+            #{representativeCode}, #{salesAmount}, #{taxAmount}, #{totalAmount},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler},
+            #{billingId}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 明細登録 (PostgreSQL) -->
     <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.SalesDetail"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "売上明細" (
             "売上ID", "行番号", "受注明細ID", "出荷明細ID", "商品コード", "商品名",
             "売上数量", "単位", "単価", "金額", "税区分",
@@ -73,6 +92,21 @@
             #{salesId}, #{lineNumber}, #{orderDetailId}, #{shipmentDetailId}, #{productCode}, #{productName},
             #{salesQuantity}, #{unit}, #{unitPrice}, #{amount},
             #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{taxRate}, #{taxAmount}, #{remarks}
+        )
+    </insert>
+
+    <!-- 明細登録 (H2) -->
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.sales.SalesDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "売上明細" (
+            "売上ID", "行番号", "受注明細ID", "出荷明細ID", "商品コード", "商品名",
+            "売上数量", "単位", "単価", "金額", "税区分",
+            "消費税率", "消費税額", "備考"
+        ) VALUES (
+            #{salesId}, #{lineNumber}, #{orderDetailId}, #{shipmentDetailId}, #{productCode}, #{productName},
+            #{salesQuantity}, #{unit}, #{unitPrice}, #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
             #{taxRate}, #{taxAmount}, #{remarks}
         )
     </insert>
@@ -103,9 +137,17 @@
         ORDER BY "売上日" DESC, "売上番号"
     </select>
 
-    <select id="findByStatus" resultMap="SalesResultMap">
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="SalesResultMap" databaseId="postgresql">
         SELECT * FROM "売上データ"
         WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler}::売上ステータス
+        ORDER BY "売上日" DESC, "売上番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="SalesResultMap" databaseId="h2">
+        SELECT * FROM "売上データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler}
         ORDER BY "売上日" DESC, "売上番号"
     </select>
 
@@ -147,7 +189,8 @@
         ORDER BY "行番号"
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Sales">
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Sales" databaseId="postgresql">
         UPDATE "売上データ" SET
             "売上日" = #{salesDate},
             "受注ID" = #{orderId},
@@ -166,6 +209,26 @@
         WHERE "ID" = #{id}
     </update>
 
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.sales.Sales" databaseId="h2">
+        UPDATE "売上データ" SET
+            "売上日" = #{salesDate},
+            "受注ID" = #{orderId},
+            "出荷ID" = #{shipmentId},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "担当者コード" = #{representativeCode},
+            "売上金額" = #{salesAmount},
+            "消費税額" = #{taxAmount},
+            "売上合計" = #{totalAmount},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.SalesStatusTypeHandler},
+            "請求ID" = #{billingId},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
     <delete id="deleteDetailsBySalesId">
         DELETE FROM "売上明細" WHERE "売上ID" = #{salesId}
     </delete>
@@ -174,11 +237,23 @@
         DELETE FROM "売上データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllDetails">
+    <!-- 全明細削除 (PostgreSQL) -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
         TRUNCATE TABLE "売上明細" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全明細削除 (H2) -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "売上明細"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "売上データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "売上データ"
     </delete>
 </mapper>

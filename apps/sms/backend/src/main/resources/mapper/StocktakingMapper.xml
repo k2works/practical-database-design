@@ -105,14 +105,28 @@
         </where>
     </select>
 
+    <!-- ヘッダ登録 (PostgreSQL) -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "棚卸データ" (
             "棚卸番号", "倉庫コード", "棚卸日", "棚卸開始日時", "棚卸終了日時",
             "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者", "バージョン"
         ) VALUES (
             #{stocktakingNumber}, #{warehouseCode}, #{stocktakingDate}, #{startDateTime}, #{endDateTime},
             #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "棚卸データ" (
+            "棚卸番号", "倉庫コード", "棚卸日", "棚卸開始日時", "棚卸終了日時",
+            "ステータス", "備考", "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{stocktakingNumber}, #{warehouseCode}, #{stocktakingDate}, #{startDateTime}, #{endDateTime},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler},
             #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
         )
     </insert>
@@ -144,9 +158,17 @@
         ORDER BY "棚卸日" DESC, "棚卸番号"
     </select>
 
-    <select id="findByStatus" resultMap="StocktakingResultMap">
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="StocktakingResultMap" databaseId="postgresql">
         SELECT * FROM "棚卸データ"
         WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス
+        ORDER BY "棚卸日" DESC, "棚卸番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="StocktakingResultMap" databaseId="h2">
+        SELECT * FROM "棚卸データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}
         ORDER BY "棚卸日" DESC, "棚卸番号"
     </select>
 
@@ -206,7 +228,8 @@
         SELECT "バージョン" FROM "棚卸データ" WHERE "ID" = #{id}
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking">
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking" databaseId="postgresql">
         UPDATE "棚卸データ" SET
             "倉庫コード" = #{warehouseCode},
             "棚卸日" = #{stocktakingDate},
@@ -220,13 +243,45 @@
         WHERE "ID" = #{id}
     </update>
 
-    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.inventory.Stocktaking">
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.inventory.Stocktaking" databaseId="h2">
+        UPDATE "棚卸データ" SET
+            "倉庫コード" = #{warehouseCode},
+            "棚卸日" = #{stocktakingDate},
+            "棚卸開始日時" = #{startDateTime},
+            "棚卸終了日時" = #{endDateTime},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 楽観ロック対応の更新 (PostgreSQL) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.inventory.Stocktaking" databaseId="postgresql">
         UPDATE "棚卸データ" SET
             "倉庫コード" = #{warehouseCode},
             "棚卸日" = #{stocktakingDate},
             "棚卸開始日時" = #{startDateTime},
             "棚卸終了日時" = #{endDateTime},
             "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- 楽観ロック対応の更新 (H2) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.inventory.Stocktaking" databaseId="h2">
+        UPDATE "棚卸データ" SET
+            "倉庫コード" = #{warehouseCode},
+            "棚卸日" = #{stocktakingDate},
+            "棚卸開始日時" = #{startDateTime},
+            "棚卸終了日時" = #{endDateTime},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler},
             "備考" = #{remarks},
             "更新日時" = CURRENT_TIMESTAMP,
             "更新者" = #{updatedBy},
@@ -256,11 +311,23 @@
         DELETE FROM "棚卸データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllDetails">
+    <!-- 全明細削除 (PostgreSQL) -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
         TRUNCATE TABLE "棚卸明細データ" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全明細削除 (H2) -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "棚卸明細データ"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "棚卸データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "棚卸データ"
     </delete>
 </mapper>

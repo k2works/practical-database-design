@@ -17,14 +17,28 @@
         <result property="createdAt" column="作成日時"/>
     </resultMap>
 
+    <!-- 登録 (PostgreSQL) -->
     <insert id="insert" parameterType="com.example.sms.domain.model.common.ChangeHistory"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "変更履歴データ" (
             "テーブル名", "レコードID", "操作種別", "変更日時",
             "変更者", "変更前データ", "変更後データ", "変更理由", "作成日時"
         ) VALUES (
             #{tableName}, #{recordId}, #{operationType}, #{changedAt},
             #{changedBy}, #{beforeData}::jsonb, #{afterData}::jsonb,
+            #{changeReason}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 登録 (H2) -->
+    <insert id="insert" parameterType="com.example.sms.domain.model.common.ChangeHistory"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "変更履歴データ" (
+            "テーブル名", "レコードID", "操作種別", "変更日時",
+            "変更者", "変更前データ", "変更後データ", "変更理由", "作成日時"
+        ) VALUES (
+            #{tableName}, #{recordId}, #{operationType}, #{changedAt},
+            #{changedBy}, #{beforeData}, #{afterData},
             #{changeReason}, CURRENT_TIMESTAMP
         )
     </insert>
@@ -60,7 +74,13 @@
         DELETE FROM "変更履歴データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "変更履歴データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "変更履歴データ"
     </delete>
 </mapper>

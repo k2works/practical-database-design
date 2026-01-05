@@ -83,8 +83,9 @@
         <result property="updatedAt" column="pd_更新日時"/>
     </resultMap>
 
+    <!-- ヘッダ登録 (PostgreSQL) -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "発注データ" (
             "発注番号", "仕入先コード", "仕入先枝番", "発注日", "希望納期",
             "発注ステータス", "発注担当者コード", "発注合計金額", "税額", "備考",
@@ -92,6 +93,21 @@
         ) VALUES (
             #{purchaseOrderNumber}, #{supplierCode}, #{supplierBranchNumber}, #{orderDate}, #{desiredDeliveryDate},
             #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            #{purchaserCode}, #{totalAmount}, #{taxAmount}, #{remarks},
+            CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
+        )
+    </insert>
+
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "発注データ" (
+            "発注番号", "仕入先コード", "仕入先枝番", "発注日", "希望納期",
+            "発注ステータス", "発注担当者コード", "発注合計金額", "税額", "備考",
+            "作成日時", "作成者", "更新日時", "更新者", "バージョン"
+        ) VALUES (
+            #{purchaseOrderNumber}, #{supplierCode}, #{supplierBranchNumber}, #{orderDate}, #{desiredDeliveryDate},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
             #{purchaserCode}, #{totalAmount}, #{taxAmount}, #{remarks},
             CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}, 1
         )
@@ -124,9 +140,17 @@
         ORDER BY "発注日" DESC, "発注番号"
     </select>
 
-    <select id="findByStatus" resultMap="PurchaseOrderResultMap">
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="PurchaseOrderResultMap" databaseId="postgresql">
         SELECT * FROM "発注データ"
         WHERE "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス
+        ORDER BY "発注日" DESC, "発注番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="PurchaseOrderResultMap" databaseId="h2">
+        SELECT * FROM "発注データ"
+        WHERE "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}
         ORDER BY "発注日" DESC, "発注番号"
     </select>
 
@@ -257,7 +281,8 @@
         SELECT "バージョン" FROM "発注データ" WHERE "ID" = #{id}
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder">
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder" databaseId="postgresql">
         UPDATE "発注データ" SET
             "仕入先コード" = #{supplierCode},
             "仕入先枝番" = #{supplierBranchNumber},
@@ -274,14 +299,51 @@
         WHERE "ID" = #{id}
     </update>
 
-    <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
-    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder">
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder" databaseId="h2">
+        UPDATE "発注データ" SET
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "発注日" = #{orderDate},
+            "希望納期" = #{desiredDeliveryDate},
+            "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
+            "発注担当者コード" = #{purchaserCode},
+            "発注合計金額" = #{totalAmount},
+            "税額" = #{taxAmount},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き）(PostgreSQL) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder" databaseId="postgresql">
         UPDATE "発注データ" SET
             "仕入先コード" = #{supplierCode},
             "仕入先枝番" = #{supplierBranchNumber},
             "発注日" = #{orderDate},
             "希望納期" = #{desiredDeliveryDate},
             "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            "発注担当者コード" = #{purchaserCode},
+            "発注合計金額" = #{totalAmount},
+            "税額" = #{taxAmount},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+        AND "バージョン" = #{version}
+    </update>
+
+    <!-- 楽観ロック対応の更新（バージョンチェック付き）(H2) -->
+    <update id="updateWithOptimisticLock" parameterType="com.example.sms.domain.model.purchase.PurchaseOrder" databaseId="h2">
+        UPDATE "発注データ" SET
+            "仕入先コード" = #{supplierCode},
+            "仕入先枝番" = #{supplierBranchNumber},
+            "発注日" = #{orderDate},
+            "希望納期" = #{desiredDeliveryDate},
+            "発注ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
             "発注担当者コード" = #{purchaserCode},
             "発注合計金額" = #{totalAmount},
             "税額" = #{taxAmount},
@@ -314,11 +376,23 @@
         DELETE FROM "発注データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllDetails">
+    <!-- 全明細削除 (PostgreSQL) -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
         TRUNCATE TABLE "発注明細データ" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全明細削除 (H2) -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "発注明細データ"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "発注データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "発注データ"
     </delete>
 </mapper>

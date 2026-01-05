@@ -48,8 +48,9 @@
         <result property="remarks" column="備考"/>
     </resultMap>
 
+    <!-- ヘッダ登録 (PostgreSQL) -->
     <insert id="insertHeader" parameterType="com.example.sms.domain.model.shipping.Shipment"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "出荷データ" (
             "出荷番号", "出荷日", "受注ID", "顧客コード", "顧客枝番",
             "出荷先番号", "出荷先名", "出荷先郵便番号", "出荷先住所1", "出荷先住所2",
@@ -65,8 +66,27 @@
         )
     </insert>
 
+    <!-- ヘッダ登録 (H2) -->
+    <insert id="insertHeader" parameterType="com.example.sms.domain.model.shipping.Shipment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "出荷データ" (
+            "出荷番号", "出荷日", "受注ID", "顧客コード", "顧客枝番",
+            "出荷先番号", "出荷先名", "出荷先郵便番号", "出荷先住所1", "出荷先住所2",
+            "担当者コード", "倉庫コード", "ステータス", "備考",
+            "作成日時", "作成者", "更新日時", "更新者"
+        ) VALUES (
+            #{shipmentNumber}, #{shipmentDate}, #{orderId}, #{customerCode}, #{customerBranchNumber},
+            #{shippingDestinationNumber}, #{shippingDestinationName}, #{shippingDestinationPostalCode},
+            #{shippingDestinationAddress1}, #{shippingDestinationAddress2},
+            #{representativeCode}, #{warehouseCode},
+            #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ShipmentStatusTypeHandler},
+            #{remarks}, CURRENT_TIMESTAMP, #{createdBy}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 明細登録 (PostgreSQL) -->
     <insert id="insertDetail" parameterType="com.example.sms.domain.model.shipping.ShipmentDetail"
-            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "出荷明細" (
             "出荷ID", "行番号", "受注明細ID", "商品コード", "商品名",
             "出荷数量", "単位", "単価", "金額", "税区分",
@@ -75,6 +95,21 @@
             #{shipmentId}, #{lineNumber}, #{orderDetailId}, #{productCode}, #{productName},
             #{shippedQuantity}, #{unit}, #{unitPrice}, #{amount},
             #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler}::税区分,
+            #{taxRate}, #{taxAmount}, #{warehouseCode}, #{remarks}
+        )
+    </insert>
+
+    <!-- 明細登録 (H2) -->
+    <insert id="insertDetail" parameterType="com.example.sms.domain.model.shipping.ShipmentDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "出荷明細" (
+            "出荷ID", "行番号", "受注明細ID", "商品コード", "商品名",
+            "出荷数量", "単位", "単価", "金額", "税区分",
+            "消費税率", "消費税額", "倉庫コード", "備考"
+        ) VALUES (
+            #{shipmentId}, #{lineNumber}, #{orderDetailId}, #{productCode}, #{productName},
+            #{shippedQuantity}, #{unit}, #{unitPrice}, #{amount},
+            #{taxCategory, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.TaxCategoryTypeHandler},
             #{taxRate}, #{taxAmount}, #{warehouseCode}, #{remarks}
         )
     </insert>
@@ -99,9 +134,17 @@
         ORDER BY "出荷日" DESC, "出荷番号"
     </select>
 
-    <select id="findByStatus" resultMap="ShipmentResultMap">
+    <!-- ステータスで検索 (PostgreSQL) -->
+    <select id="findByStatus" resultMap="ShipmentResultMap" databaseId="postgresql">
         SELECT * FROM "出荷データ"
         WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ShipmentStatusTypeHandler}::出荷ステータス
+        ORDER BY "出荷日" DESC, "出荷番号"
+    </select>
+
+    <!-- ステータスで検索 (H2) -->
+    <select id="findByStatus" resultMap="ShipmentResultMap" databaseId="h2">
+        SELECT * FROM "出荷データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ShipmentStatusTypeHandler}
         ORDER BY "出荷日" DESC, "出荷番号"
     </select>
 
@@ -145,7 +188,8 @@
         ORDER BY "行番号"
     </select>
 
-    <update id="updateHeader" parameterType="com.example.sms.domain.model.shipping.Shipment">
+    <!-- ヘッダ更新 (PostgreSQL) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.shipping.Shipment" databaseId="postgresql">
         UPDATE "出荷データ" SET
             "出荷日" = #{shipmentDate},
             "受注ID" = #{orderId},
@@ -165,6 +209,27 @@
         WHERE "ID" = #{id}
     </update>
 
+    <!-- ヘッダ更新 (H2) -->
+    <update id="updateHeader" parameterType="com.example.sms.domain.model.shipping.Shipment" databaseId="h2">
+        UPDATE "出荷データ" SET
+            "出荷日" = #{shipmentDate},
+            "受注ID" = #{orderId},
+            "顧客コード" = #{customerCode},
+            "顧客枝番" = #{customerBranchNumber},
+            "出荷先番号" = #{shippingDestinationNumber},
+            "出荷先名" = #{shippingDestinationName},
+            "出荷先郵便番号" = #{shippingDestinationPostalCode},
+            "出荷先住所1" = #{shippingDestinationAddress1},
+            "出荷先住所2" = #{shippingDestinationAddress2},
+            "担当者コード" = #{representativeCode},
+            "倉庫コード" = #{warehouseCode},
+            "ステータス" = #{status, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.ShipmentStatusTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
     <delete id="deleteDetailsByShipmentId">
         DELETE FROM "出荷明細" WHERE "出荷ID" = #{shipmentId}
     </delete>
@@ -173,11 +238,23 @@
         DELETE FROM "出荷データ" WHERE "ID" = #{id}
     </delete>
 
-    <delete id="deleteAllDetails">
+    <!-- 全明細削除 (PostgreSQL) -->
+    <delete id="deleteAllDetails" databaseId="postgresql">
         TRUNCATE TABLE "出荷明細" CASCADE
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全明細削除 (H2) -->
+    <delete id="deleteAllDetails" databaseId="h2">
+        DELETE FROM "出荷明細"
+    </delete>
+
+    <!-- 全件削除 (PostgreSQL) -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "出荷データ" CASCADE
+    </delete>
+
+    <!-- 全件削除 (H2) -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "出荷データ"
     </delete>
 </mapper>
