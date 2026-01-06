@@ -617,8 +617,8 @@ end note
 <summary>自動仕訳ステータス Enum</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/autojournal/AutoJournalStatus.java
-package com.example.accounting.domain.model.autojournal;
+// src/main/java/com/example/fas/domain/model/autojournal/AutoJournalStatus.java
+package com.example.fas.domain.model.autojournal;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -652,7 +652,7 @@ public enum AutoJournalStatus {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/autojournal/AutoJournalPattern.java
-package com.example.accounting.domain.model.autojournal;
+package com.example.fas.domain.model.autojournal;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -712,9 +712,9 @@ public class AutoJournalPattern {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/autojournal/AutoJournalEntry.java
-package com.example.accounting.domain.model.autojournal;
+package com.example.fas.domain.model.autojournal;
 
-import com.example.accounting.domain.model.account.DebitCreditType;
+import com.example.fas.domain.model.account.DebitCreditType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -758,7 +758,7 @@ public class AutoJournalEntry {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/autojournal/AutoJournalHistory.java
-package com.example.accounting.domain.model.autojournal;
+package com.example.fas.domain.model.autojournal;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -797,7 +797,7 @@ public class AutoJournalHistory {
 
 ```java
 // src/test/java/com/example/accounting/domain/model/autojournal/AutoJournalPatternTest.java
-package com.example.accounting.domain.model.autojournal;
+package com.example.fas.domain.model.autojournal;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -909,9 +909,9 @@ class AutoJournalPatternTest {
 
 ```java
 // src/main/java/com/example/accounting/application/port/out/AutoJournalRepository.java
-package com.example.accounting.application.port.out;
+package com.example.fas.application.port.out;
 
-import com.example.accounting.domain.model.autojournal.*;
+import com.example.fas.domain.model.autojournal.*;
 
 import java.time.LocalDate;
 import java.util.List;
