@@ -2714,7 +2714,769 @@ class ReceivingServiceTest {
 
 ---
 
-## まとめ
+## 25.3 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+購買管理データは、発注→発注明細、入荷→発注明細、検収→入荷 という複数のリレーションを持ちます。MyBatis でこれらの関係を効率的に取得するための設定を実装します。
+
+#### ネストした ResultMap の定義
+
+<details>
+<summary>PurchaseOrderMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/PurchaseOrderMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.PurchaseOrderMapper">
+
+    <!-- 発注データ ResultMap（明細込み） -->
+    <resultMap id="purchaseOrderWithDetailsResultMap" type="com.example.production.domain.model.purchase.PurchaseOrder">
+        <id property="id" column="po_ID"/>
+        <result property="purchaseOrderNumber" column="po_発注番号"/>
+        <result property="orderDate" column="po_発注日"/>
+        <result property="supplierCode" column="po_取引先コード"/>
+        <result property="purchaserCode" column="po_発注担当者コード"/>
+        <result property="departmentCode" column="po_発注部門コード"/>
+        <result property="status" column="po_ステータス"
+                typeHandler="com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler"/>
+        <result property="remarks" column="po_備考"/>
+        <result property="version" column="po_バージョン"/>
+        <result property="createdAt" column="po_作成日時"/>
+        <result property="createdBy" column="po_作成者"/>
+        <result property="updatedAt" column="po_更新日時"/>
+        <result property="updatedBy" column="po_更新者"/>
+        <!-- 取引先マスタとの N:1 関連 -->
+        <association property="supplier" javaType="com.example.production.domain.model.master.Supplier">
+            <id property="supplierCode" column="s_取引先コード"/>
+            <result property="supplierName" column="s_取引先名"/>
+            <result property="supplierType" column="s_取引先区分"/>
+        </association>
+        <!-- 発注明細との 1:N 関連 -->
+        <collection property="details" ofType="com.example.production.domain.model.purchase.PurchaseOrderDetail"
+                    resultMap="purchaseOrderDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 発注明細のネスト ResultMap -->
+    <resultMap id="purchaseOrderDetailNestedResultMap" type="com.example.production.domain.model.purchase.PurchaseOrderDetail">
+        <id property="id" column="pod_ID"/>
+        <result property="purchaseOrderNumber" column="pod_発注番号"/>
+        <result property="lineNumber" column="pod_発注行番号"/>
+        <result property="orderNumber" column="pod_オーダNO"/>
+        <result property="deliveryLocationCode" column="pod_納入場所コード"/>
+        <result property="itemCode" column="pod_品目コード"/>
+        <result property="isMiscellaneous" column="pod_諸口品目区分"/>
+        <result property="expectedReceiveDate" column="pod_受入予定日"/>
+        <result property="confirmedDeliveryDate" column="pod_回答納期"/>
+        <result property="unitPrice" column="pod_発注単価"/>
+        <result property="orderQuantity" column="pod_発注数量"/>
+        <result property="receivedQuantity" column="pod_入荷済数量"/>
+        <result property="inspectedQuantity" column="pod_検査済数量"/>
+        <result property="acceptedQuantity" column="pod_検収済数量"/>
+        <result property="amount" column="pod_発注金額"/>
+        <result property="taxAmount" column="pod_消費税金額"/>
+        <result property="isCompleted" column="pod_完了フラグ"/>
+        <result property="lineRemarks" column="pod_明細備考"/>
+        <result property="version" column="pod_バージョン"/>
+        <!-- 品目マスタとの N:1 関連 -->
+        <association property="item" javaType="com.example.production.domain.model.item.Item">
+            <id property="itemCode" column="i_品目コード"/>
+            <result property="itemName" column="i_品名"/>
+            <result property="itemCategory" column="i_品目区分"/>
+            <result property="unit" column="i_単位"/>
+        </association>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithDetailsByPurchaseOrderNumber" resultMap="purchaseOrderWithDetailsResultMap">
+        SELECT
+            -- 発注データ
+            po."ID" AS po_ID,
+            po."発注番号" AS po_発注番号,
+            po."発注日" AS po_発注日,
+            po."取引先コード" AS po_取引先コード,
+            po."発注担当者コード" AS po_発注担当者コード,
+            po."発注部門コード" AS po_発注部門コード,
+            po."ステータス" AS po_ステータス,
+            po."備考" AS po_備考,
+            po."バージョン" AS po_バージョン,
+            po."作成日時" AS po_作成日時,
+            po."作成者" AS po_作成者,
+            po."更新日時" AS po_更新日時,
+            po."更新者" AS po_更新者,
+            -- 取引先マスタ
+            s."取引先コード" AS s_取引先コード,
+            s."取引先名" AS s_取引先名,
+            s."取引先区分" AS s_取引先区分,
+            -- 発注明細データ
+            pod."ID" AS pod_ID,
+            pod."発注番号" AS pod_発注番号,
+            pod."発注行番号" AS pod_発注行番号,
+            pod."オーダNO" AS pod_オーダNO,
+            pod."納入場所コード" AS pod_納入場所コード,
+            pod."品目コード" AS pod_品目コード,
+            pod."諸口品目区分" AS pod_諸口品目区分,
+            pod."受入予定日" AS pod_受入予定日,
+            pod."回答納期" AS pod_回答納期,
+            pod."発注単価" AS pod_発注単価,
+            pod."発注数量" AS pod_発注数量,
+            pod."入荷済数量" AS pod_入荷済数量,
+            pod."検査済数量" AS pod_検査済数量,
+            pod."検収済数量" AS pod_検収済数量,
+            pod."発注金額" AS pod_発注金額,
+            pod."消費税金額" AS pod_消費税金額,
+            pod."完了フラグ" AS pod_完了フラグ,
+            pod."明細備考" AS pod_明細備考,
+            pod."バージョン" AS pod_バージョン,
+            -- 品目マスタ
+            i."品目コード" AS i_品目コード,
+            i."品名" AS i_品名,
+            i."品目区分" AS i_品目区分,
+            i."単位" AS i_単位
+        FROM "発注データ" po
+        LEFT JOIN "取引先マスタ" s ON po."取引先コード" = s."取引先コード"
+        LEFT JOIN "発注明細データ" pod ON po."発注番号" = pod."発注番号"
+        LEFT JOIN "品目マスタ" i ON pod."品目コード" = i."品目コード"
+            AND i."適用開始日" = (
+                SELECT MAX("適用開始日") FROM "品目マスタ"
+                WHERE "品目コード" = pod."品目コード"
+                AND "適用開始日" <= CURRENT_DATE
+            )
+        WHERE po."発注番号" = #{purchaseOrderNumber}
+        ORDER BY pod."発注行番号"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+<details>
+<summary>ReceivingMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/ReceivingMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.ReceivingMapper">
+
+    <!-- 入荷受入データ ResultMap（発注明細・検査・検収込み） -->
+    <resultMap id="receivingWithRelationsResultMap" type="com.example.production.domain.model.purchase.Receiving">
+        <id property="id" column="r_ID"/>
+        <result property="receivingNumber" column="r_入荷受入番号"/>
+        <result property="purchaseOrderNumber" column="r_発注番号"/>
+        <result property="lineNumber" column="r_発注行番号"/>
+        <result property="receivingDate" column="r_入荷日"/>
+        <result property="receivingType" column="r_入荷受入区分"
+                typeHandler="com.example.production.infrastructure.persistence.ReceivingTypeTypeHandler"/>
+        <result property="receivedQuantity" column="r_入荷数量"/>
+        <result property="locationCode" column="r_入荷場所コード"/>
+        <result property="remarks" column="r_備考"/>
+        <result property="version" column="r_バージョン"/>
+        <result property="createdAt" column="r_作成日時"/>
+        <result property="updatedAt" column="r_更新日時"/>
+        <!-- 発注明細との N:1 関連 -->
+        <association property="purchaseOrderDetail" javaType="com.example.production.domain.model.purchase.PurchaseOrderDetail">
+            <id property="id" column="pod_ID"/>
+            <result property="purchaseOrderNumber" column="pod_発注番号"/>
+            <result property="lineNumber" column="pod_発注行番号"/>
+            <result property="itemCode" column="pod_品目コード"/>
+            <result property="orderQuantity" column="pod_発注数量"/>
+            <result property="unitPrice" column="pod_発注単価"/>
+        </association>
+        <!-- 検査データとの 1:1 関連 -->
+        <association property="inspection" javaType="com.example.production.domain.model.purchase.Inspection">
+            <id property="id" column="ins_ID"/>
+            <result property="inspectionNumber" column="ins_検査番号"/>
+            <result property="inspectionDate" column="ins_検査日"/>
+            <result property="inspectedQuantity" column="ins_検査数量"/>
+            <result property="goodQuantity" column="ins_良品数量"/>
+            <result property="defectQuantity" column="ins_不良数量"/>
+        </association>
+        <!-- 検収データとの 1:1 関連 -->
+        <association property="acceptance" javaType="com.example.production.domain.model.purchase.Acceptance">
+            <id property="id" column="acc_ID"/>
+            <result property="acceptanceNumber" column="acc_検収番号"/>
+            <result property="acceptanceDate" column="acc_検収日"/>
+            <result property="acceptedQuantity" column="acc_検収数量"/>
+            <result property="amount" column="acc_検収金額"/>
+            <result property="taxAmount" column="acc_消費税額"/>
+        </association>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithRelationsByReceivingNumber" resultMap="receivingWithRelationsResultMap">
+        SELECT
+            -- 入荷受入データ
+            r."ID" AS r_ID,
+            r."入荷受入番号" AS r_入荷受入番号,
+            r."発注番号" AS r_発注番号,
+            r."発注行番号" AS r_発注行番号,
+            r."入荷日" AS r_入荷日,
+            r."入荷受入区分" AS r_入荷受入区分,
+            r."入荷数量" AS r_入荷数量,
+            r."入荷場所コード" AS r_入荷場所コード,
+            r."備考" AS r_備考,
+            r."バージョン" AS r_バージョン,
+            r."作成日時" AS r_作成日時,
+            r."更新日時" AS r_更新日時,
+            -- 発注明細データ
+            pod."ID" AS pod_ID,
+            pod."発注番号" AS pod_発注番号,
+            pod."発注行番号" AS pod_発注行番号,
+            pod."品目コード" AS pod_品目コード,
+            pod."発注数量" AS pod_発注数量,
+            pod."発注単価" AS pod_発注単価,
+            -- 受入検査データ
+            ins."ID" AS ins_ID,
+            ins."検査番号" AS ins_検査番号,
+            ins."検査日" AS ins_検査日,
+            ins."検査数量" AS ins_検査数量,
+            ins."良品数量" AS ins_良品数量,
+            ins."不良数量" AS ins_不良数量,
+            -- 検収データ
+            acc."ID" AS acc_ID,
+            acc."検収番号" AS acc_検収番号,
+            acc."検収日" AS acc_検収日,
+            acc."検収数量" AS acc_検収数量,
+            acc."検収金額" AS acc_検収金額,
+            acc."消費税額" AS acc_消費税額
+        FROM "入荷受入データ" r
+        LEFT JOIN "発注明細データ" pod
+            ON r."発注番号" = pod."発注番号" AND r."発注行番号" = pod."発注行番号"
+        LEFT JOIN "受入検査データ" ins ON r."入荷受入番号" = ins."入荷受入番号"
+        LEFT JOIN "検収データ" acc ON r."入荷受入番号" = acc."入荷受入番号"
+        WHERE r."入荷受入番号" = #{receivingNumber}
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<collection>` | 発注→発注明細 の 1:N 関連 |
+| `<association>` | 入荷→発注明細、入荷→検査、入荷→検収 の N:1/1:1 関連 |
+| エイリアス | `po_`（発注）、`pod_`（発注明細）、`r_`（入荷）、`ins_`（検査）、`acc_`（検収） |
+| 有効日サブクエリ | 品目マスタの適用開始日を考慮した最新レコード取得 |
+
+### 楽観ロックの実装
+
+発注から検収までの一連の業務で複数ユーザーが同時に操作する可能性があるため、楽観ロックを実装します。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V010__add_purchasing_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V010__add_purchasing_version_columns.sql
+
+-- 発注データテーブルにバージョンカラムを追加
+ALTER TABLE "発注データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 発注明細データテーブルにバージョンカラムを追加
+ALTER TABLE "発注明細データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 入荷受入データテーブルにバージョンカラムを追加
+ALTER TABLE "入荷受入データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 受入検査データテーブルにバージョンカラムを追加
+ALTER TABLE "受入検査データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 検収データテーブルにバージョンカラムを追加
+ALTER TABLE "検収データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "発注データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "発注明細データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "入荷受入データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "受入検査データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "検収データ"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>PurchaseOrder.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/production/domain/model/purchase/PurchaseOrder.java
+package com.example.production.domain.model.purchase;
+
+import com.example.production.domain.model.master.Supplier;
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@Builder
+public class PurchaseOrder {
+    private Integer id;
+    private String purchaseOrderNumber;
+    private LocalDate orderDate;
+    private String supplierCode;
+    private String purchaserCode;
+    private String departmentCode;
+    private PurchaseOrderStatus status;
+    private String remarks;
+    private LocalDateTime createdAt;
+    private String createdBy;
+    private LocalDateTime updatedAt;
+    private String updatedBy;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Supplier supplier;
+    @Builder.Default
+    private List<PurchaseOrderDetail> details = new ArrayList<>();
+}
+```
+
+</details>
+
+<details>
+<summary>Receiving.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/production/domain/model/purchase/Receiving.java
+package com.example.production.domain.model.purchase;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+public class Receiving {
+    private Integer id;
+    private String receivingNumber;
+    private String purchaseOrderNumber;
+    private Integer lineNumber;
+    private LocalDate receivingDate;
+    private ReceivingType receivingType;
+    private BigDecimal receivedQuantity;
+    private String locationCode;
+    private String remarks;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private PurchaseOrderDetail purchaseOrderDetail;
+    private Inspection inspection;
+    private Acceptance acceptance;
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の更新
+
+<details>
+<summary>PurchaseOrderMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 楽観ロック対応の更新（バージョンチェック付き） -->
+<update id="updateWithOptimisticLock" parameterType="com.example.production.domain.model.purchase.PurchaseOrder">
+    UPDATE "発注データ"
+    SET
+        "発注日" = #{orderDate},
+        "取引先コード" = #{supplierCode},
+        "発注担当者コード" = #{purchaserCode},
+        "発注部門コード" = #{departmentCode},
+        "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler}::発注ステータス,
+        "備考" = #{remarks},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "更新者" = #{updatedBy},
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- ステータス更新（楽観ロック対応） -->
+<update id="updateStatusWithOptimisticLock">
+    UPDATE "発注データ"
+    SET
+        "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler}::発注ステータス,
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 現在のバージョン取得 -->
+<select id="findVersionById" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "発注データ" WHERE "ID" = #{id}
+</select>
+```
+
+</details>
+
+<details>
+<summary>PurchaseOrderDetailMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 入荷数量更新（楽観ロック対応） -->
+<update id="updateReceivedQuantityWithOptimisticLock">
+    UPDATE "発注明細データ"
+    SET
+        "入荷済数量" = "入荷済数量" + #{additionalQuantity},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 検収数量更新（楽観ロック対応） -->
+<update id="updateAcceptedQuantityWithOptimisticLock">
+    UPDATE "発注明細データ"
+    SET
+        "検収済数量" = "検収済数量" + #{additionalQuantity},
+        "完了フラグ" = CASE
+            WHEN "検収済数量" + #{additionalQuantity} >= "発注数量" THEN TRUE
+            ELSE FALSE
+        END,
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 現在のバージョン取得 -->
+<select id="findVersionById" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "発注明細データ" WHERE "ID" = #{id}
+</select>
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>PurchaseOrderRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/production/infrastructure/persistence/repository/PurchaseOrderRepositoryImpl.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.PurchaseOrderRepository;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.purchase.PurchaseOrder;
+import com.example.production.domain.model.purchase.PurchaseOrderStatus;
+import com.example.production.infrastructure.persistence.mapper.PurchaseOrderMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
+
+    private final PurchaseOrderMapper mapper;
+
+    @Override
+    @Transactional
+    public void update(PurchaseOrder purchaseOrder) {
+        int updatedCount = mapper.updateWithOptimisticLock(purchaseOrder);
+
+        if (updatedCount == 0) {
+            Integer currentVersion = mapper.findVersionById(purchaseOrder.getId());
+            if (currentVersion == null) {
+                throw new OptimisticLockException("発注", purchaseOrder.getId());
+            } else {
+                throw new OptimisticLockException("発注", purchaseOrder.getId(),
+                        purchaseOrder.getVersion(), currentVersion);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Integer id, PurchaseOrderStatus status, Integer version) {
+        int updatedCount = mapper.updateStatusWithOptimisticLock(id, status, version);
+
+        if (updatedCount == 0) {
+            Integer currentVersion = mapper.findVersionById(id);
+            if (currentVersion == null) {
+                throw new OptimisticLockException("発注", id);
+            } else {
+                throw new OptimisticLockException("発注", id, version, currentVersion);
+            }
+        }
+    }
+
+    @Override
+    public Optional<PurchaseOrder> findWithDetailsByPurchaseOrderNumber(String purchaseOrderNumber) {
+        return Optional.ofNullable(mapper.findWithDetailsByPurchaseOrderNumber(purchaseOrderNumber));
+    }
+
+    // その他のメソッド...
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>PurchaseOrderRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/production/infrastructure/persistence/repository/PurchaseOrderRepositoryOptimisticLockTest.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.PurchaseOrderRepository;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.purchase.PurchaseOrder;
+import com.example.production.domain.model.purchase.PurchaseOrderStatus;
+import com.example.production.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("発注リポジトリ - 楽観ロック")
+class PurchaseOrderRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private PurchaseOrderRepository purchaseOrderRepository;
+
+    @BeforeEach
+    void setUp() {
+        purchaseOrderRepository.deleteAll();
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLocking {
+
+        @Test
+        @DisplayName("同じバージョンで更新できる")
+        void canUpdateWithSameVersion() {
+            // Arrange
+            var po = PurchaseOrder.builder()
+                    .purchaseOrderNumber("PO-2025-0001")
+                    .orderDate(LocalDate.of(2025, 1, 20))
+                    .supplierCode("SUP-001")
+                    .status(PurchaseOrderStatus.CREATING)
+                    .build();
+            purchaseOrderRepository.save(po);
+
+            // Act
+            var fetched = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0001").get();
+            fetched.setRemarks("更新テスト");
+            purchaseOrderRepository.update(fetched);
+
+            // Assert
+            var updated = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0001").get();
+            assertThat(updated.getRemarks()).isEqualTo("更新テスト");
+            assertThat(updated.getVersion()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで更新すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            var po = PurchaseOrder.builder()
+                    .purchaseOrderNumber("PO-2025-0002")
+                    .orderDate(LocalDate.of(2025, 1, 20))
+                    .supplierCode("SUP-001")
+                    .status(PurchaseOrderStatus.CREATING)
+                    .build();
+            purchaseOrderRepository.save(po);
+
+            // ユーザーAが取得
+            var poA = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0002").get();
+            // ユーザーBが取得
+            var poB = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0002").get();
+
+            // ユーザーAが更新（成功）
+            poA.setRemarks("ユーザーAの更新");
+            purchaseOrderRepository.update(poA);
+
+            // Act & Assert: ユーザーBが古いバージョンで更新（失敗）
+            poB.setRemarks("ユーザーBの更新");
+            assertThatThrownBy(() -> purchaseOrderRepository.update(poB))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+
+        @Test
+        @DisplayName("ステータス更新も楽観ロックが適用される")
+        void statusUpdateWithOptimisticLock() {
+            // Arrange
+            var po = PurchaseOrder.builder()
+                    .purchaseOrderNumber("PO-2025-0003")
+                    .orderDate(LocalDate.of(2025, 1, 20))
+                    .supplierCode("SUP-001")
+                    .status(PurchaseOrderStatus.CREATING)
+                    .build();
+            purchaseOrderRepository.save(po);
+
+            // ユーザーAとBが同時に取得
+            var poA = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0003").get();
+            var poB = purchaseOrderRepository.findByPurchaseOrderNumber("PO-2025-0003").get();
+
+            // ユーザーAがステータス更新（成功）
+            purchaseOrderRepository.updateStatus(poA.getId(), PurchaseOrderStatus.ORDERED, poA.getVersion());
+
+            // Act & Assert: ユーザーBが古いバージョンでステータス更新（失敗）
+            assertThatThrownBy(() ->
+                    purchaseOrderRepository.updateStatus(poB.getId(), PurchaseOrderStatus.CANCELLED, poB.getVersion()))
+                    .isInstanceOf(OptimisticLockException.class);
+        }
+    }
+}
+```
+
+</details>
+
+### 入荷・検収処理における楽観ロックの考慮
+
+入荷から検収までの一連の処理では、発注明細の数量を段階的に更新するため、楽観ロックの適切な処理が重要です。
+
+```plantuml
+@startuml
+
+title 入荷・検収処理と楽観ロック
+
+participant "入荷サービス" as RecvSvc
+participant "発注明細リポジトリ" as PODRepo
+participant "入荷リポジトリ" as RecvRepo
+database "DB" as DB
+
+RecvSvc -> PODRepo: findByPurchaseOrderAndLine(poNumber, lineNumber)
+PODRepo -> DB: SELECT ... WHERE 発注番号 = ? AND 発注行番号 = ?
+DB --> PODRepo: 発注明細（バージョン込み）
+PODRepo --> RecvSvc: PurchaseOrderDetail
+
+RecvSvc -> RecvSvc: 入荷データ作成
+
+RecvSvc -> RecvRepo: save(receiving)
+RecvRepo -> DB: INSERT INTO 入荷受入データ
+DB --> RecvRepo: OK
+
+RecvSvc -> PODRepo: updateReceivedQuantity(id, quantity, version)
+PODRepo -> DB: UPDATE ... WHERE ID = ? AND バージョン = ?
+alt バージョン一致
+    DB --> PODRepo: 更新成功（1件）
+    PODRepo --> RecvSvc: OK
+else バージョン不一致
+    DB --> PODRepo: 更新失敗（0件）
+    PODRepo --> RecvSvc: OptimisticLockException
+    RecvSvc -> RecvSvc: ロールバック
+end
+
+@enduml
+```
+
+#### 分割入荷時の楽観ロック戦略
+
+<details>
+<summary>ReceivingService.java（楽観ロック対応）</summary>
+
+```java
+/**
+ * 入荷処理（楽観ロック対応）
+ */
+@Transactional
+public Receiving processReceiving(ReceivingRequest request) {
+    // 発注明細を取得
+    var detail = purchaseOrderDetailRepository
+            .findByPurchaseOrderAndLine(request.getPurchaseOrderNumber(), request.getLineNumber())
+            .orElseThrow(() -> new IllegalArgumentException("発注明細が見つかりません"));
+
+    // 入荷可能数量チェック
+    var remainingQuantity = detail.getOrderQuantity()
+            .subtract(detail.getReceivedQuantity());
+    if (request.getReceivedQuantity().compareTo(remainingQuantity) > 0) {
+        throw new IllegalArgumentException(
+                String.format("入荷数量が残数を超えています（残数: %s）", remainingQuantity));
+    }
+
+    // 入荷データ作成
+    var receiving = Receiving.builder()
+            .receivingNumber(generateReceivingNumber())
+            .purchaseOrderNumber(request.getPurchaseOrderNumber())
+            .lineNumber(request.getLineNumber())
+            .receivingDate(request.getReceivingDate())
+            .receivingType(determineReceivingType(detail, request.getReceivedQuantity()))
+            .receivedQuantity(request.getReceivedQuantity())
+            .locationCode(request.getLocationCode())
+            .build();
+    receivingRepository.save(receiving);
+
+    // 発注明細の入荷済数量を更新（楽観ロック）
+    try {
+        purchaseOrderDetailRepository.updateReceivedQuantity(
+                detail.getId(),
+                request.getReceivedQuantity(),
+                detail.getVersion()
+        );
+    } catch (OptimisticLockException e) {
+        // 他ユーザーが先に入荷処理を行った場合
+        throw new ConcurrentUpdateException(
+                "他のユーザーが同時に入荷処理を行いました。画面を更新して再度お試しください。", e);
+    }
+
+    // 発注ステータス更新
+    updatePurchaseOrderStatus(request.getPurchaseOrderNumber());
+
+    return receiving;
+}
+
+private ReceivingType determineReceivingType(PurchaseOrderDetail detail, BigDecimal receivedQuantity) {
+    var totalReceived = detail.getReceivedQuantity().add(receivedQuantity);
+    if (totalReceived.compareTo(detail.getOrderQuantity()) < 0) {
+        return ReceivingType.SPLIT; // 分割入荷
+    }
+    return ReceivingType.NORMAL; // 通常入荷（全数）
+}
+```
+
+</details>
+
+#### 楽観ロックのベストプラクティス（購買管理向け）
+
+| ポイント | 説明 |
+|---------|------|
+| **発注明細の数量更新** | 入荷・検査・検収それぞれで楽観ロックを適用 |
+| **分割入荷対応** | 複数回の入荷でも整合性を保証 |
+| **ステータス連動** | 発注ステータスと明細の完了フラグを連動更新 |
+| **エラーメッセージ** | ユーザーに再操作を促す明確なメッセージ |
+| **トランザクション境界** | 入荷→明細更新→ステータス更新を1トランザクションで |
+
+---
+
+## 25.4 まとめ
 
 本章では、購買管理（発注から検収まで）の DB 設計と実装について学びました。
 

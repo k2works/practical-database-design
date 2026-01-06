@@ -1856,7 +1856,709 @@ public class StocktakingService {
 
 ---
 
-## まとめ
+## 28.4 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+在庫管理では、棚卸データ→棚卸明細→在庫調整、払出データ→払出明細といった親子関係があります。MyBatis でこれらの関係を効率的に取得するためのリレーション設定を実装します。
+
+#### 棚卸データのネスト ResultMap（明細・調整・品目を含む）
+
+<details>
+<summary>StocktakingMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/StocktakingMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.StocktakingMapper">
+
+    <!-- 棚卸データ with 明細・調整・品目 ResultMap -->
+    <resultMap id="stocktakingFullResultMap" type="com.example.production.domain.model.inventory.Stocktaking">
+        <id property="id" column="st_id"/>
+        <result property="stocktakingNumber" column="st_棚卸番号"/>
+        <result property="locationCode" column="st_場所コード"/>
+        <result property="stocktakingDate" column="st_棚卸日"/>
+        <result property="status" column="st_ステータス"
+                typeHandler="com.example.production.infrastructure.persistence.StocktakingStatusTypeHandler"/>
+        <result property="version" column="st_バージョン"/>
+        <result property="createdAt" column="st_作成日時"/>
+        <result property="updatedAt" column="st_更新日時"/>
+
+        <!-- 場所マスタとの N:1 関連 -->
+        <association property="location" javaType="com.example.production.domain.model.inventory.Location">
+            <id property="locationCode" column="l_場所コード"/>
+            <result property="locationName" column="l_場所名"/>
+            <result property="locationTypeCode" column="l_場所種類コード"/>
+        </association>
+
+        <!-- 棚卸明細との 1:N 関連 -->
+        <collection property="details" ofType="com.example.production.domain.model.inventory.StocktakingDetail"
+                    resultMap="stocktakingDetailNestedResultMap"/>
+
+        <!-- 在庫調整との 1:N 関連 -->
+        <collection property="adjustments" ofType="com.example.production.domain.model.inventory.StockAdjustment"
+                    resultMap="stockAdjustmentNestedResultMap"/>
+    </resultMap>
+
+    <!-- 棚卸明細のネスト ResultMap（品目マスタを含む） -->
+    <resultMap id="stocktakingDetailNestedResultMap" type="com.example.production.domain.model.inventory.StocktakingDetail">
+        <id property="id" column="sd_id"/>
+        <result property="stocktakingNumber" column="sd_棚卸番号"/>
+        <result property="lineNumber" column="sd_棚卸行番号"/>
+        <result property="itemCode" column="sd_品目コード"/>
+        <result property="bookQuantity" column="sd_帳簿数量"/>
+        <result property="actualQuantity" column="sd_実棚数量"/>
+        <result property="differenceQuantity" column="sd_差異数量"/>
+
+        <!-- 品目マスタとの N:1 関連 -->
+        <association property="item" javaType="com.example.production.domain.model.item.Item">
+            <id property="itemCode" column="i_品目コード"/>
+            <result property="itemName" column="i_品目名"/>
+        </association>
+    </resultMap>
+
+    <!-- 在庫調整のネスト ResultMap -->
+    <resultMap id="stockAdjustmentNestedResultMap" type="com.example.production.domain.model.inventory.StockAdjustment">
+        <id property="id" column="sa_id"/>
+        <result property="adjustmentNumber" column="sa_在庫調整番号"/>
+        <result property="stocktakingNumber" column="sa_棚卸番号"/>
+        <result property="itemCode" column="sa_品目コード"/>
+        <result property="locationCode" column="sa_場所コード"/>
+        <result property="adjustmentDate" column="sa_調整日"/>
+        <result property="adjusterCode" column="sa_調整担当者コード"/>
+        <result property="adjustmentQuantity" column="sa_調整数"/>
+        <result property="reasonCode" column="sa_理由コード"/>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findFullByStocktakingNumber" resultMap="stocktakingFullResultMap">
+        SELECT
+            st."ID" AS st_id,
+            st."棚卸番号" AS st_棚卸番号,
+            st."場所コード" AS st_場所コード,
+            st."棚卸日" AS st_棚卸日,
+            st."ステータス" AS st_ステータス,
+            st."バージョン" AS st_バージョン,
+            st."作成日時" AS st_作成日時,
+            st."更新日時" AS st_更新日時,
+            l."場所コード" AS l_場所コード,
+            l."場所名" AS l_場所名,
+            l."場所種類コード" AS l_場所種類コード,
+            sd."ID" AS sd_id,
+            sd."棚卸番号" AS sd_棚卸番号,
+            sd."棚卸行番号" AS sd_棚卸行番号,
+            sd."品目コード" AS sd_品目コード,
+            sd."帳簿数量" AS sd_帳簿数量,
+            sd."実棚数量" AS sd_実棚数量,
+            sd."差異数量" AS sd_差異数量,
+            i."品目コード" AS i_品目コード,
+            i."品目名" AS i_品目名,
+            sa."ID" AS sa_id,
+            sa."在庫調整番号" AS sa_在庫調整番号,
+            sa."棚卸番号" AS sa_棚卸番号,
+            sa."品目コード" AS sa_品目コード,
+            sa."場所コード" AS sa_場所コード,
+            sa."調整日" AS sa_調整日,
+            sa."調整担当者コード" AS sa_調整担当者コード,
+            sa."調整数" AS sa_調整数,
+            sa."理由コード" AS sa_理由コード
+        FROM "棚卸データ" st
+        LEFT JOIN "場所マスタ" l ON st."場所コード" = l."場所コード"
+        LEFT JOIN "棚卸明細データ" sd ON st."棚卸番号" = sd."棚卸番号"
+        LEFT JOIN "品目マスタ" i ON sd."品目コード" = i."品目コード"
+        LEFT JOIN "在庫調整データ" sa ON st."棚卸番号" = sa."棚卸番号"
+        WHERE st."棚卸番号" = #{stocktakingNumber}
+        ORDER BY sd."棚卸行番号"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### 払出データのネスト ResultMap（明細・品目・場所を含む）
+
+<details>
+<summary>IssueMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/IssueMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.IssueMapper">
+
+    <!-- 払出データ with 明細・品目・場所 ResultMap -->
+    <resultMap id="issueWithDetailsResultMap" type="com.example.production.domain.model.inventory.Issue">
+        <id property="id" column="is_id"/>
+        <result property="issueNumber" column="is_払出番号"/>
+        <result property="workOrderNumber" column="is_作業指示番号"/>
+        <result property="routingSequence" column="is_工順"/>
+        <result property="locationCode" column="is_場所コード"/>
+        <result property="issueDate" column="is_払出日"/>
+        <result property="issuerCode" column="is_払出担当者コード"/>
+        <result property="createdAt" column="is_作成日時"/>
+        <result property="updatedAt" column="is_更新日時"/>
+
+        <!-- 場所マスタとの N:1 関連 -->
+        <association property="location" javaType="com.example.production.domain.model.inventory.Location">
+            <id property="locationCode" column="l_場所コード"/>
+            <result property="locationName" column="l_場所名"/>
+        </association>
+
+        <!-- 払出明細との 1:N 関連 -->
+        <collection property="details" ofType="com.example.production.domain.model.inventory.IssueDetail"
+                    resultMap="issueDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 払出明細のネスト ResultMap（品目マスタを含む） -->
+    <resultMap id="issueDetailNestedResultMap" type="com.example.production.domain.model.inventory.IssueDetail">
+        <id property="id" column="id_id"/>
+        <result property="issueNumber" column="id_払出番号"/>
+        <result property="lineNumber" column="id_払出行番号"/>
+        <result property="itemCode" column="id_品目コード"/>
+        <result property="issueQuantity" column="id_払出数"/>
+
+        <!-- 品目マスタとの N:1 関連 -->
+        <association property="item" javaType="com.example.production.domain.model.item.Item">
+            <id property="itemCode" column="i_品目コード"/>
+            <result property="itemName" column="i_品目名"/>
+        </association>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithDetailsByIssueNumber" resultMap="issueWithDetailsResultMap">
+        SELECT
+            is_."ID" AS is_id,
+            is_."払出番号" AS is_払出番号,
+            is_."作業指示番号" AS is_作業指示番号,
+            is_."工順" AS is_工順,
+            is_."場所コード" AS is_場所コード,
+            is_."払出日" AS is_払出日,
+            is_."払出担当者コード" AS is_払出担当者コード,
+            is_."作成日時" AS is_作成日時,
+            is_."更新日時" AS is_更新日時,
+            l."場所コード" AS l_場所コード,
+            l."場所名" AS l_場所名,
+            id."ID" AS id_id,
+            id."払出番号" AS id_払出番号,
+            id."払出行番号" AS id_払出行番号,
+            id."品目コード" AS id_品目コード,
+            id."払出数" AS id_払出数,
+            i."品目コード" AS i_品目コード,
+            i."品目名" AS i_品目名
+        FROM "払出データ" is_
+        LEFT JOIN "場所マスタ" l ON is_."場所コード" = l."場所コード"
+        LEFT JOIN "払出明細データ" id ON is_."払出番号" = id."払出番号"
+        LEFT JOIN "品目マスタ" i ON id."品目コード" = i."品目コード"
+        WHERE is_."払出番号" = #{issueNumber}
+        ORDER BY id."払出行番号"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<collection>` | 1:N 関連のマッピング（棚卸→明細、棚卸→調整、払出→明細） |
+| `<association>` | N:1 関連のマッピング（棚卸→場所、明細→品目） |
+| `<id>` | 主キーの識別（MyBatis が重複排除に使用） |
+| エイリアス（AS） | カラム名の重複を避けるプレフィックス（`st_`, `sd_`, `sa_`, `is_`, `id_` など） |
+| `ORDER BY` | コレクションの順序を保証（行番号順） |
+
+### 楽観ロックの実装
+
+在庫管理では、複数の業務（払出、入荷、棚卸調整）が同時に在庫を更新する可能性があります。データの整合性を保つために楽観ロックを実装します。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V020__add_inventory_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V020__add_inventory_version_columns.sql
+
+-- 在庫情報テーブルにバージョンカラムを追加
+ALTER TABLE "在庫情報" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 棚卸データテーブルにバージョンカラムを追加
+ALTER TABLE "棚卸データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "在庫情報"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "棚卸データ"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>Stock.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/production/domain/model/inventory/Stock.java
+package com.example.production.domain.model.inventory;
+
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+/**
+ * 在庫情報エンティティ
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Stock {
+    private Long id;
+    private String locationCode;
+    private String itemCode;
+    private BigDecimal stockQuantity;
+    private BigDecimal passedQuantity;
+    private BigDecimal defectiveQuantity;
+    private BigDecimal uninspectedQuantity;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    public static Stock empty(String locationCode, String itemCode) {
+        return Stock.builder()
+                .locationCode(locationCode)
+                .itemCode(itemCode)
+                .stockQuantity(BigDecimal.ZERO)
+                .passedQuantity(BigDecimal.ZERO)
+                .defectiveQuantity(BigDecimal.ZERO)
+                .uninspectedQuantity(BigDecimal.ZERO)
+                .build();
+    }
+
+    /**
+     * 指定状態の在庫が払出可能かチェック
+     */
+    public boolean canIssue(BigDecimal quantity, StockStatus status) {
+        BigDecimal available = getQuantityByStatus(status);
+        return available.compareTo(quantity) >= 0;
+    }
+
+    /**
+     * 状態別の数量を取得
+     */
+    public BigDecimal getQuantityByStatus(StockStatus status) {
+        return switch (status) {
+            case PASSED -> passedQuantity;
+            case DEFECTIVE -> defectiveQuantity;
+            case UNINSPECTED -> uninspectedQuantity;
+        };
+    }
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の在庫更新
+
+在庫管理では、複数の業務が同時に在庫を更新する可能性があるため、増減時に楽観ロックを適用します。
+
+<details>
+<summary>StockMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 在庫増加（楽観ロック対応） -->
+<update id="increaseByStatusWithOptimisticLock">
+    UPDATE "在庫情報"
+    SET "在庫数量" = "在庫数量" + #{quantity},
+        <choose>
+            <when test="status == 'PASSED'">
+                "合格数" = "合格数" + #{quantity}
+            </when>
+            <when test="status == 'DEFECTIVE'">
+                "不良数" = "不良数" + #{quantity}
+            </when>
+            <when test="status == 'UNINSPECTED'">
+                "未検査数" = "未検査数" + #{quantity}
+            </when>
+        </choose>,
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "場所コード" = #{locationCode}
+      AND "品目コード" = #{itemCode}
+      AND "バージョン" = #{version}
+</update>
+
+<!-- 在庫減少（楽観ロック + 在庫チェック） -->
+<update id="decreaseByStatusWithOptimisticLock">
+    UPDATE "在庫情報"
+    SET "在庫数量" = "在庫数量" - #{quantity},
+        <choose>
+            <when test="status == 'PASSED'">
+                "合格数" = "合格数" - #{quantity}
+            </when>
+            <when test="status == 'DEFECTIVE'">
+                "不良数" = "不良数" - #{quantity}
+            </when>
+            <when test="status == 'UNINSPECTED'">
+                "未検査数" = "未検査数" - #{quantity}
+            </when>
+        </choose>,
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "場所コード" = #{locationCode}
+      AND "品目コード" = #{itemCode}
+      AND "バージョン" = #{version}
+      AND <choose>
+            <when test="status == 'PASSED'">
+                "合格数" >= #{quantity}
+            </when>
+            <when test="status == 'DEFECTIVE'">
+                "不良数" >= #{quantity}
+            </when>
+            <when test="status == 'UNINSPECTED'">
+                "未検査数" >= #{quantity}
+            </when>
+        </choose>
+</update>
+
+<!-- 在庫調整（楽観ロック対応・プラスマイナス両対応） -->
+<update id="adjustWithOptimisticLock">
+    UPDATE "在庫情報"
+    SET "在庫数量" = "在庫数量" + #{adjustmentQuantity},
+        "合格数" = "合格数" + #{adjustmentQuantity},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "場所コード" = #{locationCode}
+      AND "品目コード" = #{itemCode}
+      AND "バージョン" = #{version}
+      AND ("合格数" + #{adjustmentQuantity}) >= 0
+</update>
+
+<!-- バージョン取得 -->
+<select id="findVersionByLocationAndItem" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "在庫情報"
+    WHERE "場所コード" = #{locationCode}
+      AND "品目コード" = #{itemCode}
+</select>
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>StockRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/production/infrastructure/persistence/repository/StockRepositoryImpl.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.StockRepository;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.inventory.InsufficientStockException;
+import com.example.production.domain.model.inventory.Stock;
+import com.example.production.domain.model.inventory.StockStatus;
+import com.example.production.infrastructure.persistence.mapper.StockMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class StockRepositoryImpl implements StockRepository {
+
+    private final StockMapper mapper;
+
+    @Override
+    @Transactional
+    public void increase(String locationCode, String itemCode, Integer version,
+                        BigDecimal quantity, StockStatus status) {
+        int updatedCount = mapper.increaseByStatusWithOptimisticLock(
+                locationCode, itemCode, quantity, status.name(), version);
+
+        if (updatedCount == 0) {
+            handleOptimisticLockFailure(locationCode, itemCode, version);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void decrease(String locationCode, String itemCode, Integer version,
+                        BigDecimal quantity, StockStatus status) {
+        int updatedCount = mapper.decreaseByStatusWithOptimisticLock(
+                locationCode, itemCode, quantity, status.name(), version);
+
+        if (updatedCount == 0) {
+            // 在庫不足か楽観ロック失敗かを判定
+            Integer currentVersion = mapper.findVersionByLocationAndItem(locationCode, itemCode);
+            if (currentVersion == null) {
+                throw new IllegalArgumentException("在庫情報が見つかりません");
+            } else if (!currentVersion.equals(version)) {
+                throw new OptimisticLockException("在庫", locationCode + ":" + itemCode,
+                        version, currentVersion);
+            } else {
+                // バージョンは一致しているので在庫不足
+                throw new InsufficientStockException(
+                        String.format("在庫が不足しています: %s (場所: %s)", itemCode, locationCode));
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void adjust(String locationCode, String itemCode, Integer version,
+                      BigDecimal adjustmentQuantity) {
+        int updatedCount = mapper.adjustWithOptimisticLock(
+                locationCode, itemCode, adjustmentQuantity, version);
+
+        if (updatedCount == 0) {
+            Integer currentVersion = mapper.findVersionByLocationAndItem(locationCode, itemCode);
+            if (currentVersion == null) {
+                throw new IllegalArgumentException("在庫情報が見つかりません");
+            } else if (!currentVersion.equals(version)) {
+                throw new OptimisticLockException("在庫", locationCode + ":" + itemCode,
+                        version, currentVersion);
+            } else {
+                throw new InsufficientStockException("調整後の在庫がマイナスになります");
+            }
+        }
+    }
+
+    private void handleOptimisticLockFailure(String locationCode, String itemCode, Integer expectedVersion) {
+        Integer currentVersion = mapper.findVersionByLocationAndItem(locationCode, itemCode);
+        if (currentVersion == null) {
+            throw new IllegalArgumentException("在庫情報が見つかりません");
+        } else {
+            throw new OptimisticLockException("在庫", locationCode + ":" + itemCode,
+                    expectedVersion, currentVersion);
+        }
+    }
+
+    @Override
+    public Optional<Stock> findByLocationAndItem(String locationCode, String itemCode) {
+        return Optional.ofNullable(mapper.findByLocationAndItem(locationCode, itemCode));
+    }
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>StockRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/production/infrastructure/persistence/repository/StockRepositoryOptimisticLockTest.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.StockRepository;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.inventory.InsufficientStockException;
+import com.example.production.domain.model.inventory.Stock;
+import com.example.production.domain.model.inventory.StockStatus;
+import com.example.production.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("在庫リポジトリ - 楽観ロック")
+class StockRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private StockRepository stockRepository;
+
+    @BeforeEach
+    void setUp() {
+        // テストデータのセットアップ（在庫: 100個）
+    }
+
+    @Nested
+    @DisplayName("在庫減少の楽観ロック")
+    class DecreaseOptimisticLocking {
+
+        @Test
+        @DisplayName("同じバージョンで在庫を減少できる")
+        void canDecreaseStockWithSameVersion() {
+            // Arrange
+            Stock stock = stockRepository.findByLocationAndItem("WH001", "PROD001").get();
+            Integer initialVersion = stock.getVersion();
+
+            // Act
+            stockRepository.decrease("WH001", "PROD001", initialVersion,
+                    new BigDecimal("10"), StockStatus.PASSED);
+
+            // Assert
+            var updated = stockRepository.findByLocationAndItem("WH001", "PROD001").get();
+            assertThat(updated.getPassedQuantity()).isEqualByComparingTo(new BigDecimal("90"));
+            assertThat(updated.getVersion()).isEqualTo(initialVersion + 1);
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで減少すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            Stock stock = stockRepository.findByLocationAndItem("WH001", "PROD001").get();
+            Integer initialVersion = stock.getVersion();
+
+            // 払出Aが実行（成功）
+            stockRepository.decrease("WH001", "PROD001", initialVersion,
+                    new BigDecimal("10"), StockStatus.PASSED);
+
+            // Act & Assert: 払出Bが古いバージョンで実行（失敗）
+            assertThatThrownBy(() -> stockRepository.decrease("WH001", "PROD001",
+                    initialVersion, new BigDecimal("5"), StockStatus.PASSED))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+
+        @Test
+        @DisplayName("在庫不足の場合は在庫不足例外が発生する")
+        void throwsExceptionWhenInsufficientStock() {
+            // Arrange
+            Stock stock = stockRepository.findByLocationAndItem("WH001", "PROD001").get();
+
+            // Act & Assert: 在庫以上を減少しようとする
+            assertThatThrownBy(() -> stockRepository.decrease("WH001", "PROD001",
+                    stock.getVersion(), new BigDecimal("200"), StockStatus.PASSED))
+                    .isInstanceOf(InsufficientStockException.class)
+                    .hasMessageContaining("在庫が不足しています");
+        }
+    }
+
+    @Nested
+    @DisplayName("在庫調整の楽観ロック")
+    class AdjustOptimisticLocking {
+
+        @Test
+        @DisplayName("棚卸調整で在庫を増減できる")
+        void canAdjustStockFromStocktaking() {
+            // Arrange
+            Stock stock = stockRepository.findByLocationAndItem("WH001", "PROD001").get();
+            Integer initialVersion = stock.getVersion();
+            BigDecimal initialQuantity = stock.getPassedQuantity();
+
+            // Act: プラス調整
+            stockRepository.adjust("WH001", "PROD001", initialVersion, new BigDecimal("5"));
+
+            // Assert
+            var updated = stockRepository.findByLocationAndItem("WH001", "PROD001").get();
+            assertThat(updated.getPassedQuantity())
+                    .isEqualByComparingTo(initialQuantity.add(new BigDecimal("5")));
+
+            // Act: マイナス調整
+            stockRepository.adjust("WH001", "PROD001", updated.getVersion(), new BigDecimal("-3"));
+
+            // Assert
+            var final_ = stockRepository.findByLocationAndItem("WH001", "PROD001").get();
+            assertThat(final_.getPassedQuantity())
+                    .isEqualByComparingTo(initialQuantity.add(new BigDecimal("2")));
+        }
+    }
+}
+```
+
+</details>
+
+### 同時払出処理のシーケンス図
+
+払出処理では、同一品目の在庫を複数の作業者が同時に払い出す可能性があります。
+
+```plantuml
+@startuml
+
+title 同時払出処理シーケンス（楽観ロック対応）
+
+actor 作業者A
+actor 作業者B
+participant "IssueService" as Service
+participant "StockRepository" as StockRepo
+database "在庫情報" as StockTable
+
+== 同時払出シナリオ（WH001, PROD001: 在庫100個） ==
+
+作業者A -> Service: 払出(WH001, PROD001, 数量=30)
+activate Service
+Service -> StockRepo: findByLocationAndItem()
+StockRepo -> StockTable: SELECT ... WHERE 場所='WH001' AND 品目='PROD001'
+StockTable --> StockRepo: 在庫(数量=100, version=1)
+StockRepo --> Service: 在庫(version=1)
+
+作業者B -> Service: 払出(WH001, PROD001, 数量=20)
+activate Service
+Service -> StockRepo: findByLocationAndItem()
+StockRepo -> StockTable: SELECT
+StockTable --> StockRepo: 在庫(数量=100, version=1)
+StockRepo --> Service: 在庫(version=1)
+
+note over 作業者A,StockTable: 作業者Aが先に更新
+
+Service -> StockRepo: decrease(version=1, 数量=30)
+StockRepo -> StockTable: UPDATE SET 合格数 -= 30, バージョン += 1\nWHERE バージョン = 1 AND 合格数 >= 30
+StockTable --> StockRepo: 1 row updated
+StockRepo --> Service: 成功
+Service --> 作業者A: 払出完了（残: 70個）
+deactivate Service
+
+note over 作業者A,StockTable: 作業者Bの更新（楽観ロック失敗）
+
+Service -> StockRepo: decrease(version=1, 数量=20)
+StockRepo -> StockTable: UPDATE SET 合格数 -= 20, バージョン += 1\nWHERE バージョン = 1 AND 合格数 >= 20
+StockTable --> StockRepo: 0 rows updated
+StockRepo -> StockTable: SELECT バージョン
+StockTable --> StockRepo: version=2
+StockRepo --> Service: OptimisticLockException
+Service --> 作業者B: エラー: 他の払出と競合
+deactivate Service
+
+note over 作業者B: 作業者Bはリトライ
+
+作業者B -> Service: 払出(WH001, PROD001, 数量=20)
+activate Service
+Service -> StockRepo: findByLocationAndItem()
+StockRepo -> StockTable: SELECT
+StockTable --> StockRepo: 在庫(数量=70, version=2)
+StockRepo --> Service: 在庫(version=2)
+Service -> StockRepo: decrease(version=2, 数量=20)
+StockRepo -> StockTable: UPDATE SET 合格数 -= 20, バージョン += 1\nWHERE バージョン = 2 AND 合格数 >= 20
+StockTable --> StockRepo: 1 row updated
+StockRepo --> Service: 成功
+Service --> 作業者B: 払出完了（残: 50個）
+deactivate Service
+
+@enduml
+```
+
+### 在庫管理向け楽観ロックのベストプラクティス
+
+| ポイント | 説明 |
+|---------|------|
+| **在庫チェック併用** | `AND 合格数 >= #{quantity}` で在庫不足と楽観ロック失敗を同時に検出 |
+| **エラー原因の特定** | 更新失敗時はバージョン比較で楽観ロックか在庫不足かを判定 |
+| **リトライ戦略** | 楽観ロック失敗時は最新在庫を再取得して再試行 |
+| **バッチ処理の考慮** | 大量払出はバッチサイズを小さくして競合を軽減 |
+| **調整の双方向対応** | 棚卸調整は `+#{adjustmentQuantity}` でプラス・マイナス両対応 |
+| **マイナス在庫防止** | 調整時も `合格数 + #{adjustmentQuantity} >= 0` でチェック |
+
+---
+
+## 28.5 まとめ
 
 本章では、在庫管理の設計について学びました。
 

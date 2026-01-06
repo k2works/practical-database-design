@@ -1481,7 +1481,724 @@ actual_cost -- cost_variance : 差異分析
 
 ---
 
-## まとめ
+## 30.3 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+製造原価管理では、実際原価データ→材料消費→品目、実際原価データ→工数実績→工程といった関連があります。MyBatis でこれらの関係を効率的に取得するためのリレーション設定を実装します。
+
+#### 実際原価データのネスト ResultMap（材料消費・工数実績・配賦を含む）
+
+<details>
+<summary>ActualCostMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/ActualCostMapper.xml -->
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ActualCostMapper">
+
+    <!-- 実際原価データ with 材料消費・工数実績・配賦・品目 ResultMap -->
+    <resultMap id="actualCostFullResultMap" type="com.example.sms.domain.model.cost.ActualCost">
+        <id property="id" column="ac_id"/>
+        <result property="workOrderNumber" column="ac_作業指示番号"/>
+        <result property="itemCode" column="ac_品目コード"/>
+        <result property="completedQuantity" column="ac_完成数量"/>
+        <result property="actualMaterialCost" column="ac_実際材料費"/>
+        <result property="actualLaborCost" column="ac_実際労務費"/>
+        <result property="actualExpense" column="ac_実際経費"/>
+        <result property="actualManufacturingCost" column="ac_実際製造原価"/>
+        <result property="unitCost" column="ac_単位原価"/>
+        <result property="version" column="ac_バージョン"/>
+        <result property="createdAt" column="ac_作成日時"/>
+        <result property="updatedAt" column="ac_更新日時"/>
+
+        <!-- 品目マスタとの N:1 関連 -->
+        <association property="item" javaType="com.example.sms.domain.model.item.Item">
+            <id property="itemCode" column="i_品目コード"/>
+            <result property="itemName" column="i_品目名"/>
+        </association>
+
+        <!-- 作業指示との N:1 関連 -->
+        <association property="workOrder" javaType="com.example.sms.domain.model.process.WorkOrder">
+            <id property="workOrderNumber" column="wo_作業指示番号"/>
+            <result property="orderQuantity" column="wo_作業指示数"/>
+            <result property="completedQuantity" column="wo_完成済数"/>
+        </association>
+
+        <!-- 材料消費との 1:N 関連 -->
+        <collection property="materialConsumptions"
+                    ofType="com.example.sms.domain.model.cost.MaterialConsumption"
+                    resultMap="materialConsumptionNestedResultMap"/>
+
+        <!-- 工数実績との 1:N 関連 -->
+        <collection property="laborHours"
+                    ofType="com.example.sms.domain.model.cost.LaborHours"
+                    resultMap="laborHoursNestedResultMap"/>
+
+        <!-- 製造間接費配賦との 1:N 関連 -->
+        <collection property="overheadAllocations"
+                    ofType="com.example.sms.domain.model.cost.OverheadAllocation"
+                    resultMap="overheadAllocationNestedResultMap"/>
+    </resultMap>
+
+    <!-- 材料消費のネスト ResultMap -->
+    <resultMap id="materialConsumptionNestedResultMap" type="com.example.sms.domain.model.cost.MaterialConsumption">
+        <id property="id" column="mc_id"/>
+        <result property="workOrderNumber" column="mc_作業指示番号"/>
+        <result property="materialCode" column="mc_材料コード"/>
+        <result property="consumptionDate" column="mc_消費日"/>
+        <result property="consumptionQuantity" column="mc_消費数量"/>
+        <result property="unitPrice" column="mc_単価"/>
+        <result property="consumptionAmount" column="mc_消費金額"/>
+        <result property="isDirect" column="mc_直接材料フラグ"/>
+    </resultMap>
+
+    <!-- 工数実績のネスト ResultMap -->
+    <resultMap id="laborHoursNestedResultMap" type="com.example.sms.domain.model.cost.LaborHours">
+        <id property="id" column="lh_id"/>
+        <result property="workOrderNumber" column="lh_作業指示番号"/>
+        <result property="processCode" column="lh_工程コード"/>
+        <result property="workerCode" column="lh_作業者コード"/>
+        <result property="workDate" column="lh_作業日"/>
+        <result property="workHours" column="lh_作業時間"/>
+        <result property="hourlyRate" column="lh_時間単価"/>
+        <result property="laborCost" column="lh_労務費"/>
+        <result property="isDirect" column="lh_直接労務フラグ"/>
+    </resultMap>
+
+    <!-- 製造間接費配賦のネスト ResultMap -->
+    <resultMap id="overheadAllocationNestedResultMap" type="com.example.sms.domain.model.cost.OverheadAllocation">
+        <id property="id" column="oa_id"/>
+        <result property="workOrderNumber" column="oa_作業指示番号"/>
+        <result property="accountingPeriod" column="oa_会計期間"/>
+        <result property="allocationBasis" column="oa_配賦基準"/>
+        <result property="basisAmount" column="oa_基準金額"/>
+        <result property="allocationRate" column="oa_配賦率"/>
+        <result property="allocatedAmount" column="oa_配賦金額"/>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findFullByWorkOrderNumber" resultMap="actualCostFullResultMap">
+        SELECT
+            ac."ID" AS ac_id,
+            ac."作業指示番号" AS ac_作業指示番号,
+            ac."品目コード" AS ac_品目コード,
+            ac."完成数量" AS ac_完成数量,
+            ac."実際材料費" AS ac_実際材料費,
+            ac."実際労務費" AS ac_実際労務費,
+            ac."実際経費" AS ac_実際経費,
+            ac."実際製造原価" AS ac_実際製造原価,
+            ac."単位原価" AS ac_単位原価,
+            ac."バージョン" AS ac_バージョン,
+            ac."作成日時" AS ac_作成日時,
+            ac."更新日時" AS ac_更新日時,
+            i."品目コード" AS i_品目コード,
+            i."品目名" AS i_品目名,
+            wo."作業指示番号" AS wo_作業指示番号,
+            wo."作業指示数" AS wo_作業指示数,
+            wo."完成済数" AS wo_完成済数,
+            mc."ID" AS mc_id,
+            mc."作業指示番号" AS mc_作業指示番号,
+            mc."材料コード" AS mc_材料コード,
+            mc."消費日" AS mc_消費日,
+            mc."消費数量" AS mc_消費数量,
+            mc."単価" AS mc_単価,
+            mc."消費金額" AS mc_消費金額,
+            mc."直接材料フラグ" AS mc_直接材料フラグ,
+            lh."ID" AS lh_id,
+            lh."作業指示番号" AS lh_作業指示番号,
+            lh."工程コード" AS lh_工程コード,
+            lh."作業者コード" AS lh_作業者コード,
+            lh."作業日" AS lh_作業日,
+            lh."作業時間" AS lh_作業時間,
+            lh."時間単価" AS lh_時間単価,
+            lh."労務費" AS lh_労務費,
+            lh."直接労務フラグ" AS lh_直接労務フラグ,
+            oa."ID" AS oa_id,
+            oa."作業指示番号" AS oa_作業指示番号,
+            oa."会計期間" AS oa_会計期間,
+            oa."配賦基準" AS oa_配賦基準,
+            oa."基準金額" AS oa_基準金額,
+            oa."配賦率" AS oa_配賦率,
+            oa."配賦金額" AS oa_配賦金額
+        FROM "実際原価データ" ac
+        LEFT JOIN "品目マスタ" i ON ac."品目コード" = i."品目コード"
+        LEFT JOIN "作業指示データ" wo ON ac."作業指示番号" = wo."作業指示番号"
+        LEFT JOIN "材料消費データ" mc ON ac."作業指示番号" = mc."作業指示番号"
+        LEFT JOIN "工数実績データ" lh ON ac."作業指示番号" = lh."作業指示番号"
+        LEFT JOIN "製造間接費配賦データ" oa ON ac."作業指示番号" = oa."作業指示番号"
+        WHERE ac."作業指示番号" = #{workOrderNumber}
+        ORDER BY mc."消費日", lh."作業日"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### 標準原価と実際原価の比較ビュー ResultMap
+
+<details>
+<summary>CostComparisonMapper.xml（原価比較用）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/CostComparisonMapper.xml -->
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.CostComparisonMapper">
+
+    <!-- 原価比較 ResultMap（標準原価・実際原価・差異を含む） -->
+    <resultMap id="costComparisonResultMap" type="com.example.sms.domain.model.cost.CostComparison">
+        <id property="workOrderNumber" column="作業指示番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="itemName" column="品目名"/>
+        <result property="completedQuantity" column="完成数量"/>
+
+        <!-- 標準原価 -->
+        <result property="standardMaterialCost" column="標準材料費"/>
+        <result property="standardLaborCost" column="標準労務費"/>
+        <result property="standardExpense" column="標準経費"/>
+        <result property="standardTotalCost" column="標準製造原価"/>
+
+        <!-- 実際原価 -->
+        <result property="actualMaterialCost" column="実際材料費"/>
+        <result property="actualLaborCost" column="実際労務費"/>
+        <result property="actualExpense" column="実際経費"/>
+        <result property="actualTotalCost" column="実際製造原価"/>
+
+        <!-- 差異 -->
+        <result property="materialVariance" column="材料費差異"/>
+        <result property="laborVariance" column="労務費差異"/>
+        <result property="expenseVariance" column="経費差異"/>
+        <result property="totalVariance" column="総差異"/>
+    </resultMap>
+
+    <!-- 原価比較クエリ -->
+    <select id="findCostComparisonByWorkOrderNumber" resultMap="costComparisonResultMap">
+        SELECT
+            ac."作業指示番号",
+            ac."品目コード",
+            i."品目名",
+            ac."完成数量",
+            sc."標準材料費" * ac."完成数量" AS 標準材料費,
+            sc."標準労務費" * ac."完成数量" AS 標準労務費,
+            sc."標準経費" * ac."完成数量" AS 標準経費,
+            sc."標準製造原価" * ac."完成数量" AS 標準製造原価,
+            ac."実際材料費",
+            ac."実際労務費",
+            ac."実際経費",
+            ac."実際製造原価",
+            cv."材料費差異",
+            cv."労務費差異",
+            cv."経費差異",
+            cv."総差異"
+        FROM "実際原価データ" ac
+        LEFT JOIN "品目マスタ" i ON ac."品目コード" = i."品目コード"
+        LEFT JOIN "標準原価マスタ" sc ON ac."品目コード" = sc."品目コード"
+            AND sc."適用開始日" &lt;= CURRENT_DATE
+            AND (sc."適用終了日" IS NULL OR sc."適用終了日" >= CURRENT_DATE)
+        LEFT JOIN "原価差異データ" cv ON ac."作業指示番号" = cv."作業指示番号"
+        WHERE ac."作業指示番号" = #{workOrderNumber}
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<collection>` | 1:N 関連のマッピング（実際原価→材料消費、実際原価→工数実績、実際原価→配賦） |
+| `<association>` | N:1 関連のマッピング（実際原価→品目、実際原価→作業指示） |
+| 原価明細の集約 | 材料消費・工数実績・配賦を実際原価に紐付けて一括取得 |
+| エイリアス（AS） | カラム名の重複を避けるプレフィックス（`ac_`, `mc_`, `lh_`, `oa_` など） |
+
+### 楽観ロックの実装
+
+製造原価管理では、原価計算の再実行や標準原価の改定時に、データの整合性を保つために楽観ロックを実装します。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V030_5__add_cost_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V030_5__add_cost_version_columns.sql
+
+-- 実際原価データテーブルにバージョンカラムを追加
+ALTER TABLE "実際原価データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 標準原価マスタテーブルにバージョンカラムを追加
+ALTER TABLE "標準原価マスタ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 材料消費データテーブルにバージョンカラムを追加
+ALTER TABLE "材料消費データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "実際原価データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "標準原価マスタ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "材料消費データ"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>ActualCost.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/sms/domain/model/cost/ActualCost.java
+package com.example.sms.domain.model.cost;
+
+import com.example.sms.domain.model.item.Item;
+import com.example.sms.domain.model.process.WorkOrder;
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 実際原価データエンティティ
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ActualCost {
+    private Long id;
+    private String workOrderNumber;
+    private String itemCode;
+    private BigDecimal completedQuantity;
+    private BigDecimal actualMaterialCost;
+    private BigDecimal actualLaborCost;
+    private BigDecimal actualExpense;
+    private BigDecimal actualManufacturingCost;
+    private BigDecimal unitCost;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Item item;
+    private WorkOrder workOrder;
+    @Builder.Default
+    private List<MaterialConsumption> materialConsumptions = new ArrayList<>();
+    @Builder.Default
+    private List<LaborHours> laborHours = new ArrayList<>();
+    @Builder.Default
+    private List<OverheadAllocation> overheadAllocations = new ArrayList<>();
+
+    /**
+     * 原価再計算が必要かチェック
+     */
+    public boolean needsRecalculation(BigDecimal newMaterialCost,
+                                      BigDecimal newLaborCost,
+                                      BigDecimal newExpense) {
+        return !actualMaterialCost.equals(newMaterialCost)
+            || !actualLaborCost.equals(newLaborCost)
+            || !actualExpense.equals(newExpense);
+    }
+
+    /**
+     * 単位原価を再計算
+     */
+    public BigDecimal recalculateUnitCost() {
+        if (completedQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return actualManufacturingCost.divide(completedQuantity, 4, java.math.RoundingMode.HALF_UP);
+    }
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の更新
+
+原価データの再計算時に楽観ロックを適用します。
+
+<details>
+<summary>ActualCostMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 実際原価更新（楽観ロック対応） -->
+<update id="updateWithOptimisticLock">
+    UPDATE "実際原価データ"
+    SET
+        "完成数量" = #{completedQuantity},
+        "実際材料費" = #{actualMaterialCost},
+        "実際労務費" = #{actualLaborCost},
+        "実際経費" = #{actualExpense},
+        "実際製造原価" = #{actualManufacturingCost},
+        "単位原価" = #{unitCost},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "作業指示番号" = #{workOrderNumber}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 原価再計算による更新（楽観ロック + 完成数量チェック） -->
+<update id="recalculateWithOptimisticLock">
+    UPDATE "実際原価データ"
+    SET
+        "実際材料費" = #{actualMaterialCost},
+        "実際労務費" = #{actualLaborCost},
+        "実際経費" = #{actualExpense},
+        "実際製造原価" = #{actualMaterialCost} + #{actualLaborCost} + #{actualExpense},
+        "単位原価" = CASE
+            WHEN "完成数量" > 0
+            THEN (#{actualMaterialCost} + #{actualLaborCost} + #{actualExpense}) / "完成数量"
+            ELSE 0
+        END,
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "作業指示番号" = #{workOrderNumber}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- バージョン取得 -->
+<select id="findVersionByWorkOrderNumber" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "実際原価データ"
+    WHERE "作業指示番号" = #{workOrderNumber}
+</select>
+
+<!-- 確定状態チェック -->
+<select id="isFinalized" resultType="java.lang.Boolean">
+    SELECT EXISTS(
+        SELECT 1 FROM "原価差異データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+    )
+</select>
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>ActualCostRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/sms/infrastructure/out/persistence/repository/ActualCostRepositoryImpl.java
+package com.example.sms.infrastructure.out.persistence.repository;
+
+import com.example.sms.application.port.out.ActualCostRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.cost.ActualCost;
+import com.example.sms.infrastructure.out.persistence.mapper.ActualCostMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class ActualCostRepositoryImpl implements ActualCostRepository {
+
+    private final ActualCostMapper mapper;
+
+    @Override
+    @Transactional
+    public void update(ActualCost actualCost) {
+        int updatedCount = mapper.updateWithOptimisticLock(
+                actualCost.getWorkOrderNumber(),
+                actualCost.getVersion(),
+                actualCost.getCompletedQuantity(),
+                actualCost.getActualMaterialCost(),
+                actualCost.getActualLaborCost(),
+                actualCost.getActualExpense(),
+                actualCost.getActualManufacturingCost(),
+                actualCost.getUnitCost());
+
+        if (updatedCount == 0) {
+            handleOptimisticLockFailure(actualCost.getWorkOrderNumber(), actualCost.getVersion());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void recalculate(String workOrderNumber, Integer version,
+                           BigDecimal materialCost, BigDecimal laborCost, BigDecimal expense) {
+        // 差異分析済みの場合は再計算不可
+        if (mapper.isFinalized(workOrderNumber)) {
+            throw new IllegalStateException(
+                    String.format("原価差異分析済みのため再計算できません: %s", workOrderNumber));
+        }
+
+        int updatedCount = mapper.recalculateWithOptimisticLock(
+                workOrderNumber, version, materialCost, laborCost, expense);
+
+        if (updatedCount == 0) {
+            handleOptimisticLockFailure(workOrderNumber, version);
+        }
+    }
+
+    private void handleOptimisticLockFailure(String workOrderNumber, Integer expectedVersion) {
+        Integer currentVersion = mapper.findVersionByWorkOrderNumber(workOrderNumber);
+        if (currentVersion == null) {
+            throw new IllegalArgumentException("実際原価データが見つかりません");
+        } else {
+            throw new OptimisticLockException("実際原価", workOrderNumber,
+                    expectedVersion, currentVersion);
+        }
+    }
+
+    @Override
+    public Optional<ActualCost> findFullByWorkOrderNumber(String workOrderNumber) {
+        return Optional.ofNullable(mapper.findFullByWorkOrderNumber(workOrderNumber));
+    }
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>ActualCostRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/sms/infrastructure/out/persistence/repository/ActualCostRepositoryOptimisticLockTest.java
+package com.example.sms.infrastructure.out.persistence.repository;
+
+import com.example.sms.application.port.out.ActualCostRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.cost.ActualCost;
+import com.example.sms.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("実際原価リポジトリ - 楽観ロック")
+class ActualCostRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private ActualCostRepository actualCostRepository;
+
+    @BeforeEach
+    void setUp() {
+        // テストデータのセットアップ
+    }
+
+    @Nested
+    @DisplayName("原価更新の楽観ロック")
+    class CostUpdateOptimisticLocking {
+
+        @Test
+        @DisplayName("同じバージョンで原価を更新できる")
+        void canUpdateCostWithSameVersion() {
+            // Arrange
+            ActualCost cost = createTestActualCost("WO-TEST-001");
+            Integer initialVersion = cost.getVersion();
+
+            cost.setActualMaterialCost(new BigDecimal("15000"));
+            cost.setActualLaborCost(new BigDecimal("8000"));
+            cost.setActualExpense(new BigDecimal("3000"));
+            cost.setActualManufacturingCost(new BigDecimal("26000"));
+            cost.setUnitCost(new BigDecimal("260"));
+
+            // Act
+            actualCostRepository.update(cost);
+
+            // Assert
+            var updated = actualCostRepository.findFullByWorkOrderNumber("WO-TEST-001").get();
+            assertThat(updated.getActualMaterialCost()).isEqualByComparingTo(new BigDecimal("15000"));
+            assertThat(updated.getActualManufacturingCost()).isEqualByComparingTo(new BigDecimal("26000"));
+            assertThat(updated.getVersion()).isEqualTo(initialVersion + 1);
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで更新すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            ActualCost cost = createTestActualCost("WO-TEST-002");
+            Integer initialVersion = cost.getVersion();
+
+            // 経理担当者Aが原価を更新（成功）
+            cost.setActualMaterialCost(new BigDecimal("15000"));
+            cost.setActualManufacturingCost(new BigDecimal("25000"));
+            cost.setUnitCost(new BigDecimal("250"));
+            actualCostRepository.update(cost);
+
+            // Act & Assert: 経理担当者Bが古いバージョンで更新（失敗）
+            cost.setVersion(initialVersion); // 古いバージョンに戻す
+            cost.setActualMaterialCost(new BigDecimal("16000"));
+
+            assertThatThrownBy(() -> actualCostRepository.update(cost))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+    }
+
+    @Nested
+    @DisplayName("原価再計算の楽観ロック")
+    class RecalculateOptimisticLocking {
+
+        @Test
+        @DisplayName("原価を再計算できる")
+        void canRecalculateCost() {
+            // Arrange
+            ActualCost cost = createTestActualCost("WO-TEST-003");
+
+            // Act
+            actualCostRepository.recalculate(
+                    cost.getWorkOrderNumber(),
+                    cost.getVersion(),
+                    new BigDecimal("12000"),
+                    new BigDecimal("6000"),
+                    new BigDecimal("2000"));
+
+            // Assert
+            var updated = actualCostRepository.findFullByWorkOrderNumber("WO-TEST-003").get();
+            assertThat(updated.getActualMaterialCost()).isEqualByComparingTo(new BigDecimal("12000"));
+            assertThat(updated.getActualLaborCost()).isEqualByComparingTo(new BigDecimal("6000"));
+            assertThat(updated.getActualExpense()).isEqualByComparingTo(new BigDecimal("2000"));
+            assertThat(updated.getActualManufacturingCost()).isEqualByComparingTo(new BigDecimal("20000"));
+        }
+
+        @Test
+        @DisplayName("差異分析済みの原価は再計算できない")
+        void cannotRecalculateFinalizedCost() {
+            // Arrange: 差異分析済みの原価データを作成
+            ActualCost cost = createFinalizedActualCost("WO-TEST-004");
+
+            // Act & Assert
+            assertThatThrownBy(() -> actualCostRepository.recalculate(
+                    cost.getWorkOrderNumber(),
+                    cost.getVersion(),
+                    new BigDecimal("12000"),
+                    new BigDecimal("6000"),
+                    new BigDecimal("2000")))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("原価差異分析済みのため再計算できません");
+        }
+    }
+
+    private ActualCost createTestActualCost(String workOrderNumber) {
+        return ActualCost.builder()
+                .workOrderNumber(workOrderNumber)
+                .itemCode("PROD-001")
+                .completedQuantity(new BigDecimal("100"))
+                .actualMaterialCost(new BigDecimal("10000"))
+                .actualLaborCost(new BigDecimal("5000"))
+                .actualExpense(new BigDecimal("2000"))
+                .actualManufacturingCost(new BigDecimal("17000"))
+                .unitCost(new BigDecimal("170"))
+                .build();
+    }
+
+    private ActualCost createFinalizedActualCost(String workOrderNumber) {
+        // 差異分析済みの原価データを作成
+        return createTestActualCost(workOrderNumber);
+    }
+}
+```
+
+</details>
+
+### 原価再計算処理のシーケンス図
+
+原価再計算では、材料消費や工数実績の追加・修正後に実際原価を更新します。
+
+```plantuml
+@startuml
+
+title 原価再計算処理シーケンス（楽観ロック対応）
+
+actor 経理担当者A
+actor 経理担当者B
+participant "CostCalculationService" as Service
+participant "ActualCostRepository" as Repo
+database "実際原価データ" as CostTable
+
+== 同時原価再計算シナリオ ==
+
+経理担当者A -> Service: 原価再計算(WO-001)
+activate Service
+Service -> Repo: findFullByWorkOrderNumber(WO-001)
+Repo -> CostTable: SELECT
+CostTable --> Repo: 実際原価(version=1)
+Repo --> Service: 実際原価(version=1)
+Service -> Service: 材料費・労務費・経費を再集計
+
+経理担当者B -> Service: 原価再計算(WO-001)
+activate Service
+Service -> Repo: findFullByWorkOrderNumber(WO-001)
+Repo -> CostTable: SELECT
+CostTable --> Repo: 実際原価(version=1)
+Repo --> Service: 実際原価(version=1)
+Service -> Service: 材料費・労務費・経費を再集計
+
+note over 経理担当者A,CostTable: 経理担当者Aが先に更新
+
+Service -> Repo: recalculate(version=1, 材料費=15000)
+Repo -> CostTable: UPDATE SET 実際材料費=15000, バージョン += 1\nWHERE バージョン = 1
+CostTable --> Repo: 1 row updated
+Repo --> Service: 成功
+Service --> 経理担当者A: 再計算完了
+deactivate Service
+
+note over 経理担当者A,CostTable: 経理担当者Bの更新（楽観ロック失敗）
+
+Service -> Repo: recalculate(version=1, 材料費=16000)
+Repo -> CostTable: UPDATE SET 実際材料費=16000, バージョン += 1\nWHERE バージョン = 1
+CostTable --> Repo: 0 rows updated
+Repo -> CostTable: SELECT バージョン
+CostTable --> Repo: version=2
+Repo --> Service: OptimisticLockException
+Service --> 経理担当者B: エラー: 他の担当者が更新済み
+deactivate Service
+
+note over 経理担当者B: 担当者Bはリトライ
+
+経理担当者B -> Service: 原価再計算(WO-001)
+activate Service
+Service -> Repo: findFullByWorkOrderNumber(WO-001)
+Repo -> CostTable: SELECT
+CostTable --> Repo: 実際原価(version=2, 材料費=15000)
+Repo --> Service: 実際原価(version=2)
+Service -> Service: 最新データで再集計
+Service -> Repo: recalculate(version=2, 材料費=15500)
+Repo -> CostTable: UPDATE SET 実際材料費=15500, バージョン += 1\nWHERE バージョン = 2
+CostTable --> Repo: 1 row updated
+Repo --> Service: 成功
+Service --> 経理担当者B: 再計算完了
+deactivate Service
+
+@enduml
+```
+
+### 製造原価管理向け楽観ロックのベストプラクティス
+
+| ポイント | 説明 |
+|---------|------|
+| **確定状態チェック** | 原価差異分析済みの場合は再計算を禁止 |
+| **計算の一貫性** | 材料費・労務費・経費の合計と製造原価の整合性を UPDATE 内で保証 |
+| **単位原価の自動計算** | 完成数量による除算を SQL 内で実行し、0 除算を回避 |
+| **監査証跡** | 原価変更履歴を別テーブルに記録することを検討 |
+| **期間締め処理** | 月次締め後は当該期間の原価データを更新不可に |
+| **差異分析のタイミング** | 原価確定後に差異分析を実行し、確定状態を管理 |
+
+---
+
+## 30.4 まとめ
 
 本章では、製造原価管理の設計について解説しました。
 
