@@ -43,13 +43,14 @@ CREATE TABLE IF NOT EXISTS "勘定科目構成マスタ" (
 
 -- 部門マスタ
 CREATE TABLE IF NOT EXISTS "部門マスタ" (
-    "部門コード" VARCHAR(10) PRIMARY KEY,
+    "部門コード" VARCHAR(5) PRIMARY KEY,
     "部門名" VARCHAR(100) NOT NULL,
-    "親部門コード" VARCHAR(10),
-    "有効フラグ" BOOLEAN DEFAULT TRUE,
+    "部門略名" VARCHAR(20),
+    "組織階層" INTEGER NOT NULL CHECK ("組織階層" >= 0 AND "組織階層" <= 3),
+    "部門パス" VARCHAR(100) NOT NULL,
+    "最下層フラグ" INTEGER NOT NULL DEFAULT 0 CHECK ("最下層フラグ" IN (0, 1)),
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("親部門コード") REFERENCES "部門マスタ"("部門コード")
+    "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 仕訳データ
