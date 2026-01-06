@@ -963,6 +963,654 @@ public interface AutoJournalRepository {
 
 ---
 
+## 17.5 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+自動仕訳データは、自動仕訳パターンマスタを参照し、売上データとの関連を持ちます。MyBatis でこれらの関係を効率的に取得するためのリレーション設定を実装します。
+
+#### ネストした ResultMap の定義
+
+<details>
+<summary>AutoJournalMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/AutoJournalMapper.xml -->
+<mapper namespace="com.example.fas.infrastructure.persistence.mapper.AutoJournalMapper">
+
+    <!-- 自動仕訳パターンマスタ ResultMap -->
+    <resultMap id="autoJournalPatternResultMap" type="com.example.fas.domain.model.autojournal.AutoJournalPattern">
+        <id property="patternCode" column="パターンコード"/>
+        <result property="patternName" column="パターン名"/>
+        <result property="productGroup" column="商品グループ"/>
+        <result property="customerGroup" column="顧客グループ"/>
+        <result property="salesType" column="売上区分"/>
+        <result property="debitAccountCode" column="借方勘定科目コード"/>
+        <result property="debitSubAccountSetting" column="借方補助科目設定"/>
+        <result property="creditAccountCode" column="貸方勘定科目コード"/>
+        <result property="creditSubAccountSetting" column="貸方補助科目設定"/>
+        <result property="returnDebitAccountCode" column="返品時借方科目コード"/>
+        <result property="returnCreditAccountCode" column="返品時貸方科目コード"/>
+        <result property="taxProcessingType" column="消費税処理区分"/>
+        <result property="validFrom" column="有効開始日"/>
+        <result property="validTo" column="有効終了日"/>
+        <result property="priority" column="優先順位"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 自動仕訳データ ResultMap（パターン情報込み） -->
+    <resultMap id="autoJournalEntryWithPatternResultMap" type="com.example.fas.domain.model.autojournal.AutoJournalEntry">
+        <id property="autoJournalNumber" column="e_自動仕訳番号"/>
+        <result property="salesNumber" column="e_売上番号"/>
+        <result property="salesLineNumber" column="e_売上行番号"/>
+        <result property="patternCode" column="e_パターンコード"/>
+        <result property="postingDate" column="e_起票日"/>
+        <result property="debitCreditType" column="e_仕訳行貸借区分"
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.DebitCreditTypeHandler"/>
+        <result property="accountCode" column="e_勘定科目コード"/>
+        <result property="subAccountCode" column="e_補助科目コード"/>
+        <result property="departmentCode" column="e_部門コード"/>
+        <result property="amount" column="e_仕訳金額"/>
+        <result property="taxAmount" column="e_消費税額"/>
+        <result property="status" column="e_処理ステータス"
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.AutoJournalStatusTypeHandler"/>
+        <result property="postedFlag" column="e_転記済フラグ"/>
+        <result property="postedDate" column="e_転記日"/>
+        <result property="journalVoucherNumber" column="e_仕訳伝票番号"/>
+        <result property="errorCode" column="e_エラーコード"/>
+        <result property="errorMessage" column="e_エラーメッセージ"/>
+        <result property="version" column="e_バージョン"/>
+        <result property="createdAt" column="e_作成日時"/>
+        <result property="updatedAt" column="e_更新日時"/>
+        <!-- パターン情報との関連 -->
+        <association property="pattern" javaType="com.example.fas.domain.model.autojournal.AutoJournalPattern">
+            <id property="patternCode" column="p_パターンコード"/>
+            <result property="patternName" column="p_パターン名"/>
+            <result property="productGroup" column="p_商品グループ"/>
+            <result property="customerGroup" column="p_顧客グループ"/>
+            <result property="debitAccountCode" column="p_借方勘定科目コード"/>
+            <result property="creditAccountCode" column="p_貸方勘定科目コード"/>
+            <result property="priority" column="p_優先順位"/>
+        </association>
+    </resultMap>
+
+    <!-- 自動仕訳処理履歴 ResultMap -->
+    <resultMap id="autoJournalHistoryResultMap" type="com.example.fas.domain.model.autojournal.AutoJournalHistory">
+        <id property="processNumber" column="処理番号"/>
+        <result property="processDateTime" column="処理日時"/>
+        <result property="targetFromDate" column="処理対象開始日"/>
+        <result property="targetToDate" column="処理対象終了日"/>
+        <result property="totalCount" column="処理件数"/>
+        <result property="successCount" column="成功件数"/>
+        <result property="errorCount" column="エラー件数"/>
+        <result property="totalAmount" column="処理金額合計"/>
+        <result property="processedBy" column="処理者"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+    </resultMap>
+
+    <!-- JOIN による自動仕訳データとパターンの一括取得クエリ -->
+    <select id="findEntryWithPatternByNumber" resultMap="autoJournalEntryWithPatternResultMap">
+        SELECT
+            e."自動仕訳番号" AS e_自動仕訳番号,
+            e."売上番号" AS e_売上番号,
+            e."売上行番号" AS e_売上行番号,
+            e."パターンコード" AS e_パターンコード,
+            e."起票日" AS e_起票日,
+            e."仕訳行貸借区分" AS e_仕訳行貸借区分,
+            e."勘定科目コード" AS e_勘定科目コード,
+            e."補助科目コード" AS e_補助科目コード,
+            e."部門コード" AS e_部門コード,
+            e."仕訳金額" AS e_仕訳金額,
+            e."消費税額" AS e_消費税額,
+            e."処理ステータス" AS e_処理ステータス,
+            e."転記済フラグ" AS e_転記済フラグ,
+            e."転記日" AS e_転記日,
+            e."仕訳伝票番号" AS e_仕訳伝票番号,
+            e."エラーコード" AS e_エラーコード,
+            e."エラーメッセージ" AS e_エラーメッセージ,
+            e."バージョン" AS e_バージョン,
+            e."作成日時" AS e_作成日時,
+            e."更新日時" AS e_更新日時,
+            p."パターンコード" AS p_パターンコード,
+            p."パターン名" AS p_パターン名,
+            p."商品グループ" AS p_商品グループ,
+            p."顧客グループ" AS p_顧客グループ,
+            p."借方勘定科目コード" AS p_借方勘定科目コード,
+            p."貸方勘定科目コード" AS p_貸方勘定科目コード,
+            p."優先順位" AS p_優先順位
+        FROM "自動仕訳データ" e
+        LEFT JOIN "自動仕訳パターンマスタ" p ON e."パターンコード" = p."パターンコード"
+        WHERE e."自動仕訳番号" = #{autoJournalNumber}
+    </select>
+
+    <!-- 未転記の自動仕訳データをパターン情報付きで取得 -->
+    <select id="findUnpostedEntriesWithPattern" resultMap="autoJournalEntryWithPatternResultMap">
+        SELECT
+            e."自動仕訳番号" AS e_自動仕訳番号,
+            e."売上番号" AS e_売上番号,
+            e."売上行番号" AS e_売上行番号,
+            e."パターンコード" AS e_パターンコード,
+            e."起票日" AS e_起票日,
+            e."仕訳行貸借区分" AS e_仕訳行貸借区分,
+            e."勘定科目コード" AS e_勘定科目コード,
+            e."補助科目コード" AS e_補助科目コード,
+            e."部門コード" AS e_部門コード,
+            e."仕訳金額" AS e_仕訳金額,
+            e."消費税額" AS e_消費税額,
+            e."処理ステータス" AS e_処理ステータス,
+            e."転記済フラグ" AS e_転記済フラグ,
+            e."転記日" AS e_転記日,
+            e."仕訳伝票番号" AS e_仕訳伝票番号,
+            e."エラーコード" AS e_エラーコード,
+            e."エラーメッセージ" AS e_エラーメッセージ,
+            e."バージョン" AS e_バージョン,
+            e."作成日時" AS e_作成日時,
+            e."更新日時" AS e_更新日時,
+            p."パターンコード" AS p_パターンコード,
+            p."パターン名" AS p_パターン名,
+            p."商品グループ" AS p_商品グループ,
+            p."顧客グループ" AS p_顧客グループ,
+            p."借方勘定科目コード" AS p_借方勘定科目コード,
+            p."貸方勘定科目コード" AS p_貸方勘定科目コード,
+            p."優先順位" AS p_優先順位
+        FROM "自動仕訳データ" e
+        LEFT JOIN "自動仕訳パターンマスタ" p ON e."パターンコード" = p."パターンコード"
+        WHERE e."転記済フラグ" = 0
+        AND e."処理ステータス" = '処理完了'
+        ORDER BY e."起票日", e."自動仕訳番号"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<association>` | N:1 関連のマッピング（自動仕訳データ → パターンマスタ） |
+| `<id>` | 主キーの識別 |
+| `resultMap` | ネストした ResultMap の参照 |
+| エイリアス（AS） | カラム名の重複を避けるためのプレフィックス（e_, p_） |
+| `ORDER BY` | 取得順序の保証 |
+
+### 楽観ロックの実装
+
+自動仕訳データは複数の処理（生成、転記、エラー修正）で更新されるため、楽観ロックによる整合性確保が重要です。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V008__add_auto_journal_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V008__add_auto_journal_version_columns.sql
+
+-- 自動仕訳パターンマスタにバージョンカラムを追加
+ALTER TABLE "自動仕訳パターンマスタ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 自動仕訳データにバージョンカラムを追加
+ALTER TABLE "自動仕訳データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 自動仕訳処理履歴にバージョンカラムを追加
+ALTER TABLE "自動仕訳処理履歴" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "自動仕訳パターンマスタ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "自動仕訳データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "自動仕訳処理履歴"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>AutoJournalEntry.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/fas/domain/model/autojournal/AutoJournalEntry.java
+package com.example.fas.domain.model.autojournal;
+
+import com.example.fas.domain.model.account.DebitCreditType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AutoJournalEntry {
+    private String autoJournalNumber;     // 自動仕訳番号
+    private String salesNumber;           // 売上番号
+    private Integer salesLineNumber;      // 売上行番号
+    private String patternCode;           // パターンコード
+    private LocalDate postingDate;        // 起票日
+    private DebitCreditType debitCreditType; // 仕訳行貸借区分
+    private String accountCode;           // 勘定科目コード
+    private String subAccountCode;        // 補助科目コード
+    private String departmentCode;        // 部門コード
+    private BigDecimal amount;            // 仕訳金額
+    private BigDecimal taxAmount;         // 消費税額
+    private AutoJournalStatus status;     // 処理ステータス
+    private Boolean postedFlag;           // 転記済フラグ
+    private LocalDate postedDate;         // 転記日
+    private String journalVoucherNumber;  // 仕訳伝票番号
+    private String errorCode;             // エラーコード
+    private String errorMessage;          // エラーメッセージ
+    private LocalDateTime createdAt;      // 作成日時
+    private LocalDateTime updatedAt;      // 更新日時
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // パターン情報（リレーション）
+    private AutoJournalPattern pattern;
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の更新
+
+<details>
+<summary>AutoJournalMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 楽観ロック対応の自動仕訳データ更新（ステータス変更） -->
+<update id="updateEntryWithOptimisticLock" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry">
+    UPDATE "自動仕訳データ"
+    SET
+        "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.persistence.typehandler.AutoJournalStatusTypeHandler}::自動仕訳ステータス,
+        "転記済フラグ" = #{postedFlag},
+        "転記日" = #{postedDate},
+        "仕訳伝票番号" = #{journalVoucherNumber},
+        "エラーコード" = #{errorCode},
+        "エラーメッセージ" = #{errorMessage},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "自動仕訳番号" = #{autoJournalNumber}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 楽観ロック対応のパターンマスタ更新 -->
+<update id="updatePatternWithOptimisticLock" parameterType="com.example.fas.domain.model.autojournal.AutoJournalPattern">
+    UPDATE "自動仕訳パターンマスタ"
+    SET
+        "パターン名" = #{patternName},
+        "商品グループ" = #{productGroup},
+        "顧客グループ" = #{customerGroup},
+        "売上区分" = #{salesType},
+        "借方勘定科目コード" = #{debitAccountCode},
+        "借方補助科目設定" = #{debitSubAccountSetting},
+        "貸方勘定科目コード" = #{creditAccountCode},
+        "貸方補助科目設定" = #{creditSubAccountSetting},
+        "返品時借方科目コード" = #{returnDebitAccountCode},
+        "返品時貸方科目コード" = #{returnCreditAccountCode},
+        "消費税処理区分" = #{taxProcessingType},
+        "有効開始日" = #{validFrom},
+        "有効終了日" = #{validTo},
+        "優先順位" = #{priority},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "パターンコード" = #{patternCode}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- バージョンのみ取得 -->
+<select id="findEntryVersionByNumber" resultType="Integer">
+    SELECT "バージョン" FROM "自動仕訳データ"
+    WHERE "自動仕訳番号" = #{autoJournalNumber}
+</select>
+
+<select id="findPatternVersionByCode" resultType="Integer">
+    SELECT "バージョン" FROM "自動仕訳パターンマスタ"
+    WHERE "パターンコード" = #{patternCode}
+</select>
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>AutoJournalRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/fas/infrastructure/persistence/repository/AutoJournalRepositoryImpl.java
+package com.example.fas.infrastructure.persistence.repository;
+
+import com.example.fas.application.port.out.AutoJournalRepository;
+import com.example.fas.domain.exception.OptimisticLockException;
+import com.example.fas.domain.model.autojournal.*;
+import com.example.fas.infrastructure.persistence.mapper.AutoJournalMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class AutoJournalRepositoryImpl implements AutoJournalRepository {
+
+    private final AutoJournalMapper mapper;
+
+    @Override
+    @Transactional
+    public void updateEntry(AutoJournalEntry entry) {
+        int updatedCount = mapper.updateEntryWithOptimisticLock(entry);
+
+        if (updatedCount == 0) {
+            Integer currentVersion = mapper.findEntryVersionByNumber(entry.getAutoJournalNumber());
+            if (currentVersion == null) {
+                throw new OptimisticLockException("自動仕訳データ", entry.getAutoJournalNumber());
+            } else {
+                throw new OptimisticLockException("自動仕訳データ", entry.getAutoJournalNumber(),
+                        entry.getVersion(), currentVersion);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void updatePattern(AutoJournalPattern pattern) {
+        int updatedCount = mapper.updatePatternWithOptimisticLock(pattern);
+
+        if (updatedCount == 0) {
+            Integer currentVersion = mapper.findPatternVersionByCode(pattern.getPatternCode());
+            if (currentVersion == null) {
+                throw new OptimisticLockException("自動仕訳パターン", pattern.getPatternCode());
+            } else {
+                throw new OptimisticLockException("自動仕訳パターン", pattern.getPatternCode(),
+                        pattern.getVersion(), currentVersion);
+            }
+        }
+    }
+
+    @Override
+    public Optional<AutoJournalEntry> findEntryWithPatternByNumber(String autoJournalNumber) {
+        return Optional.ofNullable(mapper.findEntryWithPatternByNumber(autoJournalNumber));
+    }
+
+    @Override
+    public List<AutoJournalEntry> findUnpostedEntriesWithPattern() {
+        return mapper.findUnpostedEntriesWithPattern();
+    }
+
+    // その他のメソッド...
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>AutoJournalRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/fas/infrastructure/persistence/repository/AutoJournalRepositoryOptimisticLockTest.java
+package com.example.fas.infrastructure.persistence.repository;
+
+import com.example.fas.application.port.out.AutoJournalRepository;
+import com.example.fas.domain.exception.OptimisticLockException;
+import com.example.fas.domain.model.account.DebitCreditType;
+import com.example.fas.domain.model.autojournal.*;
+import com.example.fas.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("自動仕訳リポジトリ - 楽観ロック")
+class AutoJournalRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private AutoJournalRepository autoJournalRepository;
+
+    @BeforeEach
+    void setUp() {
+        // テストデータのクリーンアップ
+    }
+
+    @Nested
+    @DisplayName("自動仕訳データの楽観ロック")
+    class AutoJournalEntryOptimisticLocking {
+
+        @Test
+        @DisplayName("同じバージョンで更新できる")
+        void canUpdateWithSameVersion() {
+            // Arrange
+            var entry = createTestEntry("AJ0001");
+            autoJournalRepository.saveEntry(entry);
+
+            // Act
+            var fetched = autoJournalRepository.findEntryByNumber("AJ0001").get();
+            fetched.setStatus(AutoJournalStatus.COMPLETED);
+            autoJournalRepository.updateEntry(fetched);
+
+            // Assert
+            var updated = autoJournalRepository.findEntryByNumber("AJ0001").get();
+            assertThat(updated.getStatus()).isEqualTo(AutoJournalStatus.COMPLETED);
+            assertThat(updated.getVersion()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで更新すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            var entry = createTestEntry("AJ0002");
+            autoJournalRepository.saveEntry(entry);
+
+            // 処理Aが取得
+            var entryA = autoJournalRepository.findEntryByNumber("AJ0002").get();
+            // 処理Bが取得
+            var entryB = autoJournalRepository.findEntryByNumber("AJ0002").get();
+
+            // 処理Aが転記処理（成功）
+            entryA.setStatus(AutoJournalStatus.POSTED);
+            entryA.setPostedFlag(true);
+            entryA.setPostedDate(LocalDate.now());
+            autoJournalRepository.updateEntry(entryA);
+
+            // Act & Assert: 処理Bが古いバージョンで更新（失敗）
+            entryB.setStatus(AutoJournalStatus.ERROR);
+            assertThatThrownBy(() -> autoJournalRepository.updateEntry(entryB))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+    }
+
+    @Nested
+    @DisplayName("自動仕訳パターンの楽観ロック")
+    class AutoJournalPatternOptimisticLocking {
+
+        @Test
+        @DisplayName("パターンマスタを同じバージョンで更新できる")
+        void canUpdatePatternWithSameVersion() {
+            // Arrange
+            var pattern = createTestPattern("P001");
+            autoJournalRepository.savePattern(pattern);
+
+            // Act
+            var fetched = autoJournalRepository.findPatternByCode("P001").get();
+            fetched.setPriority(50);
+            autoJournalRepository.updatePattern(fetched);
+
+            // Assert
+            var updated = autoJournalRepository.findPatternByCode("P001").get();
+            assertThat(updated.getPriority()).isEqualTo(50);
+            assertThat(updated.getVersion()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("パターンマスタの同時更新で楽観ロック例外が発生する")
+        void throwsExceptionWhenPatternVersionMismatch() {
+            // Arrange
+            var pattern = createTestPattern("P002");
+            autoJournalRepository.savePattern(pattern);
+
+            var patternA = autoJournalRepository.findPatternByCode("P002").get();
+            var patternB = autoJournalRepository.findPatternByCode("P002").get();
+
+            // ユーザーAが更新（成功）
+            patternA.setPatternName("更新後パターン名A");
+            autoJournalRepository.updatePattern(patternA);
+
+            // Act & Assert: ユーザーBが古いバージョンで更新（失敗）
+            patternB.setPatternName("更新後パターン名B");
+            assertThatThrownBy(() -> autoJournalRepository.updatePattern(patternB))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+    }
+
+    private AutoJournalEntry createTestEntry(String autoJournalNumber) {
+        return AutoJournalEntry.builder()
+                .autoJournalNumber(autoJournalNumber)
+                .salesNumber("S0001")
+                .salesLineNumber(1)
+                .patternCode("P001")
+                .postingDate(LocalDate.of(2024, 4, 1))
+                .debitCreditType(DebitCreditType.DEBIT)
+                .accountCode("11300")
+                .amount(new BigDecimal("100000"))
+                .taxAmount(new BigDecimal("10000"))
+                .status(AutoJournalStatus.PENDING)
+                .postedFlag(false)
+                .build();
+    }
+
+    private AutoJournalPattern createTestPattern(String patternCode) {
+        return AutoJournalPattern.builder()
+                .patternCode(patternCode)
+                .patternName("テストパターン")
+                .productGroup("ALL")
+                .customerGroup("ALL")
+                .salesType("01")
+                .debitAccountCode("11300")
+                .creditAccountCode("41100")
+                .validFrom(LocalDate.of(2024, 1, 1))
+                .validTo(LocalDate.of(9999, 12, 31))
+                .priority(100)
+                .build();
+    }
+}
+```
+
+</details>
+
+#### 楽観ロックのベストプラクティス
+
+| ポイント | 説明 |
+|---------|------|
+| **バージョンカラム** | INTEGER 型で十分 |
+| **WHERE 条件** | 必ず `AND "バージョン" = #{version}` を含める |
+| **インクリメント** | `"バージョン" = "バージョン" + 1` でアトミックに更新 |
+| **例外処理** | 更新件数が0の場合は楽観ロック例外をスロー |
+| **転記処理での注意** | 一括転記時は各エントリごとにバージョンチェック |
+
+### 自動仕訳処理における整合性確保
+
+自動仕訳処理は複数のフェーズ（生成 → 確認 → 転記）を経るため、各フェーズでの整合性確保が重要です。
+
+#### 処理フェーズとロック戦略
+
+| フェーズ | 処理内容 | ロック戦略 |
+|---------|---------|----------|
+| **生成** | 売上データから自動仕訳データを生成 | 売上データのフラグ更新に楽観ロック |
+| **確認** | 自動仕訳チェックリストの確認・修正 | 自動仕訳データの更新に楽観ロック |
+| **転記** | 自動仕訳データを仕訳データに転記 | ステータス遷移に楽観ロック |
+
+#### ステータス遷移と楽観ロック
+
+```plantuml
+@startuml
+
+title 自動仕訳ステータス遷移と楽観ロック
+
+[*] --> 処理待ち : 生成時
+
+処理待ち --> 処理中 : バッチ開始\n(version check)
+処理中 --> 処理完了 : 正常終了\n(version check)
+処理中 --> エラー : 異常終了\n(version check)
+
+処理完了 --> 転記済 : 転記処理\n(version check)
+エラー --> 処理待ち : 再処理\n(version check)
+
+転記済 --> [*]
+
+note right of 処理待ち
+  各ステータス遷移で
+  楽観ロックによる
+  バージョンチェックを実施
+end note
+
+@enduml
+```
+
+#### 一括転記時の楽観ロック
+
+一括転記処理では、個別のエントリごとにバージョンチェックを行います。
+
+```java
+@Transactional
+public PostingResult postAutoJournalEntries(List<String> autoJournalNumbers) {
+    var result = new PostingResult();
+
+    for (String number : autoJournalNumbers) {
+        try {
+            var entry = autoJournalRepository.findEntryByNumber(number)
+                .orElseThrow(() -> new EntityNotFoundException("自動仕訳", number));
+
+            // 仕訳データを生成
+            var journal = createJournalFromEntry(entry);
+            journalRepository.save(journal);
+
+            // 転記済に更新（楽観ロック）
+            entry.setStatus(AutoJournalStatus.POSTED);
+            entry.setPostedFlag(true);
+            entry.setPostedDate(LocalDate.now());
+            entry.setJournalVoucherNumber(journal.getJournalVoucherNumber());
+            autoJournalRepository.updateEntry(entry);  // バージョンチェック
+
+            result.addSuccess(number);
+        } catch (OptimisticLockException e) {
+            // 他のプロセスで既に処理済み
+            result.addSkipped(number, "既に処理されています");
+        } catch (Exception e) {
+            result.addError(number, e.getMessage());
+        }
+    }
+
+    return result;
+}
+```
+
+---
+
 ## 第17章のまとめ
 
 ### 作成したテーブル
