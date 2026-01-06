@@ -130,7 +130,7 @@ COMMENT ON TABLE "日次勘定科目残高" IS '仕訳データを起票日単�
 
 ```java
 // src/main/java/com/example/sms/domain/model/accounting/DailyAccountBalance.java
-package com.example.sms.domain.model.accounting;
+package com.example.fas.domain.model.accounting;
 
 import lombok.*;
 
@@ -201,7 +201,7 @@ public class DailyAccountBalance {
 
 ```java
 // src/main/java/com/example/sms/domain/model/accounting/DailyReportLine.java
-package com.example.sms.domain.model.accounting;
+package com.example.fas.domain.model.accounting;
 
 import lombok.*;
 
@@ -249,10 +249,10 @@ public class DailyReportLine {
 
 ```java
 // src/main/java/com/example/sms/application/port/out/DailyAccountBalanceRepository.java
-package com.example.sms.application.port.out;
+package com.example.fas.application.port.out;
 
-import com.example.sms.domain.model.accounting.DailyAccountBalance;
-import com.example.sms.domain.model.accounting.DailyReportLine;
+import com.example.fas.domain.model.accounting.DailyAccountBalance;
+import com.example.fas.domain.model.accounting.DailyReportLine;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -335,7 +335,7 @@ c1 --> d3 : 40,000
 ```xml
 <!-- DailyAccountBalanceMapper.xml -->
 <!-- 日計表データ取得 -->
-<select id="getDailyReport" resultType="com.example.sms.domain.model.accounting.DailyReportLine">
+<select id="getDailyReport" resultType="com.example.fas.domain.model.accounting.DailyReportLine">
     SELECT
         d."起票日" as postingDate,
         d."勘定科目コード" as accountCode,
@@ -489,7 +489,7 @@ COMMENT ON TABLE "月次勘定科目残高" IS '日次残高を月単位で集�
 
 ```java
 // src/main/java/com/example/sms/domain/model/accounting/MonthlyAccountBalance.java
-package com.example.sms.domain.model.accounting;
+package com.example.fas.domain.model.accounting;
 
 import lombok.*;
 
@@ -564,7 +564,7 @@ public class MonthlyAccountBalance {
 
 ```java
 // src/main/java/com/example/sms/domain/model/accounting/TrialBalanceLine.java
-package com.example.sms.domain.model.accounting;
+package com.example.fas.domain.model.accounting;
 
 import lombok.*;
 
@@ -614,10 +614,10 @@ public class TrialBalanceLine {
 
 ```java
 // src/main/java/com/example/sms/application/port/out/MonthlyAccountBalanceRepository.java
-package com.example.sms.application.port.out;
+package com.example.fas.application.port.out;
 
-import com.example.sms.domain.model.accounting.MonthlyAccountBalance;
-import com.example.sms.domain.model.accounting.TrialBalanceLine;
+import com.example.fas.domain.model.accounting.MonthlyAccountBalance;
+import com.example.fas.domain.model.accounting.TrialBalanceLine;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -705,7 +705,7 @@ note bottom of total : 貸借一致の原則\n（試算表の検証）
 ```xml
 <!-- MonthlyAccountBalanceMapper.xml -->
 <!-- 合計残高試算表データ取得 -->
-<select id="getTrialBalance" resultType="com.example.sms.domain.model.accounting.TrialBalanceLine">
+<select id="getTrialBalance" resultType="com.example.fas.domain.model.accounting.TrialBalanceLine">
     SELECT
         m."決算期" as fiscalYear,
         m."月度" as month,
@@ -726,7 +726,7 @@ note bottom of total : 貸借一致の原則\n（試算表の検証）
 </select>
 
 <!-- BSPL区分別試算表データ取得 -->
-<select id="getTrialBalanceByBSPL" resultType="com.example.sms.domain.model.accounting.TrialBalanceLine">
+<select id="getTrialBalanceByBSPL" resultType="com.example.fas.domain.model.accounting.TrialBalanceLine">
     SELECT
         m."決算期" as fiscalYear,
         m."月度" as month,
@@ -865,14 +865,14 @@ rectangle "バッチ処理方式" {
 
 ```java
 // src/main/java/com/example/sms/application/service/BalanceUpdateService.java
-package com.example.sms.application.service;
+package com.example.fas.application.service;
 
-import com.example.sms.application.port.out.DailyAccountBalanceRepository;
-import com.example.sms.application.port.out.MonthlyAccountBalanceRepository;
-import com.example.sms.domain.model.accounting.DailyAccountBalance;
-import com.example.sms.domain.model.accounting.DebitCreditType;
-import com.example.sms.domain.model.accounting.Journal;
-import com.example.sms.domain.model.accounting.JournalDebitCreditDetail;
+import com.example.fas.application.port.out.DailyAccountBalanceRepository;
+import com.example.fas.application.port.out.MonthlyAccountBalanceRepository;
+import com.example.fas.domain.model.accounting.DailyAccountBalance;
+import com.example.fas.domain.model.accounting.DebitCreditType;
+import com.example.fas.domain.model.accounting.Journal;
+import com.example.fas.domain.model.accounting.JournalDebitCreditDetail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -1021,10 +1021,10 @@ stop
 
 ```java
 // src/test/java/com/example/sms/infrastructure/persistence/DailyAccountBalanceRepositoryTest.java
-package com.example.sms.infrastructure.persistence;
+package com.example.fas.infrastructure.persistence;
 
-import com.example.sms.domain.model.accounting.DailyAccountBalance;
-import com.example.sms.infrastructure.persistence.repository.DailyAccountBalanceRepositoryImpl;
+import com.example.fas.domain.model.accounting.DailyAccountBalance;
+import com.example.fas.infrastructure.persistence.repository.DailyAccountBalanceRepositoryImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -1184,10 +1184,10 @@ class DailyAccountBalanceRepositoryTest {
 
 ```java
 // src/test/java/com/example/sms/infrastructure/persistence/MonthlyAccountBalanceRepositoryTest.java
-package com.example.sms.infrastructure.persistence;
+package com.example.fas.infrastructure.persistence;
 
-import com.example.sms.domain.model.accounting.MonthlyAccountBalance;
-import com.example.sms.infrastructure.persistence.repository.MonthlyAccountBalanceRepositoryImpl;
+import com.example.fas.domain.model.accounting.MonthlyAccountBalance;
+import com.example.fas.infrastructure.persistence.repository.MonthlyAccountBalanceRepositoryImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
