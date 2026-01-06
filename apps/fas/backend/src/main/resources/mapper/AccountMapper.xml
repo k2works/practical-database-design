@@ -29,7 +29,8 @@
         <result property="updatedBy" column="更新者名"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.fas.domain.model.account.Account">
+    <!-- PostgreSQL用 INSERT（ENUM キャスト付き） -->
+    <insert id="insert" parameterType="com.example.fas.domain.model.account.Account" databaseId="postgresql">
         INSERT INTO "勘定科目マスタ" (
             "勘定科目コード", "勘定科目名", "勘定科目略名", "勘定科目カナ",
             "BSPL区分", "貸借区分", "取引要素区分", "集計区分",
@@ -48,6 +49,26 @@
         )
     </insert>
 
+    <!-- H2用 INSERT（ENUM キャストなし） -->
+    <insert id="insert" parameterType="com.example.fas.domain.model.account.Account" databaseId="h2">
+        INSERT INTO "勘定科目マスタ" (
+            "勘定科目コード", "勘定科目名", "勘定科目略名", "勘定科目カナ",
+            "BSPL区分", "貸借区分", "取引要素区分", "集計区分",
+            "管理会計区分", "費用区分", "元帳出力区分", "補助科目種別",
+            "消費税計算区分", "課税取引コード", "期日管理区分",
+            "作成日時", "更新日時", "更新者名"
+        ) VALUES (
+            #{accountCode}, #{accountName}, #{accountShortName}, #{accountNameKana},
+            #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler},
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler},
+            #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler},
+            #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler},
+            #{managementAccountingType}, #{expenseType}, #{ledgerOutputType}, #{subAccountType},
+            #{consumptionTaxType}, #{taxTransactionCode}, #{dueDateManagementType},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
     <select id="findByCode" resultMap="AccountResultMap">
         SELECT * FROM "勘定科目マスタ"
         WHERE "勘定科目コード" = #{accountCode}
@@ -58,19 +79,36 @@
         ORDER BY "勘定科目コード"
     </select>
 
-    <select id="findByBSPLType" resultMap="AccountResultMap">
+    <!-- PostgreSQL用 findByBSPLType -->
+    <select id="findByBSPLType" resultMap="AccountResultMap" databaseId="postgresql">
         SELECT * FROM "勘定科目マスタ"
         WHERE "BSPL区分" = #{bsplType}::"BSPL区分"
         ORDER BY "勘定科目コード"
     </select>
 
-    <select id="findByTransactionElementType" resultMap="AccountResultMap">
+    <!-- H2用 findByBSPLType -->
+    <select id="findByBSPLType" resultMap="AccountResultMap" databaseId="h2">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "BSPL区分" = #{bsplType}
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <!-- PostgreSQL用 findByTransactionElementType -->
+    <select id="findByTransactionElementType" resultMap="AccountResultMap" databaseId="postgresql">
         SELECT * FROM "勘定科目マスタ"
         WHERE "取引要素区分" = #{transactionElementType}::"取引要素区分"
         ORDER BY "勘定科目コード"
     </select>
 
-    <update id="update" parameterType="com.example.fas.domain.model.account.Account">
+    <!-- H2用 findByTransactionElementType -->
+    <select id="findByTransactionElementType" resultMap="AccountResultMap" databaseId="h2">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "取引要素区分" = #{transactionElementType}
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <!-- PostgreSQL用 UPDATE -->
+    <update id="update" parameterType="com.example.fas.domain.model.account.Account" databaseId="postgresql">
         UPDATE "勘定科目マスタ"
         SET "勘定科目名" = #{accountName},
             "勘定科目略名" = #{accountShortName},
@@ -91,7 +129,35 @@
         WHERE "勘定科目コード" = #{accountCode}
     </update>
 
-    <delete id="deleteAll">
+    <!-- H2用 UPDATE -->
+    <update id="update" parameterType="com.example.fas.domain.model.account.Account" databaseId="h2">
+        UPDATE "勘定科目マスタ"
+        SET "勘定科目名" = #{accountName},
+            "勘定科目略名" = #{accountShortName},
+            "勘定科目カナ" = #{accountNameKana},
+            "BSPL区分" = #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler},
+            "貸借区分" = #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler},
+            "取引要素区分" = #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler},
+            "集計区分" = #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler},
+            "管理会計区分" = #{managementAccountingType},
+            "費用区分" = #{expenseType},
+            "元帳出力区分" = #{ledgerOutputType},
+            "補助科目種別" = #{subAccountType},
+            "消費税計算区分" = #{consumptionTaxType},
+            "課税取引コード" = #{taxTransactionCode},
+            "期日管理区分" = #{dueDateManagementType},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "勘定科目コード" = #{accountCode}
+    </update>
+
+    <!-- PostgreSQL用 deleteAll -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "勘定科目マスタ" CASCADE
+    </delete>
+
+    <!-- H2用 deleteAll -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "勘定科目マスタ"
     </delete>
 </mapper>

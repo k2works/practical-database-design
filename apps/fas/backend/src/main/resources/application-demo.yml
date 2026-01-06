@@ -21,12 +21,11 @@ spring:
       settings:
         web-allow-others: true
 
-  # SQL 初期化
+  # SQL 初期化（スキーマのみ、データは SeedDataService で投入）
   sql:
     init:
       mode: always
       schema-locations: classpath:db/demo/schema.sql
-      data-locations: classpath:db/demo/data.sql
 
 server:
   port: ${PORT:8081}

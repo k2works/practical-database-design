@@ -4,12 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
  * アプリケーション起動時に Seed データを投入する Runner.
+ * default または demo プロファイルが有効な場合に実行される.
  */
 @Component
+@Profile({"default", "demo"})
 @RequiredArgsConstructor
 @Slf4j
 public class SeedDataRunner implements ApplicationRunner {
