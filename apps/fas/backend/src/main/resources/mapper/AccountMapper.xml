@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.AccountMapper">
+
+    <resultMap id="AccountResultMap" type="com.example.fas.domain.model.account.Account">
+        <result property="accountCode" column="勘定科目コード"/>
+        <result property="accountName" column="勘定科目名"/>
+        <result property="accountShortName" column="勘定科目略名"/>
+        <result property="accountNameKana" column="勘定科目カナ"/>
+        <result property="bsplType" column="BSPL区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler"/>
+        <result property="debitCreditType" column="貸借区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler"/>
+        <result property="transactionElementType" column="取引要素区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler"/>
+        <result property="aggregationType" column="集計区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler"/>
+        <result property="managementAccountingType" column="管理会計区分"/>
+        <result property="expenseType" column="費用区分"/>
+        <result property="ledgerOutputType" column="元帳出力区分"/>
+        <result property="subAccountType" column="補助科目種別"/>
+        <result property="consumptionTaxType" column="消費税計算区分"/>
+        <result property="taxTransactionCode" column="課税取引コード"/>
+        <result property="dueDateManagementType" column="期日管理区分"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.fas.domain.model.account.Account">
+        INSERT INTO "勘定科目マスタ" (
+            "勘定科目コード", "勘定科目名", "勘定科目略名", "勘定科目カナ",
+            "BSPL区分", "貸借区分", "取引要素区分", "集計区分",
+            "管理会計区分", "費用区分", "元帳出力区分", "補助科目種別",
+            "消費税計算区分", "課税取引コード", "期日管理区分",
+            "作成日時", "更新日時", "更新者名"
+        ) VALUES (
+            #{accountCode}, #{accountName}, #{accountShortName}, #{accountNameKana},
+            #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler}::"BSPL区分",
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"貸借区分",
+            #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler}::"取引要素区分",
+            #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler}::"集計区分",
+            #{managementAccountingType}, #{expenseType}, #{ledgerOutputType}, #{subAccountType},
+            #{consumptionTaxType}::"消費税計算区分", #{taxTransactionCode}, #{dueDateManagementType},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByCode" resultMap="AccountResultMap">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "勘定科目コード" = #{accountCode}
+    </select>
+
+    <select id="findAll" resultMap="AccountResultMap">
+        SELECT * FROM "勘定科目マスタ"
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <select id="findByBSPLType" resultMap="AccountResultMap">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "BSPL区分" = #{bsplType}::"BSPL区分"
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <select id="findByTransactionElementType" resultMap="AccountResultMap">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "取引要素区分" = #{transactionElementType}::"取引要素区分"
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <update id="update" parameterType="com.example.fas.domain.model.account.Account">
+        UPDATE "勘定科目マスタ"
+        SET "勘定科目名" = #{accountName},
+            "勘定科目略名" = #{accountShortName},
+            "勘定科目カナ" = #{accountNameKana},
+            "BSPL区分" = #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler}::"BSPL区分",
+            "貸借区分" = #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"貸借区分",
+            "取引要素区分" = #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler}::"取引要素区分",
+            "集計区分" = #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler}::"集計区分",
+            "管理会計区分" = #{managementAccountingType},
+            "費用区分" = #{expenseType},
+            "元帳出力区分" = #{ledgerOutputType},
+            "補助科目種別" = #{subAccountType},
+            "消費税計算区分" = #{consumptionTaxType}::"消費税計算区分",
+            "課税取引コード" = #{taxTransactionCode},
+            "期日管理区分" = #{dueDateManagementType},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "勘定科目コード" = #{accountCode}
+    </update>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "勘定科目マスタ" CASCADE
+    </delete>
+</mapper>
