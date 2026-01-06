@@ -64,7 +64,7 @@ class DatabaseConnectionTest extends BaseIntegrationTest {
              ResultSet rs = stmt.executeQuery(
                  "SELECT unnest(enum_range(NULL::\"集計区分\"))::text")) {
             assertThat(rs.next()).isTrue();
-            assertThat(rs.getString(1)).isEqualTo("集計");
+            assertThat(rs.getString(1)).isEqualTo("見出科目");
         }
     }
 
