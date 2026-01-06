@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.ChangeLogMapper">
+
+    <!-- ResultMap: 日本語カラム名 → 英語プロパティ名 -->
+    <resultMap id="ChangeLogResultMap" type="com.example.fas.domain.model.audit.ChangeLog">
+        <id property="logId" column="ログID"/>
+        <result property="tableName" column="テーブル名"/>
+        <result property="recordKey" column="レコードキー"/>
+        <result property="operationType" column="操作種別"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.OperationTypeHandler"/>
+        <result property="beforeData" column="操作前データ"/>
+        <result property="afterData" column="操作後データ"/>
+        <result property="operatedAt" column="操作日時"/>
+        <result property="operatedBy" column="操作者"/>
+        <result property="operatedFrom" column="操作端末"/>
+        <result property="remarks" column="備考"/>
+    </resultMap>
+
+    <!-- 登録 -->
+    <insert id="insert" parameterType="com.example.fas.domain.model.audit.ChangeLog"
+            useGeneratedKeys="true" keyProperty="logId" keyColumn="ログID">
+        INSERT INTO "変更ログ" (
+            "テーブル名",
+            "レコードキー",
+            "操作種別",
+            "操作前データ",
+            "操作後データ",
+            "操作日時",
+            "操作者",
+            "操作端末",
+            "備考"
+        ) VALUES (
+            #{tableName},
+            #{recordKey},
+            #{operationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.OperationTypeHandler},
+            #{beforeData}::jsonb,
+            #{afterData}::jsonb,
+            COALESCE(#{operatedAt}, CURRENT_TIMESTAMP),
+            #{operatedBy},
+            #{operatedFrom},
+            #{remarks}
+        )
+    </insert>
+
+    <!-- ログIDで検索 -->
+    <select id="findById" resultMap="ChangeLogResultMap">
+        SELECT
+            "ログID",
+            "テーブル名",
+            "レコードキー",
+            "操作種別",
+            "操作前データ",
+            "操作後データ",
+            "操作日時",
+            "操作者",
+            "操作端末",
+            "備考"
+        FROM "変更ログ"
+        WHERE "ログID" = #{logId}
+    </select>
+
+    <!-- テーブル名とレコードキーで検索 -->
+    <select id="findByTableNameAndRecordKey" resultMap="ChangeLogResultMap">
+        SELECT
+            "ログID",
+            "テーブル名",
+            "レコードキー",
+            "操作種別",
+            "操作前データ",
+            "操作後データ",
+            "操作日時",
+            "操作者",
+            "操作端末",
+            "備考"
+        FROM "変更ログ"
+        WHERE "テーブル名" = #{tableName}
+          AND "レコードキー" = #{recordKey}
+        ORDER BY "操作日時" DESC
+    </select>
+
+    <!-- テーブル名で検索 -->
+    <select id="findByTableName" resultMap="ChangeLogResultMap">
+        SELECT
+            "ログID",
+            "テーブル名",
+            "レコードキー",
+            "操作種別",
+            "操作前データ",
+            "操作後データ",
+            "操作日時",
+            "操作者",
+            "操作端末",
+            "備考"
+        FROM "変更ログ"
+        WHERE "テーブル名" = #{tableName}
+        ORDER BY "操作日時" DESC
+    </select>
+
+    <!-- 操作種別で検索 -->
+    <select id="findByOperationType" resultMap="ChangeLogResultMap">
+        SELECT
+            "ログID",
+            "テーブル名",
+            "レコードキー",
+            "操作種別",
+            "操作前データ",
+            "操作後データ",
+            "操作日時",
+            "操作者",
+            "操作端末",
+            "備考"
+        FROM "変更ログ"
+        WHERE "操作種別" = #{operationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.OperationTypeHandler}
+        ORDER BY "操作日時" DESC
+    </select>
+
+    <!-- 期間指定で検索 -->
+    <select id="findByDateRange" resultMap="ChangeLogResultMap">
+        SELECT
+            "ログID",
+            "テーブル名",
+            "レコードキー",
+            "操作種別",
+            "操作前データ",
+            "操作後データ",
+            "操作日時",
+            "操作者",
+            "操作端末",
+            "備考"
+        FROM "変更ログ"
+        WHERE "操作日時" &gt;= #{from}
+          AND "操作日時" &lt;= #{to}
+        ORDER BY "操作日時" DESC
+    </select>
+
+    <!-- 操作者で検索 -->
+    <select id="findByOperatedBy" resultMap="ChangeLogResultMap">
+        SELECT
+            "ログID",
+            "テーブル名",
+            "レコードキー",
+            "操作種別",
+            "操作前データ",
+            "操作後データ",
+            "操作日時",
+            "操作者",
+            "操作端末",
+            "備考"
+        FROM "変更ログ"
+        WHERE "操作者" = #{operatedBy}
+        ORDER BY "操作日時" DESC
+    </select>
+
+    <!-- 複合条件で検索 -->
+    <select id="findByConditions" resultMap="ChangeLogResultMap">
+        SELECT
+            "ログID",
+            "テーブル名",
+            "レコードキー",
+            "操作種別",
+            "操作前データ",
+            "操作後データ",
+            "操作日時",
+            "操作者",
+            "操作端末",
+            "備考"
+        FROM "変更ログ"
+        <where>
+            <if test="tableName != null">
+                AND "テーブル名" = #{tableName}
+            </if>
+            <if test="recordKey != null">
+                AND "レコードキー" = #{recordKey}
+            </if>
+            <if test="operationType != null">
+                AND "操作種別" = #{operationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.OperationTypeHandler}
+            </if>
+            <if test="from != null">
+                AND "操作日時" &gt;= #{from}
+            </if>
+            <if test="to != null">
+                AND "操作日時" &lt;= #{to}
+            </if>
+            <if test="operatedBy != null">
+                AND "操作者" = #{operatedBy}
+            </if>
+        </where>
+        ORDER BY "操作日時" DESC
+    </select>
+
+    <!-- 全件削除（テスト用） -->
+    <delete id="deleteAll">
+        DELETE FROM "変更ログ"
+    </delete>
+
+</mapper>

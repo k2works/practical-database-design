@@ -263,10 +263,10 @@ end note
 
 ```java
 // src/main/java/com/example/sms/application/service/JournalCorrectionService.java
-package com.example.sms.application.service;
+package com.example.fas.application.service;
 
-import com.example.sms.application.port.out.JournalRepository;
-import com.example.sms.domain.model.accounting.*;
+import com.example.fas.application.port.out.JournalRepository;
+import com.example.fas.domain.model.accounting.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -427,10 +427,10 @@ public class JournalCorrectionService {
 マスタデータの変更履歴を保存するログテーブルを設計します。
 
 <details>
-<summary>V020__create_change_log_table.sql</summary>
+<summary>V010__create_change_log_table.sql</summary>
 
 ```sql
--- V020__create_change_log_table.sql
+-- V010__create_change_log_table.sql
 
 -- 操作種別
 CREATE TYPE 操作種別 AS ENUM ('INSERT', 'UPDATE', 'DELETE');
@@ -519,7 +519,7 @@ COMMENT ON TABLE "変更ログ" IS 'マスタデータの変更履歴を保存�
 
 ```java
 // src/main/java/com/example/sms/domain/model/audit/ChangeLog.java
-package com.example.sms.domain.model.audit;
+package com.example.fas.domain.model.audit;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -565,10 +565,10 @@ public class ChangeLog {
 
 ```java
 // src/main/java/com/example/sms/application/port/out/ChangeLogRepository.java
-package com.example.sms.application.port.out;
+package com.example.fas.application.port.out;
 
-import com.example.sms.domain.model.audit.ChangeLog;
-import com.example.sms.domain.model.audit.ChangeLog.OperationType;
+import com.example.fas.domain.model.audit.ChangeLog;
+import com.example.fas.domain.model.audit.ChangeLog.OperationType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -645,15 +645,15 @@ public interface ChangeLogRepository {
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.sms.infrastructure.persistence.mapper.ChangeLogMapper">
+<mapper namespace="com.example.fas.infrastructure.persistence.mapper.ChangeLogMapper">
 
     <!-- ResultMap: 日本語カラム名 → 英語プロパティ名 -->
-    <resultMap id="ChangeLogResultMap" type="com.example.sms.domain.model.audit.ChangeLog">
+    <resultMap id="ChangeLogResultMap" type="com.example.fas.domain.model.audit.ChangeLog">
         <id property="logId" column="ログID"/>
         <result property="tableName" column="テーブル名"/>
         <result property="recordKey" column="レコードキー"/>
         <result property="operationType" column="操作種別"
-                typeHandler="com.example.sms.infrastructure.persistence.typehandler.OperationTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.OperationTypeHandler"/>
         <result property="beforeData" column="操作前データ"/>
         <result property="afterData" column="操作後データ"/>
         <result property="operatedAt" column="操作日時"/>
@@ -663,7 +663,7 @@ public interface ChangeLogRepository {
     </resultMap>
 
     <!-- 登録 -->
-    <insert id="insert" parameterType="com.example.sms.domain.model.audit.ChangeLog"
+    <insert id="insert" parameterType="com.example.fas.domain.model.audit.ChangeLog"
             useGeneratedKeys="true" keyProperty="logId" keyColumn="ログID">
         INSERT INTO "変更ログ" (
             "テーブル名",
@@ -678,7 +678,7 @@ public interface ChangeLogRepository {
         ) VALUES (
             #{tableName},
             #{recordKey},
-            #{operationType, typeHandler=com.example.sms.infrastructure.persistence.typehandler.OperationTypeHandler},
+            #{operationType, typeHandler=com.example.fas.infrastructure.persistence.typehandler.OperationTypeHandler},
             #{beforeData}::jsonb,
             #{afterData}::jsonb,
             COALESCE(#{operatedAt}, CURRENT_TIMESTAMP),
@@ -764,7 +764,7 @@ public interface ChangeLogRepository {
                 AND "レコードキー" = #{recordKey}
             </if>
             <if test="operationType != null">
-                AND "操作種別" = #{operationType, typeHandler=com.example.sms.infrastructure.persistence.typehandler.OperationTypeHandler}
+                AND "操作種別" = #{operationType, typeHandler=com.example.fas.infrastructure.persistence.typehandler.OperationTypeHandler}
             </if>
             <if test="from != null">
                 AND "操作日時" &gt;= #{from}
@@ -794,9 +794,9 @@ public interface ChangeLogRepository {
 
 ```java
 // src/main/java/com/example/sms/infrastructure/persistence/typehandler/OperationTypeHandler.java
-package com.example.sms.infrastructure.persistence.typehandler;
+package com.example.fas.infrastructure.persistence.typehandler;
 
-import com.example.sms.domain.model.audit.ChangeLog.OperationType;
+import com.example.fas.domain.model.audit.ChangeLog.OperationType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -852,11 +852,11 @@ public class OperationTypeHandler extends BaseTypeHandler<OperationType> {
 
 ```java
 // src/test/java/com/example/sms/infrastructure/persistence/ChangeLogRepositoryTest.java
-package com.example.sms.infrastructure.persistence;
+package com.example.fas.infrastructure.persistence;
 
-import com.example.sms.application.port.out.ChangeLogRepository;
-import com.example.sms.domain.model.audit.ChangeLog;
-import com.example.sms.domain.model.audit.ChangeLog.OperationType;
+import com.example.fas.application.port.out.ChangeLogRepository;
+import com.example.fas.domain.model.audit.ChangeLog;
+import com.example.fas.domain.model.audit.ChangeLog.OperationType;
 import org.junit.jupiter.api.*;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
