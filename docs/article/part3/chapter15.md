@@ -152,7 +152,7 @@ CREATE TYPE BSPL区分 AS ENUM ('BS', 'PL');
 CREATE TYPE 貸借区分 AS ENUM ('借方', '貸方');
 CREATE TYPE 取引要素区分 AS ENUM ('資産', '負債', '資本', '収益', '費用');
 CREATE TYPE 集計区分 AS ENUM ('見出科目', '集計科目', '計上科目');
-CREATE TYPE 消費税計算区分 AS ENUM ('課税', '非課税', '免税', '対象外');
+CREATE TYPE 消費税計算区分 AS ENUM ('対象外', '課税', '非課税', '不課税', '輸出免税');
 ```
 
 ```sql
@@ -205,12 +205,12 @@ CREATE INDEX idx_勘定科目マスタ_集計区分 ON "勘定科目マスタ"("
 <summary>勘定科目リポジトリテスト</summary>
 
 ```java
-// src/test/java/com/example/accounting/infrastructure/persistence/repository/AccountRepositoryTest.java
-package com.example.accounting.infrastructure.persistence.repository;
+// src/test/java/com/example/fas/infrastructure/out/persistence/repository/AccountRepositoryTest.java
+package com.example.fas.infrastructure.out.persistence.repository;
 
-import com.example.accounting.application.port.out.AccountRepository;
-import com.example.accounting.domain.model.account.*;
-import com.example.accounting.testsetup.BaseIntegrationTest;
+import com.example.fas.application.port.out.AccountRepository;
+import com.example.fas.domain.model.account.*;
+import com.example.fas.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -370,8 +370,8 @@ class AccountRepositoryTest extends BaseIntegrationTest {
 <summary>勘定科目エンティティ</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/account/Account.java
-package com.example.accounting.domain.model.account;
+// src/main/java/com/example/fas/domain/model/account/Account.java
+package com.example.fas.domain.model.account;
 
 import lombok.*;
 import java.time.LocalDateTime;
@@ -408,8 +408,8 @@ public class Account {
 <summary>BSPL区分 Enum</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/account/BSPLType.java
-package com.example.accounting.domain.model.account;
+// src/main/java/com/example/fas/domain/model/account/BSPLType.java
+package com.example.fas.domain.model.account;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -439,8 +439,8 @@ public enum BSPLType {
 <summary>貸借区分 Enum</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/account/DebitCreditType.java
-package com.example.accounting.domain.model.account;
+// src/main/java/com/example/fas/domain/model/account/DebitCreditType.java
+package com.example.fas.domain.model.account;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -470,8 +470,8 @@ public enum DebitCreditType {
 <summary>取引要素区分 Enum</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/account/TransactionElementType.java
-package com.example.accounting.domain.model.account;
+// src/main/java/com/example/fas/domain/model/account/TransactionElementType.java
+package com.example.fas.domain.model.account;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -504,8 +504,8 @@ public enum TransactionElementType {
 <summary>集計区分 Enum</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/account/AggregationType.java
-package com.example.accounting.domain.model.account;
+// src/main/java/com/example/fas/domain/model/account/AggregationType.java
+package com.example.fas.domain.model.account;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -538,12 +538,12 @@ public enum AggregationType {
 <summary>勘定科目リポジトリインターフェース</summary>
 
 ```java
-// src/main/java/com/example/accounting/application/port/out/AccountRepository.java
-package com.example.accounting.application.port.out;
+// src/main/java/com/example/fas/application/port/out/AccountRepository.java
+package com.example.fas.application.port.out;
 
-import com.example.accounting.domain.model.account.Account;
-import com.example.accounting.domain.model.account.BSPLType;
-import com.example.accounting.domain.model.account.TransactionElementType;
+import com.example.fas.domain.model.account.Account;
+import com.example.fas.domain.model.account.BSPLType;
+import com.example.fas.domain.model.account.TransactionElementType;
 
 import java.util.List;
 import java.util.Optional;
@@ -577,10 +577,10 @@ public interface AccountRepository {
 <summary>TypeHandler実装（BSPLTypeHandler）</summary>
 
 ```java
-// src/main/java/com/example/accounting/infrastructure/persistence/typehandler/BSPLTypeHandler.java
-package com.example.accounting.infrastructure.persistence.typehandler;
+// src/main/java/com/example/fas/infrastructure/out/persistence/typehandler/BSPLTypeHandler.java
+package com.example.fas.infrastructure.out.persistence.typehandler;
 
-import com.example.accounting.domain.model.account.BSPLType;
+import com.example.fas.domain.model.account.BSPLType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
@@ -620,10 +620,10 @@ public class BSPLTypeHandler extends BaseTypeHandler<BSPLType> {
 <summary>TypeHandler実装（DebitCreditTypeHandler）</summary>
 
 ```java
-// src/main/java/com/example/accounting/infrastructure/persistence/typehandler/DebitCreditTypeHandler.java
-package com.example.accounting.infrastructure.persistence.typehandler;
+// src/main/java/com/example/fas/infrastructure/out/persistence/typehandler/DebitCreditTypeHandler.java
+package com.example.fas.infrastructure.out.persistence.typehandler;
 
-import com.example.accounting.domain.model.account.DebitCreditType;
+import com.example.fas.domain.model.account.DebitCreditType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
@@ -667,21 +667,21 @@ public class DebitCreditTypeHandler extends BaseTypeHandler<DebitCreditType> {
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.accounting.infrastructure.persistence.mapper.AccountMapper">
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.AccountMapper">
 
-    <resultMap id="AccountResultMap" type="com.example.accounting.domain.model.account.Account">
+    <resultMap id="AccountResultMap" type="com.example.fas.domain.model.account.Account">
         <result property="accountCode" column="勘定科目コード"/>
         <result property="accountName" column="勘定科目名"/>
         <result property="accountShortName" column="勘定科目略名"/>
         <result property="accountNameKana" column="勘定科目カナ"/>
         <result property="bsplType" column="BSPL区分"
-                typeHandler="com.example.accounting.infrastructure.persistence.typehandler.BSPLTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler"/>
         <result property="debitCreditType" column="貸借区分"
-                typeHandler="com.example.accounting.infrastructure.persistence.typehandler.DebitCreditTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler"/>
         <result property="transactionElementType" column="取引要素区分"
-                typeHandler="com.example.accounting.infrastructure.persistence.typehandler.TransactionElementTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler"/>
         <result property="aggregationType" column="集計区分"
-                typeHandler="com.example.accounting.infrastructure.persistence.typehandler.AggregationTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler"/>
         <result property="managementAccountingType" column="管理会計区分"/>
         <result property="expenseType" column="費用区分"/>
         <result property="ledgerOutputType" column="元帳出力区分"/>
@@ -694,7 +694,7 @@ public class DebitCreditTypeHandler extends BaseTypeHandler<DebitCreditType> {
         <result property="updatedBy" column="更新者名"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.accounting.domain.model.account.Account">
+    <insert id="insert" parameterType="com.example.fas.domain.model.account.Account">
         INSERT INTO "勘定科目マスタ" (
             "勘定科目コード", "勘定科目名", "勘定科目略名", "勘定科目カナ",
             "BSPL区分", "貸借区分", "取引要素区分", "集計区分",
@@ -703,10 +703,10 @@ public class DebitCreditTypeHandler extends BaseTypeHandler<DebitCreditType> {
             "作成日時", "更新日時", "更新者名"
         ) VALUES (
             #{accountCode}, #{accountName}, #{accountShortName}, #{accountNameKana},
-            #{bsplType, typeHandler=com.example.accounting.infrastructure.persistence.typehandler.BSPLTypeHandler}::BSPL区分,
-            #{debitCreditType, typeHandler=com.example.accounting.infrastructure.persistence.typehandler.DebitCreditTypeHandler}::貸借区分,
-            #{transactionElementType, typeHandler=com.example.accounting.infrastructure.persistence.typehandler.TransactionElementTypeHandler}::取引要素区分,
-            #{aggregationType, typeHandler=com.example.accounting.infrastructure.persistence.typehandler.AggregationTypeHandler}::集計区分,
+            #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler}::BSPL区分,
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::貸借区分,
+            #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler}::取引要素区分,
+            #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler}::集計区分,
             #{managementAccountingType}, #{expenseType}, #{ledgerOutputType}, #{subAccountType},
             #{consumptionTaxType}::消費税計算区分, #{taxTransactionCode}, #{dueDateManagementType},
             CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, #{updatedBy}
@@ -741,14 +741,14 @@ public class DebitCreditTypeHandler extends BaseTypeHandler<DebitCreditType> {
 <summary>勘定科目リポジトリ実装</summary>
 
 ```java
-// src/main/java/com/example/accounting/infrastructure/persistence/repository/AccountRepositoryImpl.java
-package com.example.accounting.infrastructure.persistence.repository;
+// src/main/java/com/example/fas/infrastructure/out/persistence/repository/AccountRepositoryImpl.java
+package com.example.fas.infrastructure.out.persistence.repository;
 
-import com.example.accounting.application.port.out.AccountRepository;
-import com.example.accounting.domain.model.account.Account;
-import com.example.accounting.domain.model.account.BSPLType;
-import com.example.accounting.domain.model.account.TransactionElementType;
-import com.example.accounting.infrastructure.persistence.mapper.AccountMapper;
+import com.example.fas.application.port.out.AccountRepository;
+import com.example.fas.domain.model.account.Account;
+import com.example.fas.domain.model.account.BSPLType;
+import com.example.fas.domain.model.account.TransactionElementType;
+import com.example.fas.infrastructure.out.persistence.mapper.AccountMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -806,7 +806,7 @@ public class AccountRepositoryImpl implements AccountRepository {
 
 ### チルダ連結方式による階層構造
 
-勘定科目の階層構造を「チルダ（^）連結」で表現します。これにより、SQL の LIKE 検索で効率的に階層検索ができます。
+勘定科目の階層構造を「チルダ（~）連結」で表現します。これにより、SQL の LIKE 検索で効率的に階層検索ができます。
 
 ```plantuml
 @startwbs
@@ -846,11 +846,11 @@ title 貸借対照表の科目ツリー構造（部分）
 | 勘定科目コード | 勘定科目パス |
 |-------------|-------------|
 | 11 | 11 |
-| 11000 | 11^11000 |
-| 11190 | 11^11000^11190 |
-| 11110 | 11^11000^11190^11110 |
-| 11120 | 11^11000^11190^11120 |
-| 11130 | 11^11000^11190^11130 |
+| 11000 | 11~11000 |
+| 11190 | 11~11000~11190 |
+| 11110 | 11~11000~11190~11110 |
+| 11120 | 11~11000~11190~11120 |
+| 11130 | 11~11000~11190~11130 |
 
 ### 階層検索のメリット
 
@@ -894,13 +894,13 @@ CREATE INDEX idx_勘定科目構成マスタ_パス ON "勘定科目構成マス
 <summary>勘定科目構成リポジトリテスト</summary>
 
 ```java
-// src/test/java/com/example/accounting/infrastructure/persistence/repository/AccountStructureRepositoryTest.java
-package com.example.accounting.infrastructure.persistence.repository;
+// src/test/java/com/example/fas/infrastructure/out/persistence/repository/AccountStructureRepositoryTest.java
+package com.example.fas.infrastructure.out.persistence.repository;
 
-import com.example.accounting.application.port.out.AccountRepository;
-import com.example.accounting.application.port.out.AccountStructureRepository;
-import com.example.accounting.domain.model.account.*;
-import com.example.accounting.testsetup.BaseIntegrationTest;
+import com.example.fas.application.port.out.AccountRepository;
+import com.example.fas.application.port.out.AccountStructureRepository;
+import com.example.fas.domain.model.account.*;
+import com.example.fas.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -981,22 +981,22 @@ class AccountStructureRepositoryTest extends BaseIntegrationTest {
 
             // Arrange: 第2階層
             accountStructureRepository.save(AccountStructure.builder()
-                    .accountCode("11000").accountPath("11^11000").build());
+                    .accountCode("11000").accountPath("11~11000").build());
 
             // Arrange: 第3階層
             accountStructureRepository.save(AccountStructure.builder()
-                    .accountCode("11190").accountPath("11^11000^11190").build());
+                    .accountCode("11190").accountPath("11~11000~11190").build());
 
             // Arrange: 第4階層（計上科目）
             accountStructureRepository.save(AccountStructure.builder()
-                    .accountCode("11110").accountPath("11^11000^11190^11110").build());
+                    .accountCode("11110").accountPath("11~11000~11190~11110").build());
 
             // Act
             var result = accountStructureRepository.findByCode("11110");
 
             // Assert
             assertThat(result).isPresent();
-            assertThat(result.get().getAccountPath()).isEqualTo("11^11000^11190^11110");
+            assertThat(result.get().getAccountPath()).isEqualTo("11~11000~11190~11110");
         }
     }
 
@@ -1009,15 +1009,15 @@ class AccountStructureRepositoryTest extends BaseIntegrationTest {
             accountStructureRepository.save(AccountStructure.builder()
                     .accountCode("11").accountPath("11").build());
             accountStructureRepository.save(AccountStructure.builder()
-                    .accountCode("11000").accountPath("11^11000").build());
+                    .accountCode("11000").accountPath("11~11000").build());
             accountStructureRepository.save(AccountStructure.builder()
-                    .accountCode("11190").accountPath("11^11000^11190").build());
+                    .accountCode("11190").accountPath("11~11000~11190").build());
             accountStructureRepository.save(AccountStructure.builder()
-                    .accountCode("11110").accountPath("11^11000^11190^11110").build());
+                    .accountCode("11110").accountPath("11~11000~11190~11110").build());
             accountStructureRepository.save(AccountStructure.builder()
-                    .accountCode("11120").accountPath("11^11000^11190^11120").build());
+                    .accountCode("11120").accountPath("11~11000~11190~11120").build());
             accountStructureRepository.save(AccountStructure.builder()
-                    .accountCode("11130").accountPath("11^11000^11190^11130").build());
+                    .accountCode("11130").accountPath("11~11000~11190~11130").build());
         }
 
         @Test
@@ -1055,8 +1055,8 @@ class AccountStructureRepositoryTest extends BaseIntegrationTest {
 <summary>勘定科目構成エンティティ</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/account/AccountStructure.java
-package com.example.accounting.domain.model.account;
+// src/main/java/com/example/fas/domain/model/account/AccountStructure.java
+package com.example.fas.domain.model.account;
 
 import lombok.*;
 import java.time.LocalDateTime;
@@ -1072,23 +1072,27 @@ public class AccountStructure {
     private String updatedBy;
 
     /**
-     * パスの深さ（階層レベル）を取得
+     * パスの深さ（階層レベル）を取得する.
+     *
+     * @return 階層の深さ（1から始まる）
      */
     public int getDepth() {
         if (accountPath == null || accountPath.isEmpty()) {
             return 0;
         }
-        return accountPath.split("\\^").length - 1;
+        return accountPath.split("~").length;
     }
 
     /**
-     * 親科目コードを取得
+     * 親科目コードを取得する.
+     *
+     * @return 親科目コード。ルート科目の場合はnull
      */
     public String getParentCode() {
-        if (accountPath == null || !accountPath.contains("^")) {
+        if (accountPath == null || !accountPath.contains("~")) {
             return null;
         }
-        String[] parts = accountPath.split("\\^");
+        String[] parts = accountPath.split("~");
         if (parts.length < 2) {
             return null;
         }
@@ -1105,10 +1109,10 @@ public class AccountStructure {
 <summary>勘定科目構成リポジトリインターフェース</summary>
 
 ```java
-// src/main/java/com/example/accounting/application/port/out/AccountStructureRepository.java
-package com.example.accounting.application.port.out;
+// src/main/java/com/example/fas/application/port/out/AccountStructureRepository.java
+package com.example.fas.application.port.out;
 
-import com.example.accounting.domain.model.account.AccountStructure;
+import com.example.fas.domain.model.account.AccountStructure;
 
 import java.util.List;
 import java.util.Optional;
@@ -1146,16 +1150,16 @@ public interface AccountStructureRepository {
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.accounting.infrastructure.persistence.mapper.AccountStructureMapper">
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.AccountStructureMapper">
 
-    <resultMap id="AccountStructureResultMap" type="com.example.accounting.domain.model.account.AccountStructure">
+    <resultMap id="AccountStructureResultMap" type="com.example.fas.domain.model.account.AccountStructure">
         <result property="accountCode" column="勘定科目コード"/>
         <result property="accountPath" column="勘定科目パス"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者名"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.accounting.domain.model.account.AccountStructure">
+    <insert id="insert" parameterType="com.example.fas.domain.model.account.AccountStructure">
         INSERT INTO "勘定科目構成マスタ" (
             "勘定科目コード", "勘定科目パス", "更新日時", "更新者名"
         ) VALUES (
@@ -1181,7 +1185,8 @@ public interface AccountStructureRepository {
 
     <select id="findChildren" resultMap="AccountStructureResultMap">
         SELECT * FROM "勘定科目構成マスタ"
-        WHERE "勘定科目パス" LIKE #{parentCode} || '^%'
+        WHERE "勘定科目パス" LIKE #{parentCode} || '~%'
+          AND "勘定科目パス" NOT LIKE #{parentCode} || '~%~%'
         ORDER BY "勘定科目コード"
     </select>
 
@@ -1197,12 +1202,12 @@ public interface AccountStructureRepository {
 <summary>勘定科目構成リポジトリ実装</summary>
 
 ```java
-// src/main/java/com/example/accounting/infrastructure/persistence/repository/AccountStructureRepositoryImpl.java
-package com.example.accounting.infrastructure.persistence.repository;
+// src/main/java/com/example/fas/infrastructure/out/persistence/repository/AccountStructureRepositoryImpl.java
+package com.example.fas.infrastructure.out.persistence.repository;
 
-import com.example.accounting.application.port.out.AccountStructureRepository;
-import com.example.accounting.domain.model.account.AccountStructure;
-import com.example.accounting.infrastructure.persistence.mapper.AccountStructureMapper;
+import com.example.fas.application.port.out.AccountStructureRepository;
+import com.example.fas.domain.model.account.AccountStructure;
+import com.example.fas.infrastructure.out.persistence.mapper.AccountStructureMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -1274,12 +1279,12 @@ public class AccountStructureRepositoryImpl implements AccountStructureRepositor
 <summary>課税取引リポジトリテスト</summary>
 
 ```java
-// src/test/java/com/example/accounting/infrastructure/persistence/repository/TaxTransactionRepositoryTest.java
-package com.example.accounting.infrastructure.persistence.repository;
+// src/test/java/com/example/fas/infrastructure/out/persistence/repository/TaxTransactionRepositoryTest.java
+package com.example.fas.infrastructure.out.persistence.repository;
 
-import com.example.accounting.application.port.out.TaxTransactionRepository;
-import com.example.accounting.domain.model.tax.TaxTransaction;
-import com.example.accounting.testsetup.BaseIntegrationTest;
+import com.example.fas.application.port.out.TaxTransactionRepository;
+import com.example.fas.domain.model.tax.TaxTransaction;
+import com.example.fas.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -1410,8 +1415,8 @@ class TaxTransactionRepositoryTest extends BaseIntegrationTest {
 <summary>課税取引エンティティ</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/tax/TaxTransaction.java
-package com.example.accounting.domain.model.tax;
+// src/main/java/com/example/fas/domain/model/tax/TaxTransaction.java
+package com.example.fas.domain.model.tax;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -1451,10 +1456,10 @@ public class TaxTransaction {
 <summary>課税取引リポジトリインターフェース</summary>
 
 ```java
-// src/main/java/com/example/accounting/application/port/out/TaxTransactionRepository.java
-package com.example.accounting.application.port.out;
+// src/main/java/com/example/fas/application/port/out/TaxTransactionRepository.java
+package com.example.fas.application.port.out;
 
-import com.example.accounting.domain.model.tax.TaxTransaction;
+import com.example.fas.domain.model.tax.TaxTransaction;
 
 import java.util.List;
 import java.util.Optional;
@@ -1486,9 +1491,9 @@ public interface TaxTransactionRepository {
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.accounting.infrastructure.persistence.mapper.TaxTransactionMapper">
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.TaxTransactionMapper">
 
-    <resultMap id="TaxTransactionResultMap" type="com.example.accounting.domain.model.tax.TaxTransaction">
+    <resultMap id="TaxTransactionResultMap" type="com.example.fas.domain.model.tax.TaxTransaction">
         <result property="taxCode" column="課税取引コード"/>
         <result property="taxName" column="課税取引名"/>
         <result property="taxRate" column="税率"/>
@@ -1496,7 +1501,7 @@ public interface TaxTransactionRepository {
         <result property="updatedBy" column="更新者名"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.accounting.domain.model.tax.TaxTransaction">
+    <insert id="insert" parameterType="com.example.fas.domain.model.tax.TaxTransaction">
         INSERT INTO "課税取引マスタ" (
             "課税取引コード", "課税取引名", "税率", "更新日時", "更新者名"
         ) VALUES (
@@ -1514,7 +1519,7 @@ public interface TaxTransactionRepository {
         ORDER BY "課税取引コード"
     </select>
 
-    <update id="update" parameterType="com.example.accounting.domain.model.tax.TaxTransaction">
+    <update id="update" parameterType="com.example.fas.domain.model.tax.TaxTransaction">
         UPDATE "課税取引マスタ"
         SET "課税取引名" = #{taxName},
             "税率" = #{taxRate},
