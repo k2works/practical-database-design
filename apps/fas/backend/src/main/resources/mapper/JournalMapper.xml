@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.JournalMapper">
+
+    <!-- 仕訳 ResultMap -->
+    <resultMap id="JournalResultMap" type="com.example.fas.domain.model.journal.Journal">
+        <result property="journalVoucherNumber" column="仕訳伝票番号"/>
+        <result property="postingDate" column="起票日"/>
+        <result property="entryDate" column="入力日"/>
+        <result property="closingJournalFlag" column="決算仕訳フラグ"/>
+        <result property="singleEntryFlag" column="単振フラグ"/>
+        <result property="voucherType" column="仕訳伝票区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.JournalVoucherTypeHandler"/>
+        <result property="periodicPostingFlag" column="定期計上フラグ"/>
+        <result property="employeeCode" column="社員コード"/>
+        <result property="departmentCode" column="部門コード"/>
+        <result property="redSlipFlag" column="赤伝フラグ"/>
+        <result property="redBlackVoucherNumber" column="赤黒伝票番号"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 仕訳明細 ResultMap -->
+    <resultMap id="JournalDetailResultMap" type="com.example.fas.domain.model.journal.JournalDetail">
+        <result property="journalVoucherNumber" column="仕訳伝票番号"/>
+        <result property="lineNumber" column="仕訳行番号"/>
+        <result property="lineSummary" column="行摘要"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 仕訳貸借明細 ResultMap -->
+    <resultMap id="JournalDebitCreditDetailResultMap" type="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
+        <result property="journalVoucherNumber" column="仕訳伝票番号"/>
+        <result property="lineNumber" column="仕訳行番号"/>
+        <result property="debitCreditType" column="仕訳行貸借区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler"/>
+        <result property="accountCode" column="勘定科目コード"/>
+        <result property="subAccountCode" column="補助科目コード"/>
+        <result property="departmentCode" column="部門コード"/>
+        <result property="projectCode" column="プロジェクトコード"/>
+        <result property="amount" column="仕訳金額"/>
+        <result property="currencyCode" column="通貨コード"/>
+        <result property="exchangeRate" column="為替レート"/>
+        <result property="baseCurrencyAmount" column="基軸換算仕訳金額"/>
+        <result property="taxType" column="消費税区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.TaxTypeHandler"/>
+        <result property="taxRate" column="消費税率"/>
+        <result property="taxCalcType" column="消費税計算区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.TaxCalculationTypeHandler"/>
+        <result property="dueDate" column="期日"/>
+        <result property="cashFlowFlag" column="資金繰フラグ"/>
+        <result property="segmentCode" column="セグメントコード"/>
+        <result property="counterAccountCode" column="相手勘定科目コード"/>
+        <result property="counterSubAccountCode" column="相手補助科目コード"/>
+        <result property="tagCode" column="付箋コード"/>
+        <result property="tagContent" column="付箋内容"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 仕訳（ヘッダ）の ResultMap（リレーション込み） -->
+    <resultMap id="journalWithDetailsResultMap" type="com.example.fas.domain.model.journal.Journal">
+        <id property="journalVoucherNumber" column="j_仕訳伝票番号"/>
+        <result property="postingDate" column="j_起票日"/>
+        <result property="entryDate" column="j_入力日"/>
+        <result property="closingJournalFlag" column="j_決算仕訳フラグ"/>
+        <result property="singleEntryFlag" column="j_単振フラグ"/>
+        <result property="voucherType" column="j_仕訳伝票区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.JournalVoucherTypeHandler"/>
+        <result property="periodicPostingFlag" column="j_定期計上フラグ"/>
+        <result property="employeeCode" column="j_社員コード"/>
+        <result property="departmentCode" column="j_部門コード"/>
+        <result property="redSlipFlag" column="j_赤伝フラグ"/>
+        <result property="redBlackVoucherNumber" column="j_赤黒伝票番号"/>
+        <result property="version" column="j_バージョン"/>
+        <result property="createdAt" column="j_作成日時"/>
+        <result property="updatedAt" column="j_更新日時"/>
+        <collection property="details" ofType="com.example.fas.domain.model.journal.JournalDetail"
+                    resultMap="journalDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 仕訳明細のネスト ResultMap -->
+    <resultMap id="journalDetailNestedResultMap" type="com.example.fas.domain.model.journal.JournalDetail">
+        <id property="journalVoucherNumber" column="d_仕訳伝票番号"/>
+        <id property="lineNumber" column="d_仕訳行番号"/>
+        <result property="lineSummary" column="d_行摘要"/>
+        <result property="version" column="d_バージョン"/>
+        <result property="createdAt" column="d_作成日時"/>
+        <result property="updatedAt" column="d_更新日時"/>
+        <collection property="debitCreditDetails" ofType="com.example.fas.domain.model.journal.JournalDebitCreditDetail"
+                    resultMap="journalDebitCreditDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 仕訳貸借明細のネスト ResultMap -->
+    <resultMap id="journalDebitCreditDetailNestedResultMap" type="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
+        <id property="journalVoucherNumber" column="dc_仕訳伝票番号"/>
+        <id property="lineNumber" column="dc_仕訳行番号"/>
+        <id property="debitCreditType" column="dc_仕訳行貸借区分"
+            typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler"/>
+        <result property="accountCode" column="dc_勘定科目コード"/>
+        <result property="subAccountCode" column="dc_補助科目コード"/>
+        <result property="departmentCode" column="dc_部門コード"/>
+        <result property="projectCode" column="dc_プロジェクトコード"/>
+        <result property="amount" column="dc_仕訳金額"/>
+        <result property="currencyCode" column="dc_通貨コード"/>
+        <result property="exchangeRate" column="dc_為替レート"/>
+        <result property="baseCurrencyAmount" column="dc_基軸換算仕訳金額"/>
+        <result property="taxType" column="dc_消費税区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.TaxTypeHandler"/>
+        <result property="taxRate" column="dc_消費税率"/>
+        <result property="taxCalcType" column="dc_消費税計算区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.TaxCalculationTypeHandler"/>
+        <result property="dueDate" column="dc_期日"/>
+        <result property="cashFlowFlag" column="dc_資金繰フラグ"/>
+        <result property="segmentCode" column="dc_セグメントコード"/>
+        <result property="counterAccountCode" column="dc_相手勘定科目コード"/>
+        <result property="counterSubAccountCode" column="dc_相手補助科目コード"/>
+        <result property="tagCode" column="dc_付箋コード"/>
+        <result property="tagContent" column="dc_付箋内容"/>
+        <result property="version" column="dc_バージョン"/>
+        <result property="createdAt" column="dc_作成日時"/>
+        <result property="updatedAt" column="dc_更新日時"/>
+    </resultMap>
+
+    <!-- 仕訳ヘッダ登録 -->
+    <insert id="insertJournal" parameterType="com.example.fas.domain.model.journal.Journal">
+        INSERT INTO "仕訳" (
+            "仕訳伝票番号", "起票日", "入力日", "決算仕訳フラグ", "単振フラグ",
+            "仕訳伝票区分", "定期計上フラグ", "社員コード", "部門コード",
+            "赤伝フラグ", "赤黒伝票番号", "作成日時", "更新日時", "更新者名"
+        ) VALUES (
+            #{journalVoucherNumber}, #{postingDate}, #{entryDate},
+            CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END,
+            CASE WHEN #{singleEntryFlag} THEN 1 ELSE 0 END,
+            #{voucherType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.JournalVoucherTypeHandler}::"仕訳伝票区分",
+            CASE WHEN #{periodicPostingFlag} THEN 1 ELSE 0 END,
+            #{employeeCode}, #{departmentCode},
+            CASE WHEN #{redSlipFlag} THEN 1 ELSE 0 END,
+            #{redBlackVoucherNumber},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 仕訳明細登録 -->
+    <insert id="insertJournalDetail" parameterType="com.example.fas.domain.model.journal.JournalDetail">
+        INSERT INTO "仕訳明細" (
+            "仕訳伝票番号", "仕訳行番号", "行摘要", "作成日時", "更新日時"
+        ) VALUES (
+            #{journalVoucherNumber}, #{lineNumber}, #{lineSummary},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 仕訳貸借明細登録 -->
+    <insert id="insertJournalDebitCreditDetail" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
+        INSERT INTO "仕訳貸借明細" (
+            "仕訳伝票番号", "仕訳行番号", "仕訳行貸借区分",
+            "勘定科目コード", "補助科目コード", "部門コード", "プロジェクトコード",
+            "仕訳金額", "通貨コード", "為替レート", "基軸換算仕訳金額",
+            "消費税区分", "消費税率", "消費税計算区分",
+            "期日", "資金繰フラグ", "セグメントコード",
+            "相手勘定科目コード", "相手補助科目コード",
+            "付箋コード", "付箋内容", "作成日時", "更新日時"
+        ) VALUES (
+            #{journalVoucherNumber}, #{lineNumber},
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"仕訳行貸借区分",
+            #{accountCode}, #{subAccountCode}, #{departmentCode}, #{projectCode},
+            #{amount}, #{currencyCode}, #{exchangeRate}, #{baseCurrencyAmount},
+            #{taxType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxTypeHandler}::"消費税区分",
+            #{taxRate},
+            #{taxCalcType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxCalculationTypeHandler}::"仕訳消費税計算区分",
+            #{dueDate}, CASE WHEN #{cashFlowFlag} THEN 1 ELSE 0 END, #{segmentCode},
+            #{counterAccountCode}, #{counterSubAccountCode},
+            #{tagCode}, #{tagContent}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 仕訳伝票番号で検索 -->
+    <select id="findByVoucherNumber" resultMap="JournalResultMap">
+        SELECT * FROM "仕訳"
+        WHERE "仕訳伝票番号" = #{voucherNumber}
+    </select>
+
+    <!-- 仕訳明細検索 -->
+    <select id="findDetailsByVoucherNumber" resultMap="JournalDetailResultMap">
+        SELECT * FROM "仕訳明細"
+        WHERE "仕訳伝票番号" = #{voucherNumber}
+        ORDER BY "仕訳行番号"
+    </select>
+
+    <!-- 仕訳貸借明細検索 -->
+    <select id="findDCDetailsByVoucherAndLine" resultMap="JournalDebitCreditDetailResultMap">
+        SELECT * FROM "仕訳貸借明細"
+        WHERE "仕訳伝票番号" = #{voucherNumber}
+        AND "仕訳行番号" = #{lineNumber}
+    </select>
+
+    <!-- 起票日範囲で検索 -->
+    <select id="findVoucherNumbersByDateRange" resultType="String">
+        SELECT "仕訳伝票番号" FROM "仕訳"
+        WHERE "起票日" BETWEEN #{fromDate} AND #{toDate}
+        ORDER BY "仕訳伝票番号"
+    </select>
+
+    <!-- 勘定科目コードで検索 -->
+    <select id="findVoucherNumbersByAccountCode" resultType="String">
+        SELECT DISTINCT "仕訳伝票番号" FROM "仕訳貸借明細"
+        WHERE "勘定科目コード" = #{accountCode}
+        ORDER BY "仕訳伝票番号"
+    </select>
+
+    <!-- 部門コードで検索 -->
+    <select id="findVoucherNumbersByDepartmentCode" resultType="String">
+        SELECT DISTINCT "仕訳伝票番号" FROM "仕訳"
+        WHERE "部門コード" = #{departmentCode}
+        ORDER BY "仕訳伝票番号"
+    </select>
+
+    <!-- 削除 -->
+    <delete id="deleteJournal">
+        DELETE FROM "仕訳" WHERE "仕訳伝票番号" = #{voucherNumber}
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "仕訳" CASCADE
+    </delete>
+
+    <!-- 仕訳と明細を一括取得（JOIN） -->
+    <select id="findWithDetailsByVoucherNumber" resultMap="journalWithDetailsResultMap">
+        SELECT
+            j."仕訳伝票番号" AS j_仕訳伝票番号,
+            j."起票日" AS j_起票日,
+            j."入力日" AS j_入力日,
+            j."決算仕訳フラグ" AS j_決算仕訳フラグ,
+            j."単振フラグ" AS j_単振フラグ,
+            j."仕訳伝票区分" AS j_仕訳伝票区分,
+            j."定期計上フラグ" AS j_定期計上フラグ,
+            j."社員コード" AS j_社員コード,
+            j."部門コード" AS j_部門コード,
+            j."赤伝フラグ" AS j_赤伝フラグ,
+            j."赤黒伝票番号" AS j_赤黒伝票番号,
+            j."バージョン" AS j_バージョン,
+            j."作成日時" AS j_作成日時,
+            j."更新日時" AS j_更新日時,
+            d."仕訳伝票番号" AS d_仕訳伝票番号,
+            d."仕訳行番号" AS d_仕訳行番号,
+            d."行摘要" AS d_行摘要,
+            d."バージョン" AS d_バージョン,
+            d."作成日時" AS d_作成日時,
+            d."更新日時" AS d_更新日時,
+            dc."仕訳伝票番号" AS dc_仕訳伝票番号,
+            dc."仕訳行番号" AS dc_仕訳行番号,
+            dc."仕訳行貸借区分" AS dc_仕訳行貸借区分,
+            dc."勘定科目コード" AS dc_勘定科目コード,
+            dc."補助科目コード" AS dc_補助科目コード,
+            dc."部門コード" AS dc_部門コード,
+            dc."プロジェクトコード" AS dc_プロジェクトコード,
+            dc."仕訳金額" AS dc_仕訳金額,
+            dc."通貨コード" AS dc_通貨コード,
+            dc."為替レート" AS dc_為替レート,
+            dc."基軸換算仕訳金額" AS dc_基軸換算仕訳金額,
+            dc."消費税区分" AS dc_消費税区分,
+            dc."消費税率" AS dc_消費税率,
+            dc."消費税計算区分" AS dc_消費税計算区分,
+            dc."期日" AS dc_期日,
+            dc."資金繰フラグ" AS dc_資金繰フラグ,
+            dc."セグメントコード" AS dc_セグメントコード,
+            dc."相手勘定科目コード" AS dc_相手勘定科目コード,
+            dc."相手補助科目コード" AS dc_相手補助科目コード,
+            dc."付箋コード" AS dc_付箋コード,
+            dc."付箋内容" AS dc_付箋内容,
+            dc."バージョン" AS dc_バージョン,
+            dc."作成日時" AS dc_作成日時,
+            dc."更新日時" AS dc_更新日時
+        FROM "仕訳" j
+        LEFT JOIN "仕訳明細" d ON j."仕訳伝票番号" = d."仕訳伝票番号"
+        LEFT JOIN "仕訳貸借明細" dc ON d."仕訳伝票番号" = dc."仕訳伝票番号"
+            AND d."仕訳行番号" = dc."仕訳行番号"
+        WHERE j."仕訳伝票番号" = #{voucherNumber}
+        ORDER BY d."仕訳行番号", dc."仕訳行貸借区分"
+    </select>
+
+    <!-- 楽観ロック用バージョン取得 -->
+    <select id="findVersionByVoucherNumber" resultType="Integer">
+        SELECT "バージョン" FROM "仕訳"
+        WHERE "仕訳伝票番号" = #{voucherNumber}
+    </select>
+
+    <!-- 仕訳ヘッダ更新（楽観ロック付き） -->
+    <update id="updateJournalWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.Journal">
+        UPDATE "仕訳"
+        SET "起票日" = #{postingDate},
+            "入力日" = #{entryDate},
+            "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END,
+            "単振フラグ" = CASE WHEN #{singleEntryFlag} THEN 1 ELSE 0 END,
+            "仕訳伝票区分" = #{voucherType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.JournalVoucherTypeHandler}::"仕訳伝票区分",
+            "定期計上フラグ" = CASE WHEN #{periodicPostingFlag} THEN 1 ELSE 0 END,
+            "社員コード" = #{employeeCode},
+            "部門コード" = #{departmentCode},
+            "赤伝フラグ" = CASE WHEN #{redSlipFlag} THEN 1 ELSE 0 END,
+            "赤黒伝票番号" = #{redBlackVoucherNumber},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "仕訳伝票番号" = #{journalVoucherNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 仕訳明細更新（楽観ロック付き） -->
+    <update id="updateJournalDetailWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.JournalDetail">
+        UPDATE "仕訳明細"
+        SET "行摘要" = #{lineSummary},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "仕訳伝票番号" = #{journalVoucherNumber}
+          AND "仕訳行番号" = #{lineNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 仕訳貸借明細更新（楽観ロック付き） -->
+    <update id="updateJournalDebitCreditDetailWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
+        UPDATE "仕訳貸借明細"
+        SET "勘定科目コード" = #{accountCode},
+            "補助科目コード" = #{subAccountCode},
+            "部門コード" = #{departmentCode},
+            "プロジェクトコード" = #{projectCode},
+            "仕訳金額" = #{amount},
+            "通貨コード" = #{currencyCode},
+            "為替レート" = #{exchangeRate},
+            "基軸換算仕訳金額" = #{baseCurrencyAmount},
+            "消費税区分" = #{taxType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxTypeHandler}::"消費税区分",
+            "消費税率" = #{taxRate},
+            "消費税計算区分" = #{taxCalcType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxCalculationTypeHandler}::"仕訳消費税計算区分",
+            "期日" = #{dueDate},
+            "資金繰フラグ" = CASE WHEN #{cashFlowFlag} THEN 1 ELSE 0 END,
+            "セグメントコード" = #{segmentCode},
+            "相手勘定科目コード" = #{counterAccountCode},
+            "相手補助科目コード" = #{counterSubAccountCode},
+            "付箋コード" = #{tagCode},
+            "付箋内容" = #{tagContent},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "仕訳伝票番号" = #{journalVoucherNumber}
+          AND "仕訳行番号" = #{lineNumber}
+          AND "仕訳行貸借区分" = #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"仕訳行貸借区分"
+          AND "バージョン" = #{version}
+    </update>
+</mapper>
