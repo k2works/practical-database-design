@@ -16,6 +16,7 @@
     "docker:fas:up": "gulp docker:fas:up",
     "docker:fas:down": "gulp docker:fas:down",
     "claude:yol": "claude --dangerously-skip-permissions",
+    "copilot:yol": "copilot --allow-all-tools",
     "prepare": "husky"
   },
   "repository": {
