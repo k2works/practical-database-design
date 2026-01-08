@@ -33,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("勘定科目アプリケーションサービス")
+@SuppressWarnings("PMD.TooManyStaticImports")
 class AccountApplicationServiceTest {
 
     @Mock

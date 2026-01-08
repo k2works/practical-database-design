@@ -35,7 +35,8 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @AutoConfigureMockMvc
 @DisplayName("仕訳 API")
-@SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
+@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "PMD.UseUnderscoresInNumericLiterals",
+        "PMD.TooManyStaticImports"})
 class JournalControllerTest extends BaseIntegrationTest {
 
     @Autowired

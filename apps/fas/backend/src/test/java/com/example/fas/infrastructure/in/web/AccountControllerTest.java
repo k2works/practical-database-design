@@ -28,7 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @AutoConfigureMockMvc
 @DisplayName("勘定科目マスタ API")
-@SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
+@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "PMD.TooManyStaticImports"})
 class AccountControllerTest extends BaseIntegrationTest {
 
     @Autowired
