@@ -1,14 +1,18 @@
 package com.example.fas.application.port.in.dto;
 
 import com.example.fas.domain.model.account.Account;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 勘定科目レスポンス DTO.
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AccountResponse {
     private String accountCode;
     private String accountName;

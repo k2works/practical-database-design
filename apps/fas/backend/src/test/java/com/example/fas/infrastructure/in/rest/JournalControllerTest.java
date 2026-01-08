@@ -1,4 +1,4 @@
-package com.example.fas.infrastructure.in.web;
+package com.example.fas.infrastructure.in.rest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

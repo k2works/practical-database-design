@@ -4,14 +4,18 @@ import com.example.fas.domain.model.journal.Journal;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 仕訳レスポンス DTO.
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class JournalResponse {
     private String journalVoucherNumber;
     private LocalDate postingDate;

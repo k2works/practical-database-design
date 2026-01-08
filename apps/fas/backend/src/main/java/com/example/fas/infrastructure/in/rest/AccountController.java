@@ -1,4 +1,4 @@
-package com.example.fas.infrastructure.in.web;
+package com.example.fas.infrastructure.in.rest;
 
 import com.example.fas.application.port.in.AccountUseCase;
 import com.example.fas.application.port.in.dto.AccountResponse;

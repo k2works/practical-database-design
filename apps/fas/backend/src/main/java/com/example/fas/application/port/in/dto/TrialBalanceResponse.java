@@ -3,14 +3,18 @@ package com.example.fas.application.port.in.dto;
 import com.example.fas.domain.model.balance.TrialBalanceLine;
 import java.math.BigDecimal;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 合計残高試算表レスポンス DTO.
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TrialBalanceResponse {
     private Integer fiscalYear;
     private Integer month;
@@ -23,6 +27,8 @@ public class TrialBalanceResponse {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class TrialBalanceLineResponse {
         private String accountCode;
         private String accountName;

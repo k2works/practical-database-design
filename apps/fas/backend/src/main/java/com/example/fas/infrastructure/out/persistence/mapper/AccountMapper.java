@@ -24,5 +24,7 @@ public interface AccountMapper {
 
     void update(Account account);
 
+    void delete(@Param("accountCode") String accountCode);
+
     void deleteAll();
 }

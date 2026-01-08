@@ -143,6 +143,6 @@ public class AccountApplicationService implements AccountUseCase {
     public void deleteAccount(String accountCode) {
         accountRepository.findByCode(accountCode)
                 .orElseThrow(() -> new AccountNotFoundException(accountCode));
-        // 実際の削除処理は別途リポジトリにメソッド追加が必要
+        accountRepository.delete(accountCode);
     }
 }

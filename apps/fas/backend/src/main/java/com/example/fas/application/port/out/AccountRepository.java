@@ -23,5 +23,7 @@ public interface AccountRepository {
 
     void update(Account account);
 
+    void delete(String accountCode);
+
     void deleteAll();
 }

@@ -50,6 +50,11 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     @Override
+    public void delete(String accountCode) {
+        accountMapper.delete(accountCode);
+    }
+
+    @Override
     public void deleteAll() {
         accountMapper.deleteAll();
     }

@@ -2,14 +2,18 @@ package com.example.fas.application.port.in.dto;
 
 import com.example.fas.domain.model.balance.MonthlyAccountBalance;
 import java.math.BigDecimal;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 月次残高レスポンス DTO.
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MonthlyBalanceResponse {
     private Integer fiscalYear;
     private Integer month;

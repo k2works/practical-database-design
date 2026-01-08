@@ -3,14 +3,18 @@ package com.example.fas.application.port.in.dto;
 import com.example.fas.domain.model.journal.JournalDebitCreditDetail;
 import com.example.fas.domain.model.journal.JournalDetail;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 仕訳明細レスポンス DTO.
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class JournalDetailResponse {
     private Integer lineNumber;
     private String lineSummary;
@@ -37,6 +41,8 @@ public class JournalDetailResponse {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class DebitCreditDetailResponse {
         private String debitCreditType;
         private String accountCode;

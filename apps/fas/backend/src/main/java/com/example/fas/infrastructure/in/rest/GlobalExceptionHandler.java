@@ -1,4 +1,4 @@
-package com.example.fas.infrastructure.in.web;
+package com.example.fas.infrastructure.in.rest;
 
 import com.example.fas.domain.exception.AccountAlreadyExistsException;
 import com.example.fas.domain.exception.AccountNotFoundException;

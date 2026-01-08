@@ -1,4 +1,4 @@
-package com.example.fas.infrastructure.in.web;
+package com.example.fas.infrastructure.in.rest;
 
 import com.example.fas.application.port.in.JournalUseCase;
 import com.example.fas.application.port.in.dto.CreateJournalCommand;

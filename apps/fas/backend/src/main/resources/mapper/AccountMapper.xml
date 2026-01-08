@@ -151,6 +151,12 @@
         WHERE "勘定科目コード" = #{accountCode}
     </update>
 
+    <!-- 単一削除 -->
+    <delete id="delete">
+        DELETE FROM "勘定科目構成マスタ" WHERE "勘定科目コード" = #{accountCode};
+        DELETE FROM "勘定科目マスタ" WHERE "勘定科目コード" = #{accountCode}
+    </delete>
+
     <!-- PostgreSQL用 deleteAll -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "勘定科目マスタ" CASCADE
