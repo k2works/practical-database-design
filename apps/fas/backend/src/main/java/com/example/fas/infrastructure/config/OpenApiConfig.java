@@ -50,14 +50,10 @@ public class OpenApiConfig {
     }
 
     private List<Server> servers() {
-        Server devServer = new Server()
-                .url("http://localhost:8080")
-                .description("開発サーバー");
-
         Server demoServer = new Server()
                 .url("http://localhost:8081")
-                .description("デモサーバー");
+                .description("開発・デモサーバー");
 
-        return List.of(devServer, demoServer);
+        return List.of(demoServer);
     }
 }

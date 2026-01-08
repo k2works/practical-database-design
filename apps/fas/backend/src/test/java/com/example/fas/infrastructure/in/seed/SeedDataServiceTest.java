@@ -1,4 +1,4 @@
-package com.example.fas.infrastructure.in;
+package com.example.fas.infrastructure.in.seed;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

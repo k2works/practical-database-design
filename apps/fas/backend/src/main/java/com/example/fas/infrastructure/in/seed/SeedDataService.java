@@ -1,4 +1,4 @@
-package com.example.fas.infrastructure.in;
+package com.example.fas.infrastructure.in.seed;
 
 import com.example.fas.application.port.out.AccountRepository;
 import com.example.fas.application.port.out.DepartmentRepository;
