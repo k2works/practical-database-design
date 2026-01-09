@@ -6,36 +6,42 @@ on:
     paths:
       - 'apps/fas/**'
       - '.github/workflows/ci-fas.yml'
+      - 'flake.nix'
+      - 'flake.lock'
   pull_request:
     branches: [ main ]
     paths:
       - 'apps/fas/**'
       - '.github/workflows/ci-fas.yml'
+      - 'flake.nix'
+      - 'flake.lock'
   workflow_dispatch:
 
 jobs:
   backend-check:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/fas/backend
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@v4
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
         with:
-          java-version: '25'
-          distribution: 'temurin'
-          cache: 'gradle'
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Cache Nix store
+        uses: actions/cache@v4
+        with:
+          path: /nix/store
+          key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
+          restore-keys: |
+            nix-${{ runner.os }}-
 
       - name: Run Quality Check and Test
-        run: ./gradlew fullCheck
+        run: nix develop .#fas --command bash -c "cd apps/fas/backend && ./gradlew fullCheck"
 
       - name: Upload Test Report
         if: always()
