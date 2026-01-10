@@ -101,7 +101,7 @@ export default function (gulp) {
             const env = { ...process.env };
             delete env.DOCKER_HOST;
 
-            execSync(`docker build -t ${REGISTRY_URL} ${BACKEND_DIR}`, {
+            execSync(`docker build --platform linux/amd64 --provenance=false -t ${REGISTRY_URL} ${BACKEND_DIR}`, {
                 stdio: 'inherit',
                 cwd: process.cwd(),
                 env
