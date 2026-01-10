@@ -25,7 +25,7 @@ class HomeControllerTest extends BaseIntegrationTest {
     void shouldDisplayHomePage() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/"))
             .andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.view().name("home"))
+            .andExpect(MockMvcResultMatchers.view().name("index"))
             .andExpect(MockMvcResultMatchers.model().attributeExists("currentDate"))
             .andExpect(MockMvcResultMatchers.model().attributeExists("accountCount"))
             .andExpect(MockMvcResultMatchers.model().attributeExists("departmentCount"))
