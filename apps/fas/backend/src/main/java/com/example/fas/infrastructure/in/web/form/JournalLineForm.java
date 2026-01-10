@@ -39,14 +39,20 @@ public class JournalLineForm {
      * @return 借方・貸方明細コマンド
      */
     public DebitCreditCommand toCommand() {
-        return DebitCreditCommand.builder()
-            .debitCreditType(this.debitCreditType)
-            .accountCode(this.accountCode)
-            .subAccountCode(this.subAccountCode)
-            .departmentCode(this.departmentCode)
-            .amount(this.amount)
-            .taxType(this.taxType)
-            .taxRate(this.taxRate)
-            .build();
+        return new DebitCreditCommand(
+                this.debitCreditType,
+                this.accountCode,
+                this.subAccountCode,
+                this.departmentCode,
+                this.amount,
+                null, // currencyCode
+                null, // exchangeRate
+                null, // baseCurrencyAmount
+                this.taxType,
+                this.taxRate,
+                null, // taxCalcType
+                null, // dueDate
+                null  // cashFlowFlag
+        );
     }
 }

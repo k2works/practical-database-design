@@ -57,17 +57,17 @@ public class DepartmentApplicationService implements DepartmentUseCase {
     @Override
     @Transactional
     public DepartmentResponse createDepartment(CreateDepartmentCommand command) {
-        if (departmentRepository.findByCode(command.getDepartmentCode()).isPresent()) {
-            throw new DepartmentAlreadyExistsException(command.getDepartmentCode());
+        if (departmentRepository.findByCode(command.departmentCode()).isPresent()) {
+            throw new DepartmentAlreadyExistsException(command.departmentCode());
         }
 
         Department department = Department.builder()
-                .departmentCode(command.getDepartmentCode())
-                .departmentName(command.getDepartmentName())
-                .departmentShortName(command.getDepartmentShortName())
-                .organizationLevel(command.getOrganizationLevel())
-                .departmentPath(command.getDepartmentPath())
-                .lowestLevelFlag(command.getLowestLevelFlag())
+                .departmentCode(command.departmentCode())
+                .departmentName(command.departmentName())
+                .departmentShortName(command.departmentShortName())
+                .organizationLevel(command.organizationLevel())
+                .departmentPath(command.departmentPath())
+                .lowestLevelFlag(command.lowestLevelFlag())
                 .build();
 
         departmentRepository.save(department);
@@ -81,20 +81,20 @@ public class DepartmentApplicationService implements DepartmentUseCase {
         Department department = departmentRepository.findByCode(departmentCode)
                 .orElseThrow(() -> new DepartmentNotFoundException(departmentCode));
 
-        if (command.getDepartmentName() != null) {
-            department.setDepartmentName(command.getDepartmentName());
+        if (command.departmentName() != null) {
+            department.setDepartmentName(command.departmentName());
         }
-        if (command.getDepartmentShortName() != null) {
-            department.setDepartmentShortName(command.getDepartmentShortName());
+        if (command.departmentShortName() != null) {
+            department.setDepartmentShortName(command.departmentShortName());
         }
-        if (command.getOrganizationLevel() != null) {
-            department.setOrganizationLevel(command.getOrganizationLevel());
+        if (command.organizationLevel() != null) {
+            department.setOrganizationLevel(command.organizationLevel());
         }
-        if (command.getDepartmentPath() != null) {
-            department.setDepartmentPath(command.getDepartmentPath());
+        if (command.departmentPath() != null) {
+            department.setDepartmentPath(command.departmentPath());
         }
-        if (command.getLowestLevelFlag() != null) {
-            department.setLowestLevelFlag(command.getLowestLevelFlag());
+        if (command.lowestLevelFlag() != null) {
+            department.setLowestLevelFlag(command.lowestLevelFlag());
         }
 
         departmentRepository.update(department);

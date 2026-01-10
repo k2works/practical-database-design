@@ -54,14 +54,14 @@ public class DepartmentForm {
      * @return 登録コマンド
      */
     public CreateDepartmentCommand toCreateCommand() {
-        return CreateDepartmentCommand.builder()
-                .departmentCode(this.departmentCode)
-                .departmentName(this.departmentName)
-                .departmentShortName(this.departmentShortName)
-                .organizationLevel(this.organizationLevel)
-                .departmentPath(this.departmentPath)
-                .lowestLevelFlag(this.lowestLevelFlag)
-                .build();
+        return new CreateDepartmentCommand(
+                this.departmentCode,
+                this.departmentName,
+                this.departmentShortName,
+                this.organizationLevel,
+                this.departmentPath,
+                this.lowestLevelFlag
+        );
     }
 
     /**
@@ -70,13 +70,13 @@ public class DepartmentForm {
      * @return 更新コマンド
      */
     public UpdateDepartmentCommand toUpdateCommand() {
-        return UpdateDepartmentCommand.builder()
-                .departmentName(this.departmentName)
-                .departmentShortName(this.departmentShortName)
-                .organizationLevel(this.organizationLevel)
-                .departmentPath(this.departmentPath)
-                .lowestLevelFlag(this.lowestLevelFlag)
-                .build();
+        return new UpdateDepartmentCommand(
+                this.departmentName,
+                this.departmentShortName,
+                this.organizationLevel,
+                this.departmentPath,
+                this.lowestLevelFlag
+        );
     }
 
     /**

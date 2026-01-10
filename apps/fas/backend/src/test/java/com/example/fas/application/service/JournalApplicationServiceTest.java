@@ -143,24 +143,23 @@ class JournalApplicationServiceTest {
         @DisplayName("仕訳を登録できる")
         void canCreateJournal() {
             // Given
-            CreateJournalCommand command = CreateJournalCommand.builder()
-                    .postingDate(LocalDate.of(2025, 1, 1))
-                    .details(List.of(
-                            JournalDetailCommand.builder()
-                                    .lineSummary("テスト")
-                                    .debitCreditDetails(List.of(
-                                            DebitCreditCommand.builder()
-                                                    .debitCreditType("借方")
-                                                    .accountCode("11110")
-                                                    .amount(new BigDecimal("10000"))
-                                                    .build(),
-                                            DebitCreditCommand.builder()
-                                                    .debitCreditType("貸方")
-                                                    .accountCode("21110")
-                                                    .amount(new BigDecimal("10000"))
-                                                    .build()))
-                                    .build()))
-                    .build();
+            CreateJournalCommand command = new CreateJournalCommand(
+                    LocalDate.of(2025, 1, 1),
+                    null, null, null, null, null, null, null,
+                    List.of(new JournalDetailCommand(
+                            "テスト",
+                            List.of(
+                                    new DebitCreditCommand(
+                                            "借方", "11110", null, null,
+                                            new BigDecimal("10000"),
+                                            null, null, null, null, null, null, null, null),
+                                    new DebitCreditCommand(
+                                            "貸方", "21110", null, null,
+                                            new BigDecimal("10000"),
+                                            null, null, null, null, null, null, null, null)
+                            )
+                    ))
+            );
 
             // When
             JournalResponse response = journalApplicationService.createJournal(command);
@@ -176,24 +175,23 @@ class JournalApplicationServiceTest {
         @DisplayName("貸借不一致の場合は例外をスローする")
         void throwsExceptionForUnbalancedJournal() {
             // Given
-            CreateJournalCommand command = CreateJournalCommand.builder()
-                    .postingDate(LocalDate.of(2025, 1, 1))
-                    .details(List.of(
-                            JournalDetailCommand.builder()
-                                    .lineSummary("テスト")
-                                    .debitCreditDetails(List.of(
-                                            DebitCreditCommand.builder()
-                                                    .debitCreditType("借方")
-                                                    .accountCode("11110")
-                                                    .amount(new BigDecimal("10000"))
-                                                    .build(),
-                                            DebitCreditCommand.builder()
-                                                    .debitCreditType("貸方")
-                                                    .accountCode("21110")
-                                                    .amount(new BigDecimal("5000"))
-                                                    .build()))
-                                    .build()))
-                    .build();
+            CreateJournalCommand command = new CreateJournalCommand(
+                    LocalDate.of(2025, 1, 1),
+                    null, null, null, null, null, null, null,
+                    List.of(new JournalDetailCommand(
+                            "テスト",
+                            List.of(
+                                    new DebitCreditCommand(
+                                            "借方", "11110", null, null,
+                                            new BigDecimal("10000"),
+                                            null, null, null, null, null, null, null, null),
+                                    new DebitCreditCommand(
+                                            "貸方", "21110", null, null,
+                                            new BigDecimal("5000"),
+                                            null, null, null, null, null, null, null, null)
+                            )
+                    ))
+            );
 
             // When & Then
             assertThatThrownBy(() -> journalApplicationService.createJournal(command))

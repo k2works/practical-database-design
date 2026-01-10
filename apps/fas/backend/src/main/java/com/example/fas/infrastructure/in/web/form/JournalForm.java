@@ -57,22 +57,23 @@ public class JournalForm {
         List<JournalDetailCommand> details = new ArrayList<>();
 
         for (JournalLineForm line : lines) {
-            details.add(JournalDetailCommand.builder()
-                .lineSummary(this.lineSummary)
-                .debitCreditDetails(List.of(line.toCommand()))
-                .build());
+            details.add(new JournalDetailCommand(
+                    this.lineSummary,
+                    List.of(line.toCommand())
+            ));
         }
 
-        return CreateJournalCommand.builder()
-            .postingDate(this.postingDate)
-            .entryDate(LocalDate.now())
-            .voucherType(this.voucherType)
-            .closingJournalFlag(this.closingJournalFlag)
-            .singleEntryFlag(this.singleEntryFlag)
-            .departmentCode(this.departmentCode)
-            .employeeCode(this.employeeCode)
-            .details(details)
-            .build();
+        return new CreateJournalCommand(
+                this.postingDate,
+                LocalDate.now(), // entryDate
+                this.voucherType,
+                this.closingJournalFlag,
+                this.singleEntryFlag,
+                null, // periodicPostingFlag
+                this.employeeCode,
+                this.departmentCode,
+                details
+        );
     }
 
     /**

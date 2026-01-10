@@ -69,17 +69,17 @@ public class AccountStructureApplicationService implements AccountStructureUseCa
     @Override
     @Transactional
     public AccountStructureResponse createAccountStructure(CreateAccountStructureCommand command) {
-        String accountPath = buildPath(command.getParentCode(), command.getAccountCode());
+        String accountPath = buildPath(command.parentCode(), command.accountCode());
 
         AccountStructure structure = AccountStructure.builder()
-                .accountCode(command.getAccountCode())
+                .accountCode(command.accountCode())
                 .accountPath(accountPath)
                 .updatedBy("system")
                 .build();
 
         accountStructureRepository.save(structure);
 
-        String accountName = getAccountName(command.getAccountCode());
+        String accountName = getAccountName(command.accountCode());
         return AccountStructureResponse.from(structure, accountName);
     }
 
@@ -90,7 +90,7 @@ public class AccountStructureApplicationService implements AccountStructureUseCa
         AccountStructure structure = accountStructureRepository.findByCode(accountCode)
                 .orElseThrow(() -> new AccountStructureNotFoundException(accountCode));
 
-        String newPath = buildPath(command.getParentCode(), accountCode);
+        String newPath = buildPath(command.parentCode(), accountCode);
         structure.setAccountPath(newPath);
         structure.setUpdatedBy("system");
 

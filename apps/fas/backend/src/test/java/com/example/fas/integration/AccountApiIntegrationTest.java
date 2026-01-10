@@ -112,10 +112,11 @@ class AccountApiIntegrationTest extends IntegrationTestBase {
                     .body(AccountResponse.class);
 
             // When: 勘定科目を更新
-            UpdateAccountCommand updateRequest = UpdateAccountCommand.builder()
-                    .accountName("更新後科目")
-                    .accountShortName("更新後")
-                    .build();
+            UpdateAccountCommand updateRequest = new UpdateAccountCommand(
+                    "更新後科目",
+                    "更新後",
+                    null, null, null, null, null, null, null, null
+            );
 
             AccountResponse updateResponse = getRestClient()
                     .put()
@@ -252,16 +253,17 @@ class AccountApiIntegrationTest extends IntegrationTestBase {
     private CreateAccountCommand createAccountCommand(
             String accountCode, String accountName, String bsPlType,
             String dcType, String elementType, String summaryType) {
-        return CreateAccountCommand.builder()
-                .accountCode(accountCode)
-                .accountName(accountName)
-                .accountShortName(accountName.length() > 10
-                        ? accountName.substring(0, 10) : accountName)
-                .bsPlType(bsPlType)
-                .dcType(dcType)
-                .elementType(elementType)
-                .summaryType(summaryType)
-                .build();
+        return new CreateAccountCommand(
+                accountCode,
+                accountName,
+                accountName.length() > 10 ? accountName.substring(0, 10) : accountName,
+                null, // accountNameKana
+                bsPlType,
+                dcType,
+                elementType,
+                summaryType,
+                null, null, null, null, null, null, null, null
+        );
     }
 
     /**

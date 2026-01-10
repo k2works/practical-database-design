@@ -1,22 +1,14 @@
 package com.example.fas.application.port.in.command;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
- * 部門登録コマンド DTO.
+ * 部門登録コマンド.
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CreateDepartmentCommand {
-    private String departmentCode;
-    private String departmentName;
-    private String departmentShortName;
-    private Integer organizationLevel;
-    private String departmentPath;
-    private Integer lowestLevelFlag;
+public record CreateDepartmentCommand(
+        String departmentCode,
+        String departmentName,
+        String departmentShortName,
+        Integer organizationLevel,
+        String departmentPath,
+        Integer lowestLevelFlag
+) {
 }

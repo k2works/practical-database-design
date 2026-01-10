@@ -269,26 +269,53 @@ class JournalApiIntegrationTest extends IntegrationTestBase {
     private CreateJournalCommand createJournalCommand(
             LocalDate postingDate, String debitAccountCode, String creditAccountCode,
             BigDecimal amount, String summary) {
-        return CreateJournalCommand.builder()
-                .postingDate(postingDate)
-                .details(List.of(
-                        JournalDetailCommand.builder()
-                                .lineSummary(summary)
-                                .debitCreditDetails(List.of(
-                                        DebitCreditCommand.builder()
-                                                .debitCreditType("借方")
-                                                .accountCode(debitAccountCode)
-                                                .amount(amount)
-                                                .build(),
-                                        DebitCreditCommand.builder()
-                                                .debitCreditType("貸方")
-                                                .accountCode(creditAccountCode)
-                                                .amount(amount)
-                                                .build()
-                                ))
-                                .build()
-                ))
-                .build();
+        return new CreateJournalCommand(
+                postingDate,
+                null, // entryDate
+                null, // voucherType
+                null, // closingJournalFlag
+                null, // singleEntryFlag
+                null, // periodicPostingFlag
+                null, // employeeCode
+                null, // departmentCode
+                List.of(
+                        new JournalDetailCommand(
+                                summary,
+                                List.of(
+                                        new DebitCreditCommand(
+                                                "借方",
+                                                debitAccountCode,
+                                                null, // subAccountCode
+                                                null, // departmentCode
+                                                amount,
+                                                null, // currencyCode
+                                                null, // exchangeRate
+                                                null, // baseCurrencyAmount
+                                                null, // taxType
+                                                null, // taxRate
+                                                null, // taxCalcType
+                                                null, // dueDate
+                                                null  // cashFlowFlag
+                                        ),
+                                        new DebitCreditCommand(
+                                                "貸方",
+                                                creditAccountCode,
+                                                null, // subAccountCode
+                                                null, // departmentCode
+                                                amount,
+                                                null, // currencyCode
+                                                null, // exchangeRate
+                                                null, // baseCurrencyAmount
+                                                null, // taxType
+                                                null, // taxRate
+                                                null, // taxCalcType
+                                                null, // dueDate
+                                                null  // cashFlowFlag
+                                        )
+                                )
+                        )
+                )
+        );
     }
 
     /**

@@ -135,15 +135,11 @@ class AccountApplicationServiceTest {
         @DisplayName("新規勘定科目を登録できる")
         void canCreateAccount() {
             // Given
-            CreateAccountCommand command = CreateAccountCommand.builder()
-                    .accountCode("11150")
-                    .accountName("手許現金")
-                    .accountShortName("手許現金")
-                    .bsPlType("BS")
-                    .dcType("借方")
-                    .elementType("資産")
-                    .summaryType("計上科目")
-                    .build();
+            CreateAccountCommand command = new CreateAccountCommand(
+                    "11150", "手許現金", "手許現金", null,
+                    "BS", "借方", "資産", "計上科目",
+                    null, null, null, null, null, null, null, null
+            );
             given(accountRepository.findByCode("11150")).willReturn(Optional.empty());
 
             // When
@@ -159,14 +155,11 @@ class AccountApplicationServiceTest {
         @DisplayName("既存の勘定科目コードで登録すると例外をスロー")
         void throwsExceptionForDuplicateCode() {
             // Given
-            CreateAccountCommand command = CreateAccountCommand.builder()
-                    .accountCode("11110")
-                    .accountName("テスト科目")
-                    .bsPlType("BS")
-                    .dcType("借方")
-                    .elementType("資産")
-                    .summaryType("計上科目")
-                    .build();
+            CreateAccountCommand command = new CreateAccountCommand(
+                    "11110", "テスト科目", null, null,
+                    "BS", "借方", "資産", "計上科目",
+                    null, null, null, null, null, null, null, null
+            );
             given(accountRepository.findByCode("11110")).willReturn(Optional.of(testAccount));
 
             // When & Then
@@ -184,9 +177,9 @@ class AccountApplicationServiceTest {
         @DisplayName("勘定科目を更新できる")
         void canUpdateAccount() {
             // Given
-            UpdateAccountCommand command = UpdateAccountCommand.builder()
-                    .accountName("現金(更新)")
-                    .build();
+            UpdateAccountCommand command = new UpdateAccountCommand(
+                    "現金(更新)", null, null, null, null, null, null, null, null, null
+            );
             given(accountRepository.findByCode("11110")).willReturn(Optional.of(testAccount));
 
             // When
@@ -201,9 +194,9 @@ class AccountApplicationServiceTest {
         @DisplayName("存在しない勘定科目の更新は例外をスロー")
         void throwsExceptionForNonExistent() {
             // Given
-            UpdateAccountCommand command = UpdateAccountCommand.builder()
-                    .accountName("テスト")
-                    .build();
+            UpdateAccountCommand command = new UpdateAccountCommand(
+                    "テスト", null, null, null, null, null, null, null, null, null
+            );
             given(accountRepository.findByCode("99999")).willReturn(Optional.empty());
 
             // When & Then

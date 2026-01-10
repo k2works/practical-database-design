@@ -43,11 +43,11 @@ public class TaxTransactionForm {
      * @return 登録コマンド
      */
     public CreateTaxTransactionCommand toCreateCommand() {
-        return CreateTaxTransactionCommand.builder()
-                .taxCode(this.taxCode)
-                .taxName(this.taxName)
-                .taxRate(this.taxRate)
-                .build();
+        return new CreateTaxTransactionCommand(
+                this.taxCode,
+                this.taxName,
+                this.taxRate
+        );
     }
 
     /**
@@ -56,10 +56,10 @@ public class TaxTransactionForm {
      * @return 更新コマンド
      */
     public UpdateTaxTransactionCommand toUpdateCommand() {
-        return UpdateTaxTransactionCommand.builder()
-                .taxName(this.taxName)
-                .taxRate(this.taxRate)
-                .build();
+        return new UpdateTaxTransactionCommand(
+                this.taxName,
+                this.taxRate
+        );
     }
 
     /**

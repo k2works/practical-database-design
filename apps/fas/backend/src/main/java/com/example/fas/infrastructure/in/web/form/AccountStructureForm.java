@@ -32,10 +32,10 @@ public class AccountStructureForm {
      * @return 登録コマンド
      */
     public CreateAccountStructureCommand toCreateCommand() {
-        return CreateAccountStructureCommand.builder()
-                .accountCode(accountCode)
-                .parentCode(parentCode)
-                .build();
+        return new CreateAccountStructureCommand(
+                accountCode,
+                parentCode
+        );
     }
 
     /**
@@ -44,9 +44,9 @@ public class AccountStructureForm {
      * @return 更新コマンド
      */
     public UpdateAccountStructureCommand toUpdateCommand() {
-        return UpdateAccountStructureCommand.builder()
-                .parentCode(parentCode)
-                .build();
+        return new UpdateAccountStructureCommand(
+                parentCode
+        );
     }
 
     /**

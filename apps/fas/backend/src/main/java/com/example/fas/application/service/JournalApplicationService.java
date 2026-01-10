@@ -273,26 +273,39 @@ public class JournalApplicationService implements JournalUseCase {
 
         List<DebitCreditCommand> dcCommands = new ArrayList<>();
         for (CsvLineRecord record : records) {
-            dcCommands.add(DebitCreditCommand.builder()
-                    .debitCreditType(record.debitCreditType())
-                    .accountCode(record.accountCode())
-                    .subAccountCode(record.subAccountCode().isEmpty() ? null : record.subAccountCode())
-                    .departmentCode(record.departmentCode().isEmpty() ? null : record.departmentCode())
-                    .amount(record.amount())
-                    .build());
+            dcCommands.add(new DebitCreditCommand(
+                    record.debitCreditType(),
+                    record.accountCode(),
+                    record.subAccountCode().isEmpty() ? null : record.subAccountCode(),
+                    record.departmentCode().isEmpty() ? null : record.departmentCode(),
+                    record.amount(),
+                    null, // currencyCode
+                    null, // exchangeRate
+                    null, // baseCurrencyAmount
+                    null, // taxType
+                    null, // taxRate
+                    null, // taxCalcType
+                    null, // dueDate
+                    null  // cashFlowFlag
+            ));
         }
 
-        JournalDetailCommand detailCommand = JournalDetailCommand.builder()
-                .lineSummary(first.lineSummary())
-                .debitCreditDetails(dcCommands)
-                .build();
+        JournalDetailCommand detailCommand = new JournalDetailCommand(
+                first.lineSummary(),
+                dcCommands
+        );
 
-        return CreateJournalCommand.builder()
-                .postingDate(first.postingDate())
-                .entryDate(LocalDate.now())
-                .voucherType("NORMAL")
-                .details(List.of(detailCommand))
-                .build();
+        return new CreateJournalCommand(
+                first.postingDate(),
+                LocalDate.now(), // entryDate
+                "NORMAL", // voucherType
+                null, // closingJournalFlag
+                null, // singleEntryFlag
+                null, // periodicPostingFlag
+                null, // employeeCode
+                null, // departmentCode
+                List.of(detailCommand)
+        );
     }
 
     private LocalDate parseDate(String dateStr, int lineNumber) {
@@ -332,17 +345,17 @@ public class JournalApplicationService implements JournalUseCase {
         List<JournalDetail> details = new ArrayList<>();
         int lineNumber = 1;
 
-        for (JournalDetailCommand detailCmd : command.getDetails()) {
+        for (JournalDetailCommand detailCmd : command.details()) {
             List<JournalDebitCreditDetail> dcDetails = new ArrayList<>();
 
-            for (DebitCreditCommand dcCmd : detailCmd.getDebitCreditDetails()) {
+            for (DebitCreditCommand dcCmd : detailCmd.debitCreditDetails()) {
                 dcDetails.add(buildDebitCreditDetail(voucherNumber, lineNumber, dcCmd, now));
             }
 
             details.add(JournalDetail.builder()
                     .journalVoucherNumber(voucherNumber)
                     .lineNumber(lineNumber)
-                    .lineSummary(detailCmd.getLineSummary())
+                    .lineSummary(detailCmd.lineSummary())
                     .debitCreditDetails(dcDetails)
                     .createdAt(now)
                     .updatedAt(now)
@@ -350,22 +363,22 @@ public class JournalApplicationService implements JournalUseCase {
             lineNumber++;
         }
 
-        JournalVoucherType voucherType = parseVoucherType(command.getVoucherType());
+        JournalVoucherType voucherType = parseVoucherType(command.voucherType());
         if (voucherType == null) {
             voucherType = JournalVoucherType.NORMAL;
         }
 
         return Journal.builder()
                 .journalVoucherNumber(voucherNumber)
-                .postingDate(command.getPostingDate())
-                .entryDate(command.getEntryDate() != null
-                        ? command.getEntryDate() : LocalDate.now())
+                .postingDate(command.postingDate())
+                .entryDate(command.entryDate() != null
+                        ? command.entryDate() : LocalDate.now())
                 .voucherType(voucherType)
-                .closingJournalFlag(command.getClosingJournalFlag())
-                .singleEntryFlag(command.getSingleEntryFlag())
-                .periodicPostingFlag(command.getPeriodicPostingFlag())
-                .employeeCode(command.getEmployeeCode())
-                .departmentCode(command.getDepartmentCode())
+                .closingJournalFlag(command.closingJournalFlag())
+                .singleEntryFlag(command.singleEntryFlag())
+                .periodicPostingFlag(command.periodicPostingFlag())
+                .employeeCode(command.employeeCode())
+                .departmentCode(command.departmentCode())
                 .redSlipFlag(false)
                 .details(details)
                 .createdAt(now)
@@ -378,19 +391,19 @@ public class JournalApplicationService implements JournalUseCase {
         return JournalDebitCreditDetail.builder()
                 .journalVoucherNumber(voucherNumber)
                 .lineNumber(lineNumber)
-                .debitCreditType(DebitCreditType.fromDisplayName(cmd.getDebitCreditType()))
-                .accountCode(cmd.getAccountCode())
-                .subAccountCode(cmd.getSubAccountCode())
-                .departmentCode(cmd.getDepartmentCode())
-                .amount(cmd.getAmount())
-                .currencyCode(cmd.getCurrencyCode())
-                .exchangeRate(cmd.getExchangeRate())
-                .baseCurrencyAmount(cmd.getBaseCurrencyAmount())
-                .taxType(parseTaxType(cmd.getTaxType()))
-                .taxRate(cmd.getTaxRate())
-                .taxCalcType(parseTaxCalcType(cmd.getTaxCalcType()))
-                .dueDate(cmd.getDueDate())
-                .cashFlowFlag(cmd.getCashFlowFlag())
+                .debitCreditType(DebitCreditType.fromDisplayName(cmd.debitCreditType()))
+                .accountCode(cmd.accountCode())
+                .subAccountCode(cmd.subAccountCode())
+                .departmentCode(cmd.departmentCode())
+                .amount(cmd.amount())
+                .currencyCode(cmd.currencyCode())
+                .exchangeRate(cmd.exchangeRate())
+                .baseCurrencyAmount(cmd.baseCurrencyAmount())
+                .taxType(parseTaxType(cmd.taxType()))
+                .taxRate(cmd.taxRate())
+                .taxCalcType(parseTaxCalcType(cmd.taxCalcType()))
+                .dueDate(cmd.dueDate())
+                .cashFlowFlag(cmd.cashFlowFlag())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

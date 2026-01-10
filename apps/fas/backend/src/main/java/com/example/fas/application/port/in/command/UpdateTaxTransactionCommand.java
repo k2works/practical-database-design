@@ -1,19 +1,12 @@
 package com.example.fas.application.port.in.command;
 
 import java.math.BigDecimal;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
- * 課税取引更新コマンド DTO.
+ * 課税取引更新コマンド.
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class UpdateTaxTransactionCommand {
-    private String taxName;
-    private BigDecimal taxRate;
+public record UpdateTaxTransactionCommand(
+        String taxName,
+        BigDecimal taxRate
+) {
 }

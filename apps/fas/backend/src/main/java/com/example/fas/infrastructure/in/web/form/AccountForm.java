@@ -61,16 +61,24 @@ public class AccountForm {
      * @return 登録コマンド
      */
     public CreateAccountCommand toCreateCommand() {
-        return CreateAccountCommand.builder()
-            .accountCode(this.accountCode)
-            .accountName(this.accountName)
-            .accountShortName(this.accountShortName)
-            .accountNameKana(this.accountNameKana)
-            .bsPlType(this.bsPlType)
-            .dcType(this.dcType)
-            .elementType(this.elementType)
-            .summaryType(this.summaryType)
-            .build();
+        return new CreateAccountCommand(
+                this.accountCode,
+                this.accountName,
+                this.accountShortName,
+                this.accountNameKana,
+                this.bsPlType,
+                this.dcType,
+                this.elementType,
+                this.summaryType,
+                null, // parentAccountCode
+                null, // managementAccountingType
+                null, // expenseType
+                null, // ledgerOutputType
+                null, // subAccountType
+                null, // consumptionTaxType
+                null, // taxTransactionCode
+                null  // dueDateManagementType
+        );
     }
 
     /**
@@ -79,11 +87,18 @@ public class AccountForm {
      * @return 更新コマンド
      */
     public UpdateAccountCommand toUpdateCommand() {
-        return UpdateAccountCommand.builder()
-            .accountName(this.accountName)
-            .accountShortName(this.accountShortName)
-            .accountNameKana(this.accountNameKana)
-            .build();
+        return new UpdateAccountCommand(
+                this.accountName,
+                this.accountShortName,
+                this.accountNameKana,
+                null, // managementAccountingType
+                null, // expenseType
+                null, // ledgerOutputType
+                null, // subAccountType
+                null, // consumptionTaxType
+                null, // taxTransactionCode
+                null  // dueDateManagementType
+        );
     }
 
     /**

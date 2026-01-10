@@ -70,27 +70,27 @@ public class AccountApplicationService implements AccountUseCase {
     @Override
     @Transactional
     public AccountResponse createAccount(CreateAccountCommand command) {
-        if (accountRepository.findByCode(command.getAccountCode()).isPresent()) {
-            throw new AccountAlreadyExistsException(command.getAccountCode());
+        if (accountRepository.findByCode(command.accountCode()).isPresent()) {
+            throw new AccountAlreadyExistsException(command.accountCode());
         }
 
         Account account = Account.builder()
-                .accountCode(command.getAccountCode())
-                .accountName(command.getAccountName())
-                .accountShortName(command.getAccountShortName())
-                .accountNameKana(command.getAccountNameKana())
-                .bsplType(BSPLType.fromDisplayName(command.getBsPlType()))
-                .debitCreditType(DebitCreditType.fromDisplayName(command.getDcType()))
+                .accountCode(command.accountCode())
+                .accountName(command.accountName())
+                .accountShortName(command.accountShortName())
+                .accountNameKana(command.accountNameKana())
+                .bsplType(BSPLType.fromDisplayName(command.bsPlType()))
+                .debitCreditType(DebitCreditType.fromDisplayName(command.dcType()))
                 .transactionElementType(
-                        TransactionElementType.fromDisplayName(command.getElementType()))
-                .aggregationType(AggregationType.fromDisplayName(command.getSummaryType()))
-                .managementAccountingType(command.getManagementAccountingType())
-                .expenseType(command.getExpenseType())
-                .ledgerOutputType(command.getLedgerOutputType())
-                .subAccountType(command.getSubAccountType())
-                .consumptionTaxType(command.getConsumptionTaxType())
-                .taxTransactionCode(command.getTaxTransactionCode())
-                .dueDateManagementType(command.getDueDateManagementType())
+                        TransactionElementType.fromDisplayName(command.elementType()))
+                .aggregationType(AggregationType.fromDisplayName(command.summaryType()))
+                .managementAccountingType(command.managementAccountingType())
+                .expenseType(command.expenseType())
+                .ledgerOutputType(command.ledgerOutputType())
+                .subAccountType(command.subAccountType())
+                .consumptionTaxType(command.consumptionTaxType())
+                .taxTransactionCode(command.taxTransactionCode())
+                .dueDateManagementType(command.dueDateManagementType())
                 .build();
 
         accountRepository.save(account);
@@ -113,38 +113,38 @@ public class AccountApplicationService implements AccountUseCase {
     }
 
     private void applyBasicUpdates(Account account, UpdateAccountCommand command) {
-        if (command.getAccountName() != null) {
-            account.setAccountName(command.getAccountName());
+        if (command.accountName() != null) {
+            account.setAccountName(command.accountName());
         }
-        if (command.getAccountShortName() != null) {
-            account.setAccountShortName(command.getAccountShortName());
+        if (command.accountShortName() != null) {
+            account.setAccountShortName(command.accountShortName());
         }
-        if (command.getAccountNameKana() != null) {
-            account.setAccountNameKana(command.getAccountNameKana());
+        if (command.accountNameKana() != null) {
+            account.setAccountNameKana(command.accountNameKana());
         }
-        if (command.getManagementAccountingType() != null) {
-            account.setManagementAccountingType(command.getManagementAccountingType());
+        if (command.managementAccountingType() != null) {
+            account.setManagementAccountingType(command.managementAccountingType());
         }
-        if (command.getExpenseType() != null) {
-            account.setExpenseType(command.getExpenseType());
+        if (command.expenseType() != null) {
+            account.setExpenseType(command.expenseType());
         }
     }
 
     private void applyAdditionalUpdates(Account account, UpdateAccountCommand command) {
-        if (command.getLedgerOutputType() != null) {
-            account.setLedgerOutputType(command.getLedgerOutputType());
+        if (command.ledgerOutputType() != null) {
+            account.setLedgerOutputType(command.ledgerOutputType());
         }
-        if (command.getSubAccountType() != null) {
-            account.setSubAccountType(command.getSubAccountType());
+        if (command.subAccountType() != null) {
+            account.setSubAccountType(command.subAccountType());
         }
-        if (command.getConsumptionTaxType() != null) {
-            account.setConsumptionTaxType(command.getConsumptionTaxType());
+        if (command.consumptionTaxType() != null) {
+            account.setConsumptionTaxType(command.consumptionTaxType());
         }
-        if (command.getTaxTransactionCode() != null) {
-            account.setTaxTransactionCode(command.getTaxTransactionCode());
+        if (command.taxTransactionCode() != null) {
+            account.setTaxTransactionCode(command.taxTransactionCode());
         }
-        if (command.getDueDateManagementType() != null) {
-            account.setDueDateManagementType(command.getDueDateManagementType());
+        if (command.dueDateManagementType() != null) {
+            account.setDueDateManagementType(command.dueDateManagementType());
         }
     }
 

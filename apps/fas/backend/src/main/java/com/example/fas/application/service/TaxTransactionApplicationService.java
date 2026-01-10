@@ -50,14 +50,14 @@ public class TaxTransactionApplicationService implements TaxTransactionUseCase {
     @Override
     @Transactional
     public TaxTransactionResponse createTaxTransaction(CreateTaxTransactionCommand command) {
-        if (taxTransactionRepository.findByCode(command.getTaxCode()).isPresent()) {
-            throw new TaxTransactionAlreadyExistsException(command.getTaxCode());
+        if (taxTransactionRepository.findByCode(command.taxCode()).isPresent()) {
+            throw new TaxTransactionAlreadyExistsException(command.taxCode());
         }
 
         TaxTransaction taxTransaction = TaxTransaction.builder()
-                .taxCode(command.getTaxCode())
-                .taxName(command.getTaxName())
-                .taxRate(command.getTaxRate())
+                .taxCode(command.taxCode())
+                .taxName(command.taxName())
+                .taxRate(command.taxRate())
                 .build();
 
         taxTransactionRepository.save(taxTransaction);
@@ -71,11 +71,11 @@ public class TaxTransactionApplicationService implements TaxTransactionUseCase {
         TaxTransaction taxTransaction = taxTransactionRepository.findByCode(taxCode)
                 .orElseThrow(() -> new TaxTransactionNotFoundException(taxCode));
 
-        if (command.getTaxName() != null) {
-            taxTransaction.setTaxName(command.getTaxName());
+        if (command.taxName() != null) {
+            taxTransaction.setTaxName(command.taxName());
         }
-        if (command.getTaxRate() != null) {
-            taxTransaction.setTaxRate(command.getTaxRate());
+        if (command.taxRate() != null) {
+            taxTransaction.setTaxRate(command.taxRate());
         }
 
         taxTransactionRepository.update(taxTransaction);

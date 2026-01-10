@@ -57,17 +57,17 @@ public class JournalImportHelper {
         List<JournalDetail> details = new ArrayList<>();
         int lineNumber = 1;
 
-        for (JournalDetailCommand detailCmd : command.getDetails()) {
+        for (JournalDetailCommand detailCmd : command.details()) {
             List<JournalDebitCreditDetail> dcDetails = new ArrayList<>();
 
-            for (DebitCreditCommand dcCmd : detailCmd.getDebitCreditDetails()) {
+            for (DebitCreditCommand dcCmd : detailCmd.debitCreditDetails()) {
                 dcDetails.add(buildDebitCreditDetail(voucherNumber, lineNumber, dcCmd, now));
             }
 
             details.add(JournalDetail.builder()
                     .journalVoucherNumber(voucherNumber)
                     .lineNumber(lineNumber)
-                    .lineSummary(detailCmd.getLineSummary())
+                    .lineSummary(detailCmd.lineSummary())
                     .debitCreditDetails(dcDetails)
                     .createdAt(now)
                     .updatedAt(now)
@@ -75,22 +75,22 @@ public class JournalImportHelper {
             lineNumber++;
         }
 
-        JournalVoucherType voucherType = parseVoucherType(command.getVoucherType());
+        JournalVoucherType voucherType = parseVoucherType(command.voucherType());
         if (voucherType == null) {
             voucherType = JournalVoucherType.NORMAL;
         }
 
         return Journal.builder()
                 .journalVoucherNumber(voucherNumber)
-                .postingDate(command.getPostingDate())
-                .entryDate(command.getEntryDate() != null
-                        ? command.getEntryDate() : LocalDate.now())
+                .postingDate(command.postingDate())
+                .entryDate(command.entryDate() != null
+                        ? command.entryDate() : LocalDate.now())
                 .voucherType(voucherType)
-                .closingJournalFlag(command.getClosingJournalFlag())
-                .singleEntryFlag(command.getSingleEntryFlag())
-                .periodicPostingFlag(command.getPeriodicPostingFlag())
-                .employeeCode(command.getEmployeeCode())
-                .departmentCode(command.getDepartmentCode())
+                .closingJournalFlag(command.closingJournalFlag())
+                .singleEntryFlag(command.singleEntryFlag())
+                .periodicPostingFlag(command.periodicPostingFlag())
+                .employeeCode(command.employeeCode())
+                .departmentCode(command.departmentCode())
                 .redSlipFlag(false)
                 .details(details)
                 .createdAt(now)
@@ -103,19 +103,19 @@ public class JournalImportHelper {
         return JournalDebitCreditDetail.builder()
                 .journalVoucherNumber(voucherNumber)
                 .lineNumber(lineNumber)
-                .debitCreditType(DebitCreditType.fromDisplayName(cmd.getDebitCreditType()))
-                .accountCode(cmd.getAccountCode())
-                .subAccountCode(cmd.getSubAccountCode())
-                .departmentCode(cmd.getDepartmentCode())
-                .amount(cmd.getAmount())
-                .currencyCode(cmd.getCurrencyCode())
-                .exchangeRate(cmd.getExchangeRate())
-                .baseCurrencyAmount(cmd.getBaseCurrencyAmount())
-                .taxType(parseTaxType(cmd.getTaxType()))
-                .taxRate(cmd.getTaxRate())
-                .taxCalcType(parseTaxCalcType(cmd.getTaxCalcType()))
-                .dueDate(cmd.getDueDate())
-                .cashFlowFlag(cmd.getCashFlowFlag())
+                .debitCreditType(DebitCreditType.fromDisplayName(cmd.debitCreditType()))
+                .accountCode(cmd.accountCode())
+                .subAccountCode(cmd.subAccountCode())
+                .departmentCode(cmd.departmentCode())
+                .amount(cmd.amount())
+                .currencyCode(cmd.currencyCode())
+                .exchangeRate(cmd.exchangeRate())
+                .baseCurrencyAmount(cmd.baseCurrencyAmount())
+                .taxType(parseTaxType(cmd.taxType()))
+                .taxRate(cmd.taxRate())
+                .taxCalcType(parseTaxCalcType(cmd.taxCalcType()))
+                .dueDate(cmd.dueDate())
+                .cashFlowFlag(cmd.cashFlowFlag())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
