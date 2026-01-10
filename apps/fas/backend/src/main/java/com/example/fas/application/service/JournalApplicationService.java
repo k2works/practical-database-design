@@ -4,8 +4,14 @@ import com.example.fas.application.port.in.JournalUseCase;
 import com.example.fas.application.port.in.dto.CreateJournalCommand;
 import com.example.fas.application.port.in.dto.CreateJournalCommand.DebitCreditCommand;
 import com.example.fas.application.port.in.dto.CreateJournalCommand.JournalDetailCommand;
+import com.example.fas.application.port.in.dto.JournalImportResult;
+import com.example.fas.application.port.in.dto.JournalImportResult.ImportError;
 import com.example.fas.application.port.in.dto.JournalResponse;
 import com.example.fas.application.port.out.JournalRepository;
+import com.example.fas.domain.model.common.PageResult;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import com.example.fas.domain.exception.JournalAlreadyCancelledException;
 import com.example.fas.domain.exception.JournalBalanceException;
 import com.example.fas.domain.exception.JournalNotFoundException;
@@ -16,8 +22,12 @@ import com.example.fas.domain.model.journal.JournalDetail;
 import com.example.fas.domain.model.journal.JournalVoucherType;
 import com.example.fas.domain.model.journal.TaxCalculationType;
 import com.example.fas.domain.model.journal.TaxType;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -32,10 +42,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+@SuppressWarnings({
+    "PMD.AvoidInstantiatingObjectsInLoops",
+    "PMD.ExcessiveImports",
+    "PMD.CouplingBetweenObjects",
+    "PMD.GodClass"
+})
 public class JournalApplicationService implements JournalUseCase {
 
+    private static final int MIN_CSV_COLUMNS = 6;
+
     private final JournalRepository journalRepository;
+    private final JournalImportHelper journalImportHelper;
 
     @Override
     public JournalResponse getJournal(String voucherNumber) {
@@ -95,6 +113,216 @@ public class JournalApplicationService implements JournalUseCase {
         journalRepository.findByVoucherNumber(voucherNumber)
                 .orElseThrow(() -> new JournalNotFoundException(voucherNumber));
         journalRepository.delete(voucherNumber);
+    }
+
+    @Override
+    public PageResult<JournalResponse> getJournals(int page, int size,
+            LocalDate fromDate, LocalDate toDate, String keyword) {
+        PageResult<Journal> pageResult = journalRepository.findWithPagination(
+                page, size, fromDate, toDate, keyword);
+        return new PageResult<>(
+                pageResult.getContent().stream()
+                        .map(JournalResponse::from)
+                        .toList(),
+                pageResult.getPage(),
+                pageResult.getSize(),
+                pageResult.getTotalElements());
+    }
+
+    @Override
+    @SuppressWarnings({
+        "PMD.CognitiveComplexity",
+        "PMD.CyclomaticComplexity",
+        "PMD.AssignmentInOperand",
+        "PMD.AvoidCatchingGenericException"
+    })
+    public JournalImportResult importJournalsFromCsv(InputStream inputStream,
+            boolean skipHeaderLine, boolean skipEmptyLines) {
+        List<ImportError> errors = new ArrayList<>();
+        int totalCount = 0;
+        int successCount = 0;
+        int skippedCount = 0;
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+
+            // まず全行を読み込んでパース
+            List<CsvLineRecord> records = new ArrayList<>();
+            String line;
+            int lineNumber = 0;
+
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+
+                // ヘッダー行スキップ
+                if (skipHeaderLine && lineNumber == 1) {
+                    continue;
+                }
+
+                // 空行スキップ
+                if (skipEmptyLines && line.isBlank()) {
+                    skippedCount++;
+                    continue;
+                }
+
+                try {
+                    CsvLineRecord record = parseCsvLineToRecord(line, lineNumber);
+                    records.add(record);
+                } catch (Exception e) {
+                    errors.add(ImportError.builder()
+                            .lineNumber(lineNumber)
+                            .message(e.getMessage())
+                            .lineContent(line.length() > 100 ? line.substring(0, 100) + "..." : line)
+                            .build());
+                }
+            }
+
+            // 起票日＋摘要でグループ化
+            java.util.Map<String, List<CsvLineRecord>> grouped = records.stream()
+                    .collect(java.util.stream.Collectors.groupingBy(
+                            r -> r.postingDate().toString() + "|" + r.lineSummary(),
+                            java.util.LinkedHashMap::new,
+                            java.util.stream.Collectors.toList()));
+
+            totalCount = grouped.size();
+
+            // グループごとに仕訳を作成（各仕訳は独立したトランザクション）
+            for (var entry : grouped.entrySet()) {
+                List<CsvLineRecord> groupRecords = entry.getValue();
+                try {
+                    CreateJournalCommand command = buildJournalCommandFromRecords(groupRecords);
+                    journalImportHelper.createJournalInNewTransaction(command);
+                    successCount++;
+                } catch (Exception e) {
+                    int firstLineNumber = groupRecords.get(0).lineNumber();
+                    errors.add(ImportError.builder()
+                            .lineNumber(firstLineNumber)
+                            .message(e.getMessage())
+                            .lineContent(groupRecords.stream()
+                                    .map(r -> "行" + r.lineNumber())
+                                    .collect(java.util.stream.Collectors.joining(", ")))
+                            .build());
+                }
+            }
+        } catch (java.io.IOException e) {
+            errors.add(ImportError.builder()
+                    .lineNumber(0)
+                    .message("ファイル読み込みエラー: " + e.getMessage())
+                    .build());
+        }
+
+        return JournalImportResult.builder()
+                .totalCount(totalCount)
+                .successCount(successCount)
+                .skippedCount(skippedCount)
+                .errorCount(errors.size())
+                .errors(errors)
+                .build();
+    }
+
+    /**
+     * CSV 行をパースしてレコードを生成.
+     */
+    private record CsvLineRecord(
+            int lineNumber,
+            LocalDate postingDate,
+            String debitCreditType,
+            String accountCode,
+            String subAccountCode,
+            String departmentCode,
+            BigDecimal amount,
+            String lineSummary
+    ) { }
+
+    /**
+     * CSV 行をパースしてレコードを生成.
+     * CSV フォーマット: 起票日,貸借区分,勘定科目コード,補助科目コード,部門コード,金額,摘要
+     */
+    @SuppressWarnings("PMD.PrematureDeclaration")
+    private CsvLineRecord parseCsvLineToRecord(String line, int lineNumber) {
+        String[] columns = line.split(",", -1);
+        if (columns.length < MIN_CSV_COLUMNS) {
+            throw new IllegalArgumentException(
+                    "列数が不足しています（必要: 6列以上、実際: " + columns.length + "列）");
+        }
+
+        LocalDate postingDate = parseDate(columns[0].trim(), lineNumber);
+        String debitCreditType = columns[1].trim();
+        String accountCode = columns[2].trim();
+        String subAccountCode = columns[3].trim();
+        String departmentCode = columns[4].trim();
+        BigDecimal amount = parseAmount(columns[5].trim(), lineNumber);
+        String lineSummary = columns.length > MIN_CSV_COLUMNS ? columns[6].trim() : "";
+
+        if (accountCode.isEmpty()) {
+            throw new IllegalArgumentException("勘定科目コードは必須です");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("金額は正の数で指定してください");
+        }
+
+        return new CsvLineRecord(lineNumber, postingDate, debitCreditType,
+                accountCode, subAccountCode, departmentCode, amount, lineSummary);
+    }
+
+    /**
+     * グループ化されたレコードから仕訳登録コマンドを生成.
+     */
+    private CreateJournalCommand buildJournalCommandFromRecords(List<CsvLineRecord> records) {
+        CsvLineRecord first = records.get(0);
+
+        List<DebitCreditCommand> dcCommands = new ArrayList<>();
+        for (CsvLineRecord record : records) {
+            dcCommands.add(DebitCreditCommand.builder()
+                    .debitCreditType(record.debitCreditType())
+                    .accountCode(record.accountCode())
+                    .subAccountCode(record.subAccountCode().isEmpty() ? null : record.subAccountCode())
+                    .departmentCode(record.departmentCode().isEmpty() ? null : record.departmentCode())
+                    .amount(record.amount())
+                    .build());
+        }
+
+        JournalDetailCommand detailCommand = JournalDetailCommand.builder()
+                .lineSummary(first.lineSummary())
+                .debitCreditDetails(dcCommands)
+                .build();
+
+        return CreateJournalCommand.builder()
+                .postingDate(first.postingDate())
+                .entryDate(LocalDate.now())
+                .voucherType("NORMAL")
+                .details(List.of(detailCommand))
+                .build();
+    }
+
+    private LocalDate parseDate(String dateStr, int lineNumber) {
+        if (dateStr.isEmpty()) {
+            throw new IllegalArgumentException("起票日は必須です");
+        }
+        try {
+            // yyyy/MM/dd または yyyy-MM-dd 形式をサポート
+            if (dateStr.contains("/")) {
+                return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            } else {
+                return LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+            }
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException(
+                    "日付形式が不正です（行 " + lineNumber + "）: " + dateStr, e);
+        }
+    }
+
+    private BigDecimal parseAmount(String amountStr, int lineNumber) {
+        if (amountStr.isEmpty()) {
+            return null;
+        }
+        try {
+            // カンマ区切りを除去
+            return new BigDecimal(amountStr.replace(",", ""));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "金額形式が不正です（行 " + lineNumber + "）: " + amountStr, e);
+        }
     }
 
     private Journal buildJournalFromCommand(CreateJournalCommand command) {
