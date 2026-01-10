@@ -121,11 +121,11 @@
     <select id="getTrialBalance" resultMap="trialBalanceLineResultMap">
         SELECT
             m."決算期" AS fiscalYear,
-            m."月度" AS month,
+            m."月度" AS "month",
             m."勘定科目コード" AS accountCode,
             a."勘定科目名" AS accountName,
-            a."BSPL区分"::TEXT AS bsplType,
-            a."貸借区分"::TEXT AS debitCreditType,
+            CAST(a."BSPL区分" AS VARCHAR) AS bsplType,
+            CAST(a."貸借区分" AS VARCHAR) AS debitCreditType,
             SUM(m."月初残高") AS openingBalance,
             SUM(m."借方金額") AS debitTotal,
             SUM(m."貸方金額") AS creditTotal,
@@ -143,11 +143,11 @@
     <select id="getTrialBalanceByBSPL" resultMap="trialBalanceLineResultMap">
         SELECT
             m."決算期" AS fiscalYear,
-            m."月度" AS month,
+            m."月度" AS "month",
             m."勘定科目コード" AS accountCode,
             a."勘定科目名" AS accountName,
-            a."BSPL区分"::TEXT AS bsplType,
-            a."貸借区分"::TEXT AS debitCreditType,
+            CAST(a."BSPL区分" AS VARCHAR) AS bsplType,
+            CAST(a."貸借区分" AS VARCHAR) AS debitCreditType,
             SUM(m."月初残高") AS openingBalance,
             SUM(m."借方金額") AS debitTotal,
             SUM(m."貸方金額") AS creditTotal,
@@ -156,7 +156,7 @@
         JOIN "勘定科目マスタ" a ON m."勘定科目コード" = a."勘定科目コード"
         WHERE m."決算期" = #{fiscalYear}
           AND m."月度" = #{month}
-          AND a."BSPL区分"::TEXT = #{bsplType}
+          AND CAST(a."BSPL区分" AS VARCHAR) = #{bsplType}
         GROUP BY m."決算期", m."月度", m."勘定科目コード",
                  a."勘定科目名", a."BSPL区分", a."貸借区分"
         ORDER BY m."勘定科目コード"
@@ -281,11 +281,11 @@
     <select id="findWithPagination" resultMap="trialBalanceLineResultMap">
         SELECT
             m."決算期" AS fiscalYear,
-            m."月度" AS month,
+            m."月度" AS "month",
             m."勘定科目コード" AS accountCode,
             a."勘定科目名" AS accountName,
-            a."BSPL区分"::TEXT AS bsplType,
-            a."貸借区分"::TEXT AS debitCreditType,
+            CAST(a."BSPL区分" AS VARCHAR) AS bsplType,
+            CAST(a."貸借区分" AS VARCHAR) AS debitCreditType,
             SUM(m."月初残高") AS openingBalance,
             SUM(m."借方金額") AS debitTotal,
             SUM(m."貸方金額") AS creditTotal,
