@@ -31,6 +31,14 @@ public interface SalesOrderRepository {
 
     List<SalesOrder> findByRequestedDeliveryDateBetween(LocalDate from, LocalDate to);
 
+    /**
+     * 指定プレフィックスで始まる受注番号の最大値を取得.
+     *
+     * @param prefix 受注番号プレフィックス（例: ORD-20260110-）
+     * @return 最大受注番号（存在しない場合は empty）
+     */
+    Optional<String> findMaxOrderNumberByPrefix(String prefix);
+
     List<SalesOrder> findAll();
 
     PageResult<SalesOrder> findWithPagination(int page, int size, String keyword);
