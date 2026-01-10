@@ -54,6 +54,6 @@ public class HomeController {
         long monthlyJournalCount = journalUseCase.countJournalsByDateRange(firstDayOfMonth, today);
         model.addAttribute("monthlyJournalCount", monthlyJournalCount);
 
-        return "home";
+        return "index";
     }
 }

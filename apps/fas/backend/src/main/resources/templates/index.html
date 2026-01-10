@@ -58,17 +58,17 @@
         </div>
 
         <!-- サマリー情報 -->
-        <div class="row">
+        <div class="row mb-4">
             <!-- 今月の仕訳件数 -->
             <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-header">
+                <div class="card h-100 border-primary">
+                    <div class="card-header bg-primary text-white">
                         <h6 class="mb-0">今月の仕訳</h6>
                     </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h2 class="mb-0" th:text="${monthlyJournalCount}">0</h2>
+                                <h2 class="mb-0 text-primary" th:text="${monthlyJournalCount}">0</h2>
                                 <small class="text-muted">件</small>
                             </div>
                             <div class="text-end">
@@ -81,18 +81,18 @@
 
             <!-- 勘定科目数 -->
             <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-header">
+                <div class="card h-100 border-success">
+                    <div class="card-header bg-success text-white">
                         <h6 class="mb-0">勘定科目数</h6>
                     </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h2 class="mb-0" th:text="${accountCount}">0</h2>
+                                <h2 class="mb-0 text-success" th:text="${accountCount}">0</h2>
                                 <small class="text-muted">科目</small>
                             </div>
                             <div class="text-end">
-                                <a th:href="@{/accounts}" class="btn btn-outline-primary btn-sm">詳細</a>
+                                <a th:href="@{/accounts}" class="btn btn-outline-success btn-sm">詳細</a>
                             </div>
                         </div>
                     </div>
@@ -101,18 +101,18 @@
 
             <!-- 部門数 -->
             <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-header">
+                <div class="card h-100 border-info">
+                    <div class="card-header bg-info text-white">
                         <h6 class="mb-0">部門数</h6>
                     </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h2 class="mb-0" th:text="${departmentCount}">0</h2>
+                                <h2 class="mb-0 text-info" th:text="${departmentCount}">0</h2>
                                 <small class="text-muted">部門</small>
                             </div>
                             <div class="text-end">
-                                <a th:href="@{/departments}" class="btn btn-outline-primary btn-sm">詳細</a>
+                                <a th:href="@{/departments}" class="btn btn-outline-info btn-sm">詳細</a>
                             </div>
                         </div>
                     </div>
@@ -125,7 +125,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h6 class="mb-0">システム情報</h6>
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>システム情報</h6>
                     </div>
                     <div class="card-body">
                         <table class="table table-sm mb-0">
