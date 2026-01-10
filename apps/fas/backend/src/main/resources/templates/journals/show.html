@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>仕訳詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">仕訳詳細</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">仕訳ヘッダ</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-md-2">伝票番号</dt>
+                <dd class="col-md-4" th:text="${journal.journalVoucherNumber}"></dd>
+
+                <dt class="col-md-2">伝票区分</dt>
+                <dd class="col-md-4">
+                    <span th:if="${journal.voucherType == 'NORMAL'}" class="badge bg-primary">通常</span>
+                    <span th:if="${journal.voucherType == 'ADJUSTMENT'}" class="badge bg-warning">調整</span>
+                    <span th:if="${journal.voucherType == 'CLOSING'}" class="badge bg-info">決算</span>
+                </dd>
+
+                <dt class="col-md-2">起票日</dt>
+                <dd class="col-md-4" th:text="${#temporals.format(journal.postingDate, 'yyyy/MM/dd')}"></dd>
+
+                <dt class="col-md-2">入力日</dt>
+                <dd class="col-md-4" th:text="${#temporals.format(journal.entryDate, 'yyyy/MM/dd')}"></dd>
+
+                <dt class="col-md-2">部門コード</dt>
+                <dd class="col-md-4" th:text="${journal.departmentCode}"></dd>
+
+                <dt class="col-md-2">社員コード</dt>
+                <dd class="col-md-4" th:text="${journal.employeeCode}"></dd>
+
+                <dt class="col-md-2">決算仕訳</dt>
+                <dd class="col-md-4">
+                    <span th:if="${journal.closingJournalFlag}" class="badge bg-success">はい</span>
+                    <span th:unless="${journal.closingJournalFlag}" class="badge bg-secondary">いいえ</span>
+                </dd>
+
+                <dt class="col-md-2">赤伝フラグ</dt>
+                <dd class="col-md-4">
+                    <span th:if="${journal.redSlipFlag}" class="badge bg-danger">赤伝</span>
+                    <span th:unless="${journal.redSlipFlag}" class="badge bg-secondary">黒伝</span>
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- 仕訳明細 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">仕訳明細</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>行番号</th>
+                        <th>貸借</th>
+                        <th>勘定科目</th>
+                        <th>補助科目</th>
+                        <th>部門</th>
+                        <th class="text-end">金額</th>
+                        <th>摘要</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <th:block th:each="detail : ${journal.details}">
+                        <tr th:each="dcDetail : ${detail.debitCreditDetails}">
+                            <td th:text="${detail.lineNumber}"></td>
+                            <td>
+                                <span th:if="${dcDetail.debitCreditType == '借方'}" class="badge bg-info">借方</span>
+                                <span th:if="${dcDetail.debitCreditType == '貸方'}" class="badge bg-warning">貸方</span>
+                            </td>
+                            <td th:text="${dcDetail.accountCode}"></td>
+                            <td th:text="${dcDetail.subAccountCode}"></td>
+                            <td th:text="${dcDetail.departmentCode}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(dcDetail.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td th:text="${detail.lineSummary}"></td>
+                        </tr>
+                    </th:block>
+                </tbody>
+                <tfoot class="table-secondary">
+                    <tr>
+                        <th colspan="5" class="text-end">借方合計</th>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(journal.debitTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th colspan="5" class="text-end">貸方合計</th>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(journal.creditTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-footer bg-transparent border-0">
+        <div class="d-flex gap-2">
+            <a th:href="@{/journals}" class="btn btn-secondary">一覧に戻る</a>
+            <form th:action="@{/journals/{num}/cancel(num=${journal.journalVoucherNumber})}"
+                  method="post" class="d-inline"
+                  th:unless="${journal.redSlipFlag}"
+                  onsubmit="return confirm('この仕訳を取消（赤黒処理）してよろしいですか？');">
+                <button type="submit" class="btn btn-warning">取消（赤黒処理）</button>
+            </form>
+            <form th:action="@{/journals/{num}/delete(num=${journal.journalVoucherNumber})}"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('この仕訳を削除してよろしいですか？\n（注意: 削除は取消とは異なり、履歴が残りません）');">
+                <button type="submit" class="btn btn-danger">削除</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

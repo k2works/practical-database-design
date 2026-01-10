@@ -1,7 +1,10 @@
 package com.example.fas.application.port.in;
 
 import com.example.fas.application.port.in.dto.CreateJournalCommand;
+import com.example.fas.application.port.in.dto.JournalImportResult;
 import com.example.fas.application.port.in.dto.JournalResponse;
+import com.example.fas.domain.model.common.PageResult;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -57,4 +60,26 @@ public interface JournalUseCase {
      * @param voucherNumber 仕訳伝票番号
      */
     void deleteJournal(String voucherNumber);
+
+    /**
+     * ページネーション付きで仕訳を取得.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param fromDate 開始日（null 可）
+     * @param toDate 終了日（null 可）
+     * @param keyword キーワード（null 可）
+     * @return ページネーション結果
+     */
+    PageResult<JournalResponse> getJournals(int page, int size, LocalDate fromDate, LocalDate toDate, String keyword);
+
+    /**
+     * CSV ファイルから仕訳を取り込む.
+     *
+     * @param inputStream CSV ファイルの入力ストリーム
+     * @param skipHeaderLine ヘッダー行をスキップするか
+     * @param skipEmptyLines 空行をスキップするか
+     * @return 取込結果
+     */
+    JournalImportResult importJournalsFromCsv(InputStream inputStream, boolean skipHeaderLine, boolean skipEmptyLines);
 }

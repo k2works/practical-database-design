@@ -82,4 +82,34 @@ public interface JournalMapper {
      * @return 更新件数
      */
     int updateJournalDebitCreditDetailWithOptimisticLock(JournalDebitCreditDetail dcDetail);
+
+    /**
+     * ページネーション付きで仕訳を検索.
+     *
+     * @param offset オフセット
+     * @param limit 件数
+     * @param fromDate 開始日（null 可）
+     * @param toDate 終了日（null 可）
+     * @param keyword キーワード（null 可）
+     * @return 仕訳リスト
+     */
+    List<Journal> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("keyword") String keyword);
+
+    /**
+     * 検索条件に一致する仕訳の件数を取得.
+     *
+     * @param fromDate 開始日（null 可）
+     * @param toDate 終了日（null 可）
+     * @param keyword キーワード（null 可）
+     * @return 件数
+     */
+    long count(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("keyword") String keyword);
 }

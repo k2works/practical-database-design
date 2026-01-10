@@ -1,5 +1,6 @@
 package com.example.fas.application.port.out;
 
+import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.domain.model.journal.Journal;
 import java.time.LocalDate;
 import java.util.List;
@@ -39,4 +40,16 @@ public interface JournalRepository {
      * @throws com.example.fas.domain.exception.OptimisticLockException バージョン不一致時
      */
     void update(Journal journal);
+
+    /**
+     * ページネーション付きで仕訳を検索.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param fromDate 開始日（null 可）
+     * @param toDate 終了日（null 可）
+     * @param keyword キーワード（null 可）
+     * @return ページネーション結果
+     */
+    PageResult<Journal> findWithPagination(int page, int size, LocalDate fromDate, LocalDate toDate, String keyword);
 }

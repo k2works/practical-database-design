@@ -352,4 +352,42 @@
           AND "仕訳行貸借区分" = #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"仕訳行貸借区分"
           AND "バージョン" = #{version}
     </update>
+
+    <!-- ページネーション付き仕訳検索 -->
+    <select id="findWithPagination" resultMap="JournalResultMap">
+        SELECT j.*
+        FROM "仕訳" j
+        <where>
+            <if test="fromDate != null">
+                AND j."起票日" &gt;= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND j."起票日" &lt;= #{toDate}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (j."仕訳伝票番号" LIKE '%' || #{keyword} || '%'
+                     OR j."部門コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY j."起票日" DESC, j."仕訳伝票番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 検索条件に一致する仕訳件数 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*)
+        FROM "仕訳" j
+        <where>
+            <if test="fromDate != null">
+                AND j."起票日" &gt;= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND j."起票日" &lt;= #{toDate}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (j."仕訳伝票番号" LIKE '%' || #{keyword} || '%'
+                     OR j."部門コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
 </mapper>

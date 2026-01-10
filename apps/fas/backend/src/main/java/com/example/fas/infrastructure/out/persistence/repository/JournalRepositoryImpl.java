@@ -2,6 +2,7 @@ package com.example.fas.infrastructure.out.persistence.repository;
 
 import com.example.fas.application.port.out.JournalRepository;
 import com.example.fas.domain.exception.OptimisticLockException;
+import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.domain.model.journal.Journal;
 import com.example.fas.infrastructure.out.persistence.mapper.JournalMapper;
 import java.time.LocalDate;
@@ -140,5 +141,14 @@ public class JournalRepositoryImpl implements JournalRepository {
                 }
             });
         });
+    }
+
+    @Override
+    public PageResult<Journal> findWithPagination(int page, int size,
+            LocalDate fromDate, LocalDate toDate, String keyword) {
+        int offset = page * size;
+        List<Journal> content = journalMapper.findWithPagination(offset, size, fromDate, toDate, keyword);
+        long totalElements = journalMapper.count(fromDate, toDate, keyword);
+        return new PageResult<>(content, page, size, totalElements);
     }
 }
