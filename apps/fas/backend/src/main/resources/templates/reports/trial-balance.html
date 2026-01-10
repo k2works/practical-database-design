@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>合計残高試算表</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">合計残高試算表</h1>
+
+    <!-- 検索フォーム -->
+    <div class="search-form mb-4">
+        <form th:action="@{/reports/trial-balance}" method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">決算期</label>
+                <input type="number" name="fiscalYear" class="form-control" th:value="${fiscalYear}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">月度</label>
+                <select name="month" class="form-select">
+                    <option th:each="m : ${#numbers.sequence(1, 12)}"
+                            th:value="${m}"
+                            th:text="${m} + '月'"
+                            th:selected="${m == month}"></option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">表示</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- エクスポートボタン -->
+    <div class="mb-3">
+        <a th:href="@{/reports/trial-balance/excel(fiscalYear=${fiscalYear}, month=${month})}" class="btn btn-success">
+            Excel出力
+        </a>
+        <a th:href="@{/reports/trial-balance/pdf(fiscalYear=${fiscalYear}, month=${month})}" class="btn btn-danger">
+            PDF出力
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                合計残高試算表
+                <small class="text-muted" th:text="'(' + ${fiscalYear} + '年度 ' + ${month} + '月)'"></small>
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>勘定科目コード</th>
+                            <th>勘定科目名</th>
+                            <th>BSPL区分</th>
+                            <th>貸借区分</th>
+                            <th class="text-end">月初残高</th>
+                            <th class="text-end">借方合計</th>
+                            <th class="text-end">貸方合計</th>
+                            <th class="text-end">月末残高</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="line : ${report.lines}">
+                            <td th:text="${line.accountCode}"></td>
+                            <td th:text="${line.accountName}"></td>
+                            <td th:text="${line.bsplType}"></td>
+                            <td th:text="${line.debitCreditType}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.openingBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.debitTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.creditTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.closingBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="table-dark">
+                        <tr>
+                            <td colspan="4" class="fw-bold">合計</td>
+                            <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalOpeningDebit, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalDebit, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalCredit, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalClosingDebit, 1, 'COMMA', 0, 'POINT')}"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 貸借チェック -->
+    <div class="alert mt-3" th:classappend="${report.balanced} ? 'alert-success' : 'alert-danger'">
+        <span th:if="${report.balanced}">貸借一致しています</span>
+        <span th:unless="${report.balanced}">貸借が一致していません</span>
+    </div>
+</div>
+</body>
+</html>

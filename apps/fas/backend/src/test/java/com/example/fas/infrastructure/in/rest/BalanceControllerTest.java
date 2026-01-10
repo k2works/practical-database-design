@@ -124,8 +124,8 @@ class BalanceControllerTest extends BaseIntegrationTest {
                     .month(1)
                     .accountCode("11110")
                     .openingBalance(new BigDecimal("100000"))
-                    .debitAmount(new BigDecimal("50000"))
-                    .creditAmount(new BigDecimal("30000"))
+                    .debitTotal(new BigDecimal("50000"))
+                    .creditTotal(new BigDecimal("30000"))
                     .closingBalance(new BigDecimal("120000"))
                     .build();
 
@@ -155,8 +155,8 @@ class BalanceControllerTest extends BaseIntegrationTest {
                     .month(1)
                     .accountCode("11110")
                     .openingBalance(new BigDecimal("100000"))
-                    .debitAmount(new BigDecimal("50000"))
-                    .creditAmount(new BigDecimal("30000"))
+                    .debitTotal(new BigDecimal("50000"))
+                    .creditTotal(new BigDecimal("30000"))
                     .closingBalance(new BigDecimal("120000"))
                     .build();
 
@@ -165,8 +165,8 @@ class BalanceControllerTest extends BaseIntegrationTest {
                     .month(2)
                     .accountCode("11110")
                     .openingBalance(new BigDecimal("120000"))
-                    .debitAmount(new BigDecimal("40000"))
-                    .creditAmount(new BigDecimal("20000"))
+                    .debitTotal(new BigDecimal("40000"))
+                    .creditTotal(new BigDecimal("20000"))
                     .closingBalance(new BigDecimal("140000"))
                     .build();
 

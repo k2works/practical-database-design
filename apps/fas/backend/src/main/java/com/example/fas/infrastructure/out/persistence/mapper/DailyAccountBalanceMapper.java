@@ -53,4 +53,27 @@ public interface DailyAccountBalanceMapper {
 
     // 全件削除
     void deleteAll();
+
+    // ページネーション付き検索
+    List<DailyReportLine> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("accountCode") String accountCode);
+
+    // 検索条件に一致する件数
+    long countWithCondition(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("accountCode") String accountCode);
+
+    // 指定日のページネーション付き検索
+    List<DailyReportLine> findByPostingDateWithPagination(
+            @Param("postingDate") LocalDate postingDate,
+            @Param("offset") int offset,
+            @Param("limit") int limit);
+
+    // 指定日の件数
+    long countByPostingDate(@Param("postingDate") LocalDate postingDate);
 }

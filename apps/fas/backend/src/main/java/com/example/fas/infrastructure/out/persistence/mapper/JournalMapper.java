@@ -3,6 +3,8 @@ package com.example.fas.infrastructure.out.persistence.mapper;
 import com.example.fas.domain.model.journal.Journal;
 import com.example.fas.domain.model.journal.JournalDebitCreditDetail;
 import com.example.fas.domain.model.journal.JournalDetail;
+import com.example.fas.domain.model.report.GeneralLedgerEntry;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -112,4 +114,56 @@ public interface JournalMapper {
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
             @Param("keyword") String keyword);
+
+    /**
+     * 総勘定元帳エントリを取得.
+     *
+     * @param accountCode 勘定科目コード
+     * @param fromDate 開始日
+     * @param toDate 終了日
+     * @param offset オフセット
+     * @param limit 件数
+     * @return 総勘定元帳エントリリスト
+     */
+    List<GeneralLedgerEntry> findGeneralLedgerEntries(
+            @Param("accountCode") String accountCode,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("offset") int offset,
+            @Param("limit") int limit);
+
+    /**
+     * 総勘定元帳エントリ件数を取得.
+     *
+     * @param accountCode 勘定科目コード
+     * @param fromDate 開始日
+     * @param toDate 終了日
+     * @return 件数
+     */
+    long countGeneralLedgerEntries(
+            @Param("accountCode") String accountCode,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate);
+
+    /**
+     * 指定日以前の残高を取得.
+     *
+     * @param accountCode 勘定科目コード
+     * @param beforeDate 基準日
+     * @return 残高
+     */
+    BigDecimal getOpeningBalance(
+            @Param("accountCode") String accountCode,
+            @Param("beforeDate") LocalDate beforeDate);
+
+    /**
+     * 期間指定で仕訳件数を取得.
+     *
+     * @param fromDate 開始日
+     * @param toDate 終了日
+     * @return 仕訳件数
+     */
+    long countByDateRange(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate);
 }

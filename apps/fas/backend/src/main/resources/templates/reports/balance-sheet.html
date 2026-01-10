@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>貸借対照表</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">貸借対照表</h1>
+
+    <!-- 検索フォーム -->
+    <div class="search-form mb-4">
+        <form th:action="@{/reports/balance-sheet}" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">基準日</label>
+                <input type="date" name="asOfDate" class="form-control" th:value="${asOfDate}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">表示</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- エクスポートボタン -->
+    <div class="mb-3">
+        <a th:href="@{/reports/balance-sheet/excel(asOfDate=${asOfDate})}" class="btn btn-success">
+            Excel出力
+        </a>
+        <a th:href="@{/reports/balance-sheet/pdf(asOfDate=${asOfDate})}" class="btn btn-danger">
+            PDF出力
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- 資産の部 -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">資産の部</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <!-- 流動資産 -->
+                            <tr class="table-light">
+                                <td colspan="2" class="fw-bold">流動資産</td>
+                            </tr>
+                            <tr th:each="line : ${report.currentAssets}">
+                                <td class="ps-4" th:text="${line.accountName}"></td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td class="fw-bold">流動資産合計</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalCurrentAssets, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+
+                            <!-- 固定資産 -->
+                            <tr class="table-light">
+                                <td colspan="2" class="fw-bold">固定資産</td>
+                            </tr>
+                            <tr th:each="line : ${report.fixedAssets}">
+                                <td class="ps-4" th:text="${line.accountName}"></td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td class="fw-bold">固定資産合計</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalFixedAssets, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-dark">
+                                <td class="fw-bold">資産合計</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalAssets, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 負債・純資産の部 -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">負債の部</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <!-- 流動負債 -->
+                            <tr class="table-light">
+                                <td colspan="2" class="fw-bold">流動負債</td>
+                            </tr>
+                            <tr th:each="line : ${report.currentLiabilities}">
+                                <td class="ps-4" th:text="${line.accountName}"></td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td class="fw-bold">流動負債合計</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalCurrentLiabilities, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+
+                            <!-- 固定負債 -->
+                            <tr class="table-light">
+                                <td colspan="2" class="fw-bold">固定負債</td>
+                            </tr>
+                            <tr th:each="line : ${report.fixedLiabilities}">
+                                <td class="ps-4" th:text="${line.accountName}"></td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td class="fw-bold">固定負債合計</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalFixedLiabilities, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td class="fw-bold">負債合計</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalLiabilities, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">純資産の部</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr th:each="line : ${report.equity}">
+                                <td th:text="${line.accountName}"></td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-success">
+                                <td class="fw-bold">純資産合計</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalEquity, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                            <tr class="table-dark">
+                                <td class="fw-bold">負債純資産合計</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalLiabilitiesAndEquity, 1, 'COMMA', 0, 'POINT')}"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 貸借チェック -->
+    <div class="alert" th:classappend="${report.balanced} ? 'alert-success' : 'alert-danger'">
+        <span th:if="${report.balanced}">貸借一致しています</span>
+        <span th:unless="${report.balanced}">貸借が一致していません</span>
+    </div>
+</div>
+</body>
+</html>

@@ -491,4 +491,9 @@ public class JournalApplicationService implements JournalUseCase {
             return null;
         }
     }
+
+    @Override
+    public long countJournalsByDateRange(LocalDate fromDate, LocalDate toDate) {
+        return journalRepository.countByPostingDateBetween(fromDate, toDate);
+    }
 }

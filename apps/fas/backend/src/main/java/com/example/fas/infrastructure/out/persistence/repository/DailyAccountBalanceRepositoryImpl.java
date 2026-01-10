@@ -4,6 +4,7 @@ import com.example.fas.application.port.out.DailyAccountBalanceRepository;
 import com.example.fas.domain.exception.OptimisticLockException;
 import com.example.fas.domain.model.balance.DailyAccountBalance;
 import com.example.fas.domain.model.balance.DailyReportLine;
+import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.out.persistence.mapper.DailyAccountBalanceMapper;
 import java.time.LocalDate;
 import java.util.List;
@@ -89,5 +90,27 @@ public class DailyAccountBalanceRepositoryImpl implements DailyAccountBalanceRep
     @Transactional
     public void deleteAll() {
         mapper.deleteAll();
+    }
+
+    @Override
+    public PageResult<DailyReportLine> findWithPagination(
+            int page, int size,
+            LocalDate fromDate, LocalDate toDate,
+            String accountCode) {
+        int offset = page * size;
+        List<DailyReportLine> content = mapper.findWithPagination(
+                offset, size, fromDate, toDate, accountCode);
+        long totalElements = mapper.countWithCondition(fromDate, toDate, accountCode);
+        return new PageResult<>(content, page, size, totalElements);
+    }
+
+    @Override
+    public PageResult<DailyReportLine> findByPostingDateWithPagination(
+            LocalDate postingDate, int page, int size) {
+        int offset = page * size;
+        List<DailyReportLine> content = mapper.findByPostingDateWithPagination(
+                postingDate, offset, size);
+        long totalElements = mapper.countByPostingDate(postingDate);
+        return new PageResult<>(content, page, size, totalElements);
     }
 }

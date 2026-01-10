@@ -4,6 +4,7 @@ import com.example.fas.application.port.out.MonthlyAccountBalanceRepository;
 import com.example.fas.domain.exception.OptimisticLockException;
 import com.example.fas.domain.model.balance.MonthlyAccountBalance;
 import com.example.fas.domain.model.balance.TrialBalanceLine;
+import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.out.persistence.mapper.MonthlyAccountBalanceMapper;
 import java.time.LocalDate;
 import java.util.List;
@@ -112,5 +113,17 @@ public class MonthlyAccountBalanceRepositoryImpl implements MonthlyAccountBalanc
     @Transactional
     public void deleteAll() {
         mapper.deleteAll();
+    }
+
+    @Override
+    public PageResult<TrialBalanceLine> findWithPagination(
+            int page, int size,
+            Integer fiscalYear, Integer month,
+            String accountCode) {
+        int offset = page * size;
+        List<TrialBalanceLine> content = mapper.findWithPagination(
+                offset, size, fiscalYear, month, accountCode);
+        long totalElements = mapper.countWithCondition(fiscalYear, month, accountCode);
+        return new PageResult<>(content, page, size, totalElements);
     }
 }

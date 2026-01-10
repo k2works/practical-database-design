@@ -2,6 +2,7 @@ package com.example.fas.application.port.out;
 
 import com.example.fas.domain.model.balance.DailyAccountBalance;
 import com.example.fas.domain.model.balance.DailyReportLine;
+import com.example.fas.domain.model.common.PageResult;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -64,4 +65,30 @@ public interface DailyAccountBalanceRepository {
      * 全件削除.
      */
     void deleteAll();
+
+    /**
+     * 日次残高一覧を取得（ページネーション対応）.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param fromDate 開始日（任意）
+     * @param toDate 終了日（任意）
+     * @param accountCode 勘定科目コード（任意）
+     * @return ページネーション結果
+     */
+    PageResult<DailyReportLine> findWithPagination(
+            int page, int size,
+            LocalDate fromDate, LocalDate toDate,
+            String accountCode);
+
+    /**
+     * 指定日の日次残高を取得（ページネーション対応）.
+     *
+     * @param postingDate 起票日
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @return ページネーション結果
+     */
+    PageResult<DailyReportLine> findByPostingDateWithPagination(
+            LocalDate postingDate, int page, int size);
 }

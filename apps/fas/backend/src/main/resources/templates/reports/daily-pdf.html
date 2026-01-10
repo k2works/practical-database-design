@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>日計表</title>
+    <style>
+        body {
+            font-family: Japanese, sans-serif;
+            font-size: 10pt;
+            margin: 20px;
+        }
+        h1 {
+            font-size: 16pt;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 6px 8px;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        td.number {
+            text-align: right;
+        }
+        .total-row {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>日計表</h1>
+    <p style="text-align: center;" th:text="'対象日: ' + ${#temporals.format(date, 'yyyy年MM月dd日')}"></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>起票日</th>
+                <th>勘定科目コード</th>
+                <th>勘定科目名</th>
+                <th>BSPL</th>
+                <th>貸借</th>
+                <th>借方合計</th>
+                <th>貸方合計</th>
+                <th>残高</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="line : ${report.lines}">
+                <td th:text="${#temporals.format(line.postingDate, 'yyyy/MM/dd')}"></td>
+                <td th:text="${line.accountCode}"></td>
+                <td th:text="${line.accountName}"></td>
+                <td th:text="${line.bsplType}"></td>
+                <td th:text="${line.debitCreditType}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.debitTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.creditTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.balance, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="5" style="text-align: right;">合計</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalDebit, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalCredit, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>

@@ -158,4 +158,84 @@
         DELETE FROM "日次勘定科目残高"
     </delete>
 
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="dailyReportLineResultMap">
+        SELECT
+            d."起票日" AS postingDate,
+            d."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分"::TEXT AS bsplType,
+            a."貸借区分"::TEXT AS debitCreditType,
+            SUM(d."借方金額") AS debitTotal,
+            SUM(d."貸方金額") AS creditTotal,
+            CASE
+                WHEN a."貸借区分"::TEXT = '借方'
+                    THEN SUM(d."借方金額") - SUM(d."貸方金額")
+                ELSE SUM(d."貸方金額") - SUM(d."借方金額")
+            END AS balance
+        FROM "日次勘定科目残高" d
+        JOIN "勘定科目マスタ" a ON d."勘定科目コード" = a."勘定科目コード"
+        <where>
+            <if test="fromDate != null">
+                AND d."起票日" >= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND d."起票日" &lt;= #{toDate}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND d."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+        GROUP BY d."起票日", d."勘定科目コード", a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY d."起票日" DESC, d."勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 検索条件に一致する件数 -->
+    <select id="countWithCondition" resultType="long">
+        SELECT COUNT(DISTINCT (d."起票日", d."勘定科目コード"))
+        FROM "日次勘定科目残高" d
+        <where>
+            <if test="fromDate != null">
+                AND d."起票日" >= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND d."起票日" &lt;= #{toDate}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND d."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+    </select>
+
+    <!-- 指定日のページネーション付き検索 -->
+    <select id="findByPostingDateWithPagination" resultMap="dailyReportLineResultMap">
+        SELECT
+            d."起票日" AS postingDate,
+            d."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分"::TEXT AS bsplType,
+            a."貸借区分"::TEXT AS debitCreditType,
+            SUM(d."借方金額") AS debitTotal,
+            SUM(d."貸方金額") AS creditTotal,
+            CASE
+                WHEN a."貸借区分"::TEXT = '借方'
+                    THEN SUM(d."借方金額") - SUM(d."貸方金額")
+                ELSE SUM(d."貸方金額") - SUM(d."借方金額")
+            END AS balance
+        FROM "日次勘定科目残高" d
+        JOIN "勘定科目マスタ" a ON d."勘定科目コード" = a."勘定科目コード"
+        WHERE d."起票日" = #{postingDate}
+        GROUP BY d."起票日", d."勘定科目コード", a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY d."勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 指定日の件数 -->
+    <select id="countByPostingDate" resultType="long">
+        SELECT COUNT(DISTINCT d."勘定科目コード")
+        FROM "日次勘定科目残高" d
+        WHERE d."起票日" = #{postingDate}
+    </select>
+
 </mapper>

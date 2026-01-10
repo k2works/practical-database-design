@@ -26,6 +26,8 @@ val mybatisVersion = "4.0.0"
 val testcontainersVersion = "1.20.4"
 val springdocVersion = "2.8.3"
 val thymeleafLayoutDialectVersion = "3.4.0"
+val poiVersion = "5.3.0"
+val openhtmltopdfVersion = "1.1.36"
 
 dependencies {
     // === implementation ===
@@ -42,6 +44,10 @@ dependencies {
     // Webjars (Bootstrap 等のフロントエンドライブラリ)
     implementation("org.webjars:bootstrap:5.3.3")
     implementation("org.webjars:webjars-locator-core:0.59")
+
+    // 帳票出力
+    implementation("org.apache.poi:poi-ooxml:$poiVersion")  // Excel
+    implementation("io.github.openhtmltopdf:openhtmltopdf-pdfbox:$openhtmltopdfVersion")  // PDF
 
     // OpenAPI/Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")

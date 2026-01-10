@@ -277,4 +277,53 @@
         DELETE FROM "月次勘定科目残高"
     </delete>
 
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="trialBalanceLineResultMap">
+        SELECT
+            m."決算期" AS fiscalYear,
+            m."月度" AS month,
+            m."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分"::TEXT AS bsplType,
+            a."貸借区分"::TEXT AS debitCreditType,
+            SUM(m."月初残高") AS openingBalance,
+            SUM(m."借方金額") AS debitTotal,
+            SUM(m."貸方金額") AS creditTotal,
+            SUM(m."月末残高") AS closingBalance
+        FROM "月次勘定科目残高" m
+        JOIN "勘定科目マスタ" a ON m."勘定科目コード" = a."勘定科目コード"
+        <where>
+            <if test="fiscalYear != null">
+                AND m."決算期" = #{fiscalYear}
+            </if>
+            <if test="month != null">
+                AND m."月度" = #{month}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND m."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+        GROUP BY m."決算期", m."月度", m."勘定科目コード",
+                 a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY m."決算期" DESC, m."月度" DESC, m."勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 検索条件に一致する件数 -->
+    <select id="countWithCondition" resultType="long">
+        SELECT COUNT(DISTINCT (m."決算期", m."月度", m."勘定科目コード"))
+        FROM "月次勘定科目残高" m
+        <where>
+            <if test="fiscalYear != null">
+                AND m."決算期" = #{fiscalYear}
+            </if>
+            <if test="month != null">
+                AND m."月度" = #{month}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND m."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+    </select>
+
 </mapper>

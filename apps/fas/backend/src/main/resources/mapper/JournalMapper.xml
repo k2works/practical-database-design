@@ -390,4 +390,68 @@
             </if>
         </where>
     </select>
+
+    <!-- 総勘定元帳エントリ ResultMap -->
+    <resultMap id="generalLedgerEntryResultMap"
+               type="com.example.fas.domain.model.report.GeneralLedgerEntry">
+        <result property="postingDate" column="postingDate"/>
+        <result property="journalNumber" column="journalNumber"/>
+        <result property="description" column="description"/>
+        <result property="counterAccountCode" column="counterAccountCode"/>
+        <result property="counterAccountName" column="counterAccountName"/>
+        <result property="debitAmount" column="debitAmount"/>
+        <result property="creditAmount" column="creditAmount"/>
+        <result property="balance" column="balance"/>
+    </resultMap>
+
+    <!-- 総勘定元帳エントリ取得 -->
+    <select id="findGeneralLedgerEntries" resultMap="generalLedgerEntryResultMap">
+        SELECT
+            j."起票日" AS postingDate,
+            j."仕訳伝票番号" AS journalNumber,
+            d."行摘要" AS description,
+            dc."相手勘定科目コード" AS counterAccountCode,
+            COALESCE(a."勘定科目名", '') AS counterAccountName,
+            CASE WHEN dc."仕訳行貸借区分"::TEXT = '借方' THEN dc."仕訳金額" ELSE 0 END AS debitAmount,
+            CASE WHEN dc."仕訳行貸借区分"::TEXT = '貸方' THEN dc."仕訳金額" ELSE 0 END AS creditAmount,
+            0 AS balance
+        FROM "仕訳貸借明細" dc
+        JOIN "仕訳" j ON dc."仕訳伝票番号" = j."仕訳伝票番号"
+        JOIN "仕訳明細" d ON dc."仕訳伝票番号" = d."仕訳伝票番号"
+            AND dc."仕訳行番号" = d."仕訳行番号"
+        LEFT JOIN "勘定科目マスタ" a ON dc."相手勘定科目コード" = a."勘定科目コード"
+        WHERE dc."勘定科目コード" = #{accountCode}
+          AND j."起票日" BETWEEN #{fromDate} AND #{toDate}
+        ORDER BY j."起票日", j."仕訳伝票番号", dc."仕訳行番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 総勘定元帳エントリ件数 -->
+    <select id="countGeneralLedgerEntries" resultType="long">
+        SELECT COUNT(*)
+        FROM "仕訳貸借明細" dc
+        JOIN "仕訳" j ON dc."仕訳伝票番号" = j."仕訳伝票番号"
+        WHERE dc."勘定科目コード" = #{accountCode}
+          AND j."起票日" BETWEEN #{fromDate} AND #{toDate}
+    </select>
+
+    <!-- 指定日以前の残高取得 -->
+    <select id="getOpeningBalance" resultType="java.math.BigDecimal">
+        SELECT
+            COALESCE(SUM(
+                CASE WHEN dc."仕訳行貸借区分"::TEXT = '借方' THEN dc."仕訳金額"
+                     ELSE -dc."仕訳金額" END
+            ), 0)
+        FROM "仕訳貸借明細" dc
+        JOIN "仕訳" j ON dc."仕訳伝票番号" = j."仕訳伝票番号"
+        WHERE dc."勘定科目コード" = #{accountCode}
+          AND j."起票日" &lt;= #{beforeDate}
+    </select>
+
+    <!-- 期間指定で仕訳件数を取得 -->
+    <select id="countByDateRange" resultType="long">
+        SELECT COUNT(*)
+        FROM "仕訳"
+        WHERE "起票日" BETWEEN #{fromDate} AND #{toDate}
+    </select>
 </mapper>

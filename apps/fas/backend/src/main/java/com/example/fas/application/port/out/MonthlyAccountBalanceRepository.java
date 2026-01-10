@@ -2,6 +2,7 @@ package com.example.fas.application.port.out;
 
 import com.example.fas.domain.model.balance.MonthlyAccountBalance;
 import com.example.fas.domain.model.balance.TrialBalanceLine;
+import com.example.fas.domain.model.common.PageResult;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -97,4 +98,19 @@ public interface MonthlyAccountBalanceRepository {
      * 全件削除.
      */
     void deleteAll();
+
+    /**
+     * 月次残高一覧を取得（ページネーション対応）.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param fiscalYear 決算期（任意）
+     * @param month 月度（任意）
+     * @param accountCode 勘定科目コード（任意）
+     * @return ページネーション結果
+     */
+    PageResult<TrialBalanceLine> findWithPagination(
+            int page, int size,
+            Integer fiscalYear, Integer month,
+            String accountCode);
 }

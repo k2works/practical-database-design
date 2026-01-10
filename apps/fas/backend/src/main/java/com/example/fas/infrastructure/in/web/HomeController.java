@@ -51,7 +51,7 @@ public class HomeController {
 
         // 今月の仕訳件数
         LocalDate firstDayOfMonth = today.withDayOfMonth(1);
-        int monthlyJournalCount = journalUseCase.getJournalsByDateRange(firstDayOfMonth, today).size();
+        long monthlyJournalCount = journalUseCase.countJournalsByDateRange(firstDayOfMonth, today);
         model.addAttribute("monthlyJournalCount", monthlyJournalCount);
 
         return "home";

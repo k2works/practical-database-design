@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>貸借対照表</title>
+    <style>
+        body {
+            font-family: Japanese, sans-serif;
+            font-size: 10pt;
+            margin: 20px;
+        }
+        h1 {
+            font-size: 16pt;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: table;
+            width: 100%;
+        }
+        .column {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 4px 6px;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .section-header {
+            background-color: #d0d0d0;
+            font-weight: bold;
+        }
+        .subsection-header {
+            background-color: #e8e8e8;
+            font-weight: bold;
+        }
+        .subtotal {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+        .total {
+            background-color: #d0d0d0;
+            font-weight: bold;
+        }
+        .number {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <h1>貸借対照表</h1>
+    <p style="text-align: center;" th:text="'基準日: ' + ${#temporals.format(asOfDate, 'yyyy年MM月dd日')}"></p>
+
+    <div class="container">
+        <div class="column">
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="2">資産の部</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="subsection-header">
+                        <td colspan="2">流動資産</td>
+                    </tr>
+                    <tr th:each="line : ${report.currentAssets}">
+                        <td th:text="${line.accountName}"></td>
+                        <td class="number" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subtotal">
+                        <td>流動資産合計</td>
+                        <td class="number" th:text="${#numbers.formatDecimal(report.totalCurrentAssets, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subsection-header">
+                        <td colspan="2">固定資産</td>
+                    </tr>
+                    <tr th:each="line : ${report.fixedAssets}">
+                        <td th:text="${line.accountName}"></td>
+                        <td class="number" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subtotal">
+                        <td>固定資産合計</td>
+                        <td class="number" th:text="${#numbers.formatDecimal(report.totalFixedAssets, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total">
+                        <td>資産合計</td>
+                        <td class="number" th:text="${#numbers.formatDecimal(report.totalAssets, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="column">
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="2">負債・純資産の部</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="subsection-header">
+                        <td colspan="2">流動負債</td>
+                    </tr>
+                    <tr th:each="line : ${report.currentLiabilities}">
+                        <td th:text="${line.accountName}"></td>
+                        <td class="number" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subtotal">
+                        <td>流動負債合計</td>
+                        <td class="number" th:text="${#numbers.formatDecimal(report.totalCurrentLiabilities, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subsection-header">
+                        <td colspan="2">固定負債</td>
+                    </tr>
+                    <tr th:each="line : ${report.fixedLiabilities}">
+                        <td th:text="${line.accountName}"></td>
+                        <td class="number" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subtotal">
+                        <td>固定負債合計</td>
+                        <td class="number" th:text="${#numbers.formatDecimal(report.totalFixedLiabilities, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subtotal">
+                        <td>負債合計</td>
+                        <td class="number" th:text="${#numbers.formatDecimal(report.totalLiabilities, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subsection-header">
+                        <td colspan="2">純資産</td>
+                    </tr>
+                    <tr th:each="line : ${report.equity}">
+                        <td th:text="${line.accountName}"></td>
+                        <td class="number" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="subtotal">
+                        <td>純資産合計</td>
+                        <td class="number" th:text="${#numbers.formatDecimal(report.totalEquity, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total">
+                        <td>負債純資産合計</td>
+                        <td class="number" th:text="${#numbers.formatDecimal(report.totalLiabilitiesAndEquity, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

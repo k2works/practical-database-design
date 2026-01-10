@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>総勘定元帳</title>
+    <style>
+        body {
+            font-family: Japanese, sans-serif;
+            font-size: 9pt;
+            margin: 15px;
+        }
+        h1 {
+            font-size: 14pt;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .info-box {
+            border: 1px solid #333;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        .info-row {
+            margin-bottom: 3px;
+        }
+        .info-label {
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 3px 5px;
+        }
+        th {
+            background-color: #e0e0e0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .number {
+            text-align: right;
+        }
+        .total {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>総勘定元帳</h1>
+    <p style="text-align: center;" th:text="${#temporals.format(fromDate, 'yyyy/MM/dd')} + ' 〜 ' + ${#temporals.format(toDate, 'yyyy/MM/dd')}"></p>
+
+    <div class="info-box">
+        <div class="info-row">
+            <span class="info-label">勘定科目:</span>
+            <span th:text="${meta.accountName}"></span>
+            (<span th:text="${meta.accountCode}"></span>)
+        </div>
+        <div class="info-row">
+            <span class="info-label">BSPL区分:</span>
+            <span th:text="${meta.bsplType}"></span>
+            &#160;&#160;
+            <span class="info-label">貸借区分:</span>
+            <span th:text="${meta.debitCreditType}"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">期首残高:</span>
+            <span th:text="${#numbers.formatDecimal(meta.openingBalance, 1, 'COMMA', 0, 'POINT')}"></span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>起票日</th>
+                <th>伝票番号</th>
+                <th>摘要</th>
+                <th>相手勘定</th>
+                <th>借方</th>
+                <th>貸方</th>
+                <th>残高</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="entry : ${entries}">
+                <td th:text="${#temporals.format(entry.postingDate, 'yyyy/MM/dd')}"></td>
+                <td th:text="${entry.journalNumber}"></td>
+                <td th:text="${entry.description}"></td>
+                <td th:text="${entry.counterAccountName}"></td>
+                <td class="number" th:text="${entry.debitAmount != null} ? ${#numbers.formatDecimal(entry.debitAmount, 1, 'COMMA', 0, 'POINT')} : ''"></td>
+                <td class="number" th:text="${entry.creditAmount != null} ? ${#numbers.formatDecimal(entry.creditAmount, 1, 'COMMA', 0, 'POINT')} : ''"></td>
+                <td class="number" th:text="${entry.balance != null} ? ${#numbers.formatDecimal(entry.balance, 1, 'COMMA', 0, 'POINT')} : '0'"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

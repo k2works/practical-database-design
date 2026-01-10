@@ -77,4 +77,18 @@ public interface MonthlyAccountBalanceMapper {
 
     // 全件削除
     void deleteAll();
+
+    // ページネーション付き検索
+    List<TrialBalanceLine> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("fiscalYear") Integer fiscalYear,
+            @Param("month") Integer month,
+            @Param("accountCode") String accountCode);
+
+    // 検索条件に一致する件数
+    long countWithCondition(
+            @Param("fiscalYear") Integer fiscalYear,
+            @Param("month") Integer month,
+            @Param("accountCode") String accountCode);
 }

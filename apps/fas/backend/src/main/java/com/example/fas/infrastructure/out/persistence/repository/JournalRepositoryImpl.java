@@ -4,7 +4,9 @@ import com.example.fas.application.port.out.JournalRepository;
 import com.example.fas.domain.exception.OptimisticLockException;
 import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.domain.model.journal.Journal;
+import com.example.fas.domain.model.report.GeneralLedgerEntry;
 import com.example.fas.infrastructure.out.persistence.mapper.JournalMapper;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -150,5 +152,30 @@ public class JournalRepositoryImpl implements JournalRepository {
         List<Journal> content = journalMapper.findWithPagination(offset, size, fromDate, toDate, keyword);
         long totalElements = journalMapper.count(fromDate, toDate, keyword);
         return new PageResult<>(content, page, size, totalElements);
+    }
+
+    @Override
+    public PageResult<GeneralLedgerEntry> findGeneralLedgerEntries(
+            String accountCode,
+            LocalDate fromDate,
+            LocalDate toDate,
+            int page,
+            int size) {
+        int offset = page * size;
+        List<GeneralLedgerEntry> content = journalMapper.findGeneralLedgerEntries(
+                accountCode, fromDate, toDate, offset, size);
+        long totalElements = journalMapper.countGeneralLedgerEntries(accountCode, fromDate, toDate);
+        return new PageResult<>(content, page, size, totalElements);
+    }
+
+    @Override
+    public BigDecimal getOpeningBalance(String accountCode, LocalDate beforeDate) {
+        BigDecimal balance = journalMapper.getOpeningBalance(accountCode, beforeDate);
+        return balance != null ? balance : BigDecimal.ZERO;
+    }
+
+    @Override
+    public long countByPostingDateBetween(LocalDate fromDate, LocalDate toDate) {
+        return journalMapper.countByDateRange(fromDate, toDate);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.fas.application.port.in.dto;
 
 import com.example.fas.domain.model.balance.MonthlyAccountBalance;
+import com.example.fas.domain.model.balance.TrialBalanceLine;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,32 +19,59 @@ public class MonthlyBalanceResponse {
     private Integer fiscalYear;
     private Integer month;
     private String accountCode;
-    private String subAccountCode;
-    private String departmentCode;
+    private String accountName;
+    private String bsPlType;
+    private String debitCreditType;
     private BigDecimal openingBalance;
-    private BigDecimal debitAmount;
-    private BigDecimal creditAmount;
+    private BigDecimal debitTotal;
+    private BigDecimal creditTotal;
     private BigDecimal closingBalance;
-    private BigDecimal netChange;
 
     /**
-     * ドメインモデルからレスポンスを生成.
+     * 試算表行からレスポンス DTO を生成.
      *
-     * @param balance 月次残高
-     * @return レスポンス
+     * @param line 試算表行
+     * @return レスポンス DTO
+     */
+    public static MonthlyBalanceResponse from(TrialBalanceLine line) {
+        return MonthlyBalanceResponse.builder()
+                .fiscalYear(line.getFiscalYear())
+                .month(line.getMonth())
+                .accountCode(line.getAccountCode())
+                .accountName(line.getAccountName())
+                .bsPlType(line.getBsplType())
+                .debitCreditType(line.getDebitCreditType())
+                .openingBalance(line.getOpeningBalance())
+                .debitTotal(line.getDebitTotal())
+                .creditTotal(line.getCreditTotal())
+                .closingBalance(line.getClosingBalance())
+                .build();
+    }
+
+    /**
+     * 月次残高エンティティからレスポンス DTO を生成.
+     *
+     * @param balance 月次残高エンティティ
+     * @return レスポンス DTO
      */
     public static MonthlyBalanceResponse from(MonthlyAccountBalance balance) {
         return MonthlyBalanceResponse.builder()
                 .fiscalYear(balance.getFiscalYear())
                 .month(balance.getMonth())
                 .accountCode(balance.getAccountCode())
-                .subAccountCode(balance.getSubAccountCode())
-                .departmentCode(balance.getDepartmentCode())
                 .openingBalance(balance.getOpeningBalance())
-                .debitAmount(balance.getDebitAmount())
-                .creditAmount(balance.getCreditAmount())
+                .debitTotal(balance.getDebitAmount())
+                .creditTotal(balance.getCreditAmount())
                 .closingBalance(balance.getClosingBalance())
-                .netChange(balance.getNetChange())
                 .build();
+    }
+
+    /**
+     * 当月増減を取得.
+     *
+     * @return 当月増減
+     */
+    public BigDecimal getMonthlyChange() {
+        return closingBalance.subtract(openingBalance);
     }
 }

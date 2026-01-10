@@ -82,4 +82,13 @@ public interface JournalUseCase {
      * @return 取込結果
      */
     JournalImportResult importJournalsFromCsv(InputStream inputStream, boolean skipHeaderLine, boolean skipEmptyLines);
+
+    /**
+     * 期間指定で仕訳件数を取得.
+     *
+     * @param fromDate 開始日
+     * @param toDate 終了日
+     * @return 仕訳件数
+     */
+    long countJournalsByDateRange(LocalDate fromDate, LocalDate toDate);
 }
