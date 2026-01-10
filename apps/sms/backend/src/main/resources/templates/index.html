@@ -8,14 +8,145 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <h1 class="page-title">販売管理システム</h1>
+    <!-- ページタイトル -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>ダッシュボード</h1>
+        <span class="text-muted" th:text="${#temporals.format(currentDate, 'yyyy年MM月dd日 (E)')}">2025年01月10日 (金)</span>
+    </div>
 
+    <!-- クイックアクセス -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">クイックアクセス</h5>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <a th:href="@{/orders/new}" class="card text-decoration-none h-100 quick-access-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-cart-plus fs-1 text-success mb-2"></i>
+                    <h6 class="card-title">受注入力</h6>
+                    <p class="card-text text-muted small">新規受注を入力</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <a th:href="@{/shipments}" class="card text-decoration-none h-100 quick-access-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-truck fs-1 text-info mb-2"></i>
+                    <h6 class="card-title">出荷管理</h6>
+                    <p class="card-text text-muted small">出荷の確認・処理</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <a th:href="@{/invoices}" class="card text-decoration-none h-100 quick-access-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-receipt fs-1 text-danger mb-2"></i>
+                    <h6 class="card-title">請求管理</h6>
+                    <p class="card-text text-muted small">請求書の発行・確認</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <a th:href="@{/inventories}" class="card text-decoration-none h-100 quick-access-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-seam fs-1 text-warning mb-2"></i>
+                    <h6 class="card-title">在庫照会</h6>
+                    <p class="card-text text-muted small">在庫状況を確認</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- サマリー情報 -->
+    <div class="row mb-4">
+        <!-- 受注待ち件数 -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">未出荷受注</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0 text-success" th:text="${pendingOrderCount}">0</h2>
+                            <small class="text-muted">件</small>
+                        </div>
+                        <div class="text-end">
+                            <a th:href="@{/orders}" class="btn btn-outline-success btn-sm">詳細</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 出荷待ち件数 -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">出荷準備中</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0 text-info" th:text="${pendingShipmentCount}">0</h2>
+                            <small class="text-muted">件</small>
+                        </div>
+                        <div class="text-end">
+                            <a th:href="@{/shipments}" class="btn btn-outline-info btn-sm">詳細</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 未入金請求件数 -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">未入金請求</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0 text-danger" th:text="${unpaidInvoiceCount}">0</h2>
+                            <small class="text-muted">件</small>
+                        </div>
+                        <div class="text-end">
+                            <a th:href="@{/invoices}" class="btn btn-outline-danger btn-sm">詳細</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 本日の入金件数 -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">本日の入金</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0 text-primary" th:text="${todayReceiptCount}">0</h2>
+                            <small class="text-muted">件</small>
+                        </div>
+                        <div class="text-end">
+                            <a th:href="@{/receipts}" class="btn btn-outline-primary btn-sm">詳細</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 業務別カード -->
     <div class="row g-4">
         <!-- マスタ管理 -->
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">マスタ管理</h5>
+                    <h5 class="mb-0"><i class="bi bi-database me-2"></i>マスタ管理</h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -60,7 +191,7 @@
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">販売管理</h5>
+                    <h5 class="mb-0"><i class="bi bi-cart me-2"></i>販売管理</h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -89,7 +220,7 @@
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">調達管理</h5>
+                    <h5 class="mb-0"><i class="bi bi-box-arrow-in-down me-2"></i>調達管理</h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -114,7 +245,7 @@
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">債権管理</h5>
+                    <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i>債権管理</h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -135,7 +266,7 @@
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">債務管理</h5>
+                    <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>債務管理</h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -152,7 +283,7 @@
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0">在庫管理</h5>
+                    <h5 class="mb-0"><i class="bi bi-archive me-2"></i>在庫管理</h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -169,6 +300,33 @@
                             <span class="badge bg-warning text-dark" th:text="${stocktakingCount}">0</span>
                         </li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- システム情報 -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>システム情報</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <th style="width: 200px;">アーキテクチャ</th>
+                            <td>モノリス（Spring Boot + Thymeleaf）</td>
+                        </tr>
+                        <tr>
+                            <th>データベース</th>
+                            <td>PostgreSQL</td>
+                        </tr>
+                        <tr>
+                            <th>API ドキュメント</th>
+                            <td><a th:href="@{/swagger-ui.html}">Swagger UI</a></td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
