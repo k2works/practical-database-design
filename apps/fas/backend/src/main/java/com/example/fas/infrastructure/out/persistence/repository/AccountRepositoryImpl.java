@@ -4,6 +4,7 @@ import com.example.fas.application.port.out.AccountRepository;
 import com.example.fas.domain.model.account.Account;
 import com.example.fas.domain.model.account.BSPLType;
 import com.example.fas.domain.model.account.TransactionElementType;
+import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.out.persistence.mapper.AccountMapper;
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +43,14 @@ public class AccountRepositoryImpl implements AccountRepository {
     @Override
     public List<Account> findByTransactionElementType(TransactionElementType type) {
         return accountMapper.findByTransactionElementType(type.getDisplayName());
+    }
+
+    @Override
+    public PageResult<Account> findWithPagination(int page, int size, String bsPlType, String keyword) {
+        int offset = page * size;
+        List<Account> content = accountMapper.findWithPagination(offset, size, bsPlType, keyword);
+        long totalElements = accountMapper.count(bsPlType, keyword);
+        return new PageResult<>(content, page, size, totalElements);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.example.fas.application.port.in;
 import com.example.fas.application.port.in.dto.AccountResponse;
 import com.example.fas.application.port.in.dto.CreateAccountCommand;
 import com.example.fas.application.port.in.dto.UpdateAccountCommand;
+import com.example.fas.domain.model.common.PageResult;
 import java.util.List;
 
 /**
@@ -32,6 +33,17 @@ public interface AccountUseCase {
      * @return 勘定科目レスポンスリスト
      */
     List<AccountResponse> getAccountsByBsPlType(String bsPlType);
+
+    /**
+     * ページネーション付きで勘定科目を取得.
+     *
+     * @param page     ページ番号（0始まり）
+     * @param size     ページサイズ
+     * @param bsPlType BSPL区分（BS/PL/null）
+     * @param keyword  キーワード
+     * @return ページネーション結果
+     */
+    PageResult<AccountResponse> getAccounts(int page, int size, String bsPlType, String keyword);
 
     /**
      * 計上科目のみ取得.

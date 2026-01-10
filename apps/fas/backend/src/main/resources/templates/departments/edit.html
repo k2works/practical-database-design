@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>部門編集</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">部門編集</h1>
+
+    <form th:action="@{/departments/{code}(code=${form.departmentCode})}" th:object="${form}" method="post">
+        <div class="card">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <label for="departmentCode" class="col-md-2 col-form-label">部門コード</label>
+                    <div class="col-md-4">
+                        <input type="text" id="departmentCode" th:field="*{departmentCode}"
+                               class="form-control" readonly>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="departmentName" class="col-md-2 col-form-label">部門名</label>
+                    <div class="col-md-6">
+                        <input type="text" id="departmentName" th:field="*{departmentName}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('departmentName')} ? 'is-invalid'"
+                               maxlength="40" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('departmentName')}"
+                             th:errors="*{departmentName}"></div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="departmentShortName" class="col-md-2 col-form-label">部門略名</label>
+                    <div class="col-md-4">
+                        <input type="text" id="departmentShortName" th:field="*{departmentShortName}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('departmentShortName')} ? 'is-invalid'"
+                               maxlength="10">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('departmentShortName')}"
+                             th:errors="*{departmentShortName}"></div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="organizationLevel" class="col-md-2 col-form-label">組織階層</label>
+                    <div class="col-md-3">
+                        <select id="organizationLevel" th:field="*{organizationLevel}"
+                                class="form-select"
+                                th:classappend="${#fields.hasErrors('organizationLevel')} ? 'is-invalid'">
+                            <option value="0">0: 全社</option>
+                            <option value="1">1: 本部</option>
+                            <option value="2">2: 部</option>
+                            <option value="3">3: 課</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('organizationLevel')}"
+                             th:errors="*{organizationLevel}"></div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="departmentPath" class="col-md-2 col-form-label">部門パス</label>
+                    <div class="col-md-6">
+                        <input type="text" id="departmentPath" th:field="*{departmentPath}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('departmentPath')} ? 'is-invalid'"
+                               maxlength="100" placeholder="例: 00000~10000~11000">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('departmentPath')}"
+                             th:errors="*{departmentPath}"></div>
+                        <small class="text-muted">上位部門をチルダ(~)で連結</small>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="lowestLevelFlag" class="col-md-2 col-form-label">最下層フラグ</label>
+                    <div class="col-md-3">
+                        <select id="lowestLevelFlag" th:field="*{lowestLevelFlag}"
+                                class="form-select"
+                                th:classappend="${#fields.hasErrors('lowestLevelFlag')} ? 'is-invalid'">
+                            <option value="0">0: 中間</option>
+                            <option value="1">1: 最下層</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('lowestLevelFlag')}"
+                             th:errors="*{lowestLevelFlag}"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">更新</button>
+                <a th:href="@{/departments/{code}(code=${form.departmentCode})}" class="btn btn-secondary">キャンセル</a>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+</html>

@@ -50,7 +50,42 @@
         WHERE "勘定科目コード" = #{accountCode}
     </update>
 
-    <delete id="deleteAll">
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="AccountStructureResultMap">
+        SELECT * FROM "勘定科目構成マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("勘定科目パス") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "勘定科目構成マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                 OR LOWER("勘定科目パス") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 単一削除 -->
+    <delete id="delete">
+        DELETE FROM "勘定科目構成マスタ" WHERE "勘定科目コード" = #{accountCode}
+    </delete>
+
+    <!-- PostgreSQL用 deleteAll -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "勘定科目構成マスタ" CASCADE
+    </delete>
+
+    <!-- H2用 deleteAll -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "勘定科目構成マスタ"
     </delete>
 </mapper>

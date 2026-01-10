@@ -22,6 +22,30 @@ public interface AccountMapper {
 
     List<Account> findByTransactionElementType(@Param("transactionElementType") String type);
 
+    /**
+     * ページネーション付きで勘定科目を検索.
+     *
+     * @param offset   オフセット
+     * @param limit    リミット
+     * @param bsPlType BSPL区分（BS/PL/null）
+     * @param keyword  キーワード
+     * @return 勘定科目リスト
+     */
+    List<Account> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("bsPlType") String bsPlType,
+            @Param("keyword") String keyword);
+
+    /**
+     * 勘定科目の総件数を取得.
+     *
+     * @param bsPlType BSPL区分（BS/PL/null）
+     * @param keyword  キーワード
+     * @return 総件数
+     */
+    long count(@Param("bsPlType") String bsPlType, @Param("keyword") String keyword);
+
     void update(Account account);
 
     void delete(@Param("accountCode") String accountCode);

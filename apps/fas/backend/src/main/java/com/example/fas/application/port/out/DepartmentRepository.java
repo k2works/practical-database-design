@@ -1,5 +1,6 @@
 package com.example.fas.application.port.out;
 
+import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.domain.model.department.Department;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,17 @@ public interface DepartmentRepository {
      * @return 全部門のリスト
      */
     List<Department> findAll();
+
+    /**
+     * ページネーション付きで部門を検索.
+     *
+     * @param page    ページ番号（0始まり）
+     * @param size    ページサイズ
+     * @param keyword キーワード（部門コード、部門名）
+     * @param level   組織階層（null の場合は全階層）
+     * @return ページネーション結果
+     */
+    PageResult<Department> findWithPagination(int page, int size, String keyword, Integer level);
 
     /**
      * 階層で検索.
@@ -53,6 +65,13 @@ public interface DepartmentRepository {
      * @param department 部門
      */
     void save(Department department);
+
+    /**
+     * 部門を更新.
+     *
+     * @param department 部門
+     */
+    void update(Department department);
 
     /**
      * 部門を削除.

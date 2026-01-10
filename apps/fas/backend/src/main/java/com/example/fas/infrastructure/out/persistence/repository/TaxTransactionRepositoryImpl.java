@@ -1,6 +1,7 @@
 package com.example.fas.infrastructure.out.persistence.repository;
 
 import com.example.fas.application.port.out.TaxTransactionRepository;
+import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.domain.model.tax.TaxTransaction;
 import com.example.fas.infrastructure.out.persistence.mapper.TaxTransactionMapper;
 import java.util.List;
@@ -33,8 +34,21 @@ public class TaxTransactionRepositoryImpl implements TaxTransactionRepository {
     }
 
     @Override
+    public PageResult<TaxTransaction> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<TaxTransaction> content = taxTransactionMapper.findWithPagination(offset, size, keyword);
+        long totalElements = taxTransactionMapper.count(keyword);
+        return new PageResult<>(content, page, size, totalElements);
+    }
+
+    @Override
     public void update(TaxTransaction taxTransaction) {
         taxTransactionMapper.update(taxTransaction);
+    }
+
+    @Override
+    public void delete(String taxCode) {
+        taxTransactionMapper.delete(taxCode);
     }
 
     @Override

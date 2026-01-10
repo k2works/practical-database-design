@@ -12,6 +12,7 @@ import com.example.fas.domain.model.account.AggregationType;
 import com.example.fas.domain.model.account.BSPLType;
 import com.example.fas.domain.model.account.DebitCreditType;
 import com.example.fas.domain.model.account.TransactionElementType;
+import com.example.fas.domain.model.common.PageResult;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,15 @@ public class AccountApplicationService implements AccountUseCase {
         return accountRepository.findByBSPLType(type).stream()
                 .map(AccountResponse::from)
                 .toList();
+    }
+
+    @Override
+    public PageResult<AccountResponse> getAccounts(int page, int size, String bsPlType, String keyword) {
+        PageResult<Account> pageResult = accountRepository.findWithPagination(page, size, bsPlType, keyword);
+        List<AccountResponse> content = pageResult.getContent().stream()
+                .map(AccountResponse::from)
+                .toList();
+        return new PageResult<>(content, pageResult.getPage(), pageResult.getSize(), pageResult.getTotalElements());
     }
 
     @Override

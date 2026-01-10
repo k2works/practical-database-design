@@ -59,6 +59,43 @@
         ORDER BY "部門コード"
     </select>
 
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="DepartmentResultMap">
+        SELECT
+            "部門コード",
+            "部門名",
+            "部門略名",
+            "組織階層",
+            "部門パス",
+            "最下層フラグ"
+        FROM "部門マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("部門コード" LIKE '%' || #{keyword} || '%'
+                OR "部門名" LIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="level != null">
+                AND "組織階層" = #{level}
+            </if>
+        </where>
+        ORDER BY "部門コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "部門マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("部門コード" LIKE '%' || #{keyword} || '%'
+                OR "部門名" LIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="level != null">
+                AND "組織階層" = #{level}
+            </if>
+        </where>
+    </select>
+
     <!-- 階層で検索 -->
     <select id="findByOrganizationLevel" resultMap="DepartmentResultMap">
         SELECT
@@ -100,6 +137,17 @@
         WHERE "部門パス" LIKE #{pathPrefix} || '%'
         ORDER BY "部門コード"
     </select>
+
+    <!-- 部門を更新 -->
+    <update id="update" parameterType="com.example.fas.domain.model.department.Department">
+        UPDATE "部門マスタ"
+        SET "部門名" = #{departmentName},
+            "部門略名" = #{departmentShortName},
+            "組織階層" = #{organizationLevel},
+            "部門パス" = #{departmentPath},
+            "最下層フラグ" = #{lowestLevelFlag}
+        WHERE "部門コード" = #{departmentCode}
+    </update>
 
     <!-- 部門を削除 -->
     <delete id="deleteByCode">

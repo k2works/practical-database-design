@@ -35,6 +35,20 @@ public interface DepartmentMapper {
     List<Department> findAll();
 
     /**
+     * ページネーション付きで部門を検索.
+     */
+    List<Department> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("keyword") String keyword,
+            @Param("level") Integer level);
+
+    /**
+     * 検索条件に合致する件数を取得.
+     */
+    long count(@Param("keyword") String keyword, @Param("level") Integer level);
+
+    /**
      * 階層で検索.
      *
      * @param level 組織階層
@@ -56,6 +70,13 @@ public interface DepartmentMapper {
      * @return 配下部門のリスト
      */
     List<Department> findByPathPrefix(@Param("pathPrefix") String pathPrefix);
+
+    /**
+     * 部門を更新.
+     *
+     * @param department 部門
+     */
+    void update(Department department);
 
     /**
      * 部門を削除.

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>課税取引詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">課税取引詳細</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-md-2">課税取引コード</dt>
+                <dd class="col-md-10" th:text="${taxTransaction.taxCode}"></dd>
+
+                <dt class="col-md-2">課税取引名</dt>
+                <dd class="col-md-10" th:text="${taxTransaction.taxName}"></dd>
+
+                <dt class="col-md-2">税率</dt>
+                <dd class="col-md-10" th:text="${#numbers.formatPercent(taxTransaction.taxRate, 1, 1)}"></dd>
+            </dl>
+        </div>
+        <div class="card-footer">
+            <a th:href="@{/tax-transactions/{code}/edit(code=${taxTransaction.taxCode})}"
+               class="btn btn-primary">編集</a>
+            <form th:action="@{/tax-transactions/{code}/delete(code=${taxTransaction.taxCode})}"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('削除してよろしいですか？');">
+                <button type="submit" class="btn btn-danger">削除</button>
+            </form>
+            <a th:href="@{/tax-transactions}" class="btn btn-secondary">一覧に戻る</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>勘定科目編集</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">勘定科目編集</h1>
+
+    <!-- アクションボタン -->
+    <div class="mb-3">
+        <a th:href="@{/accounts/{code}(code=${form.accountCode})}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/accounts/{code}(code=${form.accountCode})}" th:object="${form}" method="post">
+                <!-- 勘定科目コード（編集不可） -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">勘定科目コード</label>
+                    <div class="col-md-2">
+                        <input type="text" th:field="*{accountCode}"
+                               class="form-control-plaintext" readonly>
+                    </div>
+                </div>
+
+                <!-- 勘定科目名 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">勘定科目名</label>
+                    <div class="col-md-6">
+                        <input type="text" th:field="*{accountName}"
+                               class="form-control" th:classappend="${#fields.hasErrors('accountName')} ? 'is-invalid'"
+                               maxlength="40">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountName')}"
+                             th:errors="*{accountName}"></div>
+                    </div>
+                </div>
+
+                <!-- 勘定科目略名 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">勘定科目略名</label>
+                    <div class="col-md-3">
+                        <input type="text" th:field="*{accountShortName}"
+                               class="form-control" th:classappend="${#fields.hasErrors('accountShortName')} ? 'is-invalid'"
+                               maxlength="10">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountShortName')}"
+                             th:errors="*{accountShortName}"></div>
+                        <small class="form-text text-muted">10文字以内</small>
+                    </div>
+                </div>
+
+                <!-- 勘定科目カナ -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">勘定科目カナ</label>
+                    <div class="col-md-6">
+                        <input type="text" th:field="*{accountNameKana}"
+                               class="form-control" th:classappend="${#fields.hasErrors('accountNameKana')} ? 'is-invalid'"
+                               maxlength="40">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountNameKana')}"
+                             th:errors="*{accountNameKana}"></div>
+                    </div>
+                </div>
+
+                <!-- BSPL区分（編集不可） -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">BSPL区分</label>
+                    <div class="col-md-3">
+                        <input type="hidden" th:field="*{bsPlType}">
+                        <span class="form-control-plaintext">
+                            <span th:if="${form.bsPlType == 'BS'}" class="badge bg-primary">BS（貸借対照表）</span>
+                            <span th:if="${form.bsPlType == 'PL'}" class="badge bg-success">PL（損益計算書）</span>
+                        </span>
+                        <small class="form-text text-muted">BSPL区分は変更できません</small>
+                    </div>
+                </div>
+
+                <!-- 貸借区分（編集不可） -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">貸借区分</label>
+                    <div class="col-md-3">
+                        <input type="hidden" th:field="*{dcType}">
+                        <span class="form-control-plaintext" th:text="${form.dcType}"></span>
+                        <small class="form-text text-muted">貸借区分は変更できません</small>
+                    </div>
+                </div>
+
+                <!-- 取引要素区分（編集不可） -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">取引要素区分</label>
+                    <div class="col-md-3">
+                        <input type="hidden" th:field="*{elementType}">
+                        <span class="form-control-plaintext" th:text="${form.elementType}"></span>
+                        <small class="form-text text-muted">取引要素区分は変更できません</small>
+                    </div>
+                </div>
+
+                <!-- 集計区分（編集不可） -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">集計区分</label>
+                    <div class="col-md-3">
+                        <input type="hidden" th:field="*{summaryType}">
+                        <span class="form-control-plaintext">
+                            <span th:if="${form.summaryType == '見出科目'}" class="badge bg-secondary">見出科目</span>
+                            <span th:if="${form.summaryType == '集計科目'}" class="badge bg-info">集計科目</span>
+                            <span th:if="${form.summaryType == '計上科目'}" class="badge bg-primary">計上科目</span>
+                        </span>
+                        <small class="form-text text-muted">集計区分は変更できません</small>
+                    </div>
+                </div>
+
+                <!-- ボタン -->
+                <div class="row">
+                    <div class="col-md-9 offset-md-3">
+                        <button type="submit" class="btn btn-primary">更新</button>
+                        <a th:href="@{/accounts/{code}(code=${form.accountCode})}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

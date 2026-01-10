@@ -30,6 +30,28 @@
         ORDER BY "課税取引コード"
     </select>
 
+    <select id="findWithPagination" resultMap="TaxTransactionResultMap">
+        SELECT * FROM "課税取引マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("課税取引コード" LIKE '%' || #{keyword} || '%'
+                OR "課税取引名" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "課税取引コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "課税取引マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("課税取引コード" LIKE '%' || #{keyword} || '%'
+                OR "課税取引名" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.fas.domain.model.tax.TaxTransaction">
         UPDATE "課税取引マスタ"
         SET "課税取引名" = #{taxName},
@@ -38,6 +60,11 @@
             "更新者名" = #{updatedBy}
         WHERE "課税取引コード" = #{taxCode}
     </update>
+
+    <delete id="delete">
+        DELETE FROM "課税取引マスタ"
+        WHERE "課税取引コード" = #{taxCode}
+    </delete>
 
     <delete id="deleteAll">
         TRUNCATE TABLE "課税取引マスタ" CASCADE

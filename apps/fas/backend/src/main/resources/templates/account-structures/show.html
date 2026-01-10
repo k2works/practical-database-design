@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>勘定科目構成詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">勘定科目構成詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="mb-3">
+        <a th:href="@{/account-structures}" class="btn btn-secondary">一覧に戻る</a>
+        <a th:href="@{/account-structures/{code}/edit(code=${structure.accountCode})}"
+           class="btn btn-primary">編集</a>
+        <form th:action="@{/account-structures/{code}/delete(code=${structure.accountCode})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('削除してよろしいですか？');">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 勘定科目構成詳細 -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th style="width: 200px;" class="table-light">勘定科目コード</th>
+                    <td th:text="${structure.accountCode}"></td>
+                </tr>
+                <tr>
+                    <th class="table-light">勘定科目名</th>
+                    <td th:text="${structure.accountName}"></td>
+                </tr>
+                <tr>
+                    <th class="table-light">パス</th>
+                    <td><code th:text="${structure.accountPath}"></code></td>
+                </tr>
+                <tr>
+                    <th class="table-light">親科目コード</th>
+                    <td>
+                        <span th:if="${structure.parentCode != null}">
+                            <a th:href="@{/account-structures/{code}(code=${structure.parentCode})}"
+                               th:text="${structure.parentCode}"></a>
+                        </span>
+                        <span th:if="${structure.parentCode == null}" class="text-muted">（ルート科目）</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="table-light">階層レベル</th>
+                    <td>
+                        <span class="badge bg-secondary" th:text="${structure.depth}"></span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>部門一覧</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">部門マスタ</h1>
+
+    <!-- アクションボタン -->
+    <div class="mb-3">
+        <a th:href="@{/departments/new}" class="btn btn-primary">新規登録</a>
+    </div>
+
+    <!-- 検索フォーム -->
+    <div class="search-form mb-4">
+        <form th:action="@{/departments}" method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">組織階層</label>
+                <select name="level" class="form-select">
+                    <option value="">すべて</option>
+                    <option value="0" th:selected="${selectedLevel != null and selectedLevel == 0}">全社</option>
+                    <option value="1" th:selected="${selectedLevel != null and selectedLevel == 1}">本部</option>
+                    <option value="2" th:selected="${selectedLevel != null and selectedLevel == 2}">部</option>
+                    <option value="3" th:selected="${selectedLevel != null and selectedLevel == 3}">課</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">キーワード</label>
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="部門コード、部門名">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">表示件数</label>
+                <select name="size" class="form-select">
+                    <option value="10" th:selected="${currentSize == 10}">10件</option>
+                    <option value="20" th:selected="${currentSize == 20}">20件</option>
+                    <option value="50" th:selected="${currentSize == 50}">50件</option>
+                    <option value="100" th:selected="${currentSize == 100}">100件</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">検索</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 部門一覧テーブル -->
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>部門コード</th>
+                <th>部門名</th>
+                <th>略名</th>
+                <th>組織階層</th>
+                <th>最下層</th>
+                <th class="text-center">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="department : ${departments}">
+                <td>
+                    <a th:href="@{/departments/{code}(code=${department.departmentCode})}"
+                       th:text="${department.departmentCode}"></a>
+                </td>
+                <td th:text="${department.departmentName}"></td>
+                <td th:text="${department.departmentShortName}"></td>
+                <td>
+                    <span th:text="${department.organizationLevelName}"></span>
+                    <small class="text-muted" th:text="'(' + ${department.organizationLevel} + ')'"></small>
+                </td>
+                <td>
+                    <span th:if="${department.lowestLevel}" class="badge bg-success">最下層</span>
+                    <span th:unless="${department.lowestLevel}" class="badge bg-secondary">中間</span>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <a th:href="@{/departments/{code}/edit(code=${department.departmentCode})}"
+                           class="btn btn-outline-primary">編集</a>
+                        <form th:action="@{/departments/{code}/delete(code=${department.departmentCode})}"
+                              method="post" class="d-inline"
+                              onsubmit="return confirm('削除してよろしいですか？');">
+                            <button type="submit" class="btn btn-outline-danger">削除</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(departments)}">
+                <td colspan="6" class="text-center text-muted">部門がありません</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ページネーション -->
+    <div class="mt-3">
+        <div class="text-muted text-center mb-2">
+            <span th:if="${page.totalElements > 0}">
+                <span th:text="${page.page * page.size + 1}">1</span> -
+                <span th:text="${page.page * page.size + #lists.size(departments)}">10</span> 件
+                （全 <span th:text="${page.totalElements}">0</span> 件）
+            </span>
+            <span th:if="${page.totalElements == 0}">0 件</span>
+        </div>
+
+        <nav th:if="${page.totalPages > 1}" aria-label="ページナビゲーション">
+            <ul class="pagination justify-content-center mb-0">
+                <!-- 最初のページへ -->
+                <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                    <a class="page-link" th:href="@{/departments(page=0, size=${currentSize}, keyword=${keyword}, level=${selectedLevel})}">&laquo;</a>
+                </li>
+                <!-- 前のページへ -->
+                <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                    <a class="page-link" th:href="@{/departments(page=${page.page - 1}, size=${currentSize}, keyword=${keyword}, level=${selectedLevel})}">&lsaquo;</a>
+                </li>
+
+                <!-- ページ番号 -->
+                <th:block th:with="startPage=${page.page > 2 ? page.page - 2 : 0},
+                                   endPage=${page.page + 2 < page.totalPages - 1 ? page.page + 2 : page.totalPages - 1}">
+                    <li class="page-item" th:if="${startPage > 0}">
+                        <span class="page-link">...</span>
+                    </li>
+                    <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                        class="page-item"
+                        th:classappend="${i == page.page} ? 'active'">
+                        <a class="page-link"
+                           th:href="@{/departments(page=${i}, size=${currentSize}, keyword=${keyword}, level=${selectedLevel})}"
+                           th:text="${i + 1}">1</a>
+                    </li>
+                    <li class="page-item" th:if="${endPage < page.totalPages - 1}">
+                        <span class="page-link">...</span>
+                    </li>
+                </th:block>
+
+                <!-- 次のページへ -->
+                <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                    <a class="page-link" th:href="@{/departments(page=${page.page + 1}, size=${currentSize}, keyword=${keyword}, level=${selectedLevel})}">&rsaquo;</a>
+                </li>
+                <!-- 最後のページへ -->
+                <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                    <a class="page-link" th:href="@{/departments(page=${page.totalPages - 1}, size=${currentSize}, keyword=${keyword}, level=${selectedLevel})}">&raquo;</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

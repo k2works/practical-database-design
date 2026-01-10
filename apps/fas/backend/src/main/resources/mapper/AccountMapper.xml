@@ -151,6 +151,66 @@
         WHERE "勘定科目コード" = #{accountCode}
     </update>
 
+    <!-- ページネーション付き検索（PostgreSQL） -->
+    <select id="findWithPagination" resultMap="AccountResultMap" databaseId="postgresql">
+        SELECT * FROM "勘定科目マスタ"
+        <where>
+            <if test="bsPlType != null and bsPlType != ''">
+                "BSPL区分" = #{bsPlType}::"BSPL区分"
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("勘定科目名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- ページネーション付き検索（H2） -->
+    <select id="findWithPagination" resultMap="AccountResultMap" databaseId="h2">
+        SELECT * FROM "勘定科目マスタ"
+        <where>
+            <if test="bsPlType != null and bsPlType != ''">
+                "BSPL区分" = #{bsPlType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("勘定科目名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得（PostgreSQL） -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "勘定科目マスタ"
+        <where>
+            <if test="bsPlType != null and bsPlType != ''">
+                "BSPL区分" = #{bsPlType}::"BSPL区分"
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("勘定科目名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 件数取得（H2） -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "勘定科目マスタ"
+        <where>
+            <if test="bsPlType != null and bsPlType != ''">
+                "BSPL区分" = #{bsPlType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("勘定科目名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <!-- 単一削除 -->
     <delete id="delete">
         DELETE FROM "勘定科目構成マスタ" WHERE "勘定科目コード" = #{accountCode};

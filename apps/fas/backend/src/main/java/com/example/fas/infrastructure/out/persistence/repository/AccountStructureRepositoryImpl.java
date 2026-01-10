@@ -2,6 +2,7 @@ package com.example.fas.infrastructure.out.persistence.repository;
 
 import com.example.fas.application.port.out.AccountStructureRepository;
 import com.example.fas.domain.model.account.AccountStructure;
+import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.out.persistence.mapper.AccountStructureMapper;
 import java.util.List;
 import java.util.Optional;
@@ -43,8 +44,21 @@ public class AccountStructureRepositoryImpl implements AccountStructureRepositor
     }
 
     @Override
+    public PageResult<AccountStructure> findWithPagination(int page, int size, String keyword) {
+        int offset = page * size;
+        List<AccountStructure> content = accountStructureMapper.findWithPagination(offset, size, keyword);
+        long totalElements = accountStructureMapper.count(keyword);
+        return new PageResult<>(content, page, size, totalElements);
+    }
+
+    @Override
     public void update(AccountStructure structure) {
         accountStructureMapper.update(structure);
+    }
+
+    @Override
+    public void delete(String accountCode) {
+        accountStructureMapper.delete(accountCode);
     }
 
     @Override
