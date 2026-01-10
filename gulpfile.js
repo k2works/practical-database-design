@@ -13,6 +13,7 @@ import herokuSmsTasks from './ops/scripts/heroku-sms.js';
 import herokuFasTasks from './ops/scripts/heroku-fas.js';
 import dockerSmsTasks from './ops/scripts/docker-sms.js';
 import dockerFasTasks from './ops/scripts/docker-fas.js';
+import testTasks from './ops/scripts/test.js';
 
 // Load gulp tasks from script modules
 mkdocsTasks(gulp);
@@ -23,6 +24,7 @@ herokuSmsTasks(gulp);
 herokuFasTasks(gulp);
 dockerSmsTasks(gulp);
 dockerFasTasks(gulp);
+testTasks(gulp);
 
 export const dev = gulp.series(
     gulp.parallel('mkdocs:serve', 'mkdocs:open'),

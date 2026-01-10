@@ -15,6 +15,9 @@
     "docker:sms:down": "gulp docker:sms:down",
     "docker:fas:up": "gulp docker:fas:up",
     "docker:fas:down": "gulp docker:fas:down",
+    "test:sms:backend": "gulp test:sms:backend",
+    "test:fas:backend": "gulp test:fas:backend",
+    "test:backend": "gulp test:backend",
     "claude:yol": "claude --dangerously-skip-permissions",
     "copilot:yol": "copilot --allow-all-tools",
     "prepare": "husky"
