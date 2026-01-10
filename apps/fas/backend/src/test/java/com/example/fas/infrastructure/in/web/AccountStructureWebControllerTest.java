@@ -2,7 +2,6 @@ package com.example.fas.infrastructure.in.web;
 
 import com.example.fas.application.port.in.AccountStructureUseCase;
 import com.example.fas.application.port.in.AccountUseCase;
-import com.example.fas.application.port.in.dto.AccountResponse;
 import com.example.fas.application.port.in.dto.AccountStructureResponse;
 import com.example.fas.domain.model.common.PageResult;
 import org.junit.jupiter.api.DisplayName;
