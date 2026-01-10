@@ -2,6 +2,7 @@ package com.example.fas.infrastructure.in.web;
 
 import com.example.fas.application.port.in.DepartmentUseCase;
 import com.example.fas.application.port.in.dto.DepartmentResponse;
+import com.example.fas.domain.exception.AccountingException;
 import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.in.web.form.DepartmentForm;
 import jakarta.validation.Valid;
@@ -85,9 +86,14 @@ public class DepartmentWebController {
             return "departments/new";
         }
 
-        departmentUseCase.createDepartment(form.toCreateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "部門を登録しました");
-        return "redirect:/departments";
+        try {
+            departmentUseCase.createDepartment(form.toCreateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "部門を登録しました");
+            return "redirect:/departments";
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "departments/new";
+        }
     }
 
     /**
@@ -115,9 +121,14 @@ public class DepartmentWebController {
             return "departments/edit";
         }
 
-        departmentUseCase.updateDepartment(departmentCode, form.toUpdateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "部門を更新しました");
-        return "redirect:/departments/" + departmentCode;
+        try {
+            departmentUseCase.updateDepartment(departmentCode, form.toUpdateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "部門を更新しました");
+            return "redirect:/departments/" + departmentCode;
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "departments/edit";
+        }
     }
 
     /**

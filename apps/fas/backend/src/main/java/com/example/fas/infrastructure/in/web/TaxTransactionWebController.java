@@ -2,6 +2,7 @@ package com.example.fas.infrastructure.in.web;
 
 import com.example.fas.application.port.in.TaxTransactionUseCase;
 import com.example.fas.application.port.in.dto.TaxTransactionResponse;
+import com.example.fas.domain.exception.AccountingException;
 import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.in.web.form.TaxTransactionForm;
 import jakarta.validation.Valid;
@@ -83,9 +84,14 @@ public class TaxTransactionWebController {
             return "tax-transactions/new";
         }
 
-        taxTransactionUseCase.createTaxTransaction(form.toCreateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "課税取引を登録しました");
-        return "redirect:/tax-transactions";
+        try {
+            taxTransactionUseCase.createTaxTransaction(form.toCreateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "課税取引を登録しました");
+            return "redirect:/tax-transactions";
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "tax-transactions/new";
+        }
     }
 
     /**
@@ -113,9 +119,14 @@ public class TaxTransactionWebController {
             return "tax-transactions/edit";
         }
 
-        taxTransactionUseCase.updateTaxTransaction(taxCode, form.toUpdateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "課税取引を更新しました");
-        return "redirect:/tax-transactions/" + taxCode;
+        try {
+            taxTransactionUseCase.updateTaxTransaction(taxCode, form.toUpdateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "課税取引を更新しました");
+            return "redirect:/tax-transactions/" + taxCode;
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "tax-transactions/edit";
+        }
     }
 
     /**

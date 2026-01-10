@@ -3,6 +3,7 @@ package com.example.fas.infrastructure.in.web;
 import com.example.fas.application.port.in.AccountStructureUseCase;
 import com.example.fas.application.port.in.AccountUseCase;
 import com.example.fas.application.port.in.dto.AccountStructureResponse;
+import com.example.fas.domain.exception.AccountingException;
 import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.in.web.form.AccountStructureForm;
 import jakarta.validation.Valid;
@@ -90,9 +91,15 @@ public class AccountStructureWebController {
             return "account-structures/new";
         }
 
-        accountStructureUseCase.createAccountStructure(form.toCreateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "勘定科目構成を登録しました");
-        return "redirect:/account-structures";
+        try {
+            accountStructureUseCase.createAccountStructure(form.toCreateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "勘定科目構成を登録しました");
+            return "redirect:/account-structures";
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("accounts", accountUseCase.getAllAccounts());
+            return "account-structures/new";
+        }
     }
 
     /**
@@ -122,9 +129,15 @@ public class AccountStructureWebController {
             return "account-structures/edit";
         }
 
-        accountStructureUseCase.updateAccountStructure(accountCode, form.toUpdateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "勘定科目構成を更新しました");
-        return "redirect:/account-structures/" + accountCode;
+        try {
+            accountStructureUseCase.updateAccountStructure(accountCode, form.toUpdateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "勘定科目構成を更新しました");
+            return "redirect:/account-structures/" + accountCode;
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("accounts", accountUseCase.getAllAccounts());
+            return "account-structures/edit";
+        }
     }
 
     /**

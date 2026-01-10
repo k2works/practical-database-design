@@ -23,7 +23,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 /**
  * グローバル例外ハンドラー.
  */
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "com.example.fas.infrastructure.in.rest")
 @Slf4j
 public class GlobalExceptionHandler {
 

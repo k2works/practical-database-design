@@ -2,6 +2,7 @@ package com.example.fas.infrastructure.in.web;
 
 import com.example.fas.application.port.in.AccountUseCase;
 import com.example.fas.application.port.in.dto.AccountResponse;
+import com.example.fas.domain.exception.AccountingException;
 import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.in.web.form.AccountForm;
 import jakarta.validation.Valid;
@@ -86,9 +87,14 @@ public class AccountWebController {
             return "accounts/new";
         }
 
-        accountUseCase.createAccount(form.toCreateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "勘定科目を登録しました");
-        return "redirect:/accounts";
+        try {
+            accountUseCase.createAccount(form.toCreateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "勘定科目を登録しました");
+            return "redirect:/accounts";
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "accounts/new";
+        }
     }
 
     /**
@@ -116,9 +122,14 @@ public class AccountWebController {
             return "accounts/edit";
         }
 
-        accountUseCase.updateAccount(accountCode, form.toUpdateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "勘定科目を更新しました");
-        return "redirect:/accounts/" + accountCode;
+        try {
+            accountUseCase.updateAccount(accountCode, form.toUpdateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "勘定科目を更新しました");
+            return "redirect:/accounts/" + accountCode;
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "accounts/edit";
+        }
     }
 
     /**

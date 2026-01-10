@@ -4,6 +4,7 @@ import com.example.fas.application.port.in.AccountUseCase;
 import com.example.fas.application.port.in.DepartmentUseCase;
 import com.example.fas.application.port.in.JournalUseCase;
 import com.example.fas.application.port.in.dto.JournalResponse;
+import com.example.fas.domain.exception.AccountingException;
 import com.example.fas.domain.model.common.PageResult;
 import com.example.fas.infrastructure.in.web.form.JournalForm;
 import jakarta.validation.Valid;
@@ -105,9 +106,16 @@ public class JournalWebController {
             return "journals/new";
         }
 
-        JournalResponse created = journalUseCase.createJournal(form.toCreateCommand());
-        redirectAttributes.addFlashAttribute("successMessage", "仕訳を登録しました");
-        return "redirect:/journals/" + created.getJournalVoucherNumber();
+        try {
+            JournalResponse created = journalUseCase.createJournal(form.toCreateCommand());
+            redirectAttributes.addFlashAttribute("successMessage", "仕訳を登録しました");
+            return "redirect:/journals/" + created.getJournalVoucherNumber();
+        } catch (AccountingException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("accounts", accountUseCase.getAllAccounts());
+            model.addAttribute("departments", departmentUseCase.getAllDepartments());
+            return "journals/new";
+        }
     }
 
     /**
