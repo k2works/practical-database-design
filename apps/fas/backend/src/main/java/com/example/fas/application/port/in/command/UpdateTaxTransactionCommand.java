@@ -1,4 +1,4 @@
-package com.example.fas.application.port.in.dto;
+package com.example.fas.application.port.in.command;
 
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;

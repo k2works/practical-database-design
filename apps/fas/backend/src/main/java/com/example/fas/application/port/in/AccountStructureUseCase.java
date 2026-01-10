@@ -1,8 +1,8 @@
 package com.example.fas.application.port.in;
 
+import com.example.fas.application.port.in.command.CreateAccountStructureCommand;
+import com.example.fas.application.port.in.command.UpdateAccountStructureCommand;
 import com.example.fas.application.port.in.dto.AccountStructureResponse;
-import com.example.fas.application.port.in.dto.CreateAccountStructureCommand;
-import com.example.fas.application.port.in.dto.UpdateAccountStructureCommand;
 import com.example.fas.domain.model.common.PageResult;
 import java.util.List;
 

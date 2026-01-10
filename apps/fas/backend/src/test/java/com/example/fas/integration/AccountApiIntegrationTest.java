@@ -3,9 +3,9 @@ package com.example.fas.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.fas.application.port.in.command.CreateAccountCommand;
+import com.example.fas.application.port.in.command.UpdateAccountCommand;
 import com.example.fas.application.port.in.dto.AccountResponse;
-import com.example.fas.application.port.in.dto.CreateAccountCommand;
-import com.example.fas.application.port.in.dto.UpdateAccountCommand;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

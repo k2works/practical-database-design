@@ -6,9 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.fas.application.port.in.dto.CreateJournalCommand;
-import com.example.fas.application.port.in.dto.CreateJournalCommand.DebitCreditCommand;
-import com.example.fas.application.port.in.dto.CreateJournalCommand.JournalDetailCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand.DebitCreditCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand.JournalDetailCommand;
 import com.example.fas.application.port.in.dto.JournalResponse;
 import com.example.fas.application.port.out.JournalRepository;
 import com.example.fas.domain.exception.JournalBalanceException;

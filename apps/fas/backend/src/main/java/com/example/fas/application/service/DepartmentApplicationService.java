@@ -1,9 +1,9 @@
 package com.example.fas.application.service;
 
 import com.example.fas.application.port.in.DepartmentUseCase;
-import com.example.fas.application.port.in.dto.CreateDepartmentCommand;
+import com.example.fas.application.port.in.command.CreateDepartmentCommand;
+import com.example.fas.application.port.in.command.UpdateDepartmentCommand;
 import com.example.fas.application.port.in.dto.DepartmentResponse;
-import com.example.fas.application.port.in.dto.UpdateDepartmentCommand;
 import com.example.fas.application.port.out.DepartmentRepository;
 import com.example.fas.domain.exception.DepartmentAlreadyExistsException;
 import com.example.fas.domain.exception.DepartmentNotFoundException;

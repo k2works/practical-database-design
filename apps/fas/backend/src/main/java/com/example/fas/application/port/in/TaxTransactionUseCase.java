@@ -1,8 +1,8 @@
 package com.example.fas.application.port.in;
 
-import com.example.fas.application.port.in.dto.CreateTaxTransactionCommand;
+import com.example.fas.application.port.in.command.CreateTaxTransactionCommand;
+import com.example.fas.application.port.in.command.UpdateTaxTransactionCommand;
 import com.example.fas.application.port.in.dto.TaxTransactionResponse;
-import com.example.fas.application.port.in.dto.UpdateTaxTransactionCommand;
 import com.example.fas.domain.model.common.PageResult;
 import java.util.List;
 

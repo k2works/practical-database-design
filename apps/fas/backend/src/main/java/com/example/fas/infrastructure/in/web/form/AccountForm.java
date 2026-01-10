@@ -1,8 +1,8 @@
 package com.example.fas.infrastructure.in.web.form;
 
+import com.example.fas.application.port.in.command.CreateAccountCommand;
+import com.example.fas.application.port.in.command.UpdateAccountCommand;
 import com.example.fas.application.port.in.dto.AccountResponse;
-import com.example.fas.application.port.in.dto.CreateAccountCommand;
-import com.example.fas.application.port.in.dto.UpdateAccountCommand;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;

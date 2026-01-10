@@ -1,7 +1,7 @@
 package com.example.fas.infrastructure.in.web.form;
 
-import com.example.fas.application.port.in.dto.CreateJournalCommand;
-import com.example.fas.application.port.in.dto.CreateJournalCommand.JournalDetailCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand.JournalDetailCommand;
 import com.example.fas.application.port.in.dto.JournalResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;

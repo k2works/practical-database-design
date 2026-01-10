@@ -1,4 +1,4 @@
-package com.example.fas.application.port.in.dto;
+package com.example.fas.application.port.in.command;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,6 +1,6 @@
 package com.example.fas.application.port.in;
 
-import com.example.fas.application.port.in.dto.CreateJournalCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand;
 import com.example.fas.application.port.in.dto.JournalImportResult;
 import com.example.fas.application.port.in.dto.JournalResponse;
 import com.example.fas.domain.model.common.PageResult;

@@ -1,7 +1,7 @@
 package com.example.fas.infrastructure.in.rest;
 
 import com.example.fas.application.port.in.JournalUseCase;
-import com.example.fas.application.port.in.dto.CreateJournalCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand;
 import com.example.fas.application.port.in.dto.JournalResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

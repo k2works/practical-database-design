@@ -6,9 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import com.example.fas.application.port.in.command.CreateAccountCommand;
+import com.example.fas.application.port.in.command.UpdateAccountCommand;
 import com.example.fas.application.port.in.dto.AccountResponse;
-import com.example.fas.application.port.in.dto.CreateAccountCommand;
-import com.example.fas.application.port.in.dto.UpdateAccountCommand;
 import com.example.fas.application.port.out.AccountRepository;
 import com.example.fas.domain.exception.AccountAlreadyExistsException;
 import com.example.fas.domain.exception.AccountNotFoundException;

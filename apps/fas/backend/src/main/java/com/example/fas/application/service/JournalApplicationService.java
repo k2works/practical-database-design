@@ -1,9 +1,9 @@
 package com.example.fas.application.service;
 
 import com.example.fas.application.port.in.JournalUseCase;
-import com.example.fas.application.port.in.dto.CreateJournalCommand;
-import com.example.fas.application.port.in.dto.CreateJournalCommand.DebitCreditCommand;
-import com.example.fas.application.port.in.dto.CreateJournalCommand.JournalDetailCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand.DebitCreditCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand.JournalDetailCommand;
 import com.example.fas.application.port.in.dto.JournalImportResult;
 import com.example.fas.application.port.in.dto.JournalImportResult.ImportError;
 import com.example.fas.application.port.in.dto.JournalResponse;

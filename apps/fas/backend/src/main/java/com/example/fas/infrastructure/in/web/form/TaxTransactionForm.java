@@ -1,8 +1,8 @@
 package com.example.fas.infrastructure.in.web.form;
 
-import com.example.fas.application.port.in.dto.CreateTaxTransactionCommand;
+import com.example.fas.application.port.in.command.CreateTaxTransactionCommand;
+import com.example.fas.application.port.in.command.UpdateTaxTransactionCommand;
 import com.example.fas.application.port.in.dto.TaxTransactionResponse;
-import com.example.fas.application.port.in.dto.UpdateTaxTransactionCommand;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;

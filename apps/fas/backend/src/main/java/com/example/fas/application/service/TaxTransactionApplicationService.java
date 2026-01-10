@@ -1,9 +1,9 @@
 package com.example.fas.application.service;
 
 import com.example.fas.application.port.in.TaxTransactionUseCase;
-import com.example.fas.application.port.in.dto.CreateTaxTransactionCommand;
+import com.example.fas.application.port.in.command.CreateTaxTransactionCommand;
+import com.example.fas.application.port.in.command.UpdateTaxTransactionCommand;
 import com.example.fas.application.port.in.dto.TaxTransactionResponse;
-import com.example.fas.application.port.in.dto.UpdateTaxTransactionCommand;
 import com.example.fas.application.port.out.TaxTransactionRepository;
 import com.example.fas.domain.exception.TaxTransactionAlreadyExistsException;
 import com.example.fas.domain.exception.TaxTransactionNotFoundException;

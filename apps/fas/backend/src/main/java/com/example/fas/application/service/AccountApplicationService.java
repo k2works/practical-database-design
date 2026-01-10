@@ -1,9 +1,9 @@
 package com.example.fas.application.service;
 
 import com.example.fas.application.port.in.AccountUseCase;
+import com.example.fas.application.port.in.command.CreateAccountCommand;
+import com.example.fas.application.port.in.command.UpdateAccountCommand;
 import com.example.fas.application.port.in.dto.AccountResponse;
-import com.example.fas.application.port.in.dto.CreateAccountCommand;
-import com.example.fas.application.port.in.dto.UpdateAccountCommand;
 import com.example.fas.application.port.out.AccountRepository;
 import com.example.fas.domain.exception.AccountAlreadyExistsException;
 import com.example.fas.domain.exception.AccountNotFoundException;

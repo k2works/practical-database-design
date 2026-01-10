@@ -1,8 +1,8 @@
 package com.example.fas.infrastructure.in.web.form;
 
+import com.example.fas.application.port.in.command.CreateAccountStructureCommand;
+import com.example.fas.application.port.in.command.UpdateAccountStructureCommand;
 import com.example.fas.application.port.in.dto.AccountStructureResponse;
-import com.example.fas.application.port.in.dto.CreateAccountStructureCommand;
-import com.example.fas.application.port.in.dto.UpdateAccountStructureCommand;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

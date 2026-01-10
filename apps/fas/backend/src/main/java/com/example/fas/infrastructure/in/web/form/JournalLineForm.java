@@ -1,6 +1,6 @@
 package com.example.fas.infrastructure.in.web.form;
 
-import com.example.fas.application.port.in.dto.CreateJournalCommand.DebitCreditCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand.DebitCreditCommand;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

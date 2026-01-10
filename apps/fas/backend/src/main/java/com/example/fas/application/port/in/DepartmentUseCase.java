@@ -1,8 +1,8 @@
 package com.example.fas.application.port.in;
 
-import com.example.fas.application.port.in.dto.CreateDepartmentCommand;
+import com.example.fas.application.port.in.command.CreateDepartmentCommand;
+import com.example.fas.application.port.in.command.UpdateDepartmentCommand;
 import com.example.fas.application.port.in.dto.DepartmentResponse;
-import com.example.fas.application.port.in.dto.UpdateDepartmentCommand;
 import com.example.fas.domain.model.common.PageResult;
 import java.util.List;
 

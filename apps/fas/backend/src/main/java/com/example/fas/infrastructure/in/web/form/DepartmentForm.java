@@ -1,8 +1,8 @@
 package com.example.fas.infrastructure.in.web.form;
 
-import com.example.fas.application.port.in.dto.CreateDepartmentCommand;
+import com.example.fas.application.port.in.command.CreateDepartmentCommand;
+import com.example.fas.application.port.in.command.UpdateDepartmentCommand;
 import com.example.fas.application.port.in.dto.DepartmentResponse;
-import com.example.fas.application.port.in.dto.UpdateDepartmentCommand;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

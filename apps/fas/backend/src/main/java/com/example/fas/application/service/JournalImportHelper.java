@@ -1,8 +1,8 @@
 package com.example.fas.application.service;
 
-import com.example.fas.application.port.in.dto.CreateJournalCommand;
-import com.example.fas.application.port.in.dto.CreateJournalCommand.DebitCreditCommand;
-import com.example.fas.application.port.in.dto.CreateJournalCommand.JournalDetailCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand.DebitCreditCommand;
+import com.example.fas.application.port.in.command.CreateJournalCommand.JournalDetailCommand;
 import com.example.fas.application.port.out.JournalRepository;
 import com.example.fas.domain.exception.JournalBalanceException;
 import com.example.fas.domain.model.account.DebitCreditType;
