@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 受注取込画面コントローラーのテスト.
  */
 @WebMvcTest(OrderImportWebController.class)
+@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "PMD.TooManyStaticImports"})
 class OrderImportWebControllerTest {
 
     @Autowired
