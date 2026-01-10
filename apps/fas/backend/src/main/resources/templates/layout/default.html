@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">財務会計システム</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+
+    <!-- カスタム CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <!-- htmx（部分更新用） -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{/}">財務会計システム</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">マスタ</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/accounts}">勘定科目マスタ</a></li>
+                            <li><a class="dropdown-item" th:href="@{/account-structures}">勘定科目構成</a></li>
+                            <li><a class="dropdown-item" th:href="@{/tax-transactions}">課税取引マスタ</a></li>
+                            <li><a class="dropdown-item" th:href="@{/departments}">部門マスタ</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">仕訳</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/journals}">仕訳一覧</a></li>
+                            <li><a class="dropdown-item" th:href="@{/journals/new}">仕訳入力</a></li>
+                            <li><a class="dropdown-item" th:href="@{/journals/import}">仕訳取込</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">照会</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/balances/daily}">日次残高照会</a></li>
+                            <li><a class="dropdown-item" th:href="@{/balances/monthly}">月次残高照会</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">帳票</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/reports/daily}">日計表</a></li>
+                            <li><a class="dropdown-item" th:href="@{/reports/trial-balance}">合計残高試算表</a></li>
+                            <li><a class="dropdown-item" th:href="@{/reports/ledger}">総勘定元帳</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" th:href="@{/reports/balance-sheet}">貸借対照表</a></li>
+                            <li><a class="dropdown-item" th:href="@{/reports/income-statement}">損益計算書</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/swagger-ui.html}">API ドキュメント</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- フラッシュメッセージ -->
+    <div class="container mt-3">
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <main class="container mt-4">
+        <div layout:fragment="content">
+            <!-- 各ページのコンテンツがここに挿入される -->
+        </div>
+    </main>
+
+    <!-- フッター -->
+    <footer class="footer mt-5 py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">財務会計システム &copy; 2025</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+
+    <!-- ページ固有のスクリプト -->
+    <th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

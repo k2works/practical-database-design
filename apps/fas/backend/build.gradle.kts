@@ -25,6 +25,7 @@ repositories {
 val mybatisVersion = "4.0.0"
 val testcontainersVersion = "1.20.4"
 val springdocVersion = "2.8.3"
+val thymeleafLayoutDialectVersion = "3.4.0"
 
 dependencies {
     // === implementation ===
@@ -33,6 +34,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Thymeleaf (モノリス版用テンプレートエンジン)
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:$thymeleafLayoutDialectVersion")
+
+    // Webjars (Bootstrap 等のフロントエンドライブラリ)
+    implementation("org.webjars:bootstrap:5.3.3")
+    implementation("org.webjars:webjars-locator-core:0.59")
 
     // OpenAPI/Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")

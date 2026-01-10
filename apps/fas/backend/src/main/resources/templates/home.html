@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>ホーム</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- ページタイトル -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>ダッシュボード</h1>
+            <span class="text-muted" th:text="${#temporals.format(currentDate, 'yyyy年MM月dd日 (E)')}">2025年01月10日 (金)</span>
+        </div>
+
+        <!-- クイックアクセス -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-3">クイックアクセス</h5>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/journals/new}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-pencil-square fs-1 text-primary mb-2"></i>
+                        <h6 class="card-title">仕訳入力</h6>
+                        <p class="card-text text-muted small">新規仕訳を入力</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/journals}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-list-ul fs-1 text-success mb-2"></i>
+                        <h6 class="card-title">仕訳一覧</h6>
+                        <p class="card-text text-muted small">仕訳の検索・確認</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/reports/trial-balance}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-earmark-bar-graph fs-1 text-info mb-2"></i>
+                        <h6 class="card-title">試算表</h6>
+                        <p class="card-text text-muted small">合計残高試算表</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/accounts}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-gear fs-1 text-secondary mb-2"></i>
+                        <h6 class="card-title">勘定科目</h6>
+                        <p class="card-text text-muted small">マスタ管理</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- サマリー情報 -->
+        <div class="row">
+            <!-- 今月の仕訳件数 -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">今月の仕訳</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-0" th:text="${monthlyJournalCount}">0</h2>
+                                <small class="text-muted">件</small>
+                            </div>
+                            <div class="text-end">
+                                <a th:href="@{/journals}" class="btn btn-outline-primary btn-sm">詳細</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 勘定科目数 -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">勘定科目数</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-0" th:text="${accountCount}">0</h2>
+                                <small class="text-muted">科目</small>
+                            </div>
+                            <div class="text-end">
+                                <a th:href="@{/accounts}" class="btn btn-outline-primary btn-sm">詳細</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 部門数 -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">部門数</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-0" th:text="${departmentCount}">0</h2>
+                                <small class="text-muted">部門</small>
+                            </div>
+                            <div class="text-end">
+                                <a th:href="@{/departments}" class="btn btn-outline-primary btn-sm">詳細</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- システム情報 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">システム情報</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <th style="width: 200px;">アーキテクチャ</th>
+                                <td>モノリス（Spring Boot + Thymeleaf）</td>
+                            </tr>
+                            <tr>
+                                <th>データベース</th>
+                                <td>PostgreSQL</td>
+                            </tr>
+                            <tr>
+                                <th>API ドキュメント</th>
+                                <td><a th:href="@{/swagger-ui.html}">Swagger UI</a></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
