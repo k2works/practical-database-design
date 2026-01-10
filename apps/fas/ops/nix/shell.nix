@@ -9,6 +9,8 @@ packages.mkShell {
     jdk25
     gradle
     jdt-language-server
+    nodejs_22
+    nodePackages.npm
     httpie
     jq
   ]);
