@@ -128,6 +128,12 @@ public class SeedDataService {
                 .accountCode("41110").accountName("国内売上高").accountShortName("国内売上")
                 .bsplType(BSPLType.PL).debitCreditType(DebitCreditType.CREDIT)
                 .transactionElementType(TransactionElementType.REVENUE)
+                .aggregationType(AggregationType.POSTING).build(),
+            // 費用科目
+            Account.builder()
+                .accountCode("62100").accountName("旅費交通費").accountShortName("旅費交通")
+                .bsplType(BSPLType.PL).debitCreditType(DebitCreditType.DEBIT)
+                .transactionElementType(TransactionElementType.EXPENSE)
                 .aggregationType(AggregationType.POSTING).build()
         );
 

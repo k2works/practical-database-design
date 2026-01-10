@@ -173,12 +173,18 @@
         WHERE "パターンコード" = #{patternCode}
     </delete>
 
-    <delete id="deleteAllPatterns">
+    <!-- パターン全削除（PostgreSQL） -->
+    <delete id="deleteAllPatterns" databaseId="postgresql">
         TRUNCATE TABLE "自動仕訳パターンマスタ" CASCADE
     </delete>
 
-    <!-- 自動仕訳エントリ登録 -->
-    <insert id="insertEntry" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry">
+    <!-- パターン全削除（H2） -->
+    <delete id="deleteAllPatterns" databaseId="h2">
+        DELETE FROM "自動仕訳パターンマスタ"
+    </delete>
+
+    <!-- 自動仕訳エントリ登録（PostgreSQL） -->
+    <insert id="insertEntry" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry" databaseId="postgresql">
         INSERT INTO "自動仕訳データ" (
             "自動仕訳番号", "売上番号", "売上行番号", "パターンコード",
             "起票日", "仕訳行貸借区分", "勘定科目コード", "補助科目コード",
@@ -193,6 +199,28 @@
             #{accountCode}, #{subAccountCode},
             #{departmentCode}, #{amount}, #{taxAmount},
             #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler}::"自動仕訳ステータス",
+            CASE WHEN #{postedFlag} THEN 1 ELSE 0 END, #{postedDate}, #{journalVoucherNumber},
+            #{errorCode}, #{errorMessage},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 自動仕訳エントリ登録（H2） -->
+    <insert id="insertEntry" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry" databaseId="h2">
+        INSERT INTO "自動仕訳データ" (
+            "自動仕訳番号", "売上番号", "売上行番号", "パターンコード",
+            "起票日", "仕訳行貸借区分", "勘定科目コード", "補助科目コード",
+            "部門コード", "仕訳金額", "消費税額", "処理ステータス",
+            "転記済フラグ", "転記日", "仕訳伝票番号",
+            "エラーコード", "エラーメッセージ",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{autoJournalNumber}, #{salesNumber}, #{salesLineNumber}, #{patternCode},
+            #{postingDate},
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler},
+            #{accountCode}, #{subAccountCode},
+            #{departmentCode}, #{amount}, #{taxAmount},
+            #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler},
             CASE WHEN #{postedFlag} THEN 1 ELSE 0 END, #{postedDate}, #{journalVoucherNumber},
             #{errorCode}, #{errorMessage},
             CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -226,16 +254,39 @@
         ORDER BY "自動仕訳番号"
     </select>
 
-    <select id="findEntriesByStatus" resultMap="autoJournalEntryResultMap">
+    <!-- ステータス検索（PostgreSQL） -->
+    <select id="findEntriesByStatus" resultMap="autoJournalEntryResultMap" databaseId="postgresql">
         SELECT * FROM "自動仕訳データ"
         WHERE "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler}::"自動仕訳ステータス"
         ORDER BY "起票日", "自動仕訳番号"
     </select>
 
-    <!-- 自動仕訳エントリ更新（楽観ロック） -->
-    <update id="updateEntryWithOptimisticLock" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry">
+    <!-- ステータス検索（H2） -->
+    <select id="findEntriesByStatus" resultMap="autoJournalEntryResultMap" databaseId="h2">
+        SELECT * FROM "自動仕訳データ"
+        WHERE "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler}
+        ORDER BY "起票日", "自動仕訳番号"
+    </select>
+
+    <!-- 自動仕訳エントリ更新（楽観ロック）（PostgreSQL） -->
+    <update id="updateEntryWithOptimisticLock" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry" databaseId="postgresql">
         UPDATE "自動仕訳データ"
         SET "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler}::"自動仕訳ステータス",
+            "転記済フラグ" = CASE WHEN #{postedFlag} THEN 1 ELSE 0 END,
+            "転記日" = #{postedDate},
+            "仕訳伝票番号" = #{journalVoucherNumber},
+            "エラーコード" = #{errorCode},
+            "エラーメッセージ" = #{errorMessage},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "自動仕訳番号" = #{autoJournalNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 自動仕訳エントリ更新（楽観ロック）（H2） -->
+    <update id="updateEntryWithOptimisticLock" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry" databaseId="h2">
+        UPDATE "自動仕訳データ"
+        SET "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler},
             "転記済フラグ" = CASE WHEN #{postedFlag} THEN 1 ELSE 0 END,
             "転記日" = #{postedDate},
             "仕訳伝票番号" = #{journalVoucherNumber},
@@ -257,8 +308,14 @@
         WHERE "自動仕訳番号" = #{autoJournalNumber}
     </delete>
 
-    <delete id="deleteAllEntries">
+    <!-- エントリ全削除（PostgreSQL） -->
+    <delete id="deleteAllEntries" databaseId="postgresql">
         TRUNCATE TABLE "自動仕訳データ" CASCADE
+    </delete>
+
+    <!-- エントリ全削除（H2） -->
+    <delete id="deleteAllEntries" databaseId="h2">
+        DELETE FROM "自動仕訳データ"
     </delete>
 
     <!-- パターン情報付き取得（JOIN） -->
@@ -357,8 +414,14 @@
         ORDER BY "処理日時" DESC
     </select>
 
-    <delete id="deleteAllHistories">
+    <!-- 履歴全削除（PostgreSQL） -->
+    <delete id="deleteAllHistories" databaseId="postgresql">
         TRUNCATE TABLE "自動仕訳処理履歴" CASCADE
+    </delete>
+
+    <!-- 履歴全削除（H2） -->
+    <delete id="deleteAllHistories" databaseId="h2">
+        DELETE FROM "自動仕訳処理履歴"
     </delete>
 
 </mapper>

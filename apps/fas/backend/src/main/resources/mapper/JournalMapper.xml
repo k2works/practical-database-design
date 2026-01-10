@@ -129,8 +129,8 @@
         <result property="updatedAt" column="dc_更新日時"/>
     </resultMap>
 
-    <!-- 仕訳ヘッダ登録 -->
-    <insert id="insertJournal" parameterType="com.example.fas.domain.model.journal.Journal">
+    <!-- 仕訳ヘッダ登録（PostgreSQL） -->
+    <insert id="insertJournal" parameterType="com.example.fas.domain.model.journal.Journal" databaseId="postgresql">
         INSERT INTO "仕訳" (
             "仕訳伝票番号", "起票日", "入力日", "決算仕訳フラグ", "単振フラグ",
             "仕訳伝票区分", "定期計上フラグ", "社員コード", "部門コード",
@@ -140,6 +140,25 @@
             CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END,
             CASE WHEN #{singleEntryFlag} THEN 1 ELSE 0 END,
             #{voucherType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.JournalVoucherTypeHandler}::"仕訳伝票区分",
+            CASE WHEN #{periodicPostingFlag} THEN 1 ELSE 0 END,
+            #{employeeCode}, #{departmentCode},
+            CASE WHEN #{redSlipFlag} THEN 1 ELSE 0 END,
+            #{redBlackVoucherNumber},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- 仕訳ヘッダ登録（H2） -->
+    <insert id="insertJournal" parameterType="com.example.fas.domain.model.journal.Journal" databaseId="h2">
+        INSERT INTO "仕訳" (
+            "仕訳伝票番号", "起票日", "入力日", "決算仕訳フラグ", "単振フラグ",
+            "仕訳伝票区分", "定期計上フラグ", "社員コード", "部門コード",
+            "赤伝フラグ", "赤黒伝票番号", "作成日時", "更新日時", "更新者名"
+        ) VALUES (
+            #{journalVoucherNumber}, #{postingDate}, #{entryDate},
+            CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END,
+            CASE WHEN #{singleEntryFlag} THEN 1 ELSE 0 END,
+            #{voucherType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.JournalVoucherTypeHandler},
             CASE WHEN #{periodicPostingFlag} THEN 1 ELSE 0 END,
             #{employeeCode}, #{departmentCode},
             CASE WHEN #{redSlipFlag} THEN 1 ELSE 0 END,
@@ -158,8 +177,8 @@
         )
     </insert>
 
-    <!-- 仕訳貸借明細登録 -->
-    <insert id="insertJournalDebitCreditDetail" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
+    <!-- 仕訳貸借明細登録（PostgreSQL） -->
+    <insert id="insertJournalDebitCreditDetail" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail" databaseId="postgresql">
         INSERT INTO "仕訳貸借明細" (
             "仕訳伝票番号", "仕訳行番号", "仕訳行貸借区分",
             "勘定科目コード", "補助科目コード", "部門コード", "プロジェクトコード",
@@ -176,6 +195,30 @@
             #{taxType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxTypeHandler}::"消費税区分",
             #{taxRate},
             #{taxCalcType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxCalculationTypeHandler}::"仕訳消費税計算区分",
+            #{dueDate}, CASE WHEN #{cashFlowFlag} THEN 1 ELSE 0 END, #{segmentCode},
+            #{counterAccountCode}, #{counterSubAccountCode},
+            #{tagCode}, #{tagContent}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 仕訳貸借明細登録（H2） -->
+    <insert id="insertJournalDebitCreditDetail" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail" databaseId="h2">
+        INSERT INTO "仕訳貸借明細" (
+            "仕訳伝票番号", "仕訳行番号", "仕訳行貸借区分",
+            "勘定科目コード", "補助科目コード", "部門コード", "プロジェクトコード",
+            "仕訳金額", "通貨コード", "為替レート", "基軸換算仕訳金額",
+            "消費税区分", "消費税率", "消費税計算区分",
+            "期日", "資金繰フラグ", "セグメントコード",
+            "相手勘定科目コード", "相手補助科目コード",
+            "付箋コード", "付箋内容", "作成日時", "更新日時"
+        ) VALUES (
+            #{journalVoucherNumber}, #{lineNumber},
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler},
+            #{accountCode}, #{subAccountCode}, #{departmentCode}, #{projectCode},
+            #{amount}, #{currencyCode}, #{exchangeRate}, #{baseCurrencyAmount},
+            #{taxType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxTypeHandler},
+            #{taxRate},
+            #{taxCalcType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxCalculationTypeHandler},
             #{dueDate}, CASE WHEN #{cashFlowFlag} THEN 1 ELSE 0 END, #{segmentCode},
             #{counterAccountCode}, #{counterSubAccountCode},
             #{tagCode}, #{tagContent}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -228,8 +271,14 @@
         DELETE FROM "仕訳" WHERE "仕訳伝票番号" = #{voucherNumber}
     </delete>
 
-    <delete id="deleteAll">
+    <!-- 全削除（PostgreSQL） -->
+    <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "仕訳" CASCADE
+    </delete>
+
+    <!-- 全削除（H2） -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "仕訳"
     </delete>
 
     <!-- 仕訳と明細を一括取得（JOIN） -->
@@ -293,14 +342,34 @@
         WHERE "仕訳伝票番号" = #{voucherNumber}
     </select>
 
-    <!-- 仕訳ヘッダ更新（楽観ロック付き） -->
-    <update id="updateJournalWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.Journal">
+    <!-- 仕訳ヘッダ更新（楽観ロック付き）（PostgreSQL） -->
+    <update id="updateJournalWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.Journal" databaseId="postgresql">
         UPDATE "仕訳"
         SET "起票日" = #{postingDate},
             "入力日" = #{entryDate},
             "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END,
             "単振フラグ" = CASE WHEN #{singleEntryFlag} THEN 1 ELSE 0 END,
             "仕訳伝票区分" = #{voucherType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.JournalVoucherTypeHandler}::"仕訳伝票区分",
+            "定期計上フラグ" = CASE WHEN #{periodicPostingFlag} THEN 1 ELSE 0 END,
+            "社員コード" = #{employeeCode},
+            "部門コード" = #{departmentCode},
+            "赤伝フラグ" = CASE WHEN #{redSlipFlag} THEN 1 ELSE 0 END,
+            "赤黒伝票番号" = #{redBlackVoucherNumber},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "仕訳伝票番号" = #{journalVoucherNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 仕訳ヘッダ更新（楽観ロック付き）（H2） -->
+    <update id="updateJournalWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.Journal" databaseId="h2">
+        UPDATE "仕訳"
+        SET "起票日" = #{postingDate},
+            "入力日" = #{entryDate},
+            "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END,
+            "単振フラグ" = CASE WHEN #{singleEntryFlag} THEN 1 ELSE 0 END,
+            "仕訳伝票区分" = #{voucherType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.JournalVoucherTypeHandler},
             "定期計上フラグ" = CASE WHEN #{periodicPostingFlag} THEN 1 ELSE 0 END,
             "社員コード" = #{employeeCode},
             "部門コード" = #{departmentCode},
@@ -324,8 +393,8 @@
           AND "バージョン" = #{version}
     </update>
 
-    <!-- 仕訳貸借明細更新（楽観ロック付き） -->
-    <update id="updateJournalDebitCreditDetailWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
+    <!-- 仕訳貸借明細更新（楽観ロック付き）（PostgreSQL） -->
+    <update id="updateJournalDebitCreditDetailWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail" databaseId="postgresql">
         UPDATE "仕訳貸借明細"
         SET "勘定科目コード" = #{accountCode},
             "補助科目コード" = #{subAccountCode},
@@ -350,6 +419,35 @@
         WHERE "仕訳伝票番号" = #{journalVoucherNumber}
           AND "仕訳行番号" = #{lineNumber}
           AND "仕訳行貸借区分" = #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"仕訳行貸借区分"
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 仕訳貸借明細更新（楽観ロック付き）（H2） -->
+    <update id="updateJournalDebitCreditDetailWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail" databaseId="h2">
+        UPDATE "仕訳貸借明細"
+        SET "勘定科目コード" = #{accountCode},
+            "補助科目コード" = #{subAccountCode},
+            "部門コード" = #{departmentCode},
+            "プロジェクトコード" = #{projectCode},
+            "仕訳金額" = #{amount},
+            "通貨コード" = #{currencyCode},
+            "為替レート" = #{exchangeRate},
+            "基軸換算仕訳金額" = #{baseCurrencyAmount},
+            "消費税区分" = #{taxType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxTypeHandler},
+            "消費税率" = #{taxRate},
+            "消費税計算区分" = #{taxCalcType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TaxCalculationTypeHandler},
+            "期日" = #{dueDate},
+            "資金繰フラグ" = CASE WHEN #{cashFlowFlag} THEN 1 ELSE 0 END,
+            "セグメントコード" = #{segmentCode},
+            "相手勘定科目コード" = #{counterAccountCode},
+            "相手補助科目コード" = #{counterSubAccountCode},
+            "付箋コード" = #{tagCode},
+            "付箋内容" = #{tagContent},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "仕訳伝票番号" = #{journalVoucherNumber}
+          AND "仕訳行番号" = #{lineNumber}
+          AND "仕訳行貸借区分" = #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}
           AND "バージョン" = #{version}
     </update>
 
@@ -404,8 +502,8 @@
         <result property="balance" column="balance"/>
     </resultMap>
 
-    <!-- 総勘定元帳エントリ取得 -->
-    <select id="findGeneralLedgerEntries" resultMap="generalLedgerEntryResultMap">
+    <!-- 総勘定元帳エントリ取得（PostgreSQL） -->
+    <select id="findGeneralLedgerEntries" resultMap="generalLedgerEntryResultMap" databaseId="postgresql">
         SELECT
             j."起票日" AS postingDate,
             j."仕訳伝票番号" AS journalNumber,
@@ -414,6 +512,28 @@
             COALESCE(a."勘定科目名", '') AS counterAccountName,
             CASE WHEN dc."仕訳行貸借区分"::TEXT = '借方' THEN dc."仕訳金額" ELSE 0 END AS debitAmount,
             CASE WHEN dc."仕訳行貸借区分"::TEXT = '貸方' THEN dc."仕訳金額" ELSE 0 END AS creditAmount,
+            0 AS balance
+        FROM "仕訳貸借明細" dc
+        JOIN "仕訳" j ON dc."仕訳伝票番号" = j."仕訳伝票番号"
+        JOIN "仕訳明細" d ON dc."仕訳伝票番号" = d."仕訳伝票番号"
+            AND dc."仕訳行番号" = d."仕訳行番号"
+        LEFT JOIN "勘定科目マスタ" a ON dc."相手勘定科目コード" = a."勘定科目コード"
+        WHERE dc."勘定科目コード" = #{accountCode}
+          AND j."起票日" BETWEEN #{fromDate} AND #{toDate}
+        ORDER BY j."起票日", j."仕訳伝票番号", dc."仕訳行番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 総勘定元帳エントリ取得（H2） -->
+    <select id="findGeneralLedgerEntries" resultMap="generalLedgerEntryResultMap" databaseId="h2">
+        SELECT
+            j."起票日" AS postingDate,
+            j."仕訳伝票番号" AS journalNumber,
+            d."行摘要" AS description,
+            dc."相手勘定科目コード" AS counterAccountCode,
+            COALESCE(a."勘定科目名", '') AS counterAccountName,
+            CASE WHEN dc."仕訳行貸借区分" = '借方' THEN dc."仕訳金額" ELSE 0 END AS debitAmount,
+            CASE WHEN dc."仕訳行貸借区分" = '貸方' THEN dc."仕訳金額" ELSE 0 END AS creditAmount,
             0 AS balance
         FROM "仕訳貸借明細" dc
         JOIN "仕訳" j ON dc."仕訳伝票番号" = j."仕訳伝票番号"
@@ -435,11 +555,24 @@
           AND j."起票日" BETWEEN #{fromDate} AND #{toDate}
     </select>
 
-    <!-- 指定日以前の残高取得 -->
-    <select id="getOpeningBalance" resultType="java.math.BigDecimal">
+    <!-- 指定日以前の残高取得（PostgreSQL） -->
+    <select id="getOpeningBalance" resultType="java.math.BigDecimal" databaseId="postgresql">
         SELECT
             COALESCE(SUM(
                 CASE WHEN dc."仕訳行貸借区分"::TEXT = '借方' THEN dc."仕訳金額"
+                     ELSE -dc."仕訳金額" END
+            ), 0)
+        FROM "仕訳貸借明細" dc
+        JOIN "仕訳" j ON dc."仕訳伝票番号" = j."仕訳伝票番号"
+        WHERE dc."勘定科目コード" = #{accountCode}
+          AND j."起票日" &lt;= #{beforeDate}
+    </select>
+
+    <!-- 指定日以前の残高取得（H2） -->
+    <select id="getOpeningBalance" resultType="java.math.BigDecimal" databaseId="h2">
+        SELECT
+            COALESCE(SUM(
+                CASE WHEN dc."仕訳行貸借区分" = '借方' THEN dc."仕訳金額"
                      ELSE -dc."仕訳金額" END
             ), 0)
         FROM "仕訳貸借明細" dc
