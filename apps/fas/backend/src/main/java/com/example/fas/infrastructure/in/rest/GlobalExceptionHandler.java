@@ -18,6 +18,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * グローバル例外ハンドラー.
@@ -127,6 +128,15 @@ public class GlobalExceptionHandler {
                         .timestamp(LocalDateTime.now())
                         .errors(errors)
                         .build());
+    }
+
+    /**
+     * 静的リソースが見つからない場合の例外ハンドラー（favicon.ico等）.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFoundException(NoResourceFoundException e) {
+        // favicon.ico等の静的リソース404はログ出力しない
+        return ResponseEntity.notFound().build();
     }
 
     /**
