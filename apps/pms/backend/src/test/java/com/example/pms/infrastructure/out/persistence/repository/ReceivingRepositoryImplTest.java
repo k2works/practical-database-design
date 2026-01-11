@@ -1,0 +1,199 @@
+package com.example.pms.infrastructure.out.persistence.repository;
+
+import com.example.pms.application.port.out.PurchaseOrderDetailRepository;
+import com.example.pms.application.port.out.PurchaseOrderRepository;
+import com.example.pms.application.port.out.ReceivingRepository;
+import com.example.pms.domain.model.purchase.PurchaseOrder;
+import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
+import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
+import com.example.pms.domain.model.purchase.Receiving;
+import com.example.pms.domain.model.purchase.ReceivingType;
+import com.example.pms.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * 入荷受入データリポジトリテスト.
+ */
+@DisplayName("入荷受入データリポジトリ")
+class ReceivingRepositoryImplTest extends BaseIntegrationTest {
+
+    @Autowired
+    private ReceivingRepository receivingRepository;
+
+    @Autowired
+    private PurchaseOrderRepository purchaseOrderRepository;
+
+    @Autowired
+    private PurchaseOrderDetailRepository purchaseOrderDetailRepository;
+
+    private String purchaseOrderNumber;
+    private Integer lineNumber;
+
+    @BeforeEach
+    void setUp() {
+        receivingRepository.deleteAll();
+        purchaseOrderDetailRepository.deleteAll();
+        purchaseOrderRepository.deleteAll();
+
+        // Create purchase order and detail for foreign key reference
+        PurchaseOrder po = PurchaseOrder.builder()
+                .purchaseOrderNumber("PO-001")
+                .orderDate(LocalDate.of(2024, 1, 15))
+                .supplierCode("SUP001")
+                .status(PurchaseOrderStatus.ORDERED)
+                .build();
+        purchaseOrderRepository.save(po);
+        purchaseOrderNumber = "PO-001";
+
+        PurchaseOrderDetail detail = PurchaseOrderDetail.builder()
+                .purchaseOrderNumber(purchaseOrderNumber)
+                .lineNumber(1)
+                .itemCode("ITEM001")
+                .miscellaneousItemFlag(false)
+                .expectedReceivingDate(LocalDate.of(2024, 1, 20))
+                .orderUnitPrice(new BigDecimal("1000.00"))
+                .orderQuantity(new BigDecimal("100.00"))
+                .receivedQuantity(BigDecimal.ZERO)
+                .inspectedQuantity(BigDecimal.ZERO)
+                .acceptedQuantity(BigDecimal.ZERO)
+                .orderAmount(new BigDecimal("100000.00"))
+                .taxAmount(new BigDecimal("10000.00"))
+                .completedFlag(false)
+                .build();
+        purchaseOrderDetailRepository.save(detail);
+        lineNumber = 1;
+    }
+
+    private Receiving createReceiving(String receivingNumber, ReceivingType receivingType) {
+        return Receiving.builder()
+                .receivingNumber(receivingNumber)
+                .purchaseOrderNumber(purchaseOrderNumber)
+                .lineNumber(lineNumber)
+                .receivingDate(LocalDate.of(2024, 1, 20))
+                .receiverCode("EMP001")
+                .receivingType(receivingType)
+                .itemCode("ITEM001")
+                .miscellaneousItemFlag(false)
+                .receivingQuantity(new BigDecimal("50.00"))
+                .remarks("テスト入荷")
+                .createdBy("test-user")
+                .updatedBy("test-user")
+                .build();
+    }
+
+    @Nested
+    @DisplayName("登録")
+    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+    class Registration {
+
+        @Test
+        @DisplayName("入荷を登録できる")
+        void canRegisterReceiving() {
+            // Arrange
+            Receiving receiving = createReceiving("RCV-001", ReceivingType.NORMAL);
+
+            // Act
+            receivingRepository.save(receiving);
+
+            // Assert
+            Optional<Receiving> found = receivingRepository.findByReceivingNumber("RCV-001");
+            assertThat(found).isPresent();
+            assertThat(found.get().getReceivingType()).isEqualTo(ReceivingType.NORMAL);
+            assertThat(found.get().getReceivingQuantity()).isEqualByComparingTo(new BigDecimal("50.00"));
+        }
+
+        @Test
+        @DisplayName("各入荷受入区分を登録できる")
+        void canRegisterAllReceivingTypes() {
+            // Arrange & Act & Assert
+            for (ReceivingType type : ReceivingType.values()) {
+                receivingRepository.deleteAll();
+                Receiving receiving = Receiving.builder()
+                        .receivingNumber("RCV_" + type.name())
+                        .purchaseOrderNumber(purchaseOrderNumber)
+                        .lineNumber(lineNumber)
+                        .receivingDate(LocalDate.of(2024, 1, 20))
+                        .receivingType(type)
+                        .itemCode("ITEM001")
+                        .miscellaneousItemFlag(false)
+                        .receivingQuantity(new BigDecimal("10.00"))
+                        .build();
+                receivingRepository.save(receiving);
+
+                Optional<Receiving> found = receivingRepository.findByReceivingNumber("RCV_" + type.name());
+                assertThat(found).isPresent();
+                assertThat(found.get().getReceivingType()).isEqualTo(type);
+                assertThat(found.get().getReceivingType().getDisplayName()).isEqualTo(type.getDisplayName());
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("検索")
+    class Search {
+
+        @BeforeEach
+        void setUpData() {
+            receivingRepository.save(createReceiving("RCV-001", ReceivingType.NORMAL));
+            receivingRepository.save(createReceiving("RCV-002", ReceivingType.SPLIT));
+        }
+
+        @Test
+        @DisplayName("IDで検索できる")
+        void canFindById() {
+            // Arrange
+            Optional<Receiving> receiving = receivingRepository.findByReceivingNumber("RCV-001");
+            assertThat(receiving).isPresent();
+            Integer id = receiving.get().getId();
+
+            // Act
+            Optional<Receiving> found = receivingRepository.findById(id);
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getReceivingNumber()).isEqualTo("RCV-001");
+        }
+
+        @Test
+        @DisplayName("入荷番号で検索できる")
+        void canFindByReceivingNumber() {
+            // Act
+            Optional<Receiving> found = receivingRepository.findByReceivingNumber("RCV-002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getReceivingType()).isEqualTo(ReceivingType.SPLIT);
+        }
+
+        @Test
+        @DisplayName("発注番号で検索できる")
+        void canFindByPurchaseOrderNumber() {
+            // Act
+            List<Receiving> found = receivingRepository.findByPurchaseOrderNumber(purchaseOrderNumber);
+
+            // Assert
+            assertThat(found).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("全件取得できる")
+        void canFindAll() {
+            // Act
+            List<Receiving> all = receivingRepository.findAll();
+
+            // Assert
+            assertThat(all).hasSize(2);
+        }
+    }
+}
