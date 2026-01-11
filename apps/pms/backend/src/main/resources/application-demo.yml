@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: pms-backend
+
+  # Flyway を無効化（H2 では SQL init を使用）
+  flyway:
+    enabled: false
+
+  # H2 インメモリデータベース
+  datasource:
+    url: jdbc:h2:mem:pms_demo;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # H2 コンソール
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+  # SQL 初期化（スキーマとデータを読み込み）
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/demo/schema.sql
+      data-locations: classpath:db/demo/data.sql
+
+  # Thymeleaf 設定
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+
+  # メッセージリソース
+  messages:
+    basename: messages
+    encoding: UTF-8
+
+server:
+  port: ${PORT:8082}
+  servlet:
+    session:
+      timeout: 30m
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: false
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    com.example.pms: INFO

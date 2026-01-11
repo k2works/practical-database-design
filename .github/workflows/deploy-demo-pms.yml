@@ -1,0 +1,37 @@
+name: Deploy PMS Demo to Heroku
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps/pms/backend/**'
+      - '.github/workflows/deploy-demo-pms.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Login to Heroku Container Registry
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_PMS }}
+        run: heroku container:login
+
+      - name: Build and push
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_PMS }}
+        run: |
+          docker build --platform linux/amd64 --provenance=false -t registry.heroku.com/deploy-demo-pms/web apps/pms/backend
+          docker push registry.heroku.com/deploy-demo-pms/web
+
+      - name: Release
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_PMS }}
+        run: heroku container:release web -a deploy-demo-pms

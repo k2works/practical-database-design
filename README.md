@@ -71,7 +71,7 @@
 
 | 章 | タイトル | 状態 |
 |----|----------|------|
-| 第22章 | 生産管理システムの全体像 | 未着手 |
+| 第22章 | 生産管理システムの全体像 | 完了 |
 | 第23章 | 生産管理のマスタ情報（モノ） | 未着手 |
 | 第24章 | 生産管理のマスタ情報（時・人・場所） | 未着手 |
 | 第25章 | 生産計画の設計 | 未着手 |
@@ -113,7 +113,9 @@
 
 ## デモ
 
-- [販売管理システムデモ](https://deploy-demo-sms-b33828d678a9.herokuapp.com/)
+- [販売管理システム（SMS）](https://deploy-demo-sms-b33828d678a9.herokuapp.com/)
+- [財務会計システム（FAS）](https://deploy-demo-fas.herokuapp.com/)
+- [生産管理システム（PMS）](https://deploy-demo-pms-40869571939f.herokuapp.com/)
 
 ## 詳細
 
@@ -126,8 +128,8 @@ npm start
 
 以下が自動実行されます：
 1. MkDocs サーバー起動 & ブラウザで開く
-2. SMS・FAS PostgreSQL コンテナ起動（並列）
-3. SMS・FAS SchemaSpy ER 図生成（並列）
+2. SMS・FAS・PMS PostgreSQL コンテナ起動（並列）
+3. SMS・FAS・PMS SchemaSpy ER 図生成（並列）
 
 ブラウザで http://localhost:8000 にアクセスして記事をプレビューできます。
 
@@ -222,6 +224,18 @@ claude mcp add github npx -y @modelcontextprotocol/server-github -s project
 | `gulp docker:fas:logs` | PostgreSQL ログ表示 |
 | `gulp docker:fas:restart` | コンテナ再起動 |
 
+##### PMS Docker タスク
+
+| コマンド | 説明 |
+|---------|------|
+| `npm run docker:pms:up` | PostgreSQL コンテナ起動 |
+| `npm run docker:pms:down` | PostgreSQL コンテナ停止 |
+| `gulp docker:pms:build` | 全イメージビルド（backend, schemaspy） |
+| `gulp docker:pms:clean` | コンテナ停止 & ボリューム削除（データリセット） |
+| `gulp docker:pms:status` | コンテナ状態確認 |
+| `gulp docker:pms:logs` | PostgreSQL ログ表示 |
+| `gulp docker:pms:restart` | コンテナ再起動 |
+
 ##### SMS SchemaSpy タスク
 
 | コマンド | 説明 |
@@ -237,6 +251,14 @@ claude mcp add github npx -y @modelcontextprotocol/server-github -s project
 | `npm run schemaspy:fas` | SchemaSpy ER 図生成 |
 | `gulp schemaspy:fas:open` | 生成済み ER 図をブラウザで開く |
 | `gulp schemaspy:fas:clean` | ER 図出力ディレクトリをクリーン |
+
+##### PMS SchemaSpy タスク
+
+| コマンド | 説明 |
+|---------|------|
+| `npm run schemaspy:pms` | SchemaSpy ER 図生成 |
+| `gulp schemaspy:pms:open` | 生成済み ER 図をブラウザで開く |
+| `gulp schemaspy:pms:clean` | ER 図出力ディレクトリをクリーン |
 
 ##### SMS Heroku デプロイタスク
 
@@ -263,6 +285,19 @@ claude mcp add github npx -y @modelcontextprotocol/server-github -s project
 | `gulp heroku:fas:logs` | Heroku ログ表示 |
 | `gulp heroku:fas:open` | ブラウザでアプリを開く |
 | `gulp heroku:fas:restart` | Dyno 再起動（データリセット） |
+
+##### PMS Heroku デプロイタスク
+
+| コマンド | 説明 |
+|---------|------|
+| `gulp heroku:pms:create` | Heroku アプリ新規作成 |
+| `gulp heroku:pms:deploy` | ビルド → プッシュ → リリース（一括） |
+| `gulp heroku:pms:build` | Docker イメージビルド |
+| `gulp heroku:pms:push` | イメージを Heroku にプッシュ |
+| `gulp heroku:pms:release` | リリース実行 |
+| `gulp heroku:pms:logs` | Heroku ログ表示 |
+| `gulp heroku:pms:open` | ブラウザでアプリを開く |
+| `gulp heroku:pms:restart` | Dyno 再起動（データリセット） |
 
 ##### 作業履歴（ジャーナル）タスク
 
@@ -329,7 +364,10 @@ practical-database-design/
 │   ├── sms/               # 販売管理システム（Spring Boot）
 │   │   ├── backend/       # バックエンド API
 │   │   └── docker-compose.yml
-│   └── fas/               # 財務会計システム（Spring Boot）
+│   ├── fas/               # 財務会計システム（Spring Boot）
+│   │   ├── backend/       # バックエンド API
+│   │   └── docker-compose.yml
+│   └── pms/               # 生産管理システム（Spring Boot）
 │       ├── backend/       # バックエンド API
 │       └── docker-compose.yml
 ├── ops/                   # 運用スクリプト
@@ -374,6 +412,21 @@ Nix を使用して、再現可能な開発環境を構築できます。
 - **Python/MkDocs 環境に入る:**
   ```bash
   nix develop .#python
+  ```
+
+- **SMS 環境に入る:**
+  ```bash
+  nix develop .#sms
+  ```
+
+- **FAS 環境に入る:**
+  ```bash
+  nix develop .#fas
+  ```
+
+- **PMS 環境に入る:**
+  ```bash
+  nix develop .#pms
   ```
 
 環境から抜けるには `exit` を入力します。
