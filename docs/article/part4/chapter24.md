@@ -321,9 +321,11 @@ package "infrastructure.out.persistence" {
     [RequirementRepositoryImpl]
     [AllocationRepositoryImpl]
   }
-  [PlanStatusTypeHandler]
-  [OrderTypeTypeHandler]
-  [AllocationTypeTypeHandler]
+  package "typehandler" {
+    [PlanStatusTypeHandler]
+    [OrderTypeTypeHandler]
+    [AllocationTypeTypeHandler]
+  }
 }
 
 [MrpService] --> [MpsRepository]
@@ -450,8 +452,10 @@ public enum AllocationType {
 package com.example.pms.domain.model.plan;
 
 import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -459,6 +463,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MasterProductionSchedule {
     private Integer id;
     private String mpsNumber;
@@ -489,8 +495,10 @@ public class MasterProductionSchedule {
 package com.example.pms.domain.model.plan;
 
 import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -499,6 +507,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Order {
     private Integer id;
     private String orderNumber;
@@ -536,8 +546,10 @@ public class Order {
 package com.example.pms.domain.model.plan;
 
 import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -546,6 +558,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Requirement {
     private Integer id;
     private String requirementNumber;
@@ -575,8 +589,10 @@ public class Requirement {
 // src/main/java/com/example/pms/domain/model/plan/Allocation.java
 package com.example.pms.domain.model.plan;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -584,6 +600,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Allocation {
     private Integer id;
     private Integer requirementId;
@@ -610,7 +628,7 @@ public class Allocation {
 
 ```java
 // src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/PlanStatusTypeHandler.java
-package com.example.pms.infrastructure.out.persistence;
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
 import com.example.pms.domain.model.plan.PlanStatus;
 import org.apache.ibatis.type.BaseTypeHandler;
@@ -658,7 +676,7 @@ public class PlanStatusTypeHandler extends BaseTypeHandler<PlanStatus> {
 
 ```java
 // src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/OrderTypeTypeHandler.java
-package com.example.pms.infrastructure.out.persistence;
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
 import com.example.pms.domain.model.plan.OrderType;
 import org.apache.ibatis.type.BaseTypeHandler;
@@ -706,7 +724,7 @@ public class OrderTypeTypeHandler extends BaseTypeHandler<OrderType> {
 
 ```java
 // src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/AllocationTypeTypeHandler.java
-package com.example.pms.infrastructure.out.persistence;
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
 import com.example.pms.domain.model.plan.AllocationType;
 import org.apache.ibatis.type.BaseTypeHandler;
@@ -1842,8 +1860,10 @@ COMMENT ON COLUMN "引当情報"."バージョン" IS '楽観ロック用バー�
 package com.example.pms.domain.model.plan;
 
 import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1852,6 +1872,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Order {
     private Integer id;
     private String orderNumber;
@@ -1893,8 +1915,10 @@ public class Order {
 package com.example.pms.domain.model.plan;
 
 import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1903,6 +1927,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Requirement {
     private Integer id;
     private String requirementNumber;
