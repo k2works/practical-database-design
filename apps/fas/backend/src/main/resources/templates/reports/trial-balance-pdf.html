@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>合計残高試算表</title>
+    <style>
+        body {
+            font-family: Japanese, sans-serif;
+            font-size: 9pt;
+            margin: 15px;
+        }
+        h1 {
+            font-size: 14pt;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 3px 5px;
+        }
+        th {
+            background-color: #e0e0e0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .number {
+            text-align: right;
+        }
+        .total {
+            background-color: #d0d0d0;
+            font-weight: bold;
+        }
+        .balanced {
+            color: green;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .unbalanced {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>合計残高試算表</h1>
+    <p style="text-align: center;" th:text="${fiscalYear} + '年度 ' + ${month} + '月'"></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>勘定科目コード</th>
+                <th>勘定科目名</th>
+                <th>BSPL区分</th>
+                <th>貸借区分</th>
+                <th>月初残高</th>
+                <th>借方合計</th>
+                <th>貸方合計</th>
+                <th>月末残高</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="line : ${report.lines}">
+                <td th:text="${line.accountCode}"></td>
+                <td th:text="${line.accountName}"></td>
+                <td th:text="${line.bsplType}"></td>
+                <td th:text="${line.debitCreditType}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.openingBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.debitTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.creditTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.closingBalance, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr class="total">
+                <td colspan="4">合計</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalOpeningDebit, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalDebit, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalCredit, 1, 'COMMA', 0, 'POINT')}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalClosingDebit, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <p th:if="${report.balanced}" class="balanced">貸借一致しています</p>
+    <p th:unless="${report.balanced}" class="unbalanced">貸借が一致していません</p>
+</body>
+</html>

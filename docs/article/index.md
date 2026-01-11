@@ -125,6 +125,7 @@ BOM、MRP、工程管理など製造業の基幹となるデータベース設�
 ### データベース
 
 - [SchemaSpy ER 図（SMS）](./assets/schemaspy-output/sms/index.html){:target="_blank"} - 販売管理システムのデータベース ER 図。テーブル構造やリレーションを可視化。
+- [SchemaSpy ER 図（FAS）](./assets/schemaspy-output/fas/index.html){:target="_blank"} - 財務会計システムのデータベース ER 図。テーブル構造やリレーションを可視化。
 
 ## 執筆方針
 

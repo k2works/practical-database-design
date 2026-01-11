@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.AutoJournalMapper">
+
+    <!-- 自動仕訳パターンマスタ ResultMap -->
+    <resultMap id="autoJournalPatternResultMap" type="com.example.fas.domain.model.autojournal.AutoJournalPattern">
+        <id property="patternCode" column="パターンコード"/>
+        <result property="patternName" column="パターン名"/>
+        <result property="productGroup" column="商品グループ"/>
+        <result property="customerGroup" column="顧客グループ"/>
+        <result property="salesType" column="売上区分"/>
+        <result property="debitAccountCode" column="借方勘定科目コード"/>
+        <result property="debitSubAccountSetting" column="借方補助科目設定"/>
+        <result property="creditAccountCode" column="貸方勘定科目コード"/>
+        <result property="creditSubAccountSetting" column="貸方補助科目設定"/>
+        <result property="returnDebitAccountCode" column="返品時借方科目コード"/>
+        <result property="returnCreditAccountCode" column="返品時貸方科目コード"/>
+        <result property="taxProcessingType" column="消費税処理区分"/>
+        <result property="validFrom" column="有効開始日"/>
+        <result property="validTo" column="有効終了日"/>
+        <result property="priority" column="優先順位"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 自動仕訳データ ResultMap -->
+    <resultMap id="autoJournalEntryResultMap" type="com.example.fas.domain.model.autojournal.AutoJournalEntry">
+        <id property="autoJournalNumber" column="自動仕訳番号"/>
+        <result property="salesNumber" column="売上番号"/>
+        <result property="salesLineNumber" column="売上行番号"/>
+        <result property="patternCode" column="パターンコード"/>
+        <result property="postingDate" column="起票日"/>
+        <result property="debitCreditType" column="仕訳行貸借区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler"/>
+        <result property="accountCode" column="勘定科目コード"/>
+        <result property="subAccountCode" column="補助科目コード"/>
+        <result property="departmentCode" column="部門コード"/>
+        <result property="amount" column="仕訳金額"/>
+        <result property="taxAmount" column="消費税額"/>
+        <result property="status" column="処理ステータス"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler"/>
+        <result property="postedFlag" column="転記済フラグ"/>
+        <result property="postedDate" column="転記日"/>
+        <result property="journalVoucherNumber" column="仕訳伝票番号"/>
+        <result property="errorCode" column="エラーコード"/>
+        <result property="errorMessage" column="エラーメッセージ"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 自動仕訳データ ResultMap（パターン情報込み） -->
+    <resultMap id="autoJournalEntryWithPatternResultMap" type="com.example.fas.domain.model.autojournal.AutoJournalEntry">
+        <id property="autoJournalNumber" column="e_自動仕訳番号"/>
+        <result property="salesNumber" column="e_売上番号"/>
+        <result property="salesLineNumber" column="e_売上行番号"/>
+        <result property="patternCode" column="e_パターンコード"/>
+        <result property="postingDate" column="e_起票日"/>
+        <result property="debitCreditType" column="e_仕訳行貸借区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler"/>
+        <result property="accountCode" column="e_勘定科目コード"/>
+        <result property="subAccountCode" column="e_補助科目コード"/>
+        <result property="departmentCode" column="e_部門コード"/>
+        <result property="amount" column="e_仕訳金額"/>
+        <result property="taxAmount" column="e_消費税額"/>
+        <result property="status" column="e_処理ステータス"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler"/>
+        <result property="postedFlag" column="e_転記済フラグ"/>
+        <result property="postedDate" column="e_転記日"/>
+        <result property="journalVoucherNumber" column="e_仕訳伝票番号"/>
+        <result property="errorCode" column="e_エラーコード"/>
+        <result property="errorMessage" column="e_エラーメッセージ"/>
+        <result property="version" column="e_バージョン"/>
+        <result property="createdAt" column="e_作成日時"/>
+        <result property="updatedAt" column="e_更新日時"/>
+        <association property="pattern" javaType="com.example.fas.domain.model.autojournal.AutoJournalPattern">
+            <id property="patternCode" column="p_パターンコード"/>
+            <result property="patternName" column="p_パターン名"/>
+            <result property="productGroup" column="p_商品グループ"/>
+            <result property="customerGroup" column="p_顧客グループ"/>
+            <result property="debitAccountCode" column="p_借方勘定科目コード"/>
+            <result property="creditAccountCode" column="p_貸方勘定科目コード"/>
+            <result property="priority" column="p_優先順位"/>
+        </association>
+    </resultMap>
+
+    <!-- 自動仕訳処理履歴 ResultMap -->
+    <resultMap id="autoJournalHistoryResultMap" type="com.example.fas.domain.model.autojournal.AutoJournalHistory">
+        <id property="processNumber" column="処理番号"/>
+        <result property="processDateTime" column="処理日時"/>
+        <result property="targetFromDate" column="処理対象開始日"/>
+        <result property="targetToDate" column="処理対象終了日"/>
+        <result property="totalCount" column="処理件数"/>
+        <result property="successCount" column="成功件数"/>
+        <result property="errorCount" column="エラー件数"/>
+        <result property="totalAmount" column="処理金額合計"/>
+        <result property="processedBy" column="処理者"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+    </resultMap>
+
+    <!-- パターンマスタ登録 -->
+    <insert id="insertPattern" parameterType="com.example.fas.domain.model.autojournal.AutoJournalPattern">
+        INSERT INTO "自動仕訳パターンマスタ" (
+            "パターンコード", "パターン名", "商品グループ", "顧客グループ",
+            "売上区分", "借方勘定科目コード", "借方補助科目設定",
+            "貸方勘定科目コード", "貸方補助科目設定",
+            "返品時借方科目コード", "返品時貸方科目コード",
+            "消費税処理区分", "有効開始日", "有効終了日", "優先順位",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{patternCode}, #{patternName}, #{productGroup}, #{customerGroup},
+            #{salesType}, #{debitAccountCode}, #{debitSubAccountSetting},
+            #{creditAccountCode}, #{creditSubAccountSetting},
+            #{returnDebitAccountCode}, #{returnCreditAccountCode},
+            #{taxProcessingType}, #{validFrom}, #{validTo}, #{priority},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- パターンマスタ検索 -->
+    <select id="findPatternByCode" resultMap="autoJournalPatternResultMap">
+        SELECT * FROM "自動仕訳パターンマスタ"
+        WHERE "パターンコード" = #{patternCode}
+    </select>
+
+    <select id="findAllPatterns" resultMap="autoJournalPatternResultMap">
+        SELECT * FROM "自動仕訳パターンマスタ"
+        ORDER BY "優先順位"
+    </select>
+
+    <select id="findValidPatterns" resultMap="autoJournalPatternResultMap">
+        SELECT * FROM "自動仕訳パターンマスタ"
+        WHERE "有効開始日" &lt;= #{date}
+          AND "有効終了日" >= #{date}
+        ORDER BY "優先順位"
+    </select>
+
+    <!-- パターンマスタ更新（楽観ロック） -->
+    <update id="updatePatternWithOptimisticLock" parameterType="com.example.fas.domain.model.autojournal.AutoJournalPattern">
+        UPDATE "自動仕訳パターンマスタ"
+        SET "パターン名" = #{patternName},
+            "商品グループ" = #{productGroup},
+            "顧客グループ" = #{customerGroup},
+            "売上区分" = #{salesType},
+            "借方勘定科目コード" = #{debitAccountCode},
+            "借方補助科目設定" = #{debitSubAccountSetting},
+            "貸方勘定科目コード" = #{creditAccountCode},
+            "貸方補助科目設定" = #{creditSubAccountSetting},
+            "返品時借方科目コード" = #{returnDebitAccountCode},
+            "返品時貸方科目コード" = #{returnCreditAccountCode},
+            "消費税処理区分" = #{taxProcessingType},
+            "有効開始日" = #{validFrom},
+            "有効終了日" = #{validTo},
+            "優先順位" = #{priority},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "パターンコード" = #{patternCode}
+          AND "バージョン" = #{version}
+    </update>
+
+    <select id="findPatternVersionByCode" resultType="Integer">
+        SELECT "バージョン" FROM "自動仕訳パターンマスタ"
+        WHERE "パターンコード" = #{patternCode}
+    </select>
+
+    <delete id="deletePattern">
+        DELETE FROM "自動仕訳パターンマスタ"
+        WHERE "パターンコード" = #{patternCode}
+    </delete>
+
+    <!-- パターン全削除（PostgreSQL） -->
+    <delete id="deleteAllPatterns" databaseId="postgresql">
+        TRUNCATE TABLE "自動仕訳パターンマスタ" CASCADE
+    </delete>
+
+    <!-- パターン全削除（H2） -->
+    <delete id="deleteAllPatterns" databaseId="h2">
+        DELETE FROM "自動仕訳パターンマスタ"
+    </delete>
+
+    <!-- 自動仕訳エントリ登録（PostgreSQL） -->
+    <insert id="insertEntry" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry" databaseId="postgresql">
+        INSERT INTO "自動仕訳データ" (
+            "自動仕訳番号", "売上番号", "売上行番号", "パターンコード",
+            "起票日", "仕訳行貸借区分", "勘定科目コード", "補助科目コード",
+            "部門コード", "仕訳金額", "消費税額", "処理ステータス",
+            "転記済フラグ", "転記日", "仕訳伝票番号",
+            "エラーコード", "エラーメッセージ",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{autoJournalNumber}, #{salesNumber}, #{salesLineNumber}, #{patternCode},
+            #{postingDate},
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"仕訳行貸借区分",
+            #{accountCode}, #{subAccountCode},
+            #{departmentCode}, #{amount}, #{taxAmount},
+            #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler}::"自動仕訳ステータス",
+            CASE WHEN #{postedFlag} THEN 1 ELSE 0 END, #{postedDate}, #{journalVoucherNumber},
+            #{errorCode}, #{errorMessage},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 自動仕訳エントリ登録（H2） -->
+    <insert id="insertEntry" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry" databaseId="h2">
+        INSERT INTO "自動仕訳データ" (
+            "自動仕訳番号", "売上番号", "売上行番号", "パターンコード",
+            "起票日", "仕訳行貸借区分", "勘定科目コード", "補助科目コード",
+            "部門コード", "仕訳金額", "消費税額", "処理ステータス",
+            "転記済フラグ", "転記日", "仕訳伝票番号",
+            "エラーコード", "エラーメッセージ",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{autoJournalNumber}, #{salesNumber}, #{salesLineNumber}, #{patternCode},
+            #{postingDate},
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler},
+            #{accountCode}, #{subAccountCode},
+            #{departmentCode}, #{amount}, #{taxAmount},
+            #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler},
+            CASE WHEN #{postedFlag} THEN 1 ELSE 0 END, #{postedDate}, #{journalVoucherNumber},
+            #{errorCode}, #{errorMessage},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 自動仕訳エントリ検索 -->
+    <select id="findEntryByNumber" resultMap="autoJournalEntryResultMap">
+        SELECT * FROM "自動仕訳データ"
+        WHERE "自動仕訳番号" = #{autoJournalNumber}
+    </select>
+
+    <select id="findEntriesBySalesNumber" resultMap="autoJournalEntryResultMap">
+        SELECT * FROM "自動仕訳データ"
+        WHERE "売上番号" = #{salesNumber}
+        ORDER BY "自動仕訳番号"
+    </select>
+
+    <select id="findUnpostedEntries" resultMap="autoJournalEntryResultMap">
+        SELECT * FROM "自動仕訳データ"
+        WHERE "転記済フラグ" = 0
+          AND "処理ステータス" = '処理完了'
+        ORDER BY "起票日", "自動仕訳番号"
+    </select>
+
+    <select id="findUnpostedEntriesByDate" resultMap="autoJournalEntryResultMap">
+        SELECT * FROM "自動仕訳データ"
+        WHERE "転記済フラグ" = 0
+          AND "処理ステータス" = '処理完了'
+          AND "起票日" = #{date}
+        ORDER BY "自動仕訳番号"
+    </select>
+
+    <!-- ステータス検索（PostgreSQL） -->
+    <select id="findEntriesByStatus" resultMap="autoJournalEntryResultMap" databaseId="postgresql">
+        SELECT * FROM "自動仕訳データ"
+        WHERE "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler}::"自動仕訳ステータス"
+        ORDER BY "起票日", "自動仕訳番号"
+    </select>
+
+    <!-- ステータス検索（H2） -->
+    <select id="findEntriesByStatus" resultMap="autoJournalEntryResultMap" databaseId="h2">
+        SELECT * FROM "自動仕訳データ"
+        WHERE "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler}
+        ORDER BY "起票日", "自動仕訳番号"
+    </select>
+
+    <!-- 自動仕訳エントリ更新（楽観ロック）（PostgreSQL） -->
+    <update id="updateEntryWithOptimisticLock" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry" databaseId="postgresql">
+        UPDATE "自動仕訳データ"
+        SET "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler}::"自動仕訳ステータス",
+            "転記済フラグ" = CASE WHEN #{postedFlag} THEN 1 ELSE 0 END,
+            "転記日" = #{postedDate},
+            "仕訳伝票番号" = #{journalVoucherNumber},
+            "エラーコード" = #{errorCode},
+            "エラーメッセージ" = #{errorMessage},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "自動仕訳番号" = #{autoJournalNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 自動仕訳エントリ更新（楽観ロック）（H2） -->
+    <update id="updateEntryWithOptimisticLock" parameterType="com.example.fas.domain.model.autojournal.AutoJournalEntry" databaseId="h2">
+        UPDATE "自動仕訳データ"
+        SET "処理ステータス" = #{status, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AutoJournalStatusTypeHandler},
+            "転記済フラグ" = CASE WHEN #{postedFlag} THEN 1 ELSE 0 END,
+            "転記日" = #{postedDate},
+            "仕訳伝票番号" = #{journalVoucherNumber},
+            "エラーコード" = #{errorCode},
+            "エラーメッセージ" = #{errorMessage},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "自動仕訳番号" = #{autoJournalNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <select id="findEntryVersionByNumber" resultType="Integer">
+        SELECT "バージョン" FROM "自動仕訳データ"
+        WHERE "自動仕訳番号" = #{autoJournalNumber}
+    </select>
+
+    <delete id="deleteEntry">
+        DELETE FROM "自動仕訳データ"
+        WHERE "自動仕訳番号" = #{autoJournalNumber}
+    </delete>
+
+    <!-- エントリ全削除（PostgreSQL） -->
+    <delete id="deleteAllEntries" databaseId="postgresql">
+        TRUNCATE TABLE "自動仕訳データ" CASCADE
+    </delete>
+
+    <!-- エントリ全削除（H2） -->
+    <delete id="deleteAllEntries" databaseId="h2">
+        DELETE FROM "自動仕訳データ"
+    </delete>
+
+    <!-- パターン情報付き取得（JOIN） -->
+    <select id="findEntryWithPatternByNumber" resultMap="autoJournalEntryWithPatternResultMap">
+        SELECT
+            e."自動仕訳番号" AS e_自動仕訳番号,
+            e."売上番号" AS e_売上番号,
+            e."売上行番号" AS e_売上行番号,
+            e."パターンコード" AS e_パターンコード,
+            e."起票日" AS e_起票日,
+            e."仕訳行貸借区分" AS e_仕訳行貸借区分,
+            e."勘定科目コード" AS e_勘定科目コード,
+            e."補助科目コード" AS e_補助科目コード,
+            e."部門コード" AS e_部門コード,
+            e."仕訳金額" AS e_仕訳金額,
+            e."消費税額" AS e_消費税額,
+            e."処理ステータス" AS e_処理ステータス,
+            e."転記済フラグ" AS e_転記済フラグ,
+            e."転記日" AS e_転記日,
+            e."仕訳伝票番号" AS e_仕訳伝票番号,
+            e."エラーコード" AS e_エラーコード,
+            e."エラーメッセージ" AS e_エラーメッセージ,
+            e."バージョン" AS e_バージョン,
+            e."作成日時" AS e_作成日時,
+            e."更新日時" AS e_更新日時,
+            p."パターンコード" AS p_パターンコード,
+            p."パターン名" AS p_パターン名,
+            p."商品グループ" AS p_商品グループ,
+            p."顧客グループ" AS p_顧客グループ,
+            p."借方勘定科目コード" AS p_借方勘定科目コード,
+            p."貸方勘定科目コード" AS p_貸方勘定科目コード,
+            p."優先順位" AS p_優先順位
+        FROM "自動仕訳データ" e
+        LEFT JOIN "自動仕訳パターンマスタ" p ON e."パターンコード" = p."パターンコード"
+        WHERE e."自動仕訳番号" = #{autoJournalNumber}
+    </select>
+
+    <select id="findUnpostedEntriesWithPattern" resultMap="autoJournalEntryWithPatternResultMap">
+        SELECT
+            e."自動仕訳番号" AS e_自動仕訳番号,
+            e."売上番号" AS e_売上番号,
+            e."売上行番号" AS e_売上行番号,
+            e."パターンコード" AS e_パターンコード,
+            e."起票日" AS e_起票日,
+            e."仕訳行貸借区分" AS e_仕訳行貸借区分,
+            e."勘定科目コード" AS e_勘定科目コード,
+            e."補助科目コード" AS e_補助科目コード,
+            e."部門コード" AS e_部門コード,
+            e."仕訳金額" AS e_仕訳金額,
+            e."消費税額" AS e_消費税額,
+            e."処理ステータス" AS e_処理ステータス,
+            e."転記済フラグ" AS e_転記済フラグ,
+            e."転記日" AS e_転記日,
+            e."仕訳伝票番号" AS e_仕訳伝票番号,
+            e."エラーコード" AS e_エラーコード,
+            e."エラーメッセージ" AS e_エラーメッセージ,
+            e."バージョン" AS e_バージョン,
+            e."作成日時" AS e_作成日時,
+            e."更新日時" AS e_更新日時,
+            p."パターンコード" AS p_パターンコード,
+            p."パターン名" AS p_パターン名,
+            p."商品グループ" AS p_商品グループ,
+            p."顧客グループ" AS p_顧客グループ,
+            p."借方勘定科目コード" AS p_借方勘定科目コード,
+            p."貸方勘定科目コード" AS p_貸方勘定科目コード,
+            p."優先順位" AS p_優先順位
+        FROM "自動仕訳データ" e
+        LEFT JOIN "自動仕訳パターンマスタ" p ON e."パターンコード" = p."パターンコード"
+        WHERE e."転記済フラグ" = 0
+          AND e."処理ステータス" = '処理完了'
+        ORDER BY e."起票日", e."自動仕訳番号"
+    </select>
+
+    <!-- 処理履歴登録 -->
+    <insert id="insertHistory" parameterType="com.example.fas.domain.model.autojournal.AutoJournalHistory">
+        INSERT INTO "自動仕訳処理履歴" (
+            "処理番号", "処理日時", "処理対象開始日", "処理対象終了日",
+            "処理件数", "成功件数", "エラー件数", "処理金額合計",
+            "処理者", "備考", "作成日時"
+        ) VALUES (
+            #{processNumber}, #{processDateTime}, #{targetFromDate}, #{targetToDate},
+            #{totalCount}, #{successCount}, #{errorCount}, #{totalAmount},
+            #{processedBy}, #{remarks}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 処理履歴検索 -->
+    <select id="findHistoryByNumber" resultMap="autoJournalHistoryResultMap">
+        SELECT * FROM "自動仕訳処理履歴"
+        WHERE "処理番号" = #{processNumber}
+    </select>
+
+    <select id="findHistoriesByDateRange" resultMap="autoJournalHistoryResultMap">
+        SELECT * FROM "自動仕訳処理履歴"
+        WHERE DATE("処理日時") BETWEEN #{fromDate} AND #{toDate}
+        ORDER BY "処理日時" DESC
+    </select>
+
+    <!-- 履歴全削除（PostgreSQL） -->
+    <delete id="deleteAllHistories" databaseId="postgresql">
+        TRUNCATE TABLE "自動仕訳処理履歴" CASCADE
+    </delete>
+
+    <!-- 履歴全削除（H2） -->
+    <delete id="deleteAllHistories" databaseId="h2">
+        DELETE FROM "自動仕訳処理履歴"
+    </delete>
+
+</mapper>

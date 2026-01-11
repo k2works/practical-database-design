@@ -76,6 +76,11 @@ public class SalesOrderRepositoryImpl implements SalesOrderRepository {
     }
 
     @Override
+    public Optional<String> findMaxOrderNumberByPrefix(String prefix) {
+        return salesOrderMapper.findMaxOrderNumberByPrefix(prefix);
+    }
+
+    @Override
     public List<SalesOrder> findAll() {
         return salesOrderMapper.findAll();
     }

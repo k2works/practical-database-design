@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>勘定科目登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">勘定科目登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="mb-3">
+        <a th:href="@{/accounts}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/accounts}" th:object="${form}" method="post">
+                <!-- 勘定科目コード -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">勘定科目コード</label>
+                    <div class="col-md-2">
+                        <input type="text" th:field="*{accountCode}"
+                               class="form-control" th:classappend="${#fields.hasErrors('accountCode')} ? 'is-invalid'"
+                               maxlength="5" placeholder="10100">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountCode')}"
+                             th:errors="*{accountCode}"></div>
+                        <small class="form-text text-muted">5桁以内</small>
+                    </div>
+                </div>
+
+                <!-- 勘定科目名 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">勘定科目名</label>
+                    <div class="col-md-6">
+                        <input type="text" th:field="*{accountName}"
+                               class="form-control" th:classappend="${#fields.hasErrors('accountName')} ? 'is-invalid'"
+                               maxlength="40">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountName')}"
+                             th:errors="*{accountName}"></div>
+                    </div>
+                </div>
+
+                <!-- 勘定科目略名 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">勘定科目略名</label>
+                    <div class="col-md-3">
+                        <input type="text" th:field="*{accountShortName}"
+                               class="form-control" th:classappend="${#fields.hasErrors('accountShortName')} ? 'is-invalid'"
+                               maxlength="10">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountShortName')}"
+                             th:errors="*{accountShortName}"></div>
+                        <small class="form-text text-muted">10文字以内</small>
+                    </div>
+                </div>
+
+                <!-- 勘定科目カナ -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">勘定科目カナ</label>
+                    <div class="col-md-6">
+                        <input type="text" th:field="*{accountNameKana}"
+                               class="form-control" th:classappend="${#fields.hasErrors('accountNameKana')} ? 'is-invalid'"
+                               maxlength="40">
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountNameKana')}"
+                             th:errors="*{accountNameKana}"></div>
+                    </div>
+                </div>
+
+                <!-- BSPL区分 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">BSPL区分</label>
+                    <div class="col-md-3">
+                        <select th:field="*{bsPlType}"
+                                class="form-select" th:classappend="${#fields.hasErrors('bsPlType')} ? 'is-invalid'">
+                            <option value="BS">BS（貸借対照表）</option>
+                            <option value="PL">PL（損益計算書）</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('bsPlType')}"
+                             th:errors="*{bsPlType}"></div>
+                    </div>
+                </div>
+
+                <!-- 貸借区分 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">貸借区分</label>
+                    <div class="col-md-3">
+                        <select th:field="*{dcType}"
+                                class="form-select" th:classappend="${#fields.hasErrors('dcType')} ? 'is-invalid'">
+                            <option value="借方">借方</option>
+                            <option value="貸方">貸方</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dcType')}"
+                             th:errors="*{dcType}"></div>
+                    </div>
+                </div>
+
+                <!-- 取引要素区分 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">取引要素区分</label>
+                    <div class="col-md-3">
+                        <select th:field="*{elementType}"
+                                class="form-select" th:classappend="${#fields.hasErrors('elementType')} ? 'is-invalid'">
+                            <option value="資産">資産</option>
+                            <option value="負債">負債</option>
+                            <option value="資本">資本</option>
+                            <option value="収益">収益</option>
+                            <option value="費用">費用</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('elementType')}"
+                             th:errors="*{elementType}"></div>
+                    </div>
+                </div>
+
+                <!-- 集計区分 -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">集計区分</label>
+                    <div class="col-md-3">
+                        <select th:field="*{summaryType}"
+                                class="form-select" th:classappend="${#fields.hasErrors('summaryType')} ? 'is-invalid'">
+                            <option value="見出科目">見出科目</option>
+                            <option value="集計科目">集計科目</option>
+                            <option value="計上科目">計上科目</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('summaryType')}"
+                             th:errors="*{summaryType}"></div>
+                        <small class="form-text text-muted">計上科目のみ仕訳入力可能</small>
+                    </div>
+                </div>
+
+                <!-- ボタン -->
+                <div class="row">
+                    <div class="col-md-9 offset-md-3">
+                        <button type="submit" class="btn btn-primary">登録</button>
+                        <a th:href="@{/accounts}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

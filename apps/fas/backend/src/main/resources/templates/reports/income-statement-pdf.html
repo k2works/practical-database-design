@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8"/>
+    <title>損益計算書</title>
+    <style>
+        body {
+            font-family: Japanese, sans-serif;
+            font-size: 10pt;
+            margin: 20px;
+        }
+        h1 {
+            font-size: 16pt;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 4px 8px;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .section-header {
+            background-color: #e8e8e8;
+            font-weight: bold;
+        }
+        .subtotal {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .profit {
+            background-color: #d4edda;
+            font-weight: bold;
+        }
+        .total {
+            background-color: #343a40;
+            color: white;
+            font-weight: bold;
+        }
+        .number {
+            text-align: right;
+        }
+        .indent {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>損益計算書</h1>
+    <p style="text-align: center;" th:text="${fromMonth} + ' 〜 ' + ${toMonth}"></p>
+
+    <table>
+        <tbody>
+            <!-- 売上高 -->
+            <tr class="section-header">
+                <td colspan="2">売上高</td>
+            </tr>
+            <tr th:each="line : ${report.salesRevenue}">
+                <td class="indent" th:text="${line.accountName}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+            <tr class="subtotal">
+                <td>売上高合計</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalSalesRevenue, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+
+            <!-- 売上原価 -->
+            <tr class="section-header">
+                <td colspan="2">売上原価</td>
+            </tr>
+            <tr th:each="line : ${report.costOfSales}">
+                <td class="indent" th:text="${line.accountName}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+            <tr class="subtotal">
+                <td>売上原価合計</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalCostOfSales, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+
+            <!-- 売上総利益 -->
+            <tr class="profit">
+                <td>売上総利益</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.grossProfit, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+
+            <!-- 販管費 -->
+            <tr class="section-header">
+                <td colspan="2">販売費及び一般管理費</td>
+            </tr>
+            <tr th:each="line : ${report.sellingGeneralExpenses}">
+                <td class="indent" th:text="${line.accountName}"></td>
+                <td class="number" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+            <tr class="subtotal">
+                <td>販管費合計</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.totalSellingGeneralExpenses, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+
+            <!-- 営業利益 -->
+            <tr class="profit">
+                <td>営業利益</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.operatingIncome, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+
+            <!-- 経常利益 -->
+            <tr class="profit">
+                <td>経常利益</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.ordinaryIncome, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+
+            <!-- 税引前当期純利益 -->
+            <tr class="subtotal">
+                <td>税引前当期純利益</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.incomeBeforeTaxes, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+
+            <!-- 法人税等 -->
+            <tr>
+                <td>法人税等</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.incomeTaxes, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+
+            <!-- 当期純利益 -->
+            <tr class="total">
+                <td>当期純利益</td>
+                <td class="number" th:text="${#numbers.formatDecimal(report.netIncome, 1, 'COMMA', 0, 'POINT')}"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.MonthlyAccountBalanceMapper">
+
+    <!-- 月次勘定科目残高 ResultMap -->
+    <resultMap id="monthlyAccountBalanceResultMap"
+               type="com.example.fas.domain.model.balance.MonthlyAccountBalance">
+        <id property="fiscalYear" column="決算期"/>
+        <id property="month" column="月度"/>
+        <id property="accountCode" column="勘定科目コード"/>
+        <id property="subAccountCode" column="補助科目コード"/>
+        <id property="departmentCode" column="部門コード"/>
+        <id property="projectCode" column="プロジェクトコード"/>
+        <id property="closingJournalFlag" column="決算仕訳フラグ"/>
+        <result property="openingBalance" column="月初残高"/>
+        <result property="debitAmount" column="借方金額"/>
+        <result property="creditAmount" column="貸方金額"/>
+        <result property="closingBalance" column="月末残高"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 合計残高試算表行 ResultMap -->
+    <resultMap id="trialBalanceLineResultMap"
+               type="com.example.fas.domain.model.balance.TrialBalanceLine">
+        <result property="fiscalYear" column="fiscalYear"/>
+        <result property="month" column="month"/>
+        <result property="accountCode" column="accountCode"/>
+        <result property="accountName" column="accountName"/>
+        <result property="bsplType" column="bsplType"/>
+        <result property="debitCreditType" column="debitCreditType"/>
+        <result property="openingBalance" column="openingBalance"/>
+        <result property="debitTotal" column="debitTotal"/>
+        <result property="creditTotal" column="creditTotal"/>
+        <result property="closingBalance" column="closingBalance"/>
+    </resultMap>
+
+    <!-- 登録 -->
+    <insert id="insert" parameterType="com.example.fas.domain.model.balance.MonthlyAccountBalance">
+        INSERT INTO "月次勘定科目残高" (
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "月初残高", "借方金額", "貸方金額", "月末残高",
+            "バージョン", "作成日時", "更新日時"
+        ) VALUES (
+            #{fiscalYear},
+            #{month},
+            #{accountCode},
+            #{subAccountCode},
+            #{departmentCode},
+            #{projectCode},
+            CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END,
+            #{openingBalance},
+            #{debitAmount},
+            #{creditAmount},
+            #{closingBalance},
+            1,
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ"
+        )
+        DO UPDATE SET
+            "月初残高" = EXCLUDED."月初残高",
+            "借方金額" = EXCLUDED."借方金額",
+            "貸方金額" = EXCLUDED."貸方金額",
+            "月末残高" = EXCLUDED."月末残高",
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "月次勘定科目残高"."バージョン" + 1
+    </insert>
+
+    <!-- 複合キーで検索 -->
+    <select id="findByKey" resultMap="monthlyAccountBalanceResultMap">
+        SELECT
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "月初残高", "借方金額", "貸方金額", "月末残高",
+            "バージョン", "作成日時", "更新日時"
+        FROM "月次勘定科目残高"
+        WHERE "決算期" = #{fiscalYear}
+          AND "月度" = #{month}
+          AND "勘定科目コード" = #{accountCode}
+          AND "補助科目コード" = #{subAccountCode}
+          AND "部門コード" = #{departmentCode}
+          AND "プロジェクトコード" = #{projectCode}
+          AND "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END
+    </select>
+
+    <!-- 決算期と月度で検索 -->
+    <select id="findByFiscalYearAndMonth" resultMap="monthlyAccountBalanceResultMap">
+        SELECT
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "月初残高", "借方金額", "貸方金額", "月末残高",
+            "バージョン", "作成日時", "更新日時"
+        FROM "月次勘定科目残高"
+        WHERE "決算期" = #{fiscalYear}
+          AND "月度" = #{month}
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <!-- 勘定科目コードで検索 -->
+    <select id="findByAccountCode" resultMap="monthlyAccountBalanceResultMap">
+        SELECT
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "月初残高", "借方金額", "貸方金額", "月末残高",
+            "バージョン", "作成日時", "更新日時"
+        FROM "月次勘定科目残高"
+        WHERE "決算期" = #{fiscalYear}
+          AND "勘定科目コード" = #{accountCode}
+        ORDER BY "月度"
+    </select>
+
+    <!-- 合計残高試算表データ取得 -->
+    <select id="getTrialBalance" resultMap="trialBalanceLineResultMap">
+        SELECT
+            m."決算期" AS fiscalYear,
+            m."月度" AS "month",
+            m."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            CAST(a."BSPL区分" AS VARCHAR) AS bsplType,
+            CAST(a."貸借区分" AS VARCHAR) AS debitCreditType,
+            SUM(m."月初残高") AS openingBalance,
+            SUM(m."借方金額") AS debitTotal,
+            SUM(m."貸方金額") AS creditTotal,
+            SUM(m."月末残高") AS closingBalance
+        FROM "月次勘定科目残高" m
+        JOIN "勘定科目マスタ" a ON m."勘定科目コード" = a."勘定科目コード"
+        WHERE m."決算期" = #{fiscalYear}
+          AND m."月度" = #{month}
+        GROUP BY m."決算期", m."月度", m."勘定科目コード",
+                 a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY m."勘定科目コード"
+    </select>
+
+    <!-- BSPL区分別試算表データ取得 -->
+    <select id="getTrialBalanceByBSPL" resultMap="trialBalanceLineResultMap">
+        SELECT
+            m."決算期" AS fiscalYear,
+            m."月度" AS "month",
+            m."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            CAST(a."BSPL区分" AS VARCHAR) AS bsplType,
+            CAST(a."貸借区分" AS VARCHAR) AS debitCreditType,
+            SUM(m."月初残高") AS openingBalance,
+            SUM(m."借方金額") AS debitTotal,
+            SUM(m."貸方金額") AS creditTotal,
+            SUM(m."月末残高") AS closingBalance
+        FROM "月次勘定科目残高" m
+        JOIN "勘定科目マスタ" a ON m."勘定科目コード" = a."勘定科目コード"
+        WHERE m."決算期" = #{fiscalYear}
+          AND m."月度" = #{month}
+          AND CAST(a."BSPL区分" AS VARCHAR) = #{bsplType}
+        GROUP BY m."決算期", m."月度", m."勘定科目コード",
+                 a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY m."勘定科目コード"
+    </select>
+
+    <!-- 日次残高から月次残高を集計 -->
+    <insert id="aggregateFromDaily">
+        INSERT INTO "月次勘定科目残高" (
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "月初残高", "借方金額", "貸方金額", "月末残高",
+            "バージョン", "作成日時", "更新日時"
+        )
+        SELECT
+            #{fiscalYear},
+            #{month},
+            "勘定科目コード",
+            "補助科目コード",
+            "部門コード",
+            "プロジェクトコード",
+            "決算仕訳フラグ",
+            0,
+            SUM("借方金額"),
+            SUM("貸方金額"),
+            SUM("借方金額") - SUM("貸方金額"),
+            1,
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        FROM "日次勘定科目残高"
+        WHERE "起票日" BETWEEN #{fromDate} AND #{toDate}
+        GROUP BY "勘定科目コード", "補助科目コード",
+                 "部門コード", "プロジェクトコード", "決算仕訳フラグ"
+        ON CONFLICT (
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ"
+        )
+        DO UPDATE SET
+            "借方金額" = EXCLUDED."借方金額",
+            "貸方金額" = EXCLUDED."貸方金額",
+            "月末残高" = "月次勘定科目残高"."月初残高" +
+                        EXCLUDED."借方金額" - EXCLUDED."貸方金額",
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "月次勘定科目残高"."バージョン" + 1
+    </insert>
+
+    <!-- 月次残高の繰越処理 -->
+    <insert id="carryForward">
+        INSERT INTO "月次勘定科目残高" (
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "月初残高", "借方金額", "貸方金額", "月末残高",
+            "バージョン", "作成日時", "更新日時"
+        )
+        SELECT
+            "決算期",
+            #{toMonth},
+            "勘定科目コード",
+            "補助科目コード",
+            "部門コード",
+            "プロジェクトコード",
+            "決算仕訳フラグ",
+            "月末残高",
+            0,
+            0,
+            "月末残高",
+            1,
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        FROM "月次勘定科目残高"
+        WHERE "決算期" = #{fiscalYear}
+          AND "月度" = #{fromMonth}
+        ON CONFLICT (
+            "決算期", "月度", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ"
+        )
+        DO UPDATE SET
+            "月初残高" = EXCLUDED."月初残高",
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "月次勘定科目残高"."バージョン" + 1
+    </insert>
+
+    <!-- 楽観ロック対応更新 -->
+    <update id="updateWithOptimisticLock"
+            parameterType="com.example.fas.domain.model.balance.MonthlyAccountBalance">
+        UPDATE "月次勘定科目残高"
+        SET
+            "月初残高" = #{openingBalance},
+            "借方金額" = #{debitAmount},
+            "貸方金額" = #{creditAmount},
+            "月末残高" = #{closingBalance},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "決算期" = #{fiscalYear}
+          AND "月度" = #{month}
+          AND "勘定科目コード" = #{accountCode}
+          AND "補助科目コード" = #{subAccountCode}
+          AND "部門コード" = #{departmentCode}
+          AND "プロジェクトコード" = #{projectCode}
+          AND "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- バージョン取得 -->
+    <select id="findVersion" resultType="Integer">
+        SELECT "バージョン"
+        FROM "月次勘定科目残高"
+        WHERE "決算期" = #{fiscalYear}
+          AND "月度" = #{month}
+          AND "勘定科目コード" = #{accountCode}
+          AND "補助科目コード" = #{subAccountCode}
+          AND "部門コード" = #{departmentCode}
+          AND "プロジェクトコード" = #{projectCode}
+          AND "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END
+    </select>
+
+    <!-- 全件削除 -->
+    <delete id="deleteAll">
+        DELETE FROM "月次勘定科目残高"
+    </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="trialBalanceLineResultMap">
+        SELECT
+            m."決算期" AS fiscalYear,
+            m."月度" AS "month",
+            m."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            CAST(a."BSPL区分" AS VARCHAR) AS bsplType,
+            CAST(a."貸借区分" AS VARCHAR) AS debitCreditType,
+            SUM(m."月初残高") AS openingBalance,
+            SUM(m."借方金額") AS debitTotal,
+            SUM(m."貸方金額") AS creditTotal,
+            SUM(m."月末残高") AS closingBalance
+        FROM "月次勘定科目残高" m
+        JOIN "勘定科目マスタ" a ON m."勘定科目コード" = a."勘定科目コード"
+        <where>
+            <if test="fiscalYear != null">
+                AND m."決算期" = #{fiscalYear}
+            </if>
+            <if test="month != null">
+                AND m."月度" = #{month}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND m."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+        GROUP BY m."決算期", m."月度", m."勘定科目コード",
+                 a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY m."決算期" DESC, m."月度" DESC, m."勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 検索条件に一致する件数 -->
+    <select id="countWithCondition" resultType="long">
+        SELECT COUNT(DISTINCT (m."決算期", m."月度", m."勘定科目コード"))
+        FROM "月次勘定科目残高" m
+        <where>
+            <if test="fiscalYear != null">
+                AND m."決算期" = #{fiscalYear}
+            </if>
+            <if test="month != null">
+                AND m."月度" = #{month}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND m."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+    </select>
+
+</mapper>

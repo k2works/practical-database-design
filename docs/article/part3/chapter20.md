@@ -171,8 +171,8 @@ D社の部門コードは5桁で設計されており、各桁に意味を持た
 <summary>部門エンティティの実装</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/department/Department.java
-package com.example.accounting.domain.model.department;
+// src/main/java/com/example/fas/domain/model/department/Department.java
+package com.example.fas.domain.model.department;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -248,9 +248,10 @@ public class Department {
 <summary>部門リポジトリの実装</summary>
 
 ```java
-// src/main/java/com/example/accounting/domain/model/department/DepartmentRepository.java
-package com.example.accounting.domain.model.department;
+// src/main/java/com/example/fas/application/port/out/DepartmentRepository.java
+package com.example.fas.application.port.out;
 
+import com.example.fas.domain.model.department.Department;
 import java.util.List;
 import java.util.Optional;
 
@@ -777,13 +778,13 @@ Seedデータの投入は Java サービスとして実装し、冪等性を保�
 <summary>SeedDataService の実装</summary>
 
 ```java
-// src/main/java/com/example/accounting/infrastructure/seed/SeedDataService.java
-package com.example.accounting.infrastructure.seed;
+// src/main/java/com/example/fas/infrastructure/in/SeedDataService.java
+package com.example.fas.infrastructure.in;
 
-import com.example.accounting.domain.model.account.*;
-import com.example.accounting.domain.model.department.*;
-import com.example.accounting.domain.model.journal.*;
-import com.example.accounting.infrastructure.persistence.mapper.*;
+import com.example.fas.application.port.out.*;
+import com.example.fas.domain.model.account.*;
+import com.example.fas.domain.model.department.*;
+import com.example.fas.domain.model.tax.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -798,12 +799,9 @@ import java.util.List;
 @Slf4j
 public class SeedDataService {
 
-    private final AccountMasterMapper accountMasterMapper;
-    private final TaxTransactionMapper taxTransactionMapper;
-    private final DepartmentMapper departmentMapper;
-    private final JournalMapper journalMapper;
-    private final JournalDetailMapper journalDetailMapper;
-    private final JournalDcDetailMapper journalDcDetailMapper;
+    private final TaxTransactionRepository taxTransactionRepository;
+    private final AccountRepository accountRepository;
+    private final DepartmentRepository departmentRepository;
 
     /**
      * 全Seedデータを投入
@@ -840,11 +838,13 @@ public class SeedDataService {
                 .taxCode("99").taxName("対象外").taxRate(BigDecimal.ZERO).build()
         );
 
-        taxes.forEach(tax -> {
-            if (taxTransactionMapper.findByCode(tax.getTaxCode()) == null) {
-                taxTransactionMapper.insert(tax);
+        int insertedCount = 0;
+        for (TaxTransaction tax : taxes) {
+            if (taxTransactionRepository.findByCode(tax.getTaxCode()).isEmpty()) {
+                taxTransactionRepository.save(tax);
+                insertedCount++;
             }
-        });
+        }
 
         log.info("Tax transactions seeded: {} records", taxes.size());
     }
@@ -882,8 +882,8 @@ public class SeedDataService {
 
         int insertedCount = 0;
         for (Department dept : departments) {
-            if (departmentMapper.findByCode(dept.getDepartmentCode()) == null) {
-                departmentMapper.insert(dept);
+            if (departmentRepository.findByCode(dept.getDepartmentCode()).isEmpty()) {
+                departmentRepository.save(dept);
                 insertedCount++;
             }
         }
@@ -901,56 +901,28 @@ public class SeedDataService {
 <summary>SeedDataService のテスト</summary>
 
 ```java
-// src/test/java/com/example/accounting/infrastructure/seed/SeedDataServiceTest.java
-package com.example.accounting.infrastructure.seed;
-
-import com.example.accounting.domain.model.account.*;
-import com.example.accounting.domain.model.journal.*;
-import com.example.accounting.infrastructure.persistence.mapper.*;
-import org.junit.jupiter.api.*;
-import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.math.BigDecimal;
-import java.util.List;
+// src/test/java/com/example/fas/infrastructure/in/SeedDataServiceTest.java
+package com.example.fas.infrastructure.in;
 
 import static org.assertj.core.api.Assertions.*;
 
-@MybatisTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(SeedDataService.class)
-@Testcontainers
-@DisplayName("Seedデータ投入")
-class SeedDataServiceTest {
+import com.example.fas.application.port.out.*;
+import com.example.fas.testsetup.BaseIntegrationTest;
+import java.math.BigDecimal;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
-            .withDatabaseName("testdb")
-            .withUsername("testuser")
-            .withPassword("testpass");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+@DisplayName("Seedデータ投入サービス")
+class SeedDataServiceTest extends BaseIntegrationTest {
 
     @Autowired
     private SeedDataService seedDataService;
 
     @Autowired
-    private TaxTransactionMapper taxTransactionMapper;
+    private TaxTransactionRepository taxTransactionRepository;
 
     @Autowired
-    private DepartmentMapper departmentMapper;
+    private DepartmentRepository departmentRepository;
 
     @Nested
     @DisplayName("課税取引マスタ")
@@ -963,10 +935,9 @@ class SeedDataServiceTest {
             seedDataService.seedTaxTransactions();
 
             // Assert
-            TaxTransaction tax10 = taxTransactionMapper.findByCode("10");
-            assertThat(tax10).isNotNull();
-            assertThat(tax10.getTaxName()).isEqualTo("標準税率10%");
-            assertThat(tax10.getTaxRate()).isEqualByComparingTo(new BigDecimal("0.100"));
+            var tax10 = taxTransactionRepository.findByCode("10");
+            assertThat(tax10).isPresent();
+            assertThat(tax10.get().getTaxRate()).isEqualByComparingTo(new BigDecimal("0.100"));
         }
     }
 
@@ -981,10 +952,10 @@ class SeedDataServiceTest {
             seedDataService.seedDepartments();
 
             // Assert
-            var company = departmentMapper.findByCode("10000");
-            assertThat(company).isNotNull();
-            assertThat(company.getDepartmentName()).isEqualTo("全社");
-            assertThat(company.getOrganizationLevel()).isEqualTo(0);
+            var company = departmentRepository.findByCode("10000");
+            assertThat(company).isPresent();
+            assertThat(company.get().getDepartmentName()).isEqualTo("全社");
+            assertThat(company.get().getOrganizationLevel()).isEqualTo(0);
         }
     }
 
@@ -999,8 +970,8 @@ class SeedDataServiceTest {
             seedDataService.seedAll();
 
             // Assert
-            assertThat(taxTransactionMapper.findByCode("10")).isNotNull();
-            assertThat(departmentMapper.findByCode("10000")).isNotNull();
+            assertThat(taxTransactionRepository.findByCode("10")).isPresent();
+            assertThat(departmentRepository.findByCode("10000")).isPresent();
         }
 
         @Test
@@ -1010,8 +981,9 @@ class SeedDataServiceTest {
             seedDataService.seedAll();
             seedDataService.seedAll(); // 2回目
 
-            // Assert - エラーなく完了し、データは1件のみ
-            assertThat(taxTransactionMapper.findByCode("10")).isNotNull();
+            // Assert - エラーなく完了し、データは存在する
+            assertThat(taxTransactionRepository.findByCode("10")).isPresent();
+            assertThat(departmentRepository.findByCode("10000")).isPresent();
         }
     }
 }

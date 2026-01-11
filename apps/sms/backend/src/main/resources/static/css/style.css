@@ -66,6 +66,18 @@ body {
 }
 
 /* ========================================
+   クイックアクセスカード
+   ======================================== */
+.quick-access-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.quick-access-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
    ステータスバッジ
    ======================================== */
 .badge-status-draft {

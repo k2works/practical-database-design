@@ -414,7 +414,7 @@ package "複合仕訳（単振フラグ=0）" {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/journal/JournalVoucherType.java
-package com.example.accounting.domain.model.journal;
+package com.example.fas.domain.model.journal;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -447,7 +447,7 @@ public enum JournalVoucherType {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/journal/TaxType.java
-package com.example.accounting.domain.model.journal;
+package com.example.fas.domain.model.journal;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -481,7 +481,7 @@ public enum TaxType {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/journal/TaxCalculationType.java
-package com.example.accounting.domain.model.journal;
+package com.example.fas.domain.model.journal;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -515,7 +515,7 @@ public enum TaxCalculationType {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/journal/Journal.java
-package com.example.accounting.domain.model.journal;
+package com.example.fas.domain.model.journal;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -602,7 +602,7 @@ public class Journal {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/journal/JournalDetail.java
-package com.example.accounting.domain.model.journal;
+package com.example.fas.domain.model.journal;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -637,9 +637,9 @@ public class JournalDetail {
 
 ```java
 // src/main/java/com/example/accounting/domain/model/journal/JournalDebitCreditDetail.java
-package com.example.accounting.domain.model.journal;
+package com.example.fas.domain.model.journal;
 
-import com.example.accounting.domain.model.account.DebitCreditType;
+import com.example.fas.domain.model.account.DebitCreditType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -689,12 +689,12 @@ public class JournalDebitCreditDetail {
 
 ```java
 // src/test/java/com/example/accounting/infrastructure/persistence/repository/JournalRepositoryTest.java
-package com.example.accounting.infrastructure.persistence.repository;
+package com.example.fas.infrastructure.persistence.repository;
 
-import com.example.accounting.application.port.out.JournalRepository;
-import com.example.accounting.domain.model.account.DebitCreditType;
-import com.example.accounting.domain.model.journal.*;
-import com.example.accounting.testsetup.BaseIntegrationTest;
+import com.example.fas.application.port.out.JournalRepository;
+import com.example.fas.domain.model.account.DebitCreditType;
+import com.example.fas.domain.model.journal.*;
+import com.example.fas.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -929,9 +929,9 @@ class JournalRepositoryTest extends BaseIntegrationTest {
 
 ```java
 // src/main/java/com/example/accounting/application/port/out/JournalRepository.java
-package com.example.accounting.application.port.out;
+package com.example.fas.application.port.out;
 
-import com.example.accounting.domain.model.journal.Journal;
+import com.example.fas.domain.model.journal.Journal;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -970,17 +970,17 @@ public interface JournalRepository {
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.accounting.infrastructure.persistence.mapper.JournalMapper">
+<mapper namespace="com.example.fas.infrastructure.persistence.mapper.JournalMapper">
 
     <!-- 仕訳 ResultMap -->
-    <resultMap id="JournalResultMap" type="com.example.accounting.domain.model.journal.Journal">
+    <resultMap id="JournalResultMap" type="com.example.fas.domain.model.journal.Journal">
         <result property="journalVoucherNumber" column="仕訳伝票番号"/>
         <result property="postingDate" column="起票日"/>
         <result property="entryDate" column="入力日"/>
         <result property="closingJournalFlag" column="決算仕訳フラグ"/>
         <result property="singleEntryFlag" column="単振フラグ"/>
         <result property="voucherType" column="仕訳伝票区分"
-                typeHandler="com.example.accounting.infrastructure.persistence.typehandler.JournalVoucherTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.JournalVoucherTypeHandler"/>
         <result property="periodicPostingFlag" column="定期計上フラグ"/>
         <result property="employeeCode" column="社員コード"/>
         <result property="departmentCode" column="部門コード"/>
@@ -991,7 +991,7 @@ public interface JournalRepository {
     </resultMap>
 
     <!-- 仕訳明細 ResultMap -->
-    <resultMap id="JournalDetailResultMap" type="com.example.accounting.domain.model.journal.JournalDetail">
+    <resultMap id="JournalDetailResultMap" type="com.example.fas.domain.model.journal.JournalDetail">
         <result property="journalVoucherNumber" column="仕訳伝票番号"/>
         <result property="lineNumber" column="仕訳行番号"/>
         <result property="lineSummary" column="行摘要"/>
@@ -1000,11 +1000,11 @@ public interface JournalRepository {
     </resultMap>
 
     <!-- 仕訳貸借明細 ResultMap -->
-    <resultMap id="JournalDebitCreditDetailResultMap" type="com.example.accounting.domain.model.journal.JournalDebitCreditDetail">
+    <resultMap id="JournalDebitCreditDetailResultMap" type="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
         <result property="journalVoucherNumber" column="仕訳伝票番号"/>
         <result property="lineNumber" column="仕訳行番号"/>
         <result property="debitCreditType" column="仕訳行貸借区分"
-                typeHandler="com.example.accounting.infrastructure.persistence.typehandler.DebitCreditTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.DebitCreditTypeHandler"/>
         <result property="accountCode" column="勘定科目コード"/>
         <result property="subAccountCode" column="補助科目コード"/>
         <result property="departmentCode" column="部門コード"/>
@@ -1014,10 +1014,10 @@ public interface JournalRepository {
         <result property="exchangeRate" column="為替レート"/>
         <result property="baseCurrencyAmount" column="基軸換算仕訳金額"/>
         <result property="taxType" column="消費税区分"
-                typeHandler="com.example.accounting.infrastructure.persistence.typehandler.TaxTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.TaxTypeHandler"/>
         <result property="taxRate" column="消費税率"/>
         <result property="taxCalcType" column="消費税計算区分"
-                typeHandler="com.example.accounting.infrastructure.persistence.typehandler.TaxCalculationTypeHandler"/>
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.TaxCalculationTypeHandler"/>
         <result property="dueDate" column="期日"/>
         <result property="cashFlowFlag" column="資金繰フラグ"/>
         <result property="segmentCode" column="セグメントコード"/>
@@ -1030,7 +1030,7 @@ public interface JournalRepository {
     </resultMap>
 
     <!-- 仕訳ヘッダ登録 -->
-    <insert id="insertJournal" parameterType="com.example.accounting.domain.model.journal.Journal">
+    <insert id="insertJournal" parameterType="com.example.fas.domain.model.journal.Journal">
         INSERT INTO "仕訳" (
             "仕訳伝票番号", "起票日", "入力日", "決算仕訳フラグ", "単振フラグ",
             "仕訳伝票区分", "定期計上フラグ", "社員コード", "部門コード",
@@ -1038,7 +1038,7 @@ public interface JournalRepository {
         ) VALUES (
             #{journalVoucherNumber}, #{postingDate}, #{entryDate},
             #{closingJournalFlag}, #{singleEntryFlag},
-            #{voucherType, typeHandler=com.example.accounting.infrastructure.persistence.typehandler.JournalVoucherTypeHandler}::仕訳伝票区分,
+            #{voucherType, typeHandler=com.example.fas.infrastructure.persistence.typehandler.JournalVoucherTypeHandler}::仕訳伝票区分,
             #{periodicPostingFlag}, #{employeeCode}, #{departmentCode},
             #{redSlipFlag}, #{redBlackVoucherNumber},
             CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -1046,7 +1046,7 @@ public interface JournalRepository {
     </insert>
 
     <!-- 仕訳明細登録 -->
-    <insert id="insertJournalDetail" parameterType="com.example.accounting.domain.model.journal.JournalDetail">
+    <insert id="insertJournalDetail" parameterType="com.example.fas.domain.model.journal.JournalDetail">
         INSERT INTO "仕訳明細" (
             "仕訳伝票番号", "仕訳行番号", "行摘要", "作成日時", "更新日時"
         ) VALUES (
@@ -1056,7 +1056,7 @@ public interface JournalRepository {
     </insert>
 
     <!-- 仕訳貸借明細登録 -->
-    <insert id="insertJournalDebitCreditDetail" parameterType="com.example.accounting.domain.model.journal.JournalDebitCreditDetail">
+    <insert id="insertJournalDebitCreditDetail" parameterType="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
         INSERT INTO "仕訳貸借明細" (
             "仕訳伝票番号", "仕訳行番号", "仕訳行貸借区分",
             "勘定科目コード", "補助科目コード", "部門コード", "プロジェクトコード",
@@ -1067,12 +1067,12 @@ public interface JournalRepository {
             "付箋コード", "付箋内容", "作成日時", "更新日時"
         ) VALUES (
             #{journalVoucherNumber}, #{lineNumber},
-            #{debitCreditType, typeHandler=com.example.accounting.infrastructure.persistence.typehandler.DebitCreditTypeHandler}::仕訳行貸借区分,
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.persistence.typehandler.DebitCreditTypeHandler}::仕訳行貸借区分,
             #{accountCode}, #{subAccountCode}, #{departmentCode}, #{projectCode},
             #{amount}, #{currencyCode}, #{exchangeRate}, #{baseCurrencyAmount},
-            #{taxType, typeHandler=com.example.accounting.infrastructure.persistence.typehandler.TaxTypeHandler}::消費税区分,
+            #{taxType, typeHandler=com.example.fas.infrastructure.persistence.typehandler.TaxTypeHandler}::消費税区分,
             #{taxRate},
-            #{taxCalcType, typeHandler=com.example.accounting.infrastructure.persistence.typehandler.TaxCalculationTypeHandler}::消費税計算区分,
+            #{taxCalcType, typeHandler=com.example.fas.infrastructure.persistence.typehandler.TaxCalculationTypeHandler}::消費税計算区分,
             #{dueDate}, #{cashFlowFlag}, #{segmentCode},
             #{counterAccountCode}, #{counterSubAccountCode},
             #{tagCode}, #{tagContent}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -1131,11 +1131,11 @@ public interface JournalRepository {
 
 ```java
 // src/main/java/com/example/accounting/infrastructure/persistence/repository/JournalRepositoryImpl.java
-package com.example.accounting.infrastructure.persistence.repository;
+package com.example.fas.infrastructure.persistence.repository;
 
-import com.example.accounting.application.port.out.JournalRepository;
-import com.example.accounting.domain.model.journal.Journal;
-import com.example.accounting.infrastructure.persistence.mapper.JournalMapper;
+import com.example.fas.application.port.out.JournalRepository;
+import com.example.fas.domain.model.journal.Journal;
+import com.example.fas.infrastructure.persistence.mapper.JournalMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -1225,6 +1225,584 @@ public class JournalRepositoryImpl implements JournalRepository {
 ```
 
 </details>
+
+---
+
+## 16.4 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+仕訳データは、仕訳（ヘッダ）→ 仕訳明細 → 仕訳貸借明細の3層構造を持ちます。MyBatis でこの親子関係を効率的に取得するためのリレーション設定を実装します。
+
+#### ネストした ResultMap の定義
+
+<details>
+<summary>JournalMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/JournalMapper.xml -->
+<mapper namespace="com.example.fas.infrastructure.persistence.mapper.JournalMapper">
+
+    <!-- 仕訳（ヘッダ）の ResultMap（リレーション込み） -->
+    <resultMap id="journalWithDetailsResultMap" type="com.example.fas.domain.model.journal.Journal">
+        <id property="journalVoucherNumber" column="j_仕訳伝票番号"/>
+        <result property="postingDate" column="j_起票日"/>
+        <result property="entryDate" column="j_入力日"/>
+        <result property="closingJournalFlag" column="j_決算仕訳フラグ"/>
+        <result property="singleEntryFlag" column="j_単振フラグ"/>
+        <result property="voucherType" column="j_仕訳伝票区分"
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.JournalVoucherTypeHandler"/>
+        <result property="periodicPostingFlag" column="j_定期計上フラグ"/>
+        <result property="employeeCode" column="j_社員コード"/>
+        <result property="departmentCode" column="j_部門コード"/>
+        <result property="redSlipFlag" column="j_赤伝フラグ"/>
+        <result property="redBlackVoucherNumber" column="j_赤黒伝票番号"/>
+        <result property="version" column="j_バージョン"/>
+        <result property="createdAt" column="j_作成日時"/>
+        <result property="updatedAt" column="j_更新日時"/>
+        <!-- 仕訳明細との1:N関連 -->
+        <collection property="details" ofType="com.example.fas.domain.model.journal.JournalDetail"
+                    resultMap="journalDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 仕訳明細のネスト ResultMap -->
+    <resultMap id="journalDetailNestedResultMap" type="com.example.fas.domain.model.journal.JournalDetail">
+        <id property="journalVoucherNumber" column="d_仕訳伝票番号"/>
+        <id property="lineNumber" column="d_仕訳行番号"/>
+        <result property="lineSummary" column="d_行摘要"/>
+        <result property="version" column="d_バージョン"/>
+        <result property="createdAt" column="d_作成日時"/>
+        <result property="updatedAt" column="d_更新日時"/>
+        <!-- 仕訳貸借明細との1:N関連 -->
+        <collection property="debitCreditDetails" ofType="com.example.fas.domain.model.journal.JournalDebitCreditDetail"
+                    resultMap="journalDebitCreditDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 仕訳貸借明細のネスト ResultMap -->
+    <resultMap id="journalDebitCreditDetailNestedResultMap" type="com.example.fas.domain.model.journal.JournalDebitCreditDetail">
+        <id property="journalVoucherNumber" column="dc_仕訳伝票番号"/>
+        <id property="lineNumber" column="dc_仕訳行番号"/>
+        <id property="debitCreditType" column="dc_仕訳行貸借区分"
+            typeHandler="com.example.fas.infrastructure.persistence.typehandler.DebitCreditTypeHandler"/>
+        <result property="accountCode" column="dc_勘定科目コード"/>
+        <result property="subAccountCode" column="dc_補助科目コード"/>
+        <result property="departmentCode" column="dc_部門コード"/>
+        <result property="projectCode" column="dc_プロジェクトコード"/>
+        <result property="amount" column="dc_仕訳金額"/>
+        <result property="currencyCode" column="dc_通貨コード"/>
+        <result property="exchangeRate" column="dc_為替レート"/>
+        <result property="baseCurrencyAmount" column="dc_基軸換算仕訳金額"/>
+        <result property="taxType" column="dc_消費税区分"
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.TaxTypeHandler"/>
+        <result property="taxRate" column="dc_消費税率"/>
+        <result property="taxCalcType" column="dc_消費税計算区分"
+                typeHandler="com.example.fas.infrastructure.persistence.typehandler.TaxCalculationTypeHandler"/>
+        <result property="dueDate" column="dc_期日"/>
+        <result property="cashFlowFlag" column="dc_資金繰フラグ"/>
+        <result property="segmentCode" column="dc_セグメントコード"/>
+        <result property="counterAccountCode" column="dc_相手勘定科目コード"/>
+        <result property="counterSubAccountCode" column="dc_相手補助科目コード"/>
+        <result property="tagCode" column="dc_付箋コード"/>
+        <result property="tagContent" column="dc_付箋内容"/>
+        <result property="version" column="dc_バージョン"/>
+        <result property="createdAt" column="dc_作成日時"/>
+        <result property="updatedAt" column="dc_更新日時"/>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ（3層構造） -->
+    <select id="findWithDetailsByVoucherNumber" resultMap="journalWithDetailsResultMap">
+        SELECT
+            j."仕訳伝票番号" AS j_仕訳伝票番号,
+            j."起票日" AS j_起票日,
+            j."入力日" AS j_入力日,
+            j."決算仕訳フラグ" AS j_決算仕訳フラグ,
+            j."単振フラグ" AS j_単振フラグ,
+            j."仕訳伝票区分" AS j_仕訳伝票区分,
+            j."定期計上フラグ" AS j_定期計上フラグ,
+            j."社員コード" AS j_社員コード,
+            j."部門コード" AS j_部門コード,
+            j."赤伝フラグ" AS j_赤伝フラグ,
+            j."赤黒伝票番号" AS j_赤黒伝票番号,
+            j."バージョン" AS j_バージョン,
+            j."作成日時" AS j_作成日時,
+            j."更新日時" AS j_更新日時,
+            d."仕訳伝票番号" AS d_仕訳伝票番号,
+            d."仕訳行番号" AS d_仕訳行番号,
+            d."行摘要" AS d_行摘要,
+            d."バージョン" AS d_バージョン,
+            d."作成日時" AS d_作成日時,
+            d."更新日時" AS d_更新日時,
+            dc."仕訳伝票番号" AS dc_仕訳伝票番号,
+            dc."仕訳行番号" AS dc_仕訳行番号,
+            dc."仕訳行貸借区分" AS dc_仕訳行貸借区分,
+            dc."勘定科目コード" AS dc_勘定科目コード,
+            dc."補助科目コード" AS dc_補助科目コード,
+            dc."部門コード" AS dc_部門コード,
+            dc."プロジェクトコード" AS dc_プロジェクトコード,
+            dc."仕訳金額" AS dc_仕訳金額,
+            dc."通貨コード" AS dc_通貨コード,
+            dc."為替レート" AS dc_為替レート,
+            dc."基軸換算仕訳金額" AS dc_基軸換算仕訳金額,
+            dc."消費税区分" AS dc_消費税区分,
+            dc."消費税率" AS dc_消費税率,
+            dc."消費税計算区分" AS dc_消費税計算区分,
+            dc."期日" AS dc_期日,
+            dc."資金繰フラグ" AS dc_資金繰フラグ,
+            dc."セグメントコード" AS dc_セグメントコード,
+            dc."相手勘定科目コード" AS dc_相手勘定科目コード,
+            dc."相手補助科目コード" AS dc_相手補助科目コード,
+            dc."付箋コード" AS dc_付箋コード,
+            dc."付箋内容" AS dc_付箋内容,
+            dc."バージョン" AS dc_バージョン,
+            dc."作成日時" AS dc_作成日時,
+            dc."更新日時" AS dc_更新日時
+        FROM "仕訳" j
+        LEFT JOIN "仕訳明細" d ON j."仕訳伝票番号" = d."仕訳伝票番号"
+        LEFT JOIN "仕訳貸借明細" dc ON d."仕訳伝票番号" = dc."仕訳伝票番号"
+            AND d."仕訳行番号" = dc."仕訳行番号"
+        WHERE j."仕訳伝票番号" = #{voucherNumber}
+        ORDER BY d."仕訳行番号", dc."仕訳行貸借区分"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<collection>` | 1:N 関連のマッピング |
+| `<id>` | 主キーの識別（MyBatis が重複排除に使用） |
+| 複合主キー | 仕訳明細・仕訳貸借明細は複数の `<id>` で複合主キーを表現 |
+| `resultMap` | ネストした ResultMap の参照 |
+| エイリアス（AS） | カラム名の重複を避けるためのプレフィックス（j_, d_, dc_） |
+| `ORDER BY` | コレクションの順序を保証 |
+
+### 楽観ロックの実装
+
+複数ユーザーが同時に仕訳データを編集する場合、データの整合性を保つために楽観ロック（Optimistic Locking）を実装します。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V006__add_journal_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V006__add_journal_version_columns.sql
+
+-- 仕訳テーブルにバージョンカラムを追加
+ALTER TABLE "仕訳" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 仕訳明細テーブルにバージョンカラムを追加
+ALTER TABLE "仕訳明細" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 仕訳貸借明細テーブルにバージョンカラムを追加
+ALTER TABLE "仕訳貸借明細" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "仕訳"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "仕訳明細"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "仕訳貸借明細"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>Journal.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/fas/domain/model/journal/Journal.java
+package com.example.fas.domain.model.journal;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Journal {
+    private String journalVoucherNumber;      // 仕訳伝票番号
+    private LocalDate postingDate;            // 起票日
+    private LocalDate entryDate;              // 入力日
+    private Boolean closingJournalFlag;       // 決算仕訳フラグ
+    private Boolean singleEntryFlag;          // 単振フラグ
+    private JournalVoucherType voucherType;   // 仕訳伝票区分
+    private Boolean periodicPostingFlag;      // 定期計上フラグ
+    private String employeeCode;              // 社員コード
+    private String departmentCode;            // 部門コード
+    private Boolean redSlipFlag;              // 赤伝フラグ
+    private Integer redBlackVoucherNumber;    // 赤黒伝票番号
+    private LocalDateTime createdAt;          // 作成日時
+    private LocalDateTime updatedAt;          // 更新日時
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    @Builder.Default
+    private List<JournalDetail> details = new ArrayList<>();
+
+    // 以下、既存のビジネスロジック...
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の更新
+
+<details>
+<summary>JournalMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 楽観ロック対応の更新（バージョンチェック付き） -->
+<update id="updateWithOptimisticLock" parameterType="com.example.fas.domain.model.journal.Journal">
+    UPDATE "仕訳"
+    SET
+        "起票日" = #{postingDate},
+        "入力日" = #{entryDate},
+        "決算仕訳フラグ" = #{closingJournalFlag},
+        "単振フラグ" = #{singleEntryFlag},
+        "仕訳伝票区分" = #{voucherType, typeHandler=com.example.fas.infrastructure.persistence.typehandler.JournalVoucherTypeHandler}::仕訳伝票区分,
+        "定期計上フラグ" = #{periodicPostingFlag},
+        "社員コード" = #{employeeCode},
+        "部門コード" = #{departmentCode},
+        "赤伝フラグ" = #{redSlipFlag},
+        "赤黒伝票番号" = #{redBlackVoucherNumber},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "仕訳伝票番号" = #{journalVoucherNumber}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- バージョンのみ取得 -->
+<select id="findVersionByVoucherNumber" resultType="Integer">
+    SELECT "バージョン" FROM "仕訳"
+    WHERE "仕訳伝票番号" = #{voucherNumber}
+</select>
+```
+
+</details>
+
+#### 楽観ロック例外クラス
+
+<details>
+<summary>OptimisticLockException.java</summary>
+
+```java
+// src/main/java/com/example/fas/domain/exception/OptimisticLockException.java
+package com.example.fas.domain.exception;
+
+public class OptimisticLockException extends RuntimeException {
+
+    private final String entityName;
+    private final String entityId;
+    private final Integer expectedVersion;
+    private final Integer actualVersion;
+
+    public OptimisticLockException(String entityName, String entityId) {
+        super(String.format("%s (ID: %s) は既に削除されています", entityName, entityId));
+        this.entityName = entityName;
+        this.entityId = entityId;
+        this.expectedVersion = null;
+        this.actualVersion = null;
+    }
+
+    public OptimisticLockException(String entityName, String entityId,
+                                    Integer expectedVersion, Integer actualVersion) {
+        super(String.format("%s (ID: %s) は他のユーザーによって更新されています。" +
+                "期待バージョン: %d, 実際のバージョン: %d",
+                entityName, entityId, expectedVersion, actualVersion));
+        this.entityName = entityName;
+        this.entityId = entityId;
+        this.expectedVersion = expectedVersion;
+        this.actualVersion = actualVersion;
+    }
+
+    public String getEntityName() {
+        return entityName;
+    }
+
+    public String getEntityId() {
+        return entityId;
+    }
+
+    public Integer getExpectedVersion() {
+        return expectedVersion;
+    }
+
+    public Integer getActualVersion() {
+        return actualVersion;
+    }
+}
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>JournalRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/fas/infrastructure/persistence/repository/JournalRepositoryImpl.java
+package com.example.fas.infrastructure.persistence.repository;
+
+import com.example.fas.application.port.out.JournalRepository;
+import com.example.fas.domain.exception.OptimisticLockException;
+import com.example.fas.domain.model.journal.Journal;
+import com.example.fas.infrastructure.persistence.mapper.JournalMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Repository
+@RequiredArgsConstructor
+public class JournalRepositoryImpl implements JournalRepository {
+
+    private final JournalMapper journalMapper;
+
+    @Override
+    @Transactional
+    public void update(Journal journal) {
+        int updatedCount = journalMapper.updateWithOptimisticLock(journal);
+
+        if (updatedCount == 0) {
+            // バージョン不一致または削除済み
+            Integer currentVersion = journalMapper.findVersionByVoucherNumber(
+                    journal.getJournalVoucherNumber());
+            if (currentVersion == null) {
+                throw new OptimisticLockException("仕訳", journal.getJournalVoucherNumber());
+            } else {
+                throw new OptimisticLockException("仕訳", journal.getJournalVoucherNumber(),
+                        journal.getVersion(), currentVersion);
+            }
+        }
+    }
+
+    @Override
+    public Optional<Journal> findByVoucherNumberWithDetails(String voucherNumber) {
+        return Optional.ofNullable(journalMapper.findWithDetailsByVoucherNumber(voucherNumber));
+    }
+
+    // その他のメソッド...
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>JournalRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/fas/infrastructure/persistence/repository/JournalRepositoryOptimisticLockTest.java
+package com.example.fas.infrastructure.persistence.repository;
+
+import com.example.fas.application.port.out.JournalRepository;
+import com.example.fas.domain.exception.OptimisticLockException;
+import com.example.fas.domain.model.account.DebitCreditType;
+import com.example.fas.domain.model.journal.*;
+import com.example.fas.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("仕訳リポジトリ - 楽観ロック")
+class JournalRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private JournalRepository journalRepository;
+
+    @BeforeEach
+    void setUp() {
+        journalRepository.deleteAll();
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLocking {
+
+        @Test
+        @DisplayName("同じバージョンで更新できる")
+        void canUpdateWithSameVersion() {
+            // Arrange
+            var journal = createTestJournal("J0001");
+            journalRepository.save(journal);
+
+            // Act
+            var fetched = journalRepository.findByVoucherNumber("J0001").get();
+            fetched.setDepartmentCode("DEPT-002");
+            journalRepository.update(fetched);
+
+            // Assert
+            var updated = journalRepository.findByVoucherNumber("J0001").get();
+            assertThat(updated.getDepartmentCode()).isEqualTo("DEPT-002");
+            assertThat(updated.getVersion()).isEqualTo(2); // バージョンがインクリメント
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで更新すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            var journal = createTestJournal("J0002");
+            journalRepository.save(journal);
+
+            // ユーザーAが取得
+            var journalA = journalRepository.findByVoucherNumber("J0002").get();
+            // ユーザーBが取得
+            var journalB = journalRepository.findByVoucherNumber("J0002").get();
+
+            // ユーザーAが更新（成功）
+            journalA.setDepartmentCode("DEPT-A");
+            journalRepository.update(journalA);
+
+            // Act & Assert: ユーザーBが古いバージョンで更新（失敗）
+            journalB.setDepartmentCode("DEPT-B");
+            assertThatThrownBy(() -> journalRepository.update(journalB))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+
+        @Test
+        @DisplayName("削除済みデータを更新すると楽観ロック例外が発生する")
+        void throwsExceptionWhenAlreadyDeleted() {
+            // Arrange
+            var journal = createTestJournal("J0003");
+            journalRepository.save(journal);
+
+            var fetched = journalRepository.findByVoucherNumber("J0003").get();
+            journalRepository.delete("J0003");
+
+            // Act & Assert
+            assertThatThrownBy(() -> journalRepository.update(fetched))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("既に削除されています");
+        }
+    }
+
+    private Journal createTestJournal(String voucherNumber) {
+        var debitDetail = JournalDebitCreditDetail.builder()
+                .journalVoucherNumber(voucherNumber)
+                .lineNumber(1)
+                .debitCreditType(DebitCreditType.DEBIT)
+                .accountCode("11110")
+                .amount(new BigDecimal("100000"))
+                .build();
+
+        var creditDetail = JournalDebitCreditDetail.builder()
+                .journalVoucherNumber(voucherNumber)
+                .lineNumber(1)
+                .debitCreditType(DebitCreditType.CREDIT)
+                .accountCode("41100")
+                .amount(new BigDecimal("100000"))
+                .build();
+
+        var journalDetail = JournalDetail.builder()
+                .journalVoucherNumber(voucherNumber)
+                .lineNumber(1)
+                .lineSummary("テスト仕訳")
+                .debitCreditDetails(List.of(debitDetail, creditDetail))
+                .build();
+
+        return Journal.builder()
+                .journalVoucherNumber(voucherNumber)
+                .postingDate(LocalDate.of(2024, 4, 1))
+                .entryDate(LocalDate.now())
+                .closingJournalFlag(false)
+                .singleEntryFlag(true)
+                .voucherType(JournalVoucherType.NORMAL)
+                .periodicPostingFlag(false)
+                .departmentCode("DEPT-001")
+                .redSlipFlag(false)
+                .details(List.of(journalDetail))
+                .build();
+    }
+}
+```
+
+</details>
+
+#### 楽観ロックのベストプラクティス
+
+| ポイント | 説明 |
+|---------|------|
+| **バージョンカラム** | INTEGER 型で十分（オーバーフローは実用上問題なし） |
+| **WHERE 条件** | 必ず `AND "バージョン" = #{version}` を含める |
+| **インクリメント** | `"バージョン" = "バージョン" + 1` でアトミックに更新 |
+| **例外処理** | 更新件数が0の場合は楽観ロック例外をスロー |
+| **リトライ** | 必要に応じて再取得・再更新のリトライロジックを実装 |
+| **3層構造の考慮** | 仕訳は通常ヘッダ単位でロック、明細の個別ロックは必要に応じて追加 |
+
+### 3層構造におけるリレーションと整合性
+
+仕訳データは3層構造（仕訳 → 仕訳明細 → 仕訳貸借明細）を持つため、更新時の整合性確保が重要です。
+
+#### 更新パターン
+
+| パターン | 説明 | 推奨 |
+|---------|------|------|
+| **ヘッダ単位ロック** | 仕訳ヘッダのバージョンのみチェック | ○ シンプルで実用的 |
+| **全層ロック** | 仕訳・明細・貸借明細すべてのバージョンをチェック | △ 複雑だが厳密 |
+| **カスケード更新** | ヘッダ更新時に明細も一括削除・再挿入 | △ 実装が簡単だが履歴管理に注意 |
+
+#### 推奨アプローチ
+
+仕訳データは通常、伝票単位で一括編集されるため、**ヘッダ単位ロック**が推奨されます。明細の部分更新が必要な場合は、明細レベルのバージョンチェックを追加します。
+
+```plantuml
+@startuml
+
+title 仕訳更新の楽観ロックフロー
+
+actor ユーザーA
+actor ユーザーB
+database DB
+
+== 取得フェーズ ==
+ユーザーA -> DB : 仕訳J0001取得
+DB --> ユーザーA : Journal(version=1)
+ユーザーB -> DB : 仕訳J0001取得
+DB --> ユーザーB : Journal(version=1)
+
+== 更新フェーズ ==
+ユーザーA -> DB : UPDATE WHERE version=1
+DB --> ユーザーA : 更新成功 (version=2)
+
+ユーザーB -> DB : UPDATE WHERE version=1
+DB --> ユーザーB : 更新件数=0
+ユーザーB -> ユーザーB : OptimisticLockException
+
+@enduml
+```
 
 ---
 

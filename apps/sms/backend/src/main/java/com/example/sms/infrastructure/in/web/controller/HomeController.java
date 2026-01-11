@@ -96,6 +96,10 @@ public class HomeController {
 
     @GetMapping("/")
     public String index(Model model) {
+        // 現在日付
+        LocalDate today = LocalDate.now();
+        model.addAttribute("currentDate", today);
+
         // マスタ系カウント
         model.addAttribute("departmentCount", departmentUseCase.getAllDepartments().size());
         model.addAttribute("employeeCount", employeeUseCase.getAllEmployees().size());
@@ -119,7 +123,6 @@ public class HomeController {
             + invoiceUseCase.getInvoicesByStatus(InvoiceStatus.PARTIALLY_PAID).size()
             + invoiceUseCase.getInvoicesByStatus(InvoiceStatus.OVERDUE).size();
         model.addAttribute("unpaidInvoiceCount", unpaidInvoiceCount);
-        LocalDate today = LocalDate.now();
         model.addAttribute("todayReceiptCount", receiptUseCase.getReceiptsByDateRange(today, today).size());
 
         // 購買系カウント

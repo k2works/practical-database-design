@@ -1955,7 +1955,824 @@ stop
 
 ---
 
-## まとめ
+## 26.5 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+外注委託データは、支給→支給明細、消費→消費明細 の親子関係と、支給→発注明細、消費→支給 の参照関係を持ちます。MyBatis でこれらの関係を効率的に取得するための設定を実装します。
+
+#### ネストした ResultMap の定義
+
+<details>
+<summary>SupplyMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/SupplyMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.SupplyMapper">
+
+    <!-- 支給データ ResultMap（明細・発注明細込み） -->
+    <resultMap id="supplyWithRelationsResultMap" type="com.example.production.domain.model.subcontract.Supply">
+        <id property="id" column="s_ID"/>
+        <result property="supplyNumber" column="s_支給番号"/>
+        <result property="purchaseOrderNumber" column="s_発注番号"/>
+        <result property="lineNumber" column="s_発注行番号"/>
+        <result property="supplierCode" column="s_取引先コード"/>
+        <result property="supplyDate" column="s_支給日"/>
+        <result property="supplierPersonCode" column="s_支給担当者コード"/>
+        <result property="supplyType" column="s_支給区分"
+                typeHandler="com.example.production.infrastructure.persistence.SupplyTypeTypeHandler"/>
+        <result property="remarks" column="s_備考"/>
+        <result property="version" column="s_バージョン"/>
+        <result property="createdAt" column="s_作成日時"/>
+        <result property="createdBy" column="s_作成者"/>
+        <result property="updatedAt" column="s_更新日時"/>
+        <result property="updatedBy" column="s_更新者"/>
+        <!-- 発注明細との N:1 関連 -->
+        <association property="purchaseOrderDetail" javaType="com.example.production.domain.model.purchase.PurchaseOrderDetail">
+            <id property="id" column="pod_ID"/>
+            <result property="purchaseOrderNumber" column="pod_発注番号"/>
+            <result property="lineNumber" column="pod_発注行番号"/>
+            <result property="itemCode" column="pod_品目コード"/>
+            <result property="orderQuantity" column="pod_発注数量"/>
+            <result property="unitPrice" column="pod_発注単価"/>
+        </association>
+        <!-- 取引先との N:1 関連 -->
+        <association property="supplier" javaType="com.example.production.domain.model.master.Supplier">
+            <id property="supplierCode" column="sup_取引先コード"/>
+            <result property="supplierName" column="sup_取引先名"/>
+        </association>
+        <!-- 支給明細との 1:N 関連 -->
+        <collection property="details" ofType="com.example.production.domain.model.subcontract.SupplyDetail"
+                    resultMap="supplyDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 支給明細のネスト ResultMap -->
+    <resultMap id="supplyDetailNestedResultMap" type="com.example.production.domain.model.subcontract.SupplyDetail">
+        <id property="id" column="sd_ID"/>
+        <result property="supplyNumber" column="sd_支給番号"/>
+        <result property="lineNumber" column="sd_支給行番号"/>
+        <result property="itemCode" column="sd_品目コード"/>
+        <result property="quantity" column="sd_支給数"/>
+        <result property="unitPrice" column="sd_支給単価"/>
+        <result property="amount" column="sd_支給金額"/>
+        <result property="consumedQuantity" column="sd_消費済数量"/>
+        <result property="remainingQuantity" column="sd_残数量"/>
+        <result property="remarks" column="sd_備考"/>
+        <result property="version" column="sd_バージョン"/>
+        <!-- 品目マスタとの N:1 関連 -->
+        <association property="item" javaType="com.example.production.domain.model.item.Item">
+            <id property="itemCode" column="i_品目コード"/>
+            <result property="itemName" column="i_品名"/>
+            <result property="unit" column="i_単位"/>
+        </association>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithRelationsBySupplyNumber" resultMap="supplyWithRelationsResultMap">
+        SELECT
+            -- 支給データ
+            s."ID" AS s_ID,
+            s."支給番号" AS s_支給番号,
+            s."発注番号" AS s_発注番号,
+            s."発注行番号" AS s_発注行番号,
+            s."取引先コード" AS s_取引先コード,
+            s."支給日" AS s_支給日,
+            s."支給担当者コード" AS s_支給担当者コード,
+            s."支給区分" AS s_支給区分,
+            s."備考" AS s_備考,
+            s."バージョン" AS s_バージョン,
+            s."作成日時" AS s_作成日時,
+            s."作成者" AS s_作成者,
+            s."更新日時" AS s_更新日時,
+            s."更新者" AS s_更新者,
+            -- 発注明細データ
+            pod."ID" AS pod_ID,
+            pod."発注番号" AS pod_発注番号,
+            pod."発注行番号" AS pod_発注行番号,
+            pod."品目コード" AS pod_品目コード,
+            pod."発注数量" AS pod_発注数量,
+            pod."発注単価" AS pod_発注単価,
+            -- 取引先マスタ
+            sup."取引先コード" AS sup_取引先コード,
+            sup."取引先名" AS sup_取引先名,
+            -- 支給明細データ
+            sd."ID" AS sd_ID,
+            sd."支給番号" AS sd_支給番号,
+            sd."支給行番号" AS sd_支給行番号,
+            sd."品目コード" AS sd_品目コード,
+            sd."支給数" AS sd_支給数,
+            sd."支給単価" AS sd_支給単価,
+            sd."支給金額" AS sd_支給金額,
+            sd."消費済数量" AS sd_消費済数量,
+            sd."残数量" AS sd_残数量,
+            sd."備考" AS sd_備考,
+            sd."バージョン" AS sd_バージョン,
+            -- 品目マスタ
+            i."品目コード" AS i_品目コード,
+            i."品名" AS i_品名,
+            i."単位" AS i_単位
+        FROM "支給データ" s
+        LEFT JOIN "発注明細データ" pod
+            ON s."発注番号" = pod."発注番号" AND s."発注行番号" = pod."発注行番号"
+        LEFT JOIN "取引先マスタ" sup ON s."取引先コード" = sup."取引先コード"
+        LEFT JOIN "支給明細データ" sd ON s."支給番号" = sd."支給番号"
+        LEFT JOIN "品目マスタ" i ON sd."品目コード" = i."品目コード"
+            AND i."適用開始日" = (
+                SELECT MAX("適用開始日") FROM "品目マスタ"
+                WHERE "品目コード" = sd."品目コード"
+                AND "適用開始日" <= CURRENT_DATE
+            )
+        WHERE s."支給番号" = #{supplyNumber}
+        ORDER BY sd."支給行番号"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+<details>
+<summary>ConsumptionMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/ConsumptionMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.ConsumptionMapper">
+
+    <!-- 消費データ ResultMap（明細・支給データ込み） -->
+    <resultMap id="consumptionWithRelationsResultMap" type="com.example.production.domain.model.subcontract.Consumption">
+        <id property="id" column="c_ID"/>
+        <result property="consumptionNumber" column="c_消費番号"/>
+        <result property="supplyNumber" column="c_支給番号"/>
+        <result property="receivingNumber" column="c_入荷受入番号"/>
+        <result property="consumptionDate" column="c_消費日"/>
+        <result property="remarks" column="c_備考"/>
+        <result property="version" column="c_バージョン"/>
+        <result property="createdAt" column="c_作成日時"/>
+        <result property="updatedAt" column="c_更新日時"/>
+        <!-- 支給データとの N:1 関連 -->
+        <association property="supply" javaType="com.example.production.domain.model.subcontract.Supply">
+            <id property="id" column="s_ID"/>
+            <result property="supplyNumber" column="s_支給番号"/>
+            <result property="supplierCode" column="s_取引先コード"/>
+            <result property="supplyDate" column="s_支給日"/>
+            <result property="supplyType" column="s_支給区分"
+                    typeHandler="com.example.production.infrastructure.persistence.SupplyTypeTypeHandler"/>
+        </association>
+        <!-- 入荷データとの N:1 関連 -->
+        <association property="receiving" javaType="com.example.production.domain.model.purchase.Receiving">
+            <id property="id" column="r_ID"/>
+            <result property="receivingNumber" column="r_入荷受入番号"/>
+            <result property="receivingDate" column="r_入荷日"/>
+            <result property="receivedQuantity" column="r_入荷数量"/>
+        </association>
+        <!-- 消費明細との 1:N 関連 -->
+        <collection property="details" ofType="com.example.production.domain.model.subcontract.ConsumptionDetail"
+                    resultMap="consumptionDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 消費明細のネスト ResultMap -->
+    <resultMap id="consumptionDetailNestedResultMap" type="com.example.production.domain.model.subcontract.ConsumptionDetail">
+        <id property="id" column="cd_ID"/>
+        <result property="consumptionNumber" column="cd_消費番号"/>
+        <result property="lineNumber" column="cd_消費行番号"/>
+        <result property="supplyDetailId" column="cd_支給明細ID"/>
+        <result property="itemCode" column="cd_品目コード"/>
+        <result property="consumedQuantity" column="cd_消費数量"/>
+        <result property="yieldRate" column="cd_歩留率"/>
+        <result property="remarks" column="cd_備考"/>
+        <result property="version" column="cd_バージョン"/>
+        <!-- 支給明細との N:1 関連 -->
+        <association property="supplyDetail" javaType="com.example.production.domain.model.subcontract.SupplyDetail">
+            <id property="id" column="sd_ID"/>
+            <result property="supplyNumber" column="sd_支給番号"/>
+            <result property="lineNumber" column="sd_支給行番号"/>
+            <result property="quantity" column="sd_支給数"/>
+            <result property="remainingQuantity" column="sd_残数量"/>
+        </association>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithRelationsByConsumptionNumber" resultMap="consumptionWithRelationsResultMap">
+        SELECT
+            -- 消費データ
+            c."ID" AS c_ID,
+            c."消費番号" AS c_消費番号,
+            c."支給番号" AS c_支給番号,
+            c."入荷受入番号" AS c_入荷受入番号,
+            c."消費日" AS c_消費日,
+            c."備考" AS c_備考,
+            c."バージョン" AS c_バージョン,
+            c."作成日時" AS c_作成日時,
+            c."更新日時" AS c_更新日時,
+            -- 支給データ
+            s."ID" AS s_ID,
+            s."支給番号" AS s_支給番号,
+            s."取引先コード" AS s_取引先コード,
+            s."支給日" AS s_支給日,
+            s."支給区分" AS s_支給区分,
+            -- 入荷データ
+            r."ID" AS r_ID,
+            r."入荷受入番号" AS r_入荷受入番号,
+            r."入荷日" AS r_入荷日,
+            r."入荷数量" AS r_入荷数量,
+            -- 消費明細データ
+            cd."ID" AS cd_ID,
+            cd."消費番号" AS cd_消費番号,
+            cd."消費行番号" AS cd_消費行番号,
+            cd."支給明細ID" AS cd_支給明細ID,
+            cd."品目コード" AS cd_品目コード,
+            cd."消費数量" AS cd_消費数量,
+            cd."歩留率" AS cd_歩留率,
+            cd."備考" AS cd_備考,
+            cd."バージョン" AS cd_バージョン,
+            -- 支給明細データ
+            sd."ID" AS sd_ID,
+            sd."支給番号" AS sd_支給番号,
+            sd."支給行番号" AS sd_支給行番号,
+            sd."支給数" AS sd_支給数,
+            sd."残数量" AS sd_残数量
+        FROM "消費データ" c
+        LEFT JOIN "支給データ" s ON c."支給番号" = s."支給番号"
+        LEFT JOIN "入荷受入データ" r ON c."入荷受入番号" = r."入荷受入番号"
+        LEFT JOIN "消費明細データ" cd ON c."消費番号" = cd."消費番号"
+        LEFT JOIN "支給明細データ" sd ON cd."支給明細ID" = sd."ID"
+        WHERE c."消費番号" = #{consumptionNumber}
+        ORDER BY cd."消費行番号"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<collection>` | 支給→支給明細、消費→消費明細 の 1:N 関連 |
+| `<association>` | 支給→発注明細、消費→支給、消費明細→支給明細 の N:1 関連 |
+| エイリアス | `s_`（支給）、`sd_`（支給明細）、`c_`（消費）、`cd_`（消費明細） |
+| 残数量管理 | 支給明細の残数量を消費時に更新 |
+
+### 楽観ロックの実装
+
+支給と消費は同時に複数ユーザーが操作する可能性があり、特に残数量の整合性を保つために楽観ロックが重要です。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V012__add_subcontract_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V012__add_subcontract_version_columns.sql
+
+-- 支給データテーブルにバージョンカラムを追加
+ALTER TABLE "支給データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 支給明細データテーブルにバージョンカラムと残数量を追加
+ALTER TABLE "支給明細データ" ADD COLUMN "消費済数量" DECIMAL(15, 2) DEFAULT 0 NOT NULL;
+ALTER TABLE "支給明細データ" ADD COLUMN "残数量" DECIMAL(15, 2);
+ALTER TABLE "支給明細データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 残数量の初期値を設定（支給数と同じ）
+UPDATE "支給明細データ" SET "残数量" = "支給数" WHERE "残数量" IS NULL;
+ALTER TABLE "支給明細データ" ALTER COLUMN "残数量" SET NOT NULL;
+
+-- 消費データテーブルにバージョンカラムを追加
+ALTER TABLE "消費データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 消費明細データテーブルにバージョンカラムを追加
+ALTER TABLE "消費明細データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "支給データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "支給明細データ"."消費済数量" IS '消費済の数量';
+COMMENT ON COLUMN "支給明細データ"."残数量" IS '未消費の残数量';
+COMMENT ON COLUMN "支給明細データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "消費データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "消費明細データ"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>Supply.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/production/domain/model/subcontract/Supply.java
+package com.example.production.domain.model.subcontract;
+
+import com.example.production.domain.model.master.Supplier;
+import com.example.production.domain.model.purchase.PurchaseOrderDetail;
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@Builder
+public class Supply {
+    private Integer id;
+    private String supplyNumber;
+    private String purchaseOrderNumber;
+    private Integer lineNumber;
+    private String supplierCode;
+    private LocalDate supplyDate;
+    private String supplierPersonCode;
+    private SupplyType supplyType;
+    private String remarks;
+    private LocalDateTime createdAt;
+    private String createdBy;
+    private LocalDateTime updatedAt;
+    private String updatedBy;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private PurchaseOrderDetail purchaseOrderDetail;
+    private Supplier supplier;
+    @Builder.Default
+    private List<SupplyDetail> details = new ArrayList<>();
+}
+```
+
+</details>
+
+<details>
+<summary>SupplyDetail.java（バージョン・残数量追加）</summary>
+
+```java
+// src/main/java/com/example/production/domain/model/subcontract/SupplyDetail.java
+package com.example.production.domain.model.subcontract;
+
+import com.example.production.domain.model.item.Item;
+import lombok.Builder;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+public class SupplyDetail {
+    private Integer id;
+    private String supplyNumber;
+    private Integer lineNumber;
+    private String itemCode;
+    private BigDecimal quantity;
+    private BigDecimal unitPrice;
+    private BigDecimal amount;
+    private BigDecimal consumedQuantity;
+    private BigDecimal remainingQuantity;
+    private String remarks;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Supply supply;
+    private Item item;
+
+    /**
+     * 消費可能かどうかを判定
+     */
+    public boolean canConsume(BigDecimal requestedQuantity) {
+        return remainingQuantity.compareTo(requestedQuantity) >= 0;
+    }
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の更新
+
+<details>
+<summary>SupplyDetailMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 消費数量更新（楽観ロック対応） -->
+<update id="updateConsumedQuantityWithOptimisticLock">
+    UPDATE "支給明細データ"
+    SET
+        "消費済数量" = "消費済数量" + #{consumedQuantity},
+        "残数量" = "残数量" - #{consumedQuantity},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+    AND "残数量" >= #{consumedQuantity}
+</update>
+
+<!-- 残数量チェック付き更新（楽観ロック + 業務制約） -->
+<update id="consumeWithValidation">
+    UPDATE "支給明細データ"
+    SET
+        "消費済数量" = "消費済数量" + #{consumedQuantity},
+        "残数量" = "残数量" - #{consumedQuantity},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+    AND "残数量" >= #{consumedQuantity}
+</update>
+
+<!-- 現在のバージョン取得 -->
+<select id="findVersionById" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "支給明細データ" WHERE "ID" = #{id}
+</select>
+
+<!-- 残数量取得 -->
+<select id="findRemainingQuantityById" resultType="java.math.BigDecimal">
+    SELECT "残数量" FROM "支給明細データ" WHERE "ID" = #{id}
+</select>
+```
+
+</details>
+
+<details>
+<summary>ConsumptionMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 楽観ロック対応の更新 -->
+<update id="updateWithOptimisticLock" parameterType="com.example.production.domain.model.subcontract.Consumption">
+    UPDATE "消費データ"
+    SET
+        "消費日" = #{consumptionDate},
+        "備考" = #{remarks},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 現在のバージョン取得 -->
+<select id="findVersionById" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "消費データ" WHERE "ID" = #{id}
+</select>
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>SupplyDetailRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/production/infrastructure/persistence/repository/SupplyDetailRepositoryImpl.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.SupplyDetailRepository;
+import com.example.production.domain.exception.InsufficientQuantityException;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.subcontract.SupplyDetail;
+import com.example.production.infrastructure.persistence.mapper.SupplyDetailMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class SupplyDetailRepositoryImpl implements SupplyDetailRepository {
+
+    private final SupplyDetailMapper mapper;
+
+    @Override
+    @Transactional
+    public void consumeQuantity(Integer id, BigDecimal consumedQuantity, Integer version) {
+        int updatedCount = mapper.updateConsumedQuantityWithOptimisticLock(id, consumedQuantity, version);
+
+        if (updatedCount == 0) {
+            // 更新失敗の原因を特定
+            Integer currentVersion = mapper.findVersionById(id);
+            if (currentVersion == null) {
+                throw new OptimisticLockException("支給明細", id);
+            }
+
+            BigDecimal remainingQuantity = mapper.findRemainingQuantityById(id);
+            if (remainingQuantity.compareTo(consumedQuantity) < 0) {
+                throw new InsufficientQuantityException(
+                        String.format("支給明細ID %d の残数量が不足しています（残数: %s, 要求: %s）",
+                                id, remainingQuantity, consumedQuantity));
+            }
+
+            throw new OptimisticLockException("支給明細", id, version, currentVersion);
+        }
+    }
+
+    @Override
+    public Optional<SupplyDetail> findById(Integer id) {
+        return Optional.ofNullable(mapper.findById(id));
+    }
+
+    // その他のメソッド...
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>SupplyDetailRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/production/infrastructure/persistence/repository/SupplyDetailRepositoryOptimisticLockTest.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.SupplyDetailRepository;
+import com.example.production.application.port.out.SupplyRepository;
+import com.example.production.domain.exception.InsufficientQuantityException;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.subcontract.Supply;
+import com.example.production.domain.model.subcontract.SupplyDetail;
+import com.example.production.domain.model.subcontract.SupplyType;
+import com.example.production.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("支給明細リポジトリ - 楽観ロック")
+class SupplyDetailRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private SupplyRepository supplyRepository;
+
+    @Autowired
+    private SupplyDetailRepository supplyDetailRepository;
+
+    @BeforeEach
+    void setUp() {
+        supplyRepository.deleteAll();
+    }
+
+    @Nested
+    @DisplayName("消費数量更新の楽観ロック")
+    class ConsumeQuantityOptimisticLock {
+
+        @Test
+        @DisplayName("同じバージョンで消費できる")
+        void canConsumeWithSameVersion() {
+            // Arrange
+            var supply = createSupply("SUP-2025-0001");
+            var detail = createSupplyDetail(supply.getSupplyNumber(), 1, new BigDecimal("100"));
+
+            // Act
+            var fetched = supplyDetailRepository.findById(detail.getId()).get();
+            supplyDetailRepository.consumeQuantity(
+                    fetched.getId(),
+                    new BigDecimal("30"),
+                    fetched.getVersion()
+            );
+
+            // Assert
+            var updated = supplyDetailRepository.findById(detail.getId()).get();
+            assertThat(updated.getConsumedQuantity()).isEqualByComparingTo(new BigDecimal("30"));
+            assertThat(updated.getRemainingQuantity()).isEqualByComparingTo(new BigDecimal("70"));
+            assertThat(updated.getVersion()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで消費すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            var supply = createSupply("SUP-2025-0002");
+            var detail = createSupplyDetail(supply.getSupplyNumber(), 1, new BigDecimal("100"));
+
+            // ユーザーAが取得
+            var detailA = supplyDetailRepository.findById(detail.getId()).get();
+            // ユーザーBが取得
+            var detailB = supplyDetailRepository.findById(detail.getId()).get();
+
+            // ユーザーAが消費（成功）
+            supplyDetailRepository.consumeQuantity(
+                    detailA.getId(),
+                    new BigDecimal("30"),
+                    detailA.getVersion()
+            );
+
+            // Act & Assert: ユーザーBが古いバージョンで消費（失敗）
+            assertThatThrownBy(() ->
+                    supplyDetailRepository.consumeQuantity(
+                            detailB.getId(),
+                            new BigDecimal("40"),
+                            detailB.getVersion()
+                    ))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+
+        @Test
+        @DisplayName("残数量を超える消費は残数量不足例外が発生する")
+        void throwsExceptionWhenInsufficientQuantity() {
+            // Arrange
+            var supply = createSupply("SUP-2025-0003");
+            var detail = createSupplyDetail(supply.getSupplyNumber(), 1, new BigDecimal("100"));
+
+            var fetched = supplyDetailRepository.findById(detail.getId()).get();
+
+            // Act & Assert
+            assertThatThrownBy(() ->
+                    supplyDetailRepository.consumeQuantity(
+                            fetched.getId(),
+                            new BigDecimal("150"), // 残数量100を超える
+                            fetched.getVersion()
+                    ))
+                    .isInstanceOf(InsufficientQuantityException.class)
+                    .hasMessageContaining("残数量が不足しています");
+        }
+    }
+
+    private Supply createSupply(String supplyNumber) {
+        var supply = Supply.builder()
+                .supplyNumber(supplyNumber)
+                .purchaseOrderNumber("PO-2025-0001")
+                .lineNumber(1)
+                .supplierCode("SUP-001")
+                .supplyDate(LocalDate.of(2025, 1, 20))
+                .supplierPersonCode("EMP-001")
+                .supplyType(SupplyType.FREE)
+                .build();
+        supplyRepository.save(supply);
+        return supply;
+    }
+
+    private SupplyDetail createSupplyDetail(String supplyNumber, int lineNumber, BigDecimal quantity) {
+        var detail = SupplyDetail.builder()
+                .supplyNumber(supplyNumber)
+                .lineNumber(lineNumber)
+                .itemCode("MAT-001")
+                .quantity(quantity)
+                .unitPrice(new BigDecimal("500"))
+                .amount(quantity.multiply(new BigDecimal("500")))
+                .consumedQuantity(BigDecimal.ZERO)
+                .remainingQuantity(quantity)
+                .build();
+        supplyDetailRepository.save(detail);
+        return detail;
+    }
+}
+```
+
+</details>
+
+### 消費処理における楽観ロックの考慮
+
+消費処理では、支給明細の残数量を更新するため、楽観ロックと業務制約（残数量チェック）を組み合わせた処理が必要です。
+
+```plantuml
+@startuml
+
+title 消費処理と楽観ロック
+
+participant "消費サービス" as ConsumeSvc
+participant "支給明細リポジトリ" as SDRepo
+participant "消費リポジトリ" as ConRepo
+database "DB" as DB
+
+ConsumeSvc -> SDRepo: findById(supplyDetailId)
+SDRepo -> DB: SELECT ... WHERE ID = ?
+DB --> SDRepo: 支給明細（バージョン・残数量込み）
+SDRepo --> ConsumeSvc: SupplyDetail
+
+ConsumeSvc -> ConsumeSvc: 残数量チェック
+alt 残数量 >= 消費数量
+    ConsumeSvc -> ConRepo: save(consumption)
+    ConRepo -> DB: INSERT INTO 消費データ
+    DB --> ConRepo: OK
+
+    ConsumeSvc -> SDRepo: consumeQuantity(id, quantity, version)
+    SDRepo -> DB: UPDATE ... WHERE ID = ? AND バージョン = ? AND 残数量 >= ?
+    alt 更新成功
+        DB --> SDRepo: 更新成功（1件）
+        SDRepo --> ConsumeSvc: OK
+    else バージョン不一致 or 残数量不足
+        DB --> SDRepo: 更新失敗（0件）
+        SDRepo --> ConsumeSvc: OptimisticLockException / InsufficientQuantityException
+        ConsumeSvc -> ConsumeSvc: ロールバック
+    end
+else 残数量 < 消費数量
+    ConsumeSvc -> ConsumeSvc: InsufficientQuantityException
+end
+
+@enduml
+```
+
+#### 消費サービスの実装
+
+<details>
+<summary>ConsumptionService.java（楽観ロック対応）</summary>
+
+```java
+/**
+ * 消費処理（楽観ロック対応）
+ */
+@Transactional
+public Consumption processConsumption(ConsumptionRequest request) {
+    // 支給明細を取得
+    var supplyDetail = supplyDetailRepository.findById(request.getSupplyDetailId())
+            .orElseThrow(() -> new IllegalArgumentException("支給明細が見つかりません"));
+
+    // 残数量の事前チェック（楽観的）
+    if (!supplyDetail.canConsume(request.getConsumedQuantity())) {
+        throw new InsufficientQuantityException(
+                String.format("残数量が不足しています（残数: %s, 要求: %s）",
+                        supplyDetail.getRemainingQuantity(), request.getConsumedQuantity()));
+    }
+
+    // 歩留率の計算
+    var yieldRate = calculateYieldRate(
+            request.getConsumedQuantity(),
+            request.getProducedQuantity()
+    );
+
+    // 消費データ作成
+    var consumption = Consumption.builder()
+            .consumptionNumber(generateConsumptionNumber())
+            .supplyNumber(supplyDetail.getSupplyNumber())
+            .receivingNumber(request.getReceivingNumber())
+            .consumptionDate(request.getConsumptionDate())
+            .build();
+    consumptionRepository.save(consumption);
+
+    // 消費明細作成
+    var consumptionDetail = ConsumptionDetail.builder()
+            .consumptionNumber(consumption.getConsumptionNumber())
+            .lineNumber(1)
+            .supplyDetailId(supplyDetail.getId())
+            .itemCode(supplyDetail.getItemCode())
+            .consumedQuantity(request.getConsumedQuantity())
+            .yieldRate(yieldRate)
+            .build();
+    consumptionDetailRepository.save(consumptionDetail);
+
+    // 支給明細の残数量を更新（楽観ロック）
+    try {
+        supplyDetailRepository.consumeQuantity(
+                supplyDetail.getId(),
+                request.getConsumedQuantity(),
+                supplyDetail.getVersion()
+        );
+    } catch (OptimisticLockException e) {
+        throw new ConcurrentUpdateException(
+                "他のユーザーが同時に消費処理を行いました。画面を更新して再度お試しください。", e);
+    } catch (InsufficientQuantityException e) {
+        throw new ConcurrentUpdateException(
+                "他のユーザーが先に消費処理を行ったため、残数量が不足しています。", e);
+    }
+
+    return consumption;
+}
+
+private BigDecimal calculateYieldRate(BigDecimal consumed, BigDecimal produced) {
+    if (consumed.compareTo(BigDecimal.ZERO) == 0) {
+        return BigDecimal.ZERO;
+    }
+    return produced.divide(consumed, 4, RoundingMode.HALF_UP)
+            .multiply(new BigDecimal("100"));
+}
+```
+
+</details>
+
+#### 楽観ロックのベストプラクティス（外注委託向け）
+
+| ポイント | 説明 |
+|---------|------|
+| **残数量と楽観ロックの組み合わせ** | WHERE 条件で両方をチェック |
+| **エラー原因の特定** | バージョン不一致か残数量不足かを判別 |
+| **歩留率の記録** | 消費時に歩留率を計算・記録 |
+| **有償/無償支給の区別** | 会計処理が異なるため支給区分を保持 |
+| **トランザクション境界** | 消費→消費明細→支給明細更新を1トランザクションで |
+
+---
+
+## 26.6 まとめ
 
 本章では、外注委託管理（支給から消費まで）の DB 設計と実装について学びました。
 

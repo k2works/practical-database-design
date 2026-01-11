@@ -215,6 +215,11 @@
         ORDER BY "希望納期", "受注番号"
     </select>
 
+    <select id="findMaxOrderNumberByPrefix" resultType="java.lang.String">
+        SELECT MAX("受注番号") FROM "受注データ"
+        WHERE "受注番号" LIKE #{prefix} || '%'
+    </select>
+
     <select id="findAll" resultMap="SalesOrderResultMap">
         SELECT * FROM "受注データ" ORDER BY "受注日" DESC, "受注番号"
     </select>

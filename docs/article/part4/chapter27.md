@@ -2266,7 +2266,702 @@ ORDER BY
 
 ---
 
-## まとめ
+## 27.4 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+工程管理では、作業指示→作業指示明細、完成実績→検査結果といった親子関係があります。MyBatis でこれらの関係を効率的に取得するためのリレーション設定を実装します。
+
+#### 作業指示のネスト ResultMap（明細・オーダ・品目を含む）
+
+<details>
+<summary>WorkOrderMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/WorkOrderMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.WorkOrderMapper">
+
+    <!-- 作業指示（ヘッダ）with 明細・オーダ・品目 ResultMap -->
+    <resultMap id="workOrderWithDetailsResultMap" type="com.example.production.domain.model.process.WorkOrder">
+        <id property="id" column="wo_id"/>
+        <result property="workOrderNumber" column="wo_作業指示番号"/>
+        <result property="orderNumber" column="wo_オーダ番号"/>
+        <result property="workOrderDate" column="wo_作業指示日"/>
+        <result property="itemCode" column="wo_品目コード"/>
+        <result property="orderQuantity" column="wo_作業指示数"/>
+        <result property="locationCode" column="wo_場所コード"/>
+        <result property="plannedStartDate" column="wo_開始予定日"/>
+        <result property="plannedEndDate" column="wo_完成予定日"/>
+        <result property="actualStartDate" column="wo_実績開始日"/>
+        <result property="actualEndDate" column="wo_実績完了日"/>
+        <result property="completedQuantity" column="wo_完成済数"/>
+        <result property="totalGoodQuantity" column="wo_総良品数"/>
+        <result property="totalDefectQuantity" column="wo_総不良品数"/>
+        <result property="status" column="wo_ステータス"
+                typeHandler="com.example.production.infrastructure.persistence.WorkOrderStatusTypeHandler"/>
+        <result property="completedFlag" column="wo_完了フラグ"/>
+        <result property="remarks" column="wo_備考"/>
+        <result property="version" column="wo_バージョン"/>
+        <result property="createdAt" column="wo_作成日時"/>
+        <result property="updatedAt" column="wo_更新日時"/>
+
+        <!-- オーダ情報との N:1 関連 -->
+        <association property="order" javaType="com.example.production.domain.model.planning.Order">
+            <id property="id" column="o_id"/>
+            <result property="orderNumber" column="o_オーダNO"/>
+            <result property="itemCode" column="o_品目コード"/>
+            <result property="plannedQuantity" column="o_計画数量"/>
+            <result property="dueDate" column="o_完了日"/>
+        </association>
+
+        <!-- 品目マスタとの N:1 関連 -->
+        <association property="item" javaType="com.example.production.domain.model.item.Item">
+            <id property="itemCode" column="i_品目コード"/>
+            <result property="itemName" column="i_品目名"/>
+            <result property="itemCategory" column="i_品目カテゴリ"
+                    typeHandler="com.example.production.infrastructure.persistence.ItemCategoryTypeHandler"/>
+        </association>
+
+        <!-- 作業指示明細との 1:N 関連 -->
+        <collection property="details" ofType="com.example.production.domain.model.process.WorkOrderDetail"
+                    resultMap="workOrderDetailNestedResultMap"/>
+    </resultMap>
+
+    <!-- 作業指示明細のネスト ResultMap（工程マスタを含む） -->
+    <resultMap id="workOrderDetailNestedResultMap" type="com.example.production.domain.model.process.WorkOrderDetail">
+        <id property="id" column="wd_id"/>
+        <result property="workOrderNumber" column="wd_作業指示番号"/>
+        <result property="sequence" column="wd_工順"/>
+        <result property="processCode" column="wd_工程コード"/>
+        <result property="createdAt" column="wd_作成日時"/>
+        <result property="updatedAt" column="wd_更新日時"/>
+
+        <!-- 工程マスタとの N:1 関連 -->
+        <association property="process" javaType="com.example.production.domain.model.process.Process">
+            <id property="processCode" column="p_工程コード"/>
+            <result property="processName" column="p_工程名"/>
+        </association>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithDetailsByWorkOrderNumber" resultMap="workOrderWithDetailsResultMap">
+        SELECT
+            wo."ID" AS wo_id,
+            wo."作業指示番号" AS wo_作業指示番号,
+            wo."オーダ番号" AS wo_オーダ番号,
+            wo."作業指示日" AS wo_作業指示日,
+            wo."品目コード" AS wo_品目コード,
+            wo."作業指示数" AS wo_作業指示数,
+            wo."場所コード" AS wo_場所コード,
+            wo."開始予定日" AS wo_開始予定日,
+            wo."完成予定日" AS wo_完成予定日,
+            wo."実績開始日" AS wo_実績開始日,
+            wo."実績完了日" AS wo_実績完了日,
+            wo."完成済数" AS wo_完成済数,
+            wo."総良品数" AS wo_総良品数,
+            wo."総不良品数" AS wo_総不良品数,
+            wo."ステータス" AS wo_ステータス,
+            wo."完了フラグ" AS wo_完了フラグ,
+            wo."備考" AS wo_備考,
+            wo."バージョン" AS wo_バージョン,
+            wo."作成日時" AS wo_作成日時,
+            wo."更新日時" AS wo_更新日時,
+            o."ID" AS o_id,
+            o."オーダNO" AS o_オーダNO,
+            o."品目コード" AS o_品目コード,
+            o."計画数量" AS o_計画数量,
+            o."完了日" AS o_完了日,
+            i."品目コード" AS i_品目コード,
+            i."品目名" AS i_品目名,
+            i."品目カテゴリ" AS i_品目カテゴリ,
+            wd."ID" AS wd_id,
+            wd."作業指示番号" AS wd_作業指示番号,
+            wd."工順" AS wd_工順,
+            wd."工程コード" AS wd_工程コード,
+            wd."作成日時" AS wd_作成日時,
+            wd."更新日時" AS wd_更新日時,
+            p."工程コード" AS p_工程コード,
+            p."工程名" AS p_工程名
+        FROM "作業指示データ" wo
+        LEFT JOIN "オーダ情報" o ON wo."オーダ番号" = o."オーダNO"
+        LEFT JOIN "品目マスタ" i ON wo."品目コード" = i."品目コード"
+        LEFT JOIN "作業指示明細データ" wd ON wo."作業指示番号" = wd."作業指示番号"
+        LEFT JOIN "工程マスタ" p ON wd."工程コード" = p."工程コード"
+        WHERE wo."作業指示番号" = #{workOrderNumber}
+        ORDER BY wd."工順"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### 完成実績のネスト ResultMap（検査結果・作業指示を含む）
+
+<details>
+<summary>CompletionResultMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/CompletionResultMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.CompletionResultMapper">
+
+    <!-- 完成実績 with 検査結果・作業指示 ResultMap -->
+    <resultMap id="completionResultWithInspectionsResultMap"
+               type="com.example.production.domain.model.process.CompletionResult">
+        <id property="id" column="cr_id"/>
+        <result property="completionResultNumber" column="cr_完成実績番号"/>
+        <result property="workOrderNumber" column="cr_作業指示番号"/>
+        <result property="itemCode" column="cr_品目コード"/>
+        <result property="completionDate" column="cr_完成日"/>
+        <result property="completedQuantity" column="cr_完成数量"/>
+        <result property="goodQuantity" column="cr_良品数"/>
+        <result property="defectQuantity" column="cr_不良品数"/>
+        <result property="remarks" column="cr_備考"/>
+        <result property="version" column="cr_バージョン"/>
+        <result property="createdAt" column="cr_作成日時"/>
+        <result property="updatedAt" column="cr_更新日時"/>
+
+        <!-- 作業指示との N:1 関連 -->
+        <association property="workOrder" javaType="com.example.production.domain.model.process.WorkOrder">
+            <id property="id" column="wo_id"/>
+            <result property="workOrderNumber" column="wo_作業指示番号"/>
+            <result property="itemCode" column="wo_品目コード"/>
+            <result property="orderQuantity" column="wo_作業指示数"/>
+            <result property="completedQuantity" column="wo_完成済数"/>
+            <result property="status" column="wo_ステータス"
+                    typeHandler="com.example.production.infrastructure.persistence.WorkOrderStatusTypeHandler"/>
+        </association>
+
+        <!-- 検査結果との 1:N 関連 -->
+        <collection property="inspectionResults"
+                    ofType="com.example.production.domain.model.process.InspectionResult"
+                    resultMap="inspectionResultNestedResultMap"/>
+    </resultMap>
+
+    <!-- 検査結果のネスト ResultMap（欠点マスタを含む） -->
+    <resultMap id="inspectionResultNestedResultMap"
+               type="com.example.production.domain.model.process.InspectionResult">
+        <id property="id" column="ir_id"/>
+        <result property="completionResultNumber" column="ir_完成実績番号"/>
+        <result property="defectCode" column="ir_欠点コード"/>
+        <result property="quantity" column="ir_数量"/>
+        <result property="createdAt" column="ir_作成日時"/>
+        <result property="updatedAt" column="ir_更新日時"/>
+
+        <!-- 欠点マスタとの N:1 関連 -->
+        <association property="defect" javaType="com.example.production.domain.master.Defect">
+            <id property="defectCode" column="d_欠点コード"/>
+            <result property="defectName" column="d_欠点名"/>
+            <result property="defectCategory" column="d_欠点区分"/>
+        </association>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithInspectionsByCompletionResultNumber"
+            resultMap="completionResultWithInspectionsResultMap">
+        SELECT
+            cr."ID" AS cr_id,
+            cr."完成実績番号" AS cr_完成実績番号,
+            cr."作業指示番号" AS cr_作業指示番号,
+            cr."品目コード" AS cr_品目コード,
+            cr."完成日" AS cr_完成日,
+            cr."完成数量" AS cr_完成数量,
+            cr."良品数" AS cr_良品数,
+            cr."不良品数" AS cr_不良品数,
+            cr."備考" AS cr_備考,
+            cr."バージョン" AS cr_バージョン,
+            cr."作成日時" AS cr_作成日時,
+            cr."更新日時" AS cr_更新日時,
+            wo."ID" AS wo_id,
+            wo."作業指示番号" AS wo_作業指示番号,
+            wo."品目コード" AS wo_品目コード,
+            wo."作業指示数" AS wo_作業指示数,
+            wo."完成済数" AS wo_完成済数,
+            wo."ステータス" AS wo_ステータス,
+            ir."ID" AS ir_id,
+            ir."完成実績番号" AS ir_完成実績番号,
+            ir."欠点コード" AS ir_欠点コード,
+            ir."数量" AS ir_数量,
+            ir."作成日時" AS ir_作成日時,
+            ir."更新日時" AS ir_更新日時,
+            d."欠点コード" AS d_欠点コード,
+            d."欠点名" AS d_欠点名,
+            d."欠点区分" AS d_欠点区分
+        FROM "完成実績データ" cr
+        LEFT JOIN "作業指示データ" wo ON cr."作業指示番号" = wo."作業指示番号"
+        LEFT JOIN "完成検査結果データ" ir ON cr."完成実績番号" = ir."完成実績番号"
+        LEFT JOIN "欠点マスタ" d ON ir."欠点コード" = d."欠点コード"
+        WHERE cr."完成実績番号" = #{completionResultNumber}
+        ORDER BY ir."欠点コード"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<collection>` | 1:N 関連のマッピング（作業指示→明細、完成実績→検査結果） |
+| `<association>` | N:1 関連のマッピング（作業指示→オーダ、明細→工程マスタ） |
+| `<id>` | 主キーの識別（MyBatis が重複排除に使用） |
+| エイリアス（AS） | カラム名の重複を避けるプレフィックス（`wo_`, `wd_`, `p_` など） |
+| `ORDER BY` | コレクションの順序を保証（工順順、欠点コード順） |
+
+### 楽観ロックの実装
+
+工程管理では、複数の作業者が同時に完成実績を報告したり、工数を入力したりする状況が発生します。作業指示の完成数量を正しく更新するために楽観ロックを実装します。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V017__add_process_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V017__add_process_version_columns.sql
+
+-- 作業指示データテーブルにバージョンカラムを追加
+ALTER TABLE "作業指示データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 完成実績データテーブルにバージョンカラムを追加
+ALTER TABLE "完成実績データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 工数実績データテーブルにバージョンカラムを追加
+ALTER TABLE "工数実績データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "作業指示データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "完成実績データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "工数実績データ"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>WorkOrder.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/production/domain/model/process/WorkOrder.java
+package com.example.production.domain.model.process;
+
+import com.example.production.domain.model.item.Item;
+import com.example.production.domain.master.Location;
+import com.example.production.domain.model.planning.Order;
+import lombok.Builder;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@Builder
+public class WorkOrder {
+    private Integer id;
+    private String workOrderNumber;
+    private String orderNumber;
+    private LocalDate workOrderDate;
+    private String itemCode;
+    private BigDecimal orderQuantity;
+    private String locationCode;
+    private LocalDate plannedStartDate;
+    private LocalDate plannedEndDate;
+    private LocalDate actualStartDate;
+    private LocalDate actualEndDate;
+    private BigDecimal completedQuantity;
+    private BigDecimal totalGoodQuantity;
+    private BigDecimal totalDefectQuantity;
+    private WorkOrderStatus status;
+    private Boolean completedFlag;
+    private String remarks;
+    private LocalDateTime createdAt;
+    private String createdBy;
+    private LocalDateTime updatedAt;
+    private String updatedBy;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Order order;
+    private Item item;
+    private Location location;
+    @Builder.Default
+    private List<WorkOrderDetail> details = new ArrayList<>();
+
+    /**
+     * 完成可能かどうかをチェック
+     */
+    public boolean canComplete() {
+        return status == WorkOrderStatus.IN_PROGRESS;
+    }
+
+    /**
+     * 残数量を計算
+     */
+    public BigDecimal getRemainingQuantity() {
+        return orderQuantity.subtract(completedQuantity);
+    }
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の更新
+
+工程管理では、複数作業者が同時に完成報告を行う可能性があるため、完成数量の更新時に楽観ロックを適用します。
+
+<details>
+<summary>WorkOrderMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 完成数量更新（楽観ロック対応） -->
+<update id="updateCompletionQuantitiesWithOptimisticLock">
+    UPDATE "作業指示データ"
+    SET
+        "完成済数" = "完成済数" + #{completedQuantity},
+        "総良品数" = "総良品数" + #{goodQuantity},
+        "総不良品数" = "総不良品数" + #{defectQuantity},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "作業指示番号" = #{workOrderNumber}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- ステータス更新（楽観ロック対応） -->
+<update id="updateStatusWithOptimisticLock">
+    UPDATE "作業指示データ"
+    SET
+        "ステータス" = #{newStatus, typeHandler=com.example.production.infrastructure.persistence.WorkOrderStatusTypeHandler}::作業指示ステータス,
+        "実績開始日" = COALESCE("実績開始日", #{actualStartDate}),
+        "実績完了日" = #{actualEndDate},
+        "完了フラグ" = #{completedFlag},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "作業指示番号" = #{workOrderNumber}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- バージョン取得 -->
+<select id="findVersionByWorkOrderNumber" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "作業指示データ"
+    WHERE "作業指示番号" = #{workOrderNumber}
+</select>
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>WorkOrderRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/production/infrastructure/persistence/repository/WorkOrderRepositoryImpl.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.WorkOrderRepository;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.process.WorkOrder;
+import com.example.production.domain.model.process.WorkOrderStatus;
+import com.example.production.infrastructure.persistence.mapper.WorkOrderMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class WorkOrderRepositoryImpl implements WorkOrderRepository {
+
+    private final WorkOrderMapper mapper;
+
+    @Override
+    @Transactional
+    public void updateCompletionQuantities(String workOrderNumber, Integer version,
+                                           BigDecimal completedQuantity,
+                                           BigDecimal goodQuantity,
+                                           BigDecimal defectQuantity) {
+        int updatedCount = mapper.updateCompletionQuantitiesWithOptimisticLock(
+                workOrderNumber, version, completedQuantity, goodQuantity, defectQuantity);
+
+        if (updatedCount == 0) {
+            handleOptimisticLockFailure(workOrderNumber, version);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(String workOrderNumber, Integer version,
+                            WorkOrderStatus newStatus, LocalDate actualStartDate,
+                            LocalDate actualEndDate, Boolean completedFlag) {
+        int updatedCount = mapper.updateStatusWithOptimisticLock(
+                workOrderNumber, version, newStatus, actualStartDate, actualEndDate, completedFlag);
+
+        if (updatedCount == 0) {
+            handleOptimisticLockFailure(workOrderNumber, version);
+        }
+    }
+
+    private void handleOptimisticLockFailure(String workOrderNumber, Integer expectedVersion) {
+        Integer currentVersion = mapper.findVersionByWorkOrderNumber(workOrderNumber);
+        if (currentVersion == null) {
+            throw new OptimisticLockException("作業指示", workOrderNumber);
+        } else {
+            throw new OptimisticLockException("作業指示", workOrderNumber,
+                    expectedVersion, currentVersion);
+        }
+    }
+
+    @Override
+    public Optional<WorkOrder> findWithDetailsByWorkOrderNumber(String workOrderNumber) {
+        return Optional.ofNullable(mapper.findWithDetailsByWorkOrderNumber(workOrderNumber));
+    }
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>WorkOrderRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/production/infrastructure/persistence/repository/WorkOrderRepositoryOptimisticLockTest.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.WorkOrderRepository;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.process.WorkOrder;
+import com.example.production.domain.model.process.WorkOrderStatus;
+import com.example.production.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("作業指示リポジトリ - 楽観ロック")
+class WorkOrderRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private WorkOrderRepository workOrderRepository;
+
+    @BeforeEach
+    void setUp() {
+        // テストデータのセットアップ
+    }
+
+    @Nested
+    @DisplayName("完成数量更新の楽観ロック")
+    class CompletionQuantityOptimisticLocking {
+
+        @Test
+        @DisplayName("同じバージョンで完成数量を更新できる")
+        void canUpdateCompletionQuantityWithSameVersion() {
+            // Arrange
+            WorkOrder workOrder = createTestWorkOrder("WO-TEST-001");
+            Integer initialVersion = workOrder.getVersion();
+
+            // Act
+            workOrderRepository.updateCompletionQuantities(
+                    workOrder.getWorkOrderNumber(),
+                    initialVersion,
+                    new BigDecimal("10"),
+                    new BigDecimal("9"),
+                    new BigDecimal("1"));
+
+            // Assert
+            var updated = workOrderRepository.findWithDetailsByWorkOrderNumber("WO-TEST-001").get();
+            assertThat(updated.getCompletedQuantity()).isEqualByComparingTo(new BigDecimal("10"));
+            assertThat(updated.getTotalGoodQuantity()).isEqualByComparingTo(new BigDecimal("9"));
+            assertThat(updated.getTotalDefectQuantity()).isEqualByComparingTo(new BigDecimal("1"));
+            assertThat(updated.getVersion()).isEqualTo(initialVersion + 1);
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで更新すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            WorkOrder workOrder = createTestWorkOrder("WO-TEST-002");
+            Integer initialVersion = workOrder.getVersion();
+
+            // 作業者Aが完成報告（成功）
+            workOrderRepository.updateCompletionQuantities(
+                    workOrder.getWorkOrderNumber(),
+                    initialVersion,
+                    new BigDecimal("10"),
+                    new BigDecimal("10"),
+                    BigDecimal.ZERO);
+
+            // Act & Assert: 作業者Bが古いバージョンで完成報告（失敗）
+            assertThatThrownBy(() -> workOrderRepository.updateCompletionQuantities(
+                    workOrder.getWorkOrderNumber(),
+                    initialVersion, // 古いバージョン
+                    new BigDecimal("5"),
+                    new BigDecimal("5"),
+                    BigDecimal.ZERO))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+
+        @Test
+        @DisplayName("複数回の完成報告で累計が正しく更新される")
+        void correctlyAccumulatesMultipleCompletionReports() {
+            // Arrange
+            WorkOrder workOrder = createTestWorkOrder("WO-TEST-003");
+
+            // Act: 最新バージョンを取得しながら3回報告
+            for (int i = 0; i < 3; i++) {
+                var current = workOrderRepository.findWithDetailsByWorkOrderNumber("WO-TEST-003").get();
+                workOrderRepository.updateCompletionQuantities(
+                        current.getWorkOrderNumber(),
+                        current.getVersion(),
+                        new BigDecimal("10"),
+                        new BigDecimal("9"),
+                        new BigDecimal("1"));
+            }
+
+            // Assert
+            var result = workOrderRepository.findWithDetailsByWorkOrderNumber("WO-TEST-003").get();
+            assertThat(result.getCompletedQuantity()).isEqualByComparingTo(new BigDecimal("30"));
+            assertThat(result.getTotalGoodQuantity()).isEqualByComparingTo(new BigDecimal("27"));
+            assertThat(result.getTotalDefectQuantity()).isEqualByComparingTo(new BigDecimal("3"));
+            assertThat(result.getVersion()).isEqualTo(4); // 初期1 + 3回更新
+        }
+    }
+
+    private WorkOrder createTestWorkOrder(String workOrderNumber) {
+        // テスト用作業指示の作成
+        return WorkOrder.builder()
+                .workOrderNumber(workOrderNumber)
+                .orderNumber("MO-TEST-001")
+                .workOrderDate(LocalDate.now())
+                .itemCode("PROD-001")
+                .orderQuantity(new BigDecimal("100"))
+                .locationCode("LINE001")
+                .plannedStartDate(LocalDate.now())
+                .plannedEndDate(LocalDate.now().plusDays(5))
+                .completedQuantity(BigDecimal.ZERO)
+                .totalGoodQuantity(BigDecimal.ZERO)
+                .totalDefectQuantity(BigDecimal.ZERO)
+                .status(WorkOrderStatus.IN_PROGRESS)
+                .completedFlag(false)
+                .build();
+    }
+}
+```
+
+</details>
+
+### 完成報告処理のシーケンス図
+
+完成報告では、作業指示の完成数量を楽観ロックで安全に更新します。
+
+```plantuml
+@startuml
+
+title 完成報告処理シーケンス（楽観ロック対応）
+
+actor 作業者A
+actor 作業者B
+participant "CompletionResultService" as Service
+participant "WorkOrderRepository" as WORepo
+participant "CompletionResultMapper" as CRMapper
+database "作業指示データ" as WOTable
+
+== 同時完成報告シナリオ ==
+
+作業者A -> Service: 完成報告(作業指示番号, 完成数=10)
+activate Service
+Service -> WORepo: findWithDetails(作業指示番号)
+WORepo -> WOTable: SELECT ... WHERE 作業指示番号 = ?
+WOTable --> WORepo: 作業指示(version=1)
+WORepo --> Service: 作業指示(version=1)
+
+作業者B -> Service: 完成報告(作業指示番号, 完成数=5)
+activate Service
+Service -> WORepo: findWithDetails(作業指示番号)
+WORepo -> WOTable: SELECT ... WHERE 作業指示番号 = ?
+WOTable --> WORepo: 作業指示(version=1)
+WORepo --> Service: 作業指示(version=1)
+
+note over 作業者A,WOTable: 作業者Aが先に更新
+
+Service -> CRMapper: insert(完成実績)
+Service -> WORepo: updateCompletionQuantities(version=1)
+WORepo -> WOTable: UPDATE SET 完成済数 += 10, バージョン += 1\nWHERE バージョン = 1
+WOTable --> WORepo: 1 row updated
+WORepo --> Service: 成功
+Service --> 作業者A: 完成報告完了
+deactivate Service
+
+note over 作業者A,WOTable: 作業者Bの更新（楽観ロック失敗）
+
+Service -> CRMapper: insert(完成実績)
+Service -> WORepo: updateCompletionQuantities(version=1)
+WORepo -> WOTable: UPDATE SET 完成済数 += 5, バージョン += 1\nWHERE バージョン = 1
+WOTable --> WORepo: 0 rows updated
+WORepo -> WOTable: SELECT バージョン WHERE 作業指示番号 = ?
+WOTable --> WORepo: version=2
+WORepo --> Service: OptimisticLockException
+Service --> 作業者B: エラー: 他のユーザーが更新
+deactivate Service
+
+note over 作業者B: 作業者Bはリトライ
+
+作業者B -> Service: 完成報告(作業指示番号, 完成数=5)
+activate Service
+Service -> WORepo: findWithDetails(作業指示番号)
+WORepo -> WOTable: SELECT
+WOTable --> WORepo: 作業指示(version=2, 完成済数=10)
+WORepo --> Service: 作業指示(version=2)
+Service -> CRMapper: insert(完成実績)
+Service -> WORepo: updateCompletionQuantities(version=2)
+WORepo -> WOTable: UPDATE SET 完成済数 += 5, バージョン += 1\nWHERE バージョン = 2
+WOTable --> WORepo: 1 row updated
+WORepo --> Service: 成功
+Service --> 作業者B: 完成報告完了(累計: 15)
+deactivate Service
+
+@enduml
+```
+
+### 工程管理向け楽観ロックのベストプラクティス
+
+| ポイント | 説明 |
+|---------|------|
+| **累計更新** | `完成済数 = 完成済数 + #{completedQuantity}` でアトミックに加算 |
+| **バージョンチェック** | 必ず `AND "バージョン" = #{version}` を WHERE 条件に含める |
+| **リトライ戦略** | 楽観ロック失敗時は最新データを再取得して再試行 |
+| **UI 通知** | 競合発生時はユーザーに分かりやすいメッセージを表示 |
+| **完成上限チェック** | `completedQuantity + 報告数 <= orderQuantity` のビジネスチェックも併用 |
+| **トランザクション境界** | 完成実績 INSERT と作業指示 UPDATE を同一トランザクションで実行 |
+
+---
+
+## 27.5 まとめ
 
 本章では、工程管理の設計について学びました。
 

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>勘定科目構成登録</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">勘定科目構成登録</h1>
+
+    <!-- アクションボタン -->
+    <div class="mb-3">
+        <a th:href="@{/account-structures}" class="btn btn-outline-secondary">戻る</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/account-structures}" th:object="${form}" method="post">
+                <!-- 勘定科目コード -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label required">勘定科目</label>
+                    <div class="col-md-4">
+                        <select th:field="*{accountCode}"
+                                class="form-select" th:classappend="${#fields.hasErrors('accountCode')} ? 'is-invalid'">
+                            <option value="">選択してください</option>
+                            <option th:each="account : ${accounts}"
+                                    th:value="${account.accountCode}"
+                                    th:text="${account.accountCode + ' - ' + account.accountName}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountCode')}"
+                             th:errors="*{accountCode}"></div>
+                    </div>
+                </div>
+
+                <!-- 親科目コード -->
+                <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">親科目</label>
+                    <div class="col-md-4">
+                        <select th:field="*{parentCode}"
+                                class="form-select" th:classappend="${#fields.hasErrors('parentCode')} ? 'is-invalid'">
+                            <option value="">（ルート科目）</option>
+                            <option th:each="account : ${accounts}"
+                                    th:value="${account.accountCode}"
+                                    th:text="${account.accountCode + ' - ' + account.accountName}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('parentCode')}"
+                             th:errors="*{parentCode}"></div>
+                        <small class="form-text text-muted">親科目を選択しない場合はルート科目になります</small>
+                    </div>
+                </div>
+
+                <!-- ボタン -->
+                <div class="row">
+                    <div class="col-md-9 offset-md-3">
+                        <button type="submit" class="btn btn-primary">登録</button>
+                        <a th:href="@{/account-structures}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

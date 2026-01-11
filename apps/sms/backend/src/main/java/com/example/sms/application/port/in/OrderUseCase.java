@@ -2,10 +2,12 @@ package com.example.sms.application.port.in;
 
 import com.example.sms.application.port.in.command.CreateOrderCommand;
 import com.example.sms.application.port.in.command.UpdateOrderCommand;
+import com.example.sms.application.port.in.dto.OrderImportResult;
 import com.example.sms.domain.model.common.PageResult;
 import com.example.sms.domain.model.sales.OrderStatus;
 import com.example.sms.domain.model.sales.SalesOrder;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -94,4 +96,14 @@ public interface OrderUseCase {
      * @return キャンセルされた受注
      */
     SalesOrder cancelOrder(String orderNumber, Integer version);
+
+    /**
+     * CSV ファイルから受注を取り込む.
+     *
+     * @param inputStream CSV ファイルの入力ストリーム
+     * @param skipHeaderLine ヘッダー行をスキップするか
+     * @param skipEmptyLines 空行をスキップするか
+     * @return 取込結果
+     */
+    OrderImportResult importOrdersFromCsv(InputStream inputStream, boolean skipHeaderLine, boolean skipEmptyLines);
 }

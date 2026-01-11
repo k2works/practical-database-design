@@ -1,0 +1,58 @@
+name: FAS CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps/fas/**'
+      - '.github/workflows/ci-fas.yml'
+      - 'flake.nix'
+      - 'flake.lock'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'apps/fas/**'
+      - '.github/workflows/ci-fas.yml'
+      - 'flake.nix'
+      - 'flake.lock'
+  workflow_dispatch:
+
+jobs:
+  backend-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Cache Nix store
+        uses: actions/cache@v4
+        with:
+          path: /nix/store
+          key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
+          restore-keys: |
+            nix-${{ runner.os }}-
+
+      - name: Run Quality Check and Test
+        run: nix develop .#fas --command bash -c "cd apps/fas/backend && ./gradlew fullCheck"
+
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fas-backend-test-report
+          path: apps/fas/backend/build/reports/tests/test
+
+      - name: Upload JaCoCo Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fas-backend-jacoco-report
+          path: apps/fas/backend/build/reports/jacoco/test/html

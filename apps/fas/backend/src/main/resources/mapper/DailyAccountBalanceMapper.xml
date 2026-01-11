@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.DailyAccountBalanceMapper">
+
+    <!-- 日次勘定科目残高 ResultMap -->
+    <resultMap id="dailyAccountBalanceResultMap"
+               type="com.example.fas.domain.model.balance.DailyAccountBalance">
+        <id property="postingDate" column="起票日"/>
+        <id property="accountCode" column="勘定科目コード"/>
+        <id property="subAccountCode" column="補助科目コード"/>
+        <id property="departmentCode" column="部門コード"/>
+        <id property="projectCode" column="プロジェクトコード"/>
+        <id property="closingJournalFlag" column="決算仕訳フラグ"/>
+        <result property="debitAmount" column="借方金額"/>
+        <result property="creditAmount" column="貸方金額"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 日計表行 ResultMap -->
+    <resultMap id="dailyReportLineResultMap"
+               type="com.example.fas.domain.model.balance.DailyReportLine">
+        <result property="postingDate" column="postingDate"/>
+        <result property="accountCode" column="accountCode"/>
+        <result property="accountName" column="accountName"/>
+        <result property="bsplType" column="bsplType"/>
+        <result property="debitCreditType" column="debitCreditType"/>
+        <result property="debitTotal" column="debitTotal"/>
+        <result property="creditTotal" column="creditTotal"/>
+        <result property="balance" column="balance"/>
+    </resultMap>
+
+    <!-- UPSERT -->
+    <insert id="upsert" parameterType="com.example.fas.domain.model.balance.DailyAccountBalance">
+        INSERT INTO "日次勘定科目残高" (
+            "起票日", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "借方金額", "貸方金額", "バージョン", "作成日時", "更新日時"
+        ) VALUES (
+            #{postingDate},
+            #{accountCode},
+            #{subAccountCode},
+            #{departmentCode},
+            #{projectCode},
+            CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END,
+            #{debitAmount},
+            #{creditAmount},
+            1,
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (
+            "起票日", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ"
+        )
+        DO UPDATE SET
+            "借方金額" = "日次勘定科目残高"."借方金額" + EXCLUDED."借方金額",
+            "貸方金額" = "日次勘定科目残高"."貸方金額" + EXCLUDED."貸方金額",
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "日次勘定科目残高"."バージョン" + 1
+    </insert>
+
+    <!-- 複合キーで検索 -->
+    <select id="findByKey" resultMap="dailyAccountBalanceResultMap">
+        SELECT
+            "起票日", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "借方金額", "貸方金額", "バージョン", "作成日時", "更新日時"
+        FROM "日次勘定科目残高"
+        WHERE "起票日" = #{postingDate}
+          AND "勘定科目コード" = #{accountCode}
+          AND "補助科目コード" = #{subAccountCode}
+          AND "部門コード" = #{departmentCode}
+          AND "プロジェクトコード" = #{projectCode}
+          AND "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END
+    </select>
+
+    <!-- 起票日で検索 -->
+    <select id="findByPostingDate" resultMap="dailyAccountBalanceResultMap">
+        SELECT
+            "起票日", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "借方金額", "貸方金額", "バージョン", "作成日時", "更新日時"
+        FROM "日次勘定科目残高"
+        WHERE "起票日" = #{postingDate}
+        ORDER BY "勘定科目コード", "部門コード"
+    </select>
+
+    <!-- 勘定科目コードと期間で検索 -->
+    <select id="findByAccountCodeAndDateRange" resultMap="dailyAccountBalanceResultMap">
+        SELECT
+            "起票日", "勘定科目コード", "補助科目コード",
+            "部門コード", "プロジェクトコード", "決算仕訳フラグ",
+            "借方金額", "貸方金額", "バージョン", "作成日時", "更新日時"
+        FROM "日次勘定科目残高"
+        WHERE "勘定科目コード" = #{accountCode}
+          AND "起票日" BETWEEN #{fromDate} AND #{toDate}
+        ORDER BY "起票日"
+    </select>
+
+    <!-- 日計表データ取得（PostgreSQL） -->
+    <select id="getDailyReport" resultMap="dailyReportLineResultMap" databaseId="postgresql">
+        SELECT
+            d."起票日" AS postingDate,
+            d."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分"::TEXT AS bsplType,
+            a."貸借区分"::TEXT AS debitCreditType,
+            SUM(d."借方金額") AS debitTotal,
+            SUM(d."貸方金額") AS creditTotal,
+            CASE
+                WHEN a."貸借区分"::TEXT = '借方'
+                    THEN SUM(d."借方金額") - SUM(d."貸方金額")
+                ELSE SUM(d."貸方金額") - SUM(d."借方金額")
+            END AS balance
+        FROM "日次勘定科目残高" d
+        JOIN "勘定科目マスタ" a ON d."勘定科目コード" = a."勘定科目コード"
+        WHERE d."起票日" = #{postingDate}
+        GROUP BY d."起票日", d."勘定科目コード", a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY d."勘定科目コード"
+    </select>
+
+    <!-- 日計表データ取得（H2） -->
+    <select id="getDailyReport" resultMap="dailyReportLineResultMap" databaseId="h2">
+        SELECT
+            d."起票日" AS postingDate,
+            d."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分" AS bsplType,
+            a."貸借区分" AS debitCreditType,
+            SUM(d."借方金額") AS debitTotal,
+            SUM(d."貸方金額") AS creditTotal,
+            CASE
+                WHEN a."貸借区分" = '借方'
+                    THEN SUM(d."借方金額") - SUM(d."貸方金額")
+                ELSE SUM(d."貸方金額") - SUM(d."借方金額")
+            END AS balance
+        FROM "日次勘定科目残高" d
+        JOIN "勘定科目マスタ" a ON d."勘定科目コード" = a."勘定科目コード"
+        WHERE d."起票日" = #{postingDate}
+        GROUP BY d."起票日", d."勘定科目コード", a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY d."勘定科目コード"
+    </select>
+
+    <!-- 楽観ロック対応更新 -->
+    <update id="updateWithOptimisticLock"
+            parameterType="com.example.fas.domain.model.balance.DailyAccountBalance">
+        UPDATE "日次勘定科目残高"
+        SET
+            "借方金額" = #{debitAmount},
+            "貸方金額" = #{creditAmount},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "起票日" = #{postingDate}
+          AND "勘定科目コード" = #{accountCode}
+          AND "補助科目コード" = #{subAccountCode}
+          AND "部門コード" = #{departmentCode}
+          AND "プロジェクトコード" = #{projectCode}
+          AND "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- バージョン取得 -->
+    <select id="findVersion" resultType="Integer">
+        SELECT "バージョン"
+        FROM "日次勘定科目残高"
+        WHERE "起票日" = #{postingDate}
+          AND "勘定科目コード" = #{accountCode}
+          AND "補助科目コード" = #{subAccountCode}
+          AND "部門コード" = #{departmentCode}
+          AND "プロジェクトコード" = #{projectCode}
+          AND "決算仕訳フラグ" = CASE WHEN #{closingJournalFlag} THEN 1 ELSE 0 END
+    </select>
+
+    <!-- 全件削除 -->
+    <delete id="deleteAll">
+        DELETE FROM "日次勘定科目残高"
+    </delete>
+
+    <!-- ページネーション付き検索（PostgreSQL） -->
+    <select id="findWithPagination" resultMap="dailyReportLineResultMap" databaseId="postgresql">
+        SELECT
+            d."起票日" AS postingDate,
+            d."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分"::TEXT AS bsplType,
+            a."貸借区分"::TEXT AS debitCreditType,
+            SUM(d."借方金額") AS debitTotal,
+            SUM(d."貸方金額") AS creditTotal,
+            CASE
+                WHEN a."貸借区分"::TEXT = '借方'
+                    THEN SUM(d."借方金額") - SUM(d."貸方金額")
+                ELSE SUM(d."貸方金額") - SUM(d."借方金額")
+            END AS balance
+        FROM "日次勘定科目残高" d
+        JOIN "勘定科目マスタ" a ON d."勘定科目コード" = a."勘定科目コード"
+        <where>
+            <if test="fromDate != null">
+                AND d."起票日" >= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND d."起票日" &lt;= #{toDate}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND d."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+        GROUP BY d."起票日", d."勘定科目コード", a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY d."起票日" DESC, d."勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- ページネーション付き検索（H2） -->
+    <select id="findWithPagination" resultMap="dailyReportLineResultMap" databaseId="h2">
+        SELECT
+            d."起票日" AS postingDate,
+            d."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分" AS bsplType,
+            a."貸借区分" AS debitCreditType,
+            SUM(d."借方金額") AS debitTotal,
+            SUM(d."貸方金額") AS creditTotal,
+            CASE
+                WHEN a."貸借区分" = '借方'
+                    THEN SUM(d."借方金額") - SUM(d."貸方金額")
+                ELSE SUM(d."貸方金額") - SUM(d."借方金額")
+            END AS balance
+        FROM "日次勘定科目残高" d
+        JOIN "勘定科目マスタ" a ON d."勘定科目コード" = a."勘定科目コード"
+        <where>
+            <if test="fromDate != null">
+                AND d."起票日" >= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND d."起票日" &lt;= #{toDate}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND d."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+        GROUP BY d."起票日", d."勘定科目コード", a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY d."起票日" DESC, d."勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 検索条件に一致する件数 -->
+    <select id="countWithCondition" resultType="long">
+        SELECT COUNT(DISTINCT (d."起票日", d."勘定科目コード"))
+        FROM "日次勘定科目残高" d
+        <where>
+            <if test="fromDate != null">
+                AND d."起票日" >= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND d."起票日" &lt;= #{toDate}
+            </if>
+            <if test="accountCode != null and accountCode != ''">
+                AND d."勘定科目コード" LIKE #{accountCode} || '%'
+            </if>
+        </where>
+    </select>
+
+    <!-- 指定日のページネーション付き検索（PostgreSQL） -->
+    <select id="findByPostingDateWithPagination" resultMap="dailyReportLineResultMap" databaseId="postgresql">
+        SELECT
+            d."起票日" AS postingDate,
+            d."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分"::TEXT AS bsplType,
+            a."貸借区分"::TEXT AS debitCreditType,
+            SUM(d."借方金額") AS debitTotal,
+            SUM(d."貸方金額") AS creditTotal,
+            CASE
+                WHEN a."貸借区分"::TEXT = '借方'
+                    THEN SUM(d."借方金額") - SUM(d."貸方金額")
+                ELSE SUM(d."貸方金額") - SUM(d."借方金額")
+            END AS balance
+        FROM "日次勘定科目残高" d
+        JOIN "勘定科目マスタ" a ON d."勘定科目コード" = a."勘定科目コード"
+        WHERE d."起票日" = #{postingDate}
+        GROUP BY d."起票日", d."勘定科目コード", a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY d."勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 指定日のページネーション付き検索（H2） -->
+    <select id="findByPostingDateWithPagination" resultMap="dailyReportLineResultMap" databaseId="h2">
+        SELECT
+            d."起票日" AS postingDate,
+            d."勘定科目コード" AS accountCode,
+            a."勘定科目名" AS accountName,
+            a."BSPL区分" AS bsplType,
+            a."貸借区分" AS debitCreditType,
+            SUM(d."借方金額") AS debitTotal,
+            SUM(d."貸方金額") AS creditTotal,
+            CASE
+                WHEN a."貸借区分" = '借方'
+                    THEN SUM(d."借方金額") - SUM(d."貸方金額")
+                ELSE SUM(d."貸方金額") - SUM(d."借方金額")
+            END AS balance
+        FROM "日次勘定科目残高" d
+        JOIN "勘定科目マスタ" a ON d."勘定科目コード" = a."勘定科目コード"
+        WHERE d."起票日" = #{postingDate}
+        GROUP BY d."起票日", d."勘定科目コード", a."勘定科目名", a."BSPL区分", a."貸借区分"
+        ORDER BY d."勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 指定日の件数 -->
+    <select id="countByPostingDate" resultType="long">
+        SELECT COUNT(DISTINCT d."勘定科目コード")
+        FROM "日次勘定科目残高" d
+        WHERE d."起票日" = #{postingDate}
+    </select>
+
+</mapper>

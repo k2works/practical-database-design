@@ -161,6 +161,27 @@ export default function (gulp) {
     gulp.task('docker:sms:restart', gulp.series('docker:sms:down', 'docker:sms:up'));
 
     /**
+     * 全 Docker イメージをビルド（backend, schemaspy）
+     */
+    gulp.task('docker:sms:build', (done) => {
+        try {
+            console.log('Building SMS Docker images (backend, schemaspy)...');
+
+            execSync('docker compose build backend schemaspy', {
+                cwd: PROJECT_DIR,
+                stdio: 'inherit',
+                env: getDockerEnv()
+            });
+
+            console.log('\nSMS Docker images built successfully.');
+            done();
+        } catch (error) {
+            console.error('Failed to build images:', error.message);
+            done(error);
+        }
+    });
+
+    /**
      * ヘルプを表示
      */
     gulp.task('docker:sms:help', (done) => {
@@ -169,13 +190,14 @@ SMS Docker Tasks
 ================
 
 Available tasks:
-  docker:sms:up       - Start PostgreSQL container
-  docker:sms:down     - Stop PostgreSQL container
-  docker:sms:clean    - Stop and remove volumes (data reset)
-  docker:sms:status   - Show container status
-  docker:sms:logs     - Show PostgreSQL logs (follow)
-  docker:sms:restart  - Restart PostgreSQL container
-  docker:sms:help     - Show this help
+  docker:sms:up            - Start PostgreSQL container
+  docker:sms:down          - Stop PostgreSQL container
+  docker:sms:build         - Build all images (backend, schemaspy)
+  docker:sms:clean         - Stop and remove volumes (data reset)
+  docker:sms:status        - Show container status
+  docker:sms:logs          - Show PostgreSQL logs (follow)
+  docker:sms:restart       - Restart PostgreSQL container
+  docker:sms:help          - Show this help
 
 Project directory: ${PROJECT_DIR}
 Connection: postgresql://postgres:postgres@localhost:5432/sms

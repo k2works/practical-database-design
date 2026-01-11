@@ -310,38 +310,68 @@ end note
 
 ## 14.3 財務会計システムのアーキテクチャ
 
+### 技術スタックと環境設定
+
+財務会計システム（FAS）は、販売管理システム（SMS）と同じ技術スタックを使用しますが、独立した環境で動作します。
+
+| 項目 | 財務会計システム (FAS) | 販売管理システム (SMS) |
+|------|------------------------|------------------------|
+| アプリケーションポート | 8081 | 8080 |
+| PostgreSQL ポート | 5433 | 5432 |
+| データベース名 | fas | sms |
+| Java バージョン | 25 | 25 |
+| Spring Boot | 4.0.0 | 4.0.0 |
+| MyBatis | 4.0.0 | 4.0.0 |
+
 ### プロジェクト構成
 
 財務会計システムは、ヘキサゴナルアーキテクチャ（ポート&アダプターパターン）を採用します。
 
 ```
-src/main/java/com/example/accounting/
-├── domain/                     # ドメイン層（純粋なビジネスロジック）
-│   ├── model/                 # ドメインモデル（エンティティ、値オブジェクト）
-│   │   ├── account/           # 勘定科目関連
-│   │   ├── journal/           # 仕訳関連
-│   │   └── balance/           # 残高関連
-│   ├── type/                  # 基本型（通貨、金額等）
-│   └── exception/             # ドメイン例外
+apps/fas/
+├── backend/
+│   ├── src/main/java/com/example/fas/
+│   │   ├── domain/                     # ドメイン層（純粋なビジネスロジック）
+│   │   │   ├── model/                 # ドメインモデル（エンティティ、値オブジェクト）
+│   │   │   │   ├── account/           # 勘定科目関連
+│   │   │   │   ├── journal/           # 仕訳関連
+│   │   │   │   └── balance/           # 残高関連
+│   │   │   ├── type/                  # 基本型（通貨、金額等）
+│   │   │   └── exception/             # ドメイン例外
+│   │   │
+│   │   ├── application/               # アプリケーション層
+│   │   │   └── port/
+│   │   │       └── out/              # Output Port（リポジトリインターフェース）
+│   │   │
+│   │   └── infrastructure/            # インフラストラクチャ層
+│   │       ├── config/               # 設定クラス
+│   │       ├── in/                   # Input Adapter（受信アダプター）
+│   │       │   ├── rest/             # REST API（Web実装）
+│   │       │   │   ├── controller/   # REST Controller
+│   │       │   │   ├── dto/          # Data Transfer Object
+│   │       │   │   └── exception/    # Exception Handler
+│   │       │   └── seed/             # Seed データ投入
+│   │       └── out/                  # Output Adapter（送信アダプター）
+│   │           └── persistence/      # DB実装
+│   │               ├── mapper/       # MyBatis Mapper
+│   │               ├── repository/   # Repository実装
+│   │               └── typehandler/  # 型ハンドラー
+│   │
+│   ├── src/main/resources/
+│   │   ├── application.yml            # アプリケーション設定
+│   │   └── db/migration/              # Flyway マイグレーション
+│   │       └── V001__create_enum_types.sql
+│   │
+│   ├── src/test/java/com/example/fas/
+│   │   └── testsetup/
+│   │       └── BaseIntegrationTest.java  # 統合テスト基底クラス
+│   │
+│   └── config/                        # 品質ツール設定
+│       ├── checkstyle/
+│       ├── pmd/
+│       └── spotbugs/
 │
-├── application/               # アプリケーション層
-│   └── port/
-│       └── out/              # Output Port（リポジトリインターフェース）
-│
-├── infrastructure/            # インフラストラクチャ層
-│   ├── in/                   # Input Adapter（受信アダプター）
-│   │   ├── rest/             # REST API（Web実装）
-│   │   │   ├── controller/   # REST Controller
-│   │   │   ├── dto/          # Data Transfer Object
-│   │   │   └── exception/    # Exception Handler
-│   │   └── seed/             # Seed データ投入
-│   └── out/                  # Output Adapter（送信アダプター）
-│       └── persistence/      # DB実装
-│           ├── mapper/       # MyBatis Mapper
-│           ├── repository/   # Repository実装
-│           └── typehandler/  # 型ハンドラー
-│
-└── config/                   # 設定クラス
+└── docker-compose.yml                 # PostgreSQL コンテナ定義
 ```
 
 ### ヘキサゴナルアーキテクチャ（ポート&アダプター）
@@ -571,6 +601,47 @@ package "残高情報" {
 | **マスタ情報** | 基本的に変更が少ない、システムの基盤となるデータ | 勘定科目マスタ、勘定科目構成マスタ、課税取引マスタ |
 | **トランザクション情報** | 日々の業務で発生するデータ | 仕訳データ、日次勘定科目残高、月次勘定科目残高 |
 
+### PostgreSQL ENUM 型定義
+
+財務会計システムでは、業務で使用する区分値を PostgreSQL の ENUM 型で定義します。日本語のカラム名・テーブル名と同様に、ENUM 型名も日本語で定義します。
+
+```sql
+-- BSPL区分（貸借対照表/損益計算書区分）
+CREATE TYPE "BSPL区分" AS ENUM ('BS', 'PL');
+
+-- 貸借区分
+CREATE TYPE "貸借区分" AS ENUM ('借方', '貸方');
+
+-- 集計区分
+CREATE TYPE "集計区分" AS ENUM ('集計', '明細');
+
+-- 課税区分
+CREATE TYPE "課税区分" AS ENUM ('課税', '非課税', '免税', '対象外');
+
+-- 仕訳区分
+CREATE TYPE "仕訳区分" AS ENUM ('通常', '振替', '決算', '自動');
+
+-- 仕訳ステータス
+CREATE TYPE "仕訳ステータス" AS ENUM ('入力中', '確定', '承認済', '取消');
+
+-- 自動仕訳パターン区分
+CREATE TYPE "自動仕訳パターン区分" AS ENUM ('売上', '仕入', '入金', '出金', '減価償却', '引当');
+
+-- 決算区分
+CREATE TYPE "決算区分" AS ENUM ('月次', '四半期', '中間', '年次');
+```
+
+| ENUM 型名 | 説明 | 値 |
+|-----------|------|-----|
+| BSPL区分 | 貸借対照表/損益計算書の区分 | BS, PL |
+| 貸借区分 | 勘定科目の借方/貸方区分 | 借方, 貸方 |
+| 集計区分 | 勘定科目の集計/明細区分 | 集計, 明細 |
+| 課税区分 | 消費税の課税区分 | 課税, 非課税, 免税, 対象外 |
+| 仕訳区分 | 仕訳の種類 | 通常, 振替, 決算, 自動 |
+| 仕訳ステータス | 仕訳の処理状態 | 入力中, 確定, 承認済, 取消 |
+| 自動仕訳パターン区分 | 自動仕訳の発生パターン | 売上, 仕入, 入金, 出金, 減価償却, 引当 |
+| 決算区分 | 決算処理の種類 | 月次, 四半期, 中間, 年次 |
+
 ---
 
 ## 本章のまとめ
@@ -587,6 +658,9 @@ package "残高情報" {
 | 管理会計 | 内部意思決定目的（任意） |
 | アーキテクチャ | ヘキサゴナルアーキテクチャ（ポート&アダプター） |
 | 設計手法 | ドメイン駆動設計（集約・リポジトリ・ドメインサービス） |
+| 技術スタック | Java 25、Spring Boot 4.0.0、MyBatis 4.0.0、PostgreSQL 16 |
+| 環境設定 | FAS: ポート 8081、PostgreSQL 5433 / SMS: ポート 8080、PostgreSQL 5432 |
+| ENUM 型 | 8 種類の業務区分を PostgreSQL ENUM で日本語定義 |
 
 ### 次章の予告
 

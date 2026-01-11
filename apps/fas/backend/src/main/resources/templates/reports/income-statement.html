@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>損益計算書</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">損益計算書</h1>
+
+    <!-- 検索フォーム -->
+    <div class="search-form mb-4">
+        <form th:action="@{/reports/income-statement}" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">開始月</label>
+                <input type="month" name="fromMonth" class="form-control" th:value="${fromMonth}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">終了月</label>
+                <input type="month" name="toMonth" class="form-control" th:value="${toMonth}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">表示</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- エクスポートボタン -->
+    <div class="mb-3">
+        <a th:href="@{/reports/income-statement/excel(fromMonth=${fromMonth}, toMonth=${toMonth})}" class="btn btn-success">
+            Excel出力
+        </a>
+        <a th:href="@{/reports/income-statement/pdf(fromMonth=${fromMonth}, toMonth=${toMonth})}" class="btn btn-danger">
+            PDF出力
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                損益計算書
+                <small class="text-muted" th:text="'(' + ${fromMonth} + ' 〜 ' + ${toMonth} + ')'"></small>
+            </h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <tbody>
+                    <!-- 売上高 -->
+                    <tr class="table-light">
+                        <td colspan="2" class="fw-bold">売上高</td>
+                    </tr>
+                    <tr th:each="line : ${report.salesRevenue}">
+                        <td class="ps-4" th:text="${line.accountName}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td class="fw-bold">売上高合計</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalSalesRevenue, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 売上原価 -->
+                    <tr class="table-light">
+                        <td colspan="2" class="fw-bold">売上原価</td>
+                    </tr>
+                    <tr th:each="line : ${report.costOfSales}">
+                        <td class="ps-4" th:text="${line.accountName}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td class="fw-bold">売上原価合計</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalCostOfSales, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 売上総利益 -->
+                    <tr class="table-info">
+                        <td class="fw-bold">売上総利益</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.grossProfit, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 販管費 -->
+                    <tr class="table-light">
+                        <td colspan="2" class="fw-bold">販売費及び一般管理費</td>
+                    </tr>
+                    <tr th:each="line : ${report.sellingGeneralExpenses}">
+                        <td class="ps-4" th:text="${line.accountName}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td class="fw-bold">販管費合計</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.totalSellingGeneralExpenses, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 営業利益 -->
+                    <tr class="table-primary">
+                        <td class="fw-bold">営業利益</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.operatingIncome, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 営業外収益・費用 -->
+                    <tr class="table-light">
+                        <td colspan="2" class="fw-bold">営業外収益</td>
+                    </tr>
+                    <tr th:each="line : ${report.nonOperatingIncome}">
+                        <td class="ps-4" th:text="${line.accountName}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <tr class="table-light">
+                        <td colspan="2" class="fw-bold">営業外費用</td>
+                    </tr>
+                    <tr th:each="line : ${report.nonOperatingExpenses}">
+                        <td class="ps-4" th:text="${line.accountName}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(line.amount, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 経常利益 -->
+                    <tr class="table-success">
+                        <td class="fw-bold">経常利益</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.ordinaryIncome, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 税引前当期純利益 -->
+                    <tr class="table-warning">
+                        <td class="fw-bold">税引前当期純利益</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(report.incomeBeforeTaxes, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 法人税等 -->
+                    <tr>
+                        <td>法人税等</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(report.incomeTaxes, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+
+                    <!-- 当期純利益 -->
+                    <tr class="table-dark">
+                        <td class="fw-bold">当期純利益</td>
+                        <td class="text-end fw-bold"
+                            th:classappend="${report.netIncome.signum() < 0} ? 'text-danger' : ''"
+                            th:text="${#numbers.formatDecimal(report.netIncome, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

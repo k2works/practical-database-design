@@ -1600,7 +1600,725 @@ BOM }o--|| 品目マスタ : 子品目
 
 ---
 
-## まとめ
+## 24.3 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+生産計画データは、MPS → オーダ → 所要 → 引当 という階層構造と、オーダ間の親子関係（自己参照）を持ちます。MyBatis でこれらの複雑なリレーションを効率的に取得するための設定を実装します。
+
+#### ネストした ResultMap の定義
+
+<details>
+<summary>OrderMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/OrderMapper.xml -->
+<mapper namespace="com.example.production.infrastructure.persistence.mapper.OrderMapper">
+
+    <!-- オーダ情報 ResultMap（親オーダ・MPS・子オーダ込み） -->
+    <resultMap id="orderWithRelationsResultMap" type="com.example.production.domain.model.plan.Order">
+        <id property="id" column="o_ID"/>
+        <result property="orderNumber" column="o_オーダNO"/>
+        <result property="orderType" column="o_オーダ種別"
+                typeHandler="com.example.production.infrastructure.persistence.OrderTypeTypeHandler"/>
+        <result property="itemCode" column="o_品目コード"/>
+        <result property="startDate" column="o_着手予定日"/>
+        <result property="dueDate" column="o_納期"/>
+        <result property="expirationDate" column="o_有効期限"/>
+        <result property="planQuantity" column="o_計画数量"/>
+        <result property="locationCode" column="o_場所コード"/>
+        <result property="status" column="o_ステータス"
+                typeHandler="com.example.production.infrastructure.persistence.PlanStatusTypeHandler"/>
+        <result property="mpsId" column="o_MPS_ID"/>
+        <result property="parentOrderId" column="o_親オーダID"/>
+        <result property="version" column="o_バージョン"/>
+        <result property="createdAt" column="o_作成日時"/>
+        <result property="createdBy" column="o_作成者"/>
+        <result property="updatedAt" column="o_更新日時"/>
+        <result property="updatedBy" column="o_更新者"/>
+        <!-- MPS との N:1 関連 -->
+        <association property="mps" javaType="com.example.production.domain.model.plan.MasterProductionSchedule">
+            <id property="id" column="m_ID"/>
+            <result property="mpsNumber" column="m_MPS番号"/>
+            <result property="planDate" column="m_計画日"/>
+            <result property="itemCode" column="m_品目コード"/>
+            <result property="planQuantity" column="m_計画数量"/>
+            <result property="dueDate" column="m_納期"/>
+            <result property="status" column="m_ステータス"
+                    typeHandler="com.example.production.infrastructure.persistence.PlanStatusTypeHandler"/>
+        </association>
+        <!-- 親オーダとの自己参照 N:1 関連 -->
+        <association property="parentOrder" javaType="com.example.production.domain.model.plan.Order">
+            <id property="id" column="p_ID"/>
+            <result property="orderNumber" column="p_オーダNO"/>
+            <result property="orderType" column="p_オーダ種別"
+                    typeHandler="com.example.production.infrastructure.persistence.OrderTypeTypeHandler"/>
+            <result property="itemCode" column="p_品目コード"/>
+            <result property="planQuantity" column="p_計画数量"/>
+        </association>
+        <!-- 子オーダとの 1:N 関連 -->
+        <collection property="childOrders" ofType="com.example.production.domain.model.plan.Order"
+                    resultMap="childOrderResultMap"/>
+        <!-- 所要情報との 1:N 関連 -->
+        <collection property="requirements" ofType="com.example.production.domain.model.plan.Requirement"
+                    resultMap="requirementNestedResultMap"/>
+    </resultMap>
+
+    <!-- 子オーダの ResultMap -->
+    <resultMap id="childOrderResultMap" type="com.example.production.domain.model.plan.Order">
+        <id property="id" column="c_ID"/>
+        <result property="orderNumber" column="c_オーダNO"/>
+        <result property="orderType" column="c_オーダ種別"
+                typeHandler="com.example.production.infrastructure.persistence.OrderTypeTypeHandler"/>
+        <result property="itemCode" column="c_品目コード"/>
+        <result property="startDate" column="c_着手予定日"/>
+        <result property="dueDate" column="c_納期"/>
+        <result property="planQuantity" column="c_計画数量"/>
+        <result property="status" column="c_ステータス"
+                typeHandler="com.example.production.infrastructure.persistence.PlanStatusTypeHandler"/>
+    </resultMap>
+
+    <!-- 所要情報のネスト ResultMap -->
+    <resultMap id="requirementNestedResultMap" type="com.example.production.domain.model.plan.Requirement">
+        <id property="id" column="r_ID"/>
+        <result property="requirementNumber" column="r_所要NO"/>
+        <result property="orderId" column="r_オーダID"/>
+        <result property="itemCode" column="r_品目コード"/>
+        <result property="dueDate" column="r_納期"/>
+        <result property="requiredQuantity" column="r_必要数量"/>
+        <result property="allocatedQuantity" column="r_引当済数量"/>
+        <result property="shortageQuantity" column="r_不足数量"/>
+        <result property="locationCode" column="r_場所コード"/>
+        <result property="version" column="r_バージョン"/>
+        <!-- 引当情報との 1:N 関連 -->
+        <collection property="allocations" ofType="com.example.production.domain.model.plan.Allocation"
+                    resultMap="allocationNestedResultMap"/>
+    </resultMap>
+
+    <!-- 引当情報のネスト ResultMap -->
+    <resultMap id="allocationNestedResultMap" type="com.example.production.domain.model.plan.Allocation">
+        <id property="id" column="a_ID"/>
+        <result property="requirementId" column="a_所要ID"/>
+        <result property="allocationType" column="a_引当区分"
+                typeHandler="com.example.production.infrastructure.persistence.AllocationTypeTypeHandler"/>
+        <result property="orderId" column="a_オーダID"/>
+        <result property="allocationDate" column="a_引当日"/>
+        <result property="allocatedQuantity" column="a_引当数量"/>
+        <result property="locationCode" column="a_場所コード"/>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findWithRelationsByOrderNumber" resultMap="orderWithRelationsResultMap">
+        SELECT
+            -- オーダ情報
+            o."ID" AS o_ID,
+            o."オーダNO" AS o_オーダNO,
+            o."オーダ種別" AS o_オーダ種別,
+            o."品目コード" AS o_品目コード,
+            o."着手予定日" AS o_着手予定日,
+            o."納期" AS o_納期,
+            o."有効期限" AS o_有効期限,
+            o."計画数量" AS o_計画数量,
+            o."場所コード" AS o_場所コード,
+            o."ステータス" AS o_ステータス,
+            o."MPS_ID" AS o_MPS_ID,
+            o."親オーダID" AS o_親オーダID,
+            o."バージョン" AS o_バージョン,
+            o."作成日時" AS o_作成日時,
+            o."作成者" AS o_作成者,
+            o."更新日時" AS o_更新日時,
+            o."更新者" AS o_更新者,
+            -- MPS情報
+            m."ID" AS m_ID,
+            m."MPS番号" AS m_MPS番号,
+            m."計画日" AS m_計画日,
+            m."品目コード" AS m_品目コード,
+            m."計画数量" AS m_計画数量,
+            m."納期" AS m_納期,
+            m."ステータス" AS m_ステータス,
+            -- 親オーダ情報
+            p."ID" AS p_ID,
+            p."オーダNO" AS p_オーダNO,
+            p."オーダ種別" AS p_オーダ種別,
+            p."品目コード" AS p_品目コード,
+            p."計画数量" AS p_計画数量,
+            -- 子オーダ情報
+            c."ID" AS c_ID,
+            c."オーダNO" AS c_オーダNO,
+            c."オーダ種別" AS c_オーダ種別,
+            c."品目コード" AS c_品目コード,
+            c."着手予定日" AS c_着手予定日,
+            c."納期" AS c_納期,
+            c."計画数量" AS c_計画数量,
+            c."ステータス" AS c_ステータス,
+            -- 所要情報
+            r."ID" AS r_ID,
+            r."所要NO" AS r_所要NO,
+            r."オーダID" AS r_オーダID,
+            r."品目コード" AS r_品目コード,
+            r."納期" AS r_納期,
+            r."必要数量" AS r_必要数量,
+            r."引当済数量" AS r_引当済数量,
+            r."不足数量" AS r_不足数量,
+            r."場所コード" AS r_場所コード,
+            r."バージョン" AS r_バージョン,
+            -- 引当情報
+            a."ID" AS a_ID,
+            a."所要ID" AS a_所要ID,
+            a."引当区分" AS a_引当区分,
+            a."オーダID" AS a_オーダID,
+            a."引当日" AS a_引当日,
+            a."引当数量" AS a_引当数量,
+            a."場所コード" AS a_場所コード
+        FROM "オーダ情報" o
+        LEFT JOIN "基準生産計画" m ON o."MPS_ID" = m."ID"
+        LEFT JOIN "オーダ情報" p ON o."親オーダID" = p."ID"
+        LEFT JOIN "オーダ情報" c ON o."ID" = c."親オーダID"
+        LEFT JOIN "所要情報" r ON o."ID" = r."オーダID"
+        LEFT JOIN "引当情報" a ON r."ID" = a."所要ID"
+        WHERE o."オーダNO" = #{orderNumber}
+        ORDER BY c."ID", r."ID", a."ID"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<association>` | N:1 関連のマッピング（MPS、親オーダ） |
+| `<collection>` | 1:N 関連のマッピング（子オーダ、所要、引当） |
+| 自己参照 | オーダの親子関係を同一テーブルで管理 |
+| エイリアス | `o_`（オーダ）、`m_`（MPS）、`p_`（親）、`c_`（子）、`r_`（所要）、`a_`（引当） |
+| 複数 LEFT JOIN | 階層構造を一度のクエリで取得 |
+
+### 楽観ロックの実装
+
+MRP 処理や計画変更時に複数ユーザーが同時に編集する可能性があるため、楽観ロックを実装します。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V009__add_planning_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V009__add_planning_version_columns.sql
+
+-- 基準生産計画テーブルにバージョンカラムを追加
+ALTER TABLE "基準生産計画" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- オーダ情報テーブルにバージョンカラムを追加
+ALTER TABLE "オーダ情報" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 所要情報テーブルにバージョンカラムを追加
+ALTER TABLE "所要情報" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 引当情報テーブルにバージョンカラムを追加
+ALTER TABLE "引当情報" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "基準生産計画"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "オーダ情報"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "所要情報"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "引当情報"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>Order.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/production/domain/model/plan/Order.java
+package com.example.production.domain.model.plan;
+
+import com.example.production.domain.model.item.Item;
+import lombok.Builder;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@Builder
+public class Order {
+    private Integer id;
+    private String orderNumber;
+    private OrderType orderType;
+    private String itemCode;
+    private LocalDate startDate;
+    private LocalDate dueDate;
+    private LocalDate expirationDate;
+    private BigDecimal planQuantity;
+    private String locationCode;
+    private PlanStatus status;
+    private Integer mpsId;
+    private Integer parentOrderId;
+    private LocalDateTime createdAt;
+    private String createdBy;
+    private LocalDateTime updatedAt;
+    private String updatedBy;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Item item;
+    private MasterProductionSchedule mps;
+    private Order parentOrder;
+    private List<Order> childOrders;
+    private List<Requirement> requirements;
+}
+```
+
+</details>
+
+<details>
+<summary>Requirement.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/production/domain/model/plan/Requirement.java
+package com.example.production.domain.model.plan;
+
+import com.example.production.domain.model.item.Item;
+import lombok.Builder;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@Builder
+public class Requirement {
+    private Integer id;
+    private String requirementNumber;
+    private Integer orderId;
+    private String itemCode;
+    private LocalDate dueDate;
+    private BigDecimal requiredQuantity;
+    private BigDecimal allocatedQuantity;
+    private BigDecimal shortageQuantity;
+    private String locationCode;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Order order;
+    private Item item;
+    private List<Allocation> allocations;
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の更新
+
+<details>
+<summary>OrderMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 楽観ロック対応の更新（バージョンチェック付き） -->
+<update id="updateWithOptimisticLock" parameterType="com.example.production.domain.model.plan.Order">
+    UPDATE "オーダ情報"
+    SET
+        "オーダ種別" = #{orderType, typeHandler=com.example.production.infrastructure.persistence.OrderTypeTypeHandler}::オーダ種別,
+        "品目コード" = #{itemCode},
+        "着手予定日" = #{startDate},
+        "納期" = #{dueDate},
+        "有効期限" = #{expirationDate},
+        "計画数量" = #{planQuantity},
+        "場所コード" = #{locationCode},
+        "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス,
+        "MPS_ID" = #{mpsId},
+        "親オーダID" = #{parentOrderId},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "更新者" = #{updatedBy},
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- ステータス更新（楽観ロック対応） -->
+<update id="updateStatusWithOptimisticLock">
+    UPDATE "オーダ情報"
+    SET
+        "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス,
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 現在のバージョン取得 -->
+<select id="findVersionById" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "オーダ情報" WHERE "ID" = #{id}
+</select>
+```
+
+</details>
+
+<details>
+<summary>RequirementMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 引当更新（楽観ロック対応） -->
+<update id="updateAllocationWithOptimisticLock">
+    UPDATE "所要情報"
+    SET
+        "引当済数量" = #{allocatedQuantity},
+        "不足数量" = #{shortageQuantity},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "ID" = #{id}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 現在のバージョン取得 -->
+<select id="findVersionById" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "所要情報" WHERE "ID" = #{id}
+</select>
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>OrderRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/production/infrastructure/persistence/repository/OrderRepositoryImpl.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.OrderRepository;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.plan.Order;
+import com.example.production.domain.model.plan.PlanStatus;
+import com.example.production.infrastructure.persistence.mapper.OrderMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class OrderRepositoryImpl implements OrderRepository {
+
+    private final OrderMapper mapper;
+
+    @Override
+    @Transactional
+    public void update(Order order) {
+        int updatedCount = mapper.updateWithOptimisticLock(order);
+
+        if (updatedCount == 0) {
+            // バージョン不一致または削除済み
+            Integer currentVersion = mapper.findVersionById(order.getId());
+            if (currentVersion == null) {
+                throw new OptimisticLockException("オーダ", order.getId());
+            } else {
+                throw new OptimisticLockException("オーダ", order.getId(),
+                        order.getVersion(), currentVersion);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Integer id, PlanStatus status, Integer version) {
+        int updatedCount = mapper.updateStatusWithOptimisticLock(id, status, version);
+
+        if (updatedCount == 0) {
+            Integer currentVersion = mapper.findVersionById(id);
+            if (currentVersion == null) {
+                throw new OptimisticLockException("オーダ", id);
+            } else {
+                throw new OptimisticLockException("オーダ", id, version, currentVersion);
+            }
+        }
+    }
+
+    @Override
+    public Optional<Order> findWithRelationsByOrderNumber(String orderNumber) {
+        return Optional.ofNullable(mapper.findWithRelationsByOrderNumber(orderNumber));
+    }
+
+    // その他のメソッド...
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>OrderRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/production/infrastructure/persistence/repository/OrderRepositoryOptimisticLockTest.java
+package com.example.production.infrastructure.persistence.repository;
+
+import com.example.production.application.port.out.OrderRepository;
+import com.example.production.domain.exception.OptimisticLockException;
+import com.example.production.domain.model.plan.Order;
+import com.example.production.domain.model.plan.OrderType;
+import com.example.production.domain.model.plan.PlanStatus;
+import com.example.production.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("オーダリポジトリ - 楽観ロック")
+class OrderRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @BeforeEach
+    void setUp() {
+        orderRepository.deleteAll();
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLocking {
+
+        @Test
+        @DisplayName("同じバージョンで更新できる")
+        void canUpdateWithSameVersion() {
+            // Arrange
+            var order = Order.builder()
+                    .orderNumber("MO-2025-0001")
+                    .orderType(OrderType.MANUFACTURING)
+                    .itemCode("PROD-001")
+                    .startDate(LocalDate.of(2025, 1, 15))
+                    .dueDate(LocalDate.of(2025, 1, 20))
+                    .planQuantity(new BigDecimal("100"))
+                    .locationCode("WH-001")
+                    .status(PlanStatus.DRAFT)
+                    .build();
+            orderRepository.save(order);
+
+            // Act
+            var fetched = orderRepository.findByOrderNumber("MO-2025-0001").get();
+            fetched.setPlanQuantity(new BigDecimal("150"));
+            orderRepository.update(fetched);
+
+            // Assert
+            var updated = orderRepository.findByOrderNumber("MO-2025-0001").get();
+            assertThat(updated.getPlanQuantity()).isEqualByComparingTo(new BigDecimal("150"));
+            assertThat(updated.getVersion()).isEqualTo(2); // バージョンがインクリメント
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで更新すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            var order = Order.builder()
+                    .orderNumber("MO-2025-0002")
+                    .orderType(OrderType.MANUFACTURING)
+                    .itemCode("PROD-001")
+                    .startDate(LocalDate.of(2025, 1, 15))
+                    .dueDate(LocalDate.of(2025, 1, 20))
+                    .planQuantity(new BigDecimal("100"))
+                    .locationCode("WH-001")
+                    .status(PlanStatus.DRAFT)
+                    .build();
+            orderRepository.save(order);
+
+            // ユーザーAが取得
+            var orderA = orderRepository.findByOrderNumber("MO-2025-0002").get();
+            // ユーザーBが取得
+            var orderB = orderRepository.findByOrderNumber("MO-2025-0002").get();
+
+            // ユーザーAが更新（成功）
+            orderA.setPlanQuantity(new BigDecimal("150"));
+            orderRepository.update(orderA);
+
+            // Act & Assert: ユーザーBが古いバージョンで更新（失敗）
+            orderB.setPlanQuantity(new BigDecimal("200"));
+            assertThatThrownBy(() -> orderRepository.update(orderB))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+
+        @Test
+        @DisplayName("ステータス更新も楽観ロックが適用される")
+        void statusUpdateWithOptimisticLock() {
+            // Arrange
+            var order = Order.builder()
+                    .orderNumber("MO-2025-0003")
+                    .orderType(OrderType.MANUFACTURING)
+                    .itemCode("PROD-001")
+                    .startDate(LocalDate.of(2025, 1, 15))
+                    .dueDate(LocalDate.of(2025, 1, 20))
+                    .planQuantity(new BigDecimal("100"))
+                    .locationCode("WH-001")
+                    .status(PlanStatus.DRAFT)
+                    .build();
+            orderRepository.save(order);
+
+            // ユーザーAとBが同時に取得
+            var orderA = orderRepository.findByOrderNumber("MO-2025-0003").get();
+            var orderB = orderRepository.findByOrderNumber("MO-2025-0003").get();
+
+            // ユーザーAがステータス確定（成功）
+            orderRepository.updateStatus(orderA.getId(), PlanStatus.CONFIRMED, orderA.getVersion());
+
+            // Act & Assert: ユーザーBが古いバージョンでステータス更新（失敗）
+            assertThatThrownBy(() ->
+                    orderRepository.updateStatus(orderB.getId(), PlanStatus.CANCELLED, orderB.getVersion()))
+                    .isInstanceOf(OptimisticLockException.class);
+        }
+    }
+}
+```
+
+</details>
+
+### MRP 処理における楽観ロックの考慮
+
+MRP 処理は複数のオーダや所要を一括で更新するため、楽観ロックの扱いに注意が必要です。
+
+```plantuml
+@startuml
+
+title MRP処理と楽観ロック
+
+participant "MRPサービス" as MRP
+participant "オーダリポジトリ" as OrderRepo
+participant "所要リポジトリ" as ReqRepo
+database "DB" as DB
+
+MRP -> OrderRepo: findByMpsId(mpsId)
+OrderRepo -> DB: SELECT ... WHERE MPS_ID = ?
+DB --> OrderRepo: オーダ一覧（バージョン込み）
+OrderRepo --> MRP: List<Order>
+
+loop 各オーダに対して
+    MRP -> ReqRepo: explodeRequirements(orderId)
+    ReqRepo -> DB: INSERT INTO 所要情報
+    DB --> ReqRepo: OK
+
+    MRP -> OrderRepo: updateStatus(id, EXPANDED, version)
+    OrderRepo -> DB: UPDATE ... WHERE ID = ? AND バージョン = ?
+    alt バージョン一致
+        DB --> OrderRepo: 更新成功（1件）
+        OrderRepo --> MRP: OK
+    else バージョン不一致
+        DB --> OrderRepo: 更新失敗（0件）
+        OrderRepo --> MRP: OptimisticLockException
+        MRP -> MRP: ロールバック・リトライ判定
+    end
+end
+
+@enduml
+```
+
+#### 一括処理時の楽観ロック戦略
+
+<details>
+<summary>MrpService.java（楽観ロック対応の改善版）</summary>
+
+```java
+/**
+ * MRP の完全実行（楽観ロック対応）
+ */
+@Transactional
+public MrpExecutionResult executeMrpWithOptimisticLock(Integer mpsId, MpsRepository mpsRepository) {
+    var mps = mpsRepository.findById(mpsId)
+            .orElseThrow(() -> new IllegalArgumentException("MPS not found: " + mpsId));
+
+    List<String> warnings = new ArrayList<>();
+    int processedCount = 0;
+    int skippedCount = 0;
+
+    var orders = orderRepository.findByMpsId(mpsId);
+
+    for (var order : orders) {
+        try {
+            // 個別オーダの処理
+            var requirements = explodeRequirements(order.getId());
+
+            // ステータス更新（楽観ロック付き）
+            orderRepository.updateStatus(
+                    order.getId(),
+                    PlanStatus.EXPANDED,
+                    order.getVersion()
+            );
+
+            processedCount++;
+
+            // 子オーダの再帰処理
+            for (var requirement : requirements) {
+                processChildOrder(requirement, warnings);
+            }
+
+        } catch (OptimisticLockException e) {
+            // 楽観ロック競合時はスキップして続行
+            warnings.add(String.format(
+                    "オーダ %s は他のユーザーによって更新されたためスキップしました",
+                    order.getOrderNumber()
+            ));
+            skippedCount++;
+        }
+    }
+
+    return MrpExecutionResult.builder()
+            .processedCount(processedCount)
+            .skippedCount(skippedCount)
+            .warnings(warnings)
+            .build();
+}
+
+@Data
+@Builder
+public static class MrpExecutionResult {
+    private int processedCount;
+    private int skippedCount;
+    private List<String> warnings;
+}
+```
+
+</details>
+
+#### 楽観ロックのベストプラクティス（生産計画向け）
+
+| ポイント | 説明 |
+|---------|------|
+| **一括処理時の例外処理** | 個別レコードの競合でバッチ全体を止めない |
+| **リトライ戦略** | 競合時は最新データを再取得して再試行 |
+| **警告ログ** | スキップしたレコードを明示的に記録 |
+| **ステータス遷移** | 草案→確定→展開済の順序を厳守 |
+| **親子整合性** | 親オーダ更新時に子オーダも整合性チェック |
+
+---
+
+## 24.4 まとめ
 
 ### 学んだこと
 

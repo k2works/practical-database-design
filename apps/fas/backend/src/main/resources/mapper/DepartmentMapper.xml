@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.DepartmentMapper">
+
+    <!-- ResultMap: 日本語カラム名 → 英語プロパティ名 -->
+    <resultMap id="DepartmentResultMap" type="com.example.fas.domain.model.department.Department">
+        <id property="departmentCode" column="部門コード"/>
+        <result property="departmentName" column="部門名"/>
+        <result property="departmentShortName" column="部門略名"/>
+        <result property="organizationLevel" column="組織階層"/>
+        <result property="departmentPath" column="部門パス"/>
+        <result property="lowestLevelFlag" column="最下層フラグ"/>
+    </resultMap>
+
+    <!-- 登録 -->
+    <insert id="insert" parameterType="com.example.fas.domain.model.department.Department">
+        INSERT INTO "部門マスタ" (
+            "部門コード",
+            "部門名",
+            "部門略名",
+            "組織階層",
+            "部門パス",
+            "最下層フラグ"
+        ) VALUES (
+            #{departmentCode},
+            #{departmentName},
+            #{departmentShortName},
+            #{organizationLevel},
+            #{departmentPath},
+            #{lowestLevelFlag}
+        )
+    </insert>
+
+    <!-- 部門コードで検索 -->
+    <select id="findByCode" resultMap="DepartmentResultMap">
+        SELECT
+            "部門コード",
+            "部門名",
+            "部門略名",
+            "組織階層",
+            "部門パス",
+            "最下層フラグ"
+        FROM "部門マスタ"
+        WHERE "部門コード" = #{departmentCode}
+    </select>
+
+    <!-- 全件取得 -->
+    <select id="findAll" resultMap="DepartmentResultMap">
+        SELECT
+            "部門コード",
+            "部門名",
+            "部門略名",
+            "組織階層",
+            "部門パス",
+            "最下層フラグ"
+        FROM "部門マスタ"
+        ORDER BY "部門コード"
+    </select>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="DepartmentResultMap">
+        SELECT
+            "部門コード",
+            "部門名",
+            "部門略名",
+            "組織階層",
+            "部門パス",
+            "最下層フラグ"
+        FROM "部門マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("部門コード" LIKE '%' || #{keyword} || '%'
+                OR "部門名" LIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="level != null">
+                AND "組織階層" = #{level}
+            </if>
+        </where>
+        ORDER BY "部門コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "部門マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("部門コード" LIKE '%' || #{keyword} || '%'
+                OR "部門名" LIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="level != null">
+                AND "組織階層" = #{level}
+            </if>
+        </where>
+    </select>
+
+    <!-- 階層で検索 -->
+    <select id="findByOrganizationLevel" resultMap="DepartmentResultMap">
+        SELECT
+            "部門コード",
+            "部門名",
+            "部門略名",
+            "組織階層",
+            "部門パス",
+            "最下層フラグ"
+        FROM "部門マスタ"
+        WHERE "組織階層" = #{level}
+        ORDER BY "部門コード"
+    </select>
+
+    <!-- 最下層部門のみ取得 -->
+    <select id="findLowestLevel" resultMap="DepartmentResultMap">
+        SELECT
+            "部門コード",
+            "部門名",
+            "部門略名",
+            "組織階層",
+            "部門パス",
+            "最下層フラグ"
+        FROM "部門マスタ"
+        WHERE "最下層フラグ" = 1
+        ORDER BY "部門コード"
+    </select>
+
+    <!-- パス接頭辞で検索 -->
+    <select id="findByPathPrefix" resultMap="DepartmentResultMap">
+        SELECT
+            "部門コード",
+            "部門名",
+            "部門略名",
+            "組織階層",
+            "部門パス",
+            "最下層フラグ"
+        FROM "部門マスタ"
+        WHERE "部門パス" LIKE #{pathPrefix} || '%'
+        ORDER BY "部門コード"
+    </select>
+
+    <!-- 部門を更新 -->
+    <update id="update" parameterType="com.example.fas.domain.model.department.Department">
+        UPDATE "部門マスタ"
+        SET "部門名" = #{departmentName},
+            "部門略名" = #{departmentShortName},
+            "組織階層" = #{organizationLevel},
+            "部門パス" = #{departmentPath},
+            "最下層フラグ" = #{lowestLevelFlag}
+        WHERE "部門コード" = #{departmentCode}
+    </update>
+
+    <!-- 部門を削除 -->
+    <delete id="deleteByCode">
+        DELETE FROM "部門マスタ"
+        WHERE "部門コード" = #{departmentCode}
+    </delete>
+
+    <!-- 全件削除（テスト用） -->
+    <delete id="deleteAll">
+        DELETE FROM "部門マスタ"
+    </delete>
+
+</mapper>

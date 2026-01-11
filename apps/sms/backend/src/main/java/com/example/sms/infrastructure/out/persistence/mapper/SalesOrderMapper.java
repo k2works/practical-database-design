@@ -45,6 +45,8 @@ public interface SalesOrderMapper {
 
     List<SalesOrder> findByRequestedDeliveryDateBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
+    Optional<String> findMaxOrderNumberByPrefix(@Param("prefix") String prefix);
+
     List<SalesOrder> findAll();
 
     List<SalesOrderDetail> findDetailsByOrderId(Integer orderId);

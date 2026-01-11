@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.TaxTransactionMapper">
+
+    <resultMap id="TaxTransactionResultMap" type="com.example.fas.domain.model.tax.TaxTransaction">
+        <result property="taxCode" column="課税取引コード"/>
+        <result property="taxName" column="課税取引名"/>
+        <result property="taxRate" column="税率"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.fas.domain.model.tax.TaxTransaction">
+        INSERT INTO "課税取引マスタ" (
+            "課税取引コード", "課税取引名", "税率", "更新日時", "更新者名"
+        ) VALUES (
+            #{taxCode}, #{taxName}, #{taxRate}, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByCode" resultMap="TaxTransactionResultMap">
+        SELECT * FROM "課税取引マスタ"
+        WHERE "課税取引コード" = #{taxCode}
+    </select>
+
+    <select id="findAll" resultMap="TaxTransactionResultMap">
+        SELECT * FROM "課税取引マスタ"
+        ORDER BY "課税取引コード"
+    </select>
+
+    <select id="findWithPagination" resultMap="TaxTransactionResultMap">
+        SELECT * FROM "課税取引マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("課税取引コード" LIKE '%' || #{keyword} || '%'
+                OR "課税取引名" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "課税取引コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "課税取引マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("課税取引コード" LIKE '%' || #{keyword} || '%'
+                OR "課税取引名" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <update id="update" parameterType="com.example.fas.domain.model.tax.TaxTransaction">
+        UPDATE "課税取引マスタ"
+        SET "課税取引名" = #{taxName},
+            "税率" = #{taxRate},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "課税取引コード" = #{taxCode}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM "課税取引マスタ"
+        WHERE "課税取引コード" = #{taxCode}
+    </delete>
+
+    <delete id="deleteAll">
+        TRUNCATE TABLE "課税取引マスタ" CASCADE
+    </delete>
+</mapper>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>日計表</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">日計表</h1>
+
+    <!-- 検索フォーム -->
+    <div class="search-form mb-4">
+        <form th:action="@{/reports/daily}" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">対象日</label>
+                <input type="date" name="date" class="form-control" th:value="${date}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">表示</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- エクスポートボタン -->
+    <div class="mb-3">
+        <a th:href="@{/reports/daily/excel(date=${date})}" class="btn btn-success">
+            Excel出力
+        </a>
+        <a th:href="@{/reports/daily/pdf(date=${date})}" class="btn btn-danger">
+            PDF出力
+        </a>
+    </div>
+
+    <!-- 日計表テーブル -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">日計表 - <span th:text="${#temporals.format(date, 'yyyy年MM月dd日')}"></span></h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>起票日</th>
+                        <th>勘定科目コード</th>
+                        <th>勘定科目名</th>
+                        <th>BSPL区分</th>
+                        <th>貸借区分</th>
+                        <th class="text-end">借方合計</th>
+                        <th class="text-end">貸方合計</th>
+                        <th class="text-end">残高</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="line : ${report.lines}">
+                        <td th:text="${#temporals.format(line.postingDate, 'yyyy/MM/dd')}"></td>
+                        <td th:text="${line.accountCode}"></td>
+                        <td th:text="${line.accountName}"></td>
+                        <td>
+                            <span th:if="${line.bsplType == 'BS'}" class="badge bg-primary">BS</span>
+                            <span th:if="${line.bsplType == 'PL'}" class="badge bg-success">PL</span>
+                        </td>
+                        <td>
+                            <span th:if="${line.debitCreditType == '借方'}" class="badge bg-info">借方</span>
+                            <span th:if="${line.debitCreditType == '貸方'}" class="badge bg-warning">貸方</span>
+                        </td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(line.debitTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(line.creditTotal, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td class="text-end fw-bold"
+                            th:classappend="${line.balance.signum() < 0} ? 'text-danger' : ''"
+                            th:text="${#numbers.formatDecimal(line.balance, 1, 'COMMA', 0, 'POINT')}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(report.lines)}">
+                        <td colspan="8" class="text-center text-muted">データがありません</td>
+                    </tr>
+                </tbody>
+                <tfoot th:if="${!#lists.isEmpty(report.lines)}">
+                    <tr class="table-secondary fw-bold">
+                        <td colspan="5" class="text-end">合計</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(report.totalDebit, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(report.totalCredit, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

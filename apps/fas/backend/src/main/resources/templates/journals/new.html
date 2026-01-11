@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>仕訳入力</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">仕訳入力</h1>
+
+    <form th:action="@{/journals}" th:object="${form}" method="post">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">仕訳ヘッダ</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <label for="postingDate" class="col-md-2 col-form-label">起票日</label>
+                    <div class="col-md-3">
+                        <input type="date" id="postingDate" th:field="*{postingDate}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('postingDate')} ? 'is-invalid'"
+                               required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('postingDate')}"
+                             th:errors="*{postingDate}"></div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="voucherType" class="col-md-2 col-form-label">伝票区分</label>
+                    <div class="col-md-3">
+                        <select id="voucherType" th:field="*{voucherType}" class="form-select">
+                            <option value="NORMAL">通常</option>
+                            <option value="ADJUSTMENT">調整</option>
+                            <option value="CLOSING">決算</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="departmentCode" class="col-md-2 col-form-label">部門</label>
+                    <div class="col-md-4">
+                        <select id="departmentCode" th:field="*{departmentCode}" class="form-select">
+                            <option value="">選択してください</option>
+                            <option th:each="dept : ${departments}"
+                                    th:value="${dept.departmentCode}"
+                                    th:text="${dept.departmentCode + ' - ' + dept.departmentName}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="lineSummary" class="col-md-2 col-form-label">摘要</label>
+                    <div class="col-md-6">
+                        <input type="text" id="lineSummary" th:field="*{lineSummary}"
+                               class="form-control" maxlength="100"
+                               placeholder="仕訳の摘要を入力">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-10">
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" id="closingJournalFlag" th:field="*{closingJournalFlag}"
+                                   class="form-check-input">
+                            <label for="closingJournalFlag" class="form-check-label">決算仕訳</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" id="singleEntryFlag" th:field="*{singleEntryFlag}"
+                                   class="form-check-input">
+                            <label for="singleEntryFlag" class="form-check-label">単振</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 仕訳明細 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">仕訳明細</h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addLine()">
+                    + 行を追加
+                </button>
+            </div>
+            <div class="card-body">
+                <div th:if="${#fields.hasErrors('lines')}" class="alert alert-danger">
+                    <span th:errors="*{lines}"></span>
+                </div>
+
+                <table class="table table-bordered" id="journalLines">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 100px;">貸借区分</th>
+                            <th style="width: 200px;">勘定科目</th>
+                            <th style="width: 150px;">補助科目</th>
+                            <th style="width: 150px;">部門</th>
+                            <th style="width: 150px;">金額</th>
+                            <th style="width: 80px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="line, stat : *{lines}">
+                            <td>
+                                <select th:field="*{lines[__${stat.index}__].debitCreditType}"
+                                        class="form-select form-select-sm"
+                                        th:classappend="${#fields.hasErrors('lines[' + stat.index + '].debitCreditType')} ? 'is-invalid'">
+                                    <option value="借方">借方</option>
+                                    <option value="貸方">貸方</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select th:field="*{lines[__${stat.index}__].accountCode}"
+                                        class="form-select form-select-sm"
+                                        th:classappend="${#fields.hasErrors('lines[' + stat.index + '].accountCode')} ? 'is-invalid'">
+                                    <option value="">選択してください</option>
+                                    <option th:each="acct : ${accounts}"
+                                            th:value="${acct.accountCode}"
+                                            th:text="${acct.accountCode + ' - ' + acct.accountName}"></option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" th:field="*{lines[__${stat.index}__].subAccountCode}"
+                                       class="form-control form-control-sm">
+                            </td>
+                            <td>
+                                <select th:field="*{lines[__${stat.index}__].departmentCode}"
+                                        class="form-select form-select-sm">
+                                    <option value="">--</option>
+                                    <option th:each="dept : ${departments}"
+                                            th:value="${dept.departmentCode}"
+                                            th:text="${dept.departmentCode}"></option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" th:field="*{lines[__${stat.index}__].amount}"
+                                       class="form-control form-control-sm text-end"
+                                       th:classappend="${#fields.hasErrors('lines[' + stat.index + '].amount')} ? 'is-invalid'"
+                                       step="1" min="0">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="removeLine(this)">削除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">登録</button>
+            <a th:href="@{/journals}" class="btn btn-secondary">キャンセル</a>
+        </div>
+    </form>
+</div>
+
+<script layout:fragment="scripts">
+    let lineIndex = document.querySelectorAll('#journalLines tbody tr').length;
+
+    function addLine() {
+        const tbody = document.querySelector('#journalLines tbody');
+        const template = `
+            <tr>
+                <td>
+                    <select name="lines[${lineIndex}].debitCreditType" class="form-select form-select-sm">
+                        <option value="借方">借方</option>
+                        <option value="貸方">貸方</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="lines[${lineIndex}].accountCode" class="form-select form-select-sm">
+                        <option value="">選択してください</option>
+                        ${getAccountOptions()}
+                    </select>
+                </td>
+                <td>
+                    <input type="text" name="lines[${lineIndex}].subAccountCode" class="form-control form-control-sm">
+                </td>
+                <td>
+                    <select name="lines[${lineIndex}].departmentCode" class="form-select form-select-sm">
+                        <option value="">--</option>
+                        ${getDepartmentOptions()}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="lines[${lineIndex}].amount" class="form-control form-control-sm text-end" step="1" min="0">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLine(this)">削除</button>
+                </td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', template);
+        lineIndex++;
+    }
+
+    function removeLine(button) {
+        const row = button.closest('tr');
+        row.remove();
+        reindexLines();
+    }
+
+    function reindexLines() {
+        const rows = document.querySelectorAll('#journalLines tbody tr');
+        rows.forEach((row, index) => {
+            row.querySelectorAll('[name]').forEach(input => {
+                input.name = input.name.replace(/lines\[\d+\]/, `lines[${index}]`);
+            });
+        });
+        lineIndex = rows.length;
+    }
+
+    function getAccountOptions() {
+        const firstSelect = document.querySelector('select[name$=".accountCode"]');
+        if (!firstSelect) return '';
+        return Array.from(firstSelect.options)
+            .filter(opt => opt.value !== '')
+            .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+            .join('');
+    }
+
+    function getDepartmentOptions() {
+        const firstSelect = document.querySelector('select[name$=".departmentCode"]');
+        if (!firstSelect) return '';
+        return Array.from(firstSelect.options)
+            .filter(opt => opt.value !== '')
+            .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+            .join('');
+    }
+</script>
+</body>
+</html>

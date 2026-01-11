@@ -1817,7 +1817,714 @@ lot_master ||--o{ lot_composition : 子ロット
 
 ---
 
-## まとめ
+## 29.3 リレーションと楽観ロックの設計
+
+### MyBatis ネストした ResultMap によるリレーション設定
+
+品質管理では、検査データ→検査結果→欠点マスタ、ロットマスタ→ロット構成といった親子関係があります。MyBatis でこれらの関係を効率的に取得するためのリレーション設定を実装します。
+
+#### 受入検査データのネスト ResultMap（検査結果・欠点・品目・仕入先を含む）
+
+<details>
+<summary>ReceivingInspectionMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/ReceivingInspectionMapper.xml -->
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper">
+
+    <!-- 受入検査データ with 検査結果・欠点・品目・仕入先 ResultMap -->
+    <resultMap id="receivingInspectionFullResultMap"
+               type="com.example.sms.domain.model.quality.ReceivingInspection">
+        <id property="id" column="ri_id"/>
+        <result property="inspectionNumber" column="ri_受入検査番号"/>
+        <result property="receivingNumber" column="ri_入荷番号"/>
+        <result property="purchaseOrderNumber" column="ri_発注番号"/>
+        <result property="itemCode" column="ri_品目コード"/>
+        <result property="supplierCode" column="ri_仕入先コード"/>
+        <result property="inspectionDate" column="ri_検査日"/>
+        <result property="inspectorCode" column="ri_検査担当者コード"/>
+        <result property="inspectionQuantity" column="ri_検査数量"/>
+        <result property="passedQuantity" column="ri_合格数"/>
+        <result property="failedQuantity" column="ri_不合格数"/>
+        <result property="judgment" column="ri_判定"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
+        <result property="remarks" column="ri_備考"/>
+        <result property="version" column="ri_バージョン"/>
+        <result property="createdAt" column="ri_作成日時"/>
+        <result property="updatedAt" column="ri_更新日時"/>
+
+        <!-- 品目マスタとの N:1 関連 -->
+        <association property="item" javaType="com.example.sms.domain.model.item.Item">
+            <id property="itemCode" column="i_品目コード"/>
+            <result property="itemName" column="i_品目名"/>
+        </association>
+
+        <!-- 仕入先マスタとの N:1 関連 -->
+        <association property="supplier" javaType="com.example.sms.domain.model.supplier.Supplier">
+            <id property="supplierCode" column="s_仕入先コード"/>
+            <result property="supplierName" column="s_仕入先名"/>
+        </association>
+
+        <!-- 検査結果との 1:N 関連 -->
+        <collection property="results"
+                    ofType="com.example.sms.domain.model.quality.ReceivingInspectionResult"
+                    resultMap="receivingInspectionResultNestedResultMap"/>
+    </resultMap>
+
+    <!-- 検査結果のネスト ResultMap（欠点マスタを含む） -->
+    <resultMap id="receivingInspectionResultNestedResultMap"
+               type="com.example.sms.domain.model.quality.ReceivingInspectionResult">
+        <id property="id" column="rir_id"/>
+        <result property="inspectionNumber" column="rir_受入検査番号"/>
+        <result property="defectCode" column="rir_欠点コード"/>
+        <result property="quantity" column="rir_数量"/>
+        <result property="remarks" column="rir_備考"/>
+
+        <!-- 欠点マスタとの N:1 関連 -->
+        <association property="defect" javaType="com.example.sms.domain.model.quality.DefectMaster">
+            <id property="defectCode" column="d_欠点コード"/>
+            <result property="defectName" column="d_欠点名"/>
+            <result property="defectCategory" column="d_欠点分類"/>
+        </association>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findFullByInspectionNumber" resultMap="receivingInspectionFullResultMap">
+        SELECT
+            ri."ID" AS ri_id,
+            ri."受入検査番号" AS ri_受入検査番号,
+            ri."入荷番号" AS ri_入荷番号,
+            ri."発注番号" AS ri_発注番号,
+            ri."品目コード" AS ri_品目コード,
+            ri."仕入先コード" AS ri_仕入先コード,
+            ri."検査日" AS ri_検査日,
+            ri."検査担当者コード" AS ri_検査担当者コード,
+            ri."検査数量" AS ri_検査数量,
+            ri."合格数" AS ri_合格数,
+            ri."不合格数" AS ri_不合格数,
+            ri."判定" AS ri_判定,
+            ri."備考" AS ri_備考,
+            ri."バージョン" AS ri_バージョン,
+            ri."作成日時" AS ri_作成日時,
+            ri."更新日時" AS ri_更新日時,
+            i."品目コード" AS i_品目コード,
+            i."品目名" AS i_品目名,
+            s."仕入先コード" AS s_仕入先コード,
+            s."仕入先名" AS s_仕入先名,
+            rir."ID" AS rir_id,
+            rir."受入検査番号" AS rir_受入検査番号,
+            rir."欠点コード" AS rir_欠点コード,
+            rir."数量" AS rir_数量,
+            rir."備考" AS rir_備考,
+            d."欠点コード" AS d_欠点コード,
+            d."欠点名" AS d_欠点名,
+            d."欠点分類" AS d_欠点分類
+        FROM "受入検査データ" ri
+        LEFT JOIN "品目マスタ" i ON ri."品目コード" = i."品目コード"
+        LEFT JOIN "仕入先マスタ" s ON ri."仕入先コード" = s."仕入先コード"
+        LEFT JOIN "受入検査結果データ" rir ON ri."受入検査番号" = rir."受入検査番号"
+        LEFT JOIN "欠点マスタ" d ON rir."欠点コード" = d."欠点コード"
+        WHERE ri."受入検査番号" = #{inspectionNumber}
+        ORDER BY rir."欠点コード"
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### ロットマスタのネスト ResultMap（親子ロット構成を含む）
+
+<details>
+<summary>LotMapper.xml（リレーション設定）</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- src/main/resources/mapper/LotMapper.xml -->
+<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.LotMapper">
+
+    <!-- ロットマスタ with 親子ロット構成・品目 ResultMap -->
+    <resultMap id="lotMasterFullResultMap" type="com.example.sms.domain.model.quality.LotMaster">
+        <id property="id" column="lm_id"/>
+        <result property="lotNumber" column="lm_ロット番号"/>
+        <result property="itemCode" column="lm_品目コード"/>
+        <result property="lotType" column="lm_ロット種別"
+                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler"/>
+        <result property="manufactureDate" column="lm_製造日"/>
+        <result property="expirationDate" column="lm_有効期限"/>
+        <result property="quantity" column="lm_数量"/>
+        <result property="warehouseCode" column="lm_倉庫コード"/>
+        <result property="remarks" column="lm_備考"/>
+        <result property="version" column="lm_バージョン"/>
+        <result property="createdAt" column="lm_作成日時"/>
+        <result property="updatedAt" column="lm_更新日時"/>
+
+        <!-- 品目マスタとの N:1 関連 -->
+        <association property="item" javaType="com.example.sms.domain.model.item.Item">
+            <id property="itemCode" column="i_品目コード"/>
+            <result property="itemName" column="i_品目名"/>
+        </association>
+
+        <!-- 親ロット構成（このロットを材料として使用した製造ロット）との 1:N 関連 -->
+        <collection property="parentLotRelations"
+                    ofType="com.example.sms.domain.model.quality.LotComposition"
+                    resultMap="parentLotCompositionResultMap"/>
+
+        <!-- 子ロット構成（このロットが使用した材料ロット）との 1:N 関連 -->
+        <collection property="childLotRelations"
+                    ofType="com.example.sms.domain.model.quality.LotComposition"
+                    resultMap="childLotCompositionResultMap"/>
+    </resultMap>
+
+    <!-- 親ロット構成 ResultMap -->
+    <resultMap id="parentLotCompositionResultMap" type="com.example.sms.domain.model.quality.LotComposition">
+        <id property="id" column="plc_id"/>
+        <result property="parentLotNumber" column="plc_親ロット番号"/>
+        <result property="childLotNumber" column="plc_子ロット番号"/>
+        <result property="usedQuantity" column="plc_使用数量"/>
+        <result property="createdAt" column="plc_作成日時"/>
+    </resultMap>
+
+    <!-- 子ロット構成 ResultMap -->
+    <resultMap id="childLotCompositionResultMap" type="com.example.sms.domain.model.quality.LotComposition">
+        <id property="id" column="clc_id"/>
+        <result property="parentLotNumber" column="clc_親ロット番号"/>
+        <result property="childLotNumber" column="clc_子ロット番号"/>
+        <result property="usedQuantity" column="clc_使用数量"/>
+        <result property="createdAt" column="clc_作成日時"/>
+    </resultMap>
+
+    <!-- JOIN による一括取得クエリ -->
+    <select id="findFullByLotNumber" resultMap="lotMasterFullResultMap">
+        SELECT
+            lm."ID" AS lm_id,
+            lm."ロット番号" AS lm_ロット番号,
+            lm."品目コード" AS lm_品目コード,
+            lm."ロット種別" AS lm_ロット種別,
+            lm."製造日" AS lm_製造日,
+            lm."有効期限" AS lm_有効期限,
+            lm."数量" AS lm_数量,
+            lm."倉庫コード" AS lm_倉庫コード,
+            lm."備考" AS lm_備考,
+            lm."バージョン" AS lm_バージョン,
+            lm."作成日時" AS lm_作成日時,
+            lm."更新日時" AS lm_更新日時,
+            i."品目コード" AS i_品目コード,
+            i."品目名" AS i_品目名,
+            plc."ID" AS plc_id,
+            plc."親ロット番号" AS plc_親ロット番号,
+            plc."子ロット番号" AS plc_子ロット番号,
+            plc."使用数量" AS plc_使用数量,
+            plc."作成日時" AS plc_作成日時,
+            clc."ID" AS clc_id,
+            clc."親ロット番号" AS clc_親ロット番号,
+            clc."子ロット番号" AS clc_子ロット番号,
+            clc."使用数量" AS clc_使用数量,
+            clc."作成日時" AS clc_作成日時
+        FROM "ロットマスタ" lm
+        LEFT JOIN "品目マスタ" i ON lm."品目コード" = i."品目コード"
+        LEFT JOIN "ロット構成" plc ON lm."ロット番号" = plc."子ロット番号"
+        LEFT JOIN "ロット構成" clc ON lm."ロット番号" = clc."親ロット番号"
+        WHERE lm."ロット番号" = #{lotNumber}
+    </select>
+
+</mapper>
+```
+
+</details>
+
+#### リレーション設定のポイント
+
+| 設定項目 | 説明 |
+|---------|------|
+| `<collection>` | 1:N 関連のマッピング（検査→結果、ロット→構成） |
+| `<association>` | N:1 関連のマッピング（検査→品目、検査→仕入先、結果→欠点） |
+| 双方向ロット構成 | 親・子両方向のロット構成を別々の collection で取得 |
+| エイリアス（AS） | カラム名の重複を避けるプレフィックス（`ri_`, `rir_`, `d_`, `lm_`, `plc_`, `clc_` など） |
+
+### 楽観ロックの実装
+
+品質管理では、検査結果の再判定やロット情報の更新時に、データの整合性を保つために楽観ロックを実装します。
+
+#### Flyway マイグレーション: バージョンカラム追加
+
+<details>
+<summary>V029_5__add_quality_version_columns.sql</summary>
+
+```sql
+-- src/main/resources/db/migration/V029_5__add_quality_version_columns.sql
+
+-- 受入検査データテーブルにバージョンカラムを追加
+ALTER TABLE "受入検査データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 工程検査データテーブルにバージョンカラムを追加
+ALTER TABLE "工程検査データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- 出荷検査データテーブルにバージョンカラムを追加
+ALTER TABLE "出荷検査データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- ロットマスタテーブルにバージョンカラムを追加
+ALTER TABLE "ロットマスタ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
+
+-- コメント追加
+COMMENT ON COLUMN "受入検査データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "工程検査データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "出荷検査データ"."バージョン" IS '楽観ロック用バージョン番号';
+COMMENT ON COLUMN "ロットマスタ"."バージョン" IS '楽観ロック用バージョン番号';
+```
+
+</details>
+
+#### エンティティへのバージョンフィールド追加
+
+<details>
+<summary>ReceivingInspection.java（バージョンフィールド追加）</summary>
+
+```java
+// src/main/java/com/example/sms/domain/model/quality/ReceivingInspection.java
+package com.example.sms.domain.model.quality;
+
+import com.example.sms.domain.model.item.Item;
+import com.example.sms.domain.model.supplier.Supplier;
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 受入検査データエンティティ
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ReceivingInspection {
+    private Long id;
+    private String inspectionNumber;
+    private String receivingNumber;
+    private String purchaseOrderNumber;
+    private String itemCode;
+    private String supplierCode;
+    private LocalDate inspectionDate;
+    private String inspectorCode;
+    private BigDecimal inspectionQuantity;
+    private BigDecimal passedQuantity;
+    private BigDecimal failedQuantity;
+    private InspectionJudgment judgment;
+    private String remarks;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Item item;
+    private Supplier supplier;
+    @Builder.Default
+    private List<ReceivingInspectionResult> results = new ArrayList<>();
+
+    /**
+     * 再検査可能かどうかをチェック
+     */
+    public boolean canReinspect() {
+        return judgment == InspectionJudgment.HOLD;
+    }
+
+    /**
+     * 不合格率を計算
+     */
+    public BigDecimal getFailureRate() {
+        if (inspectionQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return failedQuantity.divide(inspectionQuantity, 4, java.math.RoundingMode.HALF_UP)
+                .multiply(new BigDecimal("100"));
+    }
+}
+```
+
+</details>
+
+#### MyBatis Mapper: 楽観ロック対応の更新
+
+検査データの判定更新や数量修正時に楽観ロックを適用します。
+
+<details>
+<summary>ReceivingInspectionMapper.xml（楽観ロック対応 UPDATE）</summary>
+
+```xml
+<!-- 判定更新（楽観ロック対応） -->
+<update id="updateJudgmentWithOptimisticLock">
+    UPDATE "受入検査データ"
+    SET
+        "合格数" = #{passedQuantity},
+        "不合格数" = #{failedQuantity},
+        "判定" = #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler}::"検査判定",
+        "備考" = #{remarks},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "受入検査番号" = #{inspectionNumber}
+    AND "バージョン" = #{version}
+</update>
+
+<!-- 再検査による判定変更（楽観ロック + 保留チェック） -->
+<update id="reinspectWithOptimisticLock">
+    UPDATE "受入検査データ"
+    SET
+        "合格数" = #{passedQuantity},
+        "不合格数" = #{failedQuantity},
+        "判定" = #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler}::"検査判定",
+        "備考" = #{remarks},
+        "更新日時" = CURRENT_TIMESTAMP,
+        "バージョン" = "バージョン" + 1
+    WHERE "受入検査番号" = #{inspectionNumber}
+    AND "バージョン" = #{version}
+    AND "判定" = '保留'
+</update>
+
+<!-- バージョン取得 -->
+<select id="findVersionByInspectionNumber" resultType="java.lang.Integer">
+    SELECT "バージョン" FROM "受入検査データ"
+    WHERE "受入検査番号" = #{inspectionNumber}
+</select>
+
+<!-- 判定状態取得 -->
+<select id="findJudgmentByInspectionNumber" resultType="java.lang.String">
+    SELECT "判定"::text FROM "受入検査データ"
+    WHERE "受入検査番号" = #{inspectionNumber}
+</select>
+```
+
+</details>
+
+#### Repository 実装: 楽観ロック対応
+
+<details>
+<summary>ReceivingInspectionRepositoryImpl.java（楽観ロック対応）</summary>
+
+```java
+// src/main/java/com/example/sms/infrastructure/out/persistence/repository/ReceivingInspectionRepositoryImpl.java
+package com.example.sms.infrastructure.out.persistence.repository;
+
+import com.example.sms.application.port.out.ReceivingInspectionRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.quality.InspectionJudgment;
+import com.example.sms.domain.model.quality.ReceivingInspection;
+import com.example.sms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class ReceivingInspectionRepositoryImpl implements ReceivingInspectionRepository {
+
+    private final ReceivingInspectionMapper mapper;
+
+    @Override
+    @Transactional
+    public void updateJudgment(String inspectionNumber, Integer version,
+                               BigDecimal passedQuantity, BigDecimal failedQuantity,
+                               InspectionJudgment judgment, String remarks) {
+        int updatedCount = mapper.updateJudgmentWithOptimisticLock(
+                inspectionNumber, version, passedQuantity, failedQuantity, judgment, remarks);
+
+        if (updatedCount == 0) {
+            handleOptimisticLockFailure(inspectionNumber, version);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void reinspect(String inspectionNumber, Integer version,
+                         BigDecimal passedQuantity, BigDecimal failedQuantity,
+                         InspectionJudgment judgment, String remarks) {
+        int updatedCount = mapper.reinspectWithOptimisticLock(
+                inspectionNumber, version, passedQuantity, failedQuantity, judgment, remarks);
+
+        if (updatedCount == 0) {
+            // 再検査失敗の原因を特定
+            Integer currentVersion = mapper.findVersionByInspectionNumber(inspectionNumber);
+            if (currentVersion == null) {
+                throw new IllegalArgumentException("検査データが見つかりません");
+            } else if (!currentVersion.equals(version)) {
+                throw new OptimisticLockException("受入検査", inspectionNumber,
+                        version, currentVersion);
+            } else {
+                // バージョンは一致しているので保留状態ではない
+                String currentJudgment = mapper.findJudgmentByInspectionNumber(inspectionNumber);
+                throw new IllegalStateException(
+                        String.format("保留状態の検査のみ再検査可能です。現在の判定: %s", currentJudgment));
+            }
+        }
+    }
+
+    private void handleOptimisticLockFailure(String inspectionNumber, Integer expectedVersion) {
+        Integer currentVersion = mapper.findVersionByInspectionNumber(inspectionNumber);
+        if (currentVersion == null) {
+            throw new IllegalArgumentException("検査データが見つかりません");
+        } else {
+            throw new OptimisticLockException("受入検査", inspectionNumber,
+                    expectedVersion, currentVersion);
+        }
+    }
+
+    @Override
+    public Optional<ReceivingInspection> findFullByInspectionNumber(String inspectionNumber) {
+        return Optional.ofNullable(mapper.findFullByInspectionNumber(inspectionNumber));
+    }
+}
+```
+
+</details>
+
+#### TDD: 楽観ロックのテスト
+
+<details>
+<summary>ReceivingInspectionRepositoryOptimisticLockTest.java</summary>
+
+```java
+// src/test/java/com/example/sms/infrastructure/out/persistence/repository/ReceivingInspectionRepositoryOptimisticLockTest.java
+package com.example.sms.infrastructure.out.persistence.repository;
+
+import com.example.sms.application.port.out.ReceivingInspectionRepository;
+import com.example.sms.domain.exception.OptimisticLockException;
+import com.example.sms.domain.model.quality.InspectionJudgment;
+import com.example.sms.domain.model.quality.ReceivingInspection;
+import com.example.sms.testsetup.BaseIntegrationTest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("受入検査リポジトリ - 楽観ロック")
+class ReceivingInspectionRepositoryOptimisticLockTest extends BaseIntegrationTest {
+
+    @Autowired
+    private ReceivingInspectionRepository receivingInspectionRepository;
+
+    @BeforeEach
+    void setUp() {
+        // テストデータのセットアップ
+    }
+
+    @Nested
+    @DisplayName("判定更新の楽観ロック")
+    class JudgmentUpdateOptimisticLocking {
+
+        @Test
+        @DisplayName("同じバージョンで判定を更新できる")
+        void canUpdateJudgmentWithSameVersion() {
+            // Arrange
+            ReceivingInspection inspection = createTestInspection("RI-TEST-001", InspectionJudgment.HOLD);
+            Integer initialVersion = inspection.getVersion();
+
+            // Act
+            receivingInspectionRepository.updateJudgment(
+                    inspection.getInspectionNumber(),
+                    initialVersion,
+                    new BigDecimal("95"),
+                    new BigDecimal("5"),
+                    InspectionJudgment.PASSED,
+                    "再検査により合格");
+
+            // Assert
+            var updated = receivingInspectionRepository
+                    .findFullByInspectionNumber("RI-TEST-001").get();
+            assertThat(updated.getJudgment()).isEqualTo(InspectionJudgment.PASSED);
+            assertThat(updated.getPassedQuantity()).isEqualByComparingTo(new BigDecimal("95"));
+            assertThat(updated.getVersion()).isEqualTo(initialVersion + 1);
+        }
+
+        @Test
+        @DisplayName("異なるバージョンで更新すると楽観ロック例外が発生する")
+        void throwsExceptionWhenVersionMismatch() {
+            // Arrange
+            ReceivingInspection inspection = createTestInspection("RI-TEST-002", InspectionJudgment.HOLD);
+            Integer initialVersion = inspection.getVersion();
+
+            // 検査担当者Aが更新（成功）
+            receivingInspectionRepository.updateJudgment(
+                    inspection.getInspectionNumber(),
+                    initialVersion,
+                    new BigDecimal("90"),
+                    new BigDecimal("10"),
+                    InspectionJudgment.PASSED,
+                    "担当者Aによる判定");
+
+            // Act & Assert: 検査担当者Bが古いバージョンで更新（失敗）
+            assertThatThrownBy(() -> receivingInspectionRepository.updateJudgment(
+                    inspection.getInspectionNumber(),
+                    initialVersion, // 古いバージョン
+                    new BigDecimal("80"),
+                    new BigDecimal("20"),
+                    InspectionJudgment.FAILED,
+                    "担当者Bによる判定"))
+                    .isInstanceOf(OptimisticLockException.class)
+                    .hasMessageContaining("他のユーザーによって更新されています");
+        }
+    }
+
+    @Nested
+    @DisplayName("再検査の楽観ロック")
+    class ReinspectOptimisticLocking {
+
+        @Test
+        @DisplayName("保留状態の検査を再検査できる")
+        void canReinspectHoldInspection() {
+            // Arrange
+            ReceivingInspection inspection = createTestInspection("RI-TEST-003", InspectionJudgment.HOLD);
+
+            // Act
+            receivingInspectionRepository.reinspect(
+                    inspection.getInspectionNumber(),
+                    inspection.getVersion(),
+                    new BigDecimal("100"),
+                    BigDecimal.ZERO,
+                    InspectionJudgment.PASSED,
+                    "再検査により合格");
+
+            // Assert
+            var updated = receivingInspectionRepository
+                    .findFullByInspectionNumber("RI-TEST-003").get();
+            assertThat(updated.getJudgment()).isEqualTo(InspectionJudgment.PASSED);
+        }
+
+        @Test
+        @DisplayName("保留状態でない検査は再検査できない")
+        void cannotReinspectNonHoldInspection() {
+            // Arrange: 合格状態の検査を作成
+            ReceivingInspection inspection = createTestInspection("RI-TEST-004", InspectionJudgment.PASSED);
+
+            // Act & Assert
+            assertThatThrownBy(() -> receivingInspectionRepository.reinspect(
+                    inspection.getInspectionNumber(),
+                    inspection.getVersion(),
+                    new BigDecimal("80"),
+                    new BigDecimal("20"),
+                    InspectionJudgment.FAILED,
+                    "再検査"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("保留状態の検査のみ再検査可能です");
+        }
+    }
+
+    private ReceivingInspection createTestInspection(String inspectionNumber, InspectionJudgment judgment) {
+        // テスト用検査データの作成
+        return ReceivingInspection.builder()
+                .inspectionNumber(inspectionNumber)
+                .receivingNumber("RC-TEST-001")
+                .purchaseOrderNumber("PO-TEST-001")
+                .itemCode("MAT-001")
+                .supplierCode("SUP-001")
+                .inspectionDate(java.time.LocalDate.now())
+                .inspectorCode("INS-001")
+                .inspectionQuantity(new BigDecimal("100"))
+                .passedQuantity(judgment == InspectionJudgment.PASSED ? new BigDecimal("100") : BigDecimal.ZERO)
+                .failedQuantity(judgment == InspectionJudgment.FAILED ? new BigDecimal("100") : BigDecimal.ZERO)
+                .judgment(judgment)
+                .build();
+    }
+}
+```
+
+</details>
+
+### 検査再判定処理のシーケンス図
+
+検査の再判定では、同一検査に対する複数担当者の同時更新を楽観ロックで制御します。
+
+```plantuml
+@startuml
+
+title 検査再判定処理シーケンス（楽観ロック対応）
+
+actor 検査担当者A
+actor 検査担当者B
+participant "InspectionService" as Service
+participant "ReceivingInspectionRepository" as Repo
+database "受入検査データ" as InspTable
+
+== 同時再判定シナリオ（検査番号: RI-001, 判定: 保留） ==
+
+検査担当者A -> Service: 再判定(RI-001, 合格)
+activate Service
+Service -> Repo: findFullByInspectionNumber(RI-001)
+Repo -> InspTable: SELECT ... WHERE 受入検査番号 = 'RI-001'
+InspTable --> Repo: 検査データ(判定=保留, version=1)
+Repo --> Service: 検査データ(version=1)
+
+検査担当者B -> Service: 再判定(RI-001, 不合格)
+activate Service
+Service -> Repo: findFullByInspectionNumber(RI-001)
+Repo -> InspTable: SELECT
+InspTable --> Repo: 検査データ(判定=保留, version=1)
+Repo --> Service: 検査データ(version=1)
+
+note over 検査担当者A,InspTable: 検査担当者Aが先に更新
+
+Service -> Repo: reinspect(version=1, 判定=合格)
+Repo -> InspTable: UPDATE SET 判定='合格', バージョン += 1\nWHERE バージョン = 1 AND 判定 = '保留'
+InspTable --> Repo: 1 row updated
+Repo --> Service: 成功
+Service --> 検査担当者A: 再判定完了（合格）
+deactivate Service
+
+note over 検査担当者A,InspTable: 検査担当者Bの更新（楽観ロック失敗）
+
+Service -> Repo: reinspect(version=1, 判定=不合格)
+Repo -> InspTable: UPDATE SET 判定='不合格', バージョン += 1\nWHERE バージョン = 1 AND 判定 = '保留'
+InspTable --> Repo: 0 rows updated
+Repo -> InspTable: SELECT バージョン, 判定
+InspTable --> Repo: version=2, 判定='合格'
+Repo --> Service: OptimisticLockException
+Service --> 検査担当者B: エラー: 他の担当者が更新済み
+deactivate Service
+
+note over 検査担当者B: 担当者Bは最新状態を確認
+
+検査担当者B -> Service: 検査情報取得(RI-001)
+activate Service
+Service -> Repo: findFullByInspectionNumber(RI-001)
+Repo -> InspTable: SELECT
+InspTable --> Repo: 検査データ(判定=合格, version=2)
+Repo --> Service: 検査データ
+Service --> 検査担当者B: 判定: 合格（担当者Aが更新済み）
+deactivate Service
+
+@enduml
+```
+
+### 品質管理向け楽観ロックのベストプラクティス
+
+| ポイント | 説明 |
+|---------|------|
+| **状態チェック併用** | `AND 判定 = '保留'` で再検査可能状態と楽観ロック失敗を同時に検出 |
+| **エラー原因の特定** | 更新失敗時はバージョンと状態を確認してエラー種別を判定 |
+| **監査証跡の考慮** | 検査判定の変更履歴を別テーブルに記録することも検討 |
+| **ロット追跡の整合性** | ロット構成追加時は親子両方のロットをロックして整合性を保証 |
+| **再検査ワークフロー** | 保留→合格/不合格の遷移のみ許可し、確定後の変更は別プロセスで管理 |
+| **品質記録の永続性** | 検査結果は物理削除せず、バージョン管理で履歴を保持 |
+
+---
+
+## 29.4 まとめ
 
 本章では、品質管理の設計について解説しました。
 

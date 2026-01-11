@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>勘定科目詳細</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">勘定科目詳細</h1>
+
+    <!-- アクションボタン -->
+    <div class="mb-3">
+        <a th:href="@{/accounts}" class="btn btn-secondary">一覧に戻る</a>
+        <a th:href="@{/accounts/{code}/edit(code=${account.accountCode})}"
+           class="btn btn-primary">編集</a>
+        <form th:action="@{/accounts/{code}/delete(code=${account.accountCode})}"
+              method="post" class="d-inline"
+              onsubmit="return confirm('削除してよろしいですか？');">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 勘定科目詳細 -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th style="width: 200px;" class="table-light">勘定科目コード</th>
+                    <td th:text="${account.accountCode}"></td>
+                </tr>
+                <tr>
+                    <th class="table-light">勘定科目名</th>
+                    <td th:text="${account.accountName}"></td>
+                </tr>
+                <tr>
+                    <th class="table-light">勘定科目略名</th>
+                    <td th:text="${account.accountShortName}"></td>
+                </tr>
+                <tr>
+                    <th class="table-light">勘定科目カナ</th>
+                    <td th:text="${account.accountNameKana}"></td>
+                </tr>
+                <tr>
+                    <th class="table-light">BSPL区分</th>
+                    <td>
+                        <span th:if="${account.bsPlType == 'BS'}" class="badge bg-primary">BS（貸借対照表）</span>
+                        <span th:if="${account.bsPlType == 'PL'}" class="badge bg-success">PL（損益計算書）</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="table-light">貸借区分</th>
+                    <td th:text="${account.dcType}"></td>
+                </tr>
+                <tr>
+                    <th class="table-light">取引要素区分</th>
+                    <td th:text="${account.elementType}"></td>
+                </tr>
+                <tr>
+                    <th class="table-light">集計区分</th>
+                    <td>
+                        <span th:if="${account.summaryType == '見出科目'}" class="badge bg-secondary">見出科目</span>
+                        <span th:if="${account.summaryType == '集計科目'}" class="badge bg-info">集計科目</span>
+                        <span th:if="${account.summaryType == '計上科目'}" class="badge bg-primary">計上科目</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

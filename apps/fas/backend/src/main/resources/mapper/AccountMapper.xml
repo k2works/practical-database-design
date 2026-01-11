@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.fas.infrastructure.out.persistence.mapper.AccountMapper">
+
+    <resultMap id="AccountResultMap" type="com.example.fas.domain.model.account.Account">
+        <result property="accountCode" column="勘定科目コード"/>
+        <result property="accountName" column="勘定科目名"/>
+        <result property="accountShortName" column="勘定科目略名"/>
+        <result property="accountNameKana" column="勘定科目カナ"/>
+        <result property="bsplType" column="BSPL区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler"/>
+        <result property="debitCreditType" column="貸借区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler"/>
+        <result property="transactionElementType" column="取引要素区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler"/>
+        <result property="aggregationType" column="集計区分"
+                typeHandler="com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler"/>
+        <result property="managementAccountingType" column="管理会計区分"/>
+        <result property="expenseType" column="費用区分"/>
+        <result property="ledgerOutputType" column="元帳出力区分"/>
+        <result property="subAccountType" column="補助科目種別"/>
+        <result property="consumptionTaxType" column="消費税計算区分"/>
+        <result property="taxTransactionCode" column="課税取引コード"/>
+        <result property="dueDateManagementType" column="期日管理区分"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者名"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT（ENUM キャスト付き） -->
+    <insert id="insert" parameterType="com.example.fas.domain.model.account.Account" databaseId="postgresql">
+        INSERT INTO "勘定科目マスタ" (
+            "勘定科目コード", "勘定科目名", "勘定科目略名", "勘定科目カナ",
+            "BSPL区分", "貸借区分", "取引要素区分", "集計区分",
+            "管理会計区分", "費用区分", "元帳出力区分", "補助科目種別",
+            "消費税計算区分", "課税取引コード", "期日管理区分",
+            "作成日時", "更新日時", "更新者名"
+        ) VALUES (
+            #{accountCode}, #{accountName}, #{accountShortName}, #{accountNameKana},
+            #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler}::"BSPL区分",
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"貸借区分",
+            #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler}::"取引要素区分",
+            #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler}::"集計区分",
+            #{managementAccountingType}, #{expenseType}, #{ledgerOutputType}, #{subAccountType},
+            #{consumptionTaxType}::"消費税計算区分", #{taxTransactionCode}, #{dueDateManagementType},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <!-- H2用 INSERT（ENUM キャストなし） -->
+    <insert id="insert" parameterType="com.example.fas.domain.model.account.Account" databaseId="h2">
+        INSERT INTO "勘定科目マスタ" (
+            "勘定科目コード", "勘定科目名", "勘定科目略名", "勘定科目カナ",
+            "BSPL区分", "貸借区分", "取引要素区分", "集計区分",
+            "管理会計区分", "費用区分", "元帳出力区分", "補助科目種別",
+            "消費税計算区分", "課税取引コード", "期日管理区分",
+            "作成日時", "更新日時", "更新者名"
+        ) VALUES (
+            #{accountCode}, #{accountName}, #{accountShortName}, #{accountNameKana},
+            #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler},
+            #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler},
+            #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler},
+            #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler},
+            #{managementAccountingType}, #{expenseType}, #{ledgerOutputType}, #{subAccountType},
+            #{consumptionTaxType}, #{taxTransactionCode}, #{dueDateManagementType},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, #{updatedBy}
+        )
+    </insert>
+
+    <select id="findByCode" resultMap="AccountResultMap">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "勘定科目コード" = #{accountCode}
+    </select>
+
+    <select id="findAll" resultMap="AccountResultMap">
+        SELECT * FROM "勘定科目マスタ"
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <!-- PostgreSQL用 findByBSPLType -->
+    <select id="findByBSPLType" resultMap="AccountResultMap" databaseId="postgresql">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "BSPL区分" = #{bsplType}::"BSPL区分"
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <!-- H2用 findByBSPLType -->
+    <select id="findByBSPLType" resultMap="AccountResultMap" databaseId="h2">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "BSPL区分" = #{bsplType}
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <!-- PostgreSQL用 findByTransactionElementType -->
+    <select id="findByTransactionElementType" resultMap="AccountResultMap" databaseId="postgresql">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "取引要素区分" = #{transactionElementType}::"取引要素区分"
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <!-- H2用 findByTransactionElementType -->
+    <select id="findByTransactionElementType" resultMap="AccountResultMap" databaseId="h2">
+        SELECT * FROM "勘定科目マスタ"
+        WHERE "取引要素区分" = #{transactionElementType}
+        ORDER BY "勘定科目コード"
+    </select>
+
+    <!-- PostgreSQL用 UPDATE -->
+    <update id="update" parameterType="com.example.fas.domain.model.account.Account" databaseId="postgresql">
+        UPDATE "勘定科目マスタ"
+        SET "勘定科目名" = #{accountName},
+            "勘定科目略名" = #{accountShortName},
+            "勘定科目カナ" = #{accountNameKana},
+            "BSPL区分" = #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler}::"BSPL区分",
+            "貸借区分" = #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler}::"貸借区分",
+            "取引要素区分" = #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler}::"取引要素区分",
+            "集計区分" = #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler}::"集計区分",
+            "管理会計区分" = #{managementAccountingType},
+            "費用区分" = #{expenseType},
+            "元帳出力区分" = #{ledgerOutputType},
+            "補助科目種別" = #{subAccountType},
+            "消費税計算区分" = #{consumptionTaxType}::"消費税計算区分",
+            "課税取引コード" = #{taxTransactionCode},
+            "期日管理区分" = #{dueDateManagementType},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "勘定科目コード" = #{accountCode}
+    </update>
+
+    <!-- H2用 UPDATE -->
+    <update id="update" parameterType="com.example.fas.domain.model.account.Account" databaseId="h2">
+        UPDATE "勘定科目マスタ"
+        SET "勘定科目名" = #{accountName},
+            "勘定科目略名" = #{accountShortName},
+            "勘定科目カナ" = #{accountNameKana},
+            "BSPL区分" = #{bsplType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.BSPLTypeHandler},
+            "貸借区分" = #{debitCreditType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.DebitCreditTypeHandler},
+            "取引要素区分" = #{transactionElementType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.TransactionElementTypeHandler},
+            "集計区分" = #{aggregationType, typeHandler=com.example.fas.infrastructure.out.persistence.typehandler.AggregationTypeHandler},
+            "管理会計区分" = #{managementAccountingType},
+            "費用区分" = #{expenseType},
+            "元帳出力区分" = #{ledgerOutputType},
+            "補助科目種別" = #{subAccountType},
+            "消費税計算区分" = #{consumptionTaxType},
+            "課税取引コード" = #{taxTransactionCode},
+            "期日管理区分" = #{dueDateManagementType},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者名" = #{updatedBy}
+        WHERE "勘定科目コード" = #{accountCode}
+    </update>
+
+    <!-- ページネーション付き検索（PostgreSQL） -->
+    <select id="findWithPagination" resultMap="AccountResultMap" databaseId="postgresql">
+        SELECT * FROM "勘定科目マスタ"
+        <where>
+            <if test="bsPlType != null and bsPlType != ''">
+                "BSPL区分" = #{bsPlType}::"BSPL区分"
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("勘定科目名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- ページネーション付き検索（H2） -->
+    <select id="findWithPagination" resultMap="AccountResultMap" databaseId="h2">
+        SELECT * FROM "勘定科目マスタ"
+        <where>
+            <if test="bsPlType != null and bsPlType != ''">
+                "BSPL区分" = #{bsPlType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("勘定科目名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "勘定科目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得（PostgreSQL） -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "勘定科目マスタ"
+        <where>
+            <if test="bsPlType != null and bsPlType != ''">
+                "BSPL区分" = #{bsPlType}::"BSPL区分"
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("勘定科目名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 件数取得（H2） -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "勘定科目マスタ"
+        <where>
+            <if test="bsPlType != null and bsPlType != ''">
+                "BSPL区分" = #{bsPlType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("勘定科目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("勘定科目名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 単一削除 -->
+    <delete id="delete">
+        DELETE FROM "勘定科目構成マスタ" WHERE "勘定科目コード" = #{accountCode};
+        DELETE FROM "勘定科目マスタ" WHERE "勘定科目コード" = #{accountCode}
+    </delete>
+
+    <!-- PostgreSQL用 deleteAll -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "勘定科目マスタ" CASCADE
+    </delete>
+
+    <!-- H2用 deleteAll -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "勘定科目マスタ"
+    </delete>
+</mapper>

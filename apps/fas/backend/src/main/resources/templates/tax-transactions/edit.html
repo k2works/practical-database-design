@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>課税取引編集</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="mb-4">課税取引編集</h1>
+
+    <form th:action="@{/tax-transactions/{code}(code=${form.taxCode})}" th:object="${form}" method="post">
+        <div class="card">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <label for="taxCode" class="col-md-2 col-form-label">課税取引コード</label>
+                    <div class="col-md-4">
+                        <input type="text" id="taxCode" th:field="*{taxCode}"
+                               class="form-control" readonly>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="taxName" class="col-md-2 col-form-label">課税取引名</label>
+                    <div class="col-md-6">
+                        <input type="text" id="taxName" th:field="*{taxName}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('taxName')} ? 'is-invalid'"
+                               maxlength="40" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('taxName')}"
+                             th:errors="*{taxName}"></div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="taxRate" class="col-md-2 col-form-label">税率</label>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="number" id="taxRate" th:field="*{taxRate}"
+                                   class="form-control"
+                                   th:classappend="${#fields.hasErrors('taxRate')} ? 'is-invalid'"
+                                   step="0.01" min="0" max="1" required>
+                            <span class="input-group-text">（0.10 = 10%）</span>
+                        </div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('taxRate')}"
+                             th:errors="*{taxRate}"></div>
+                        <small class="text-muted">例: 10%の場合は 0.10 と入力</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">更新</button>
+                <a th:href="@{/tax-transactions/{code}(code=${form.taxCode})}" class="btn btn-secondary">キャンセル</a>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+</html>
