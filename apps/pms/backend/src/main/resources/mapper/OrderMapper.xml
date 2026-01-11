@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.OrderMapper">
+
+    <!-- 日本語カラム名と英語プロパティ名のマッピング -->
+    <resultMap id="OrderResultMap" type="com.example.pms.domain.model.plan.Order">
+        <id property="id" column="ID"/>
+        <result property="orderNumber" column="オーダNO"/>
+        <result property="orderType" column="オーダ種別"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="startDate" column="着手予定日"/>
+        <result property="dueDate" column="納期"/>
+        <result property="expirationDate" column="有効期限"/>
+        <result property="planQuantity" column="計画数量"/>
+        <result property="locationCode" column="場所コード"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler"/>
+        <result property="mpsId" column="MPS_ID"/>
+        <result property="parentOrderId" column="親オーダID"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.plan.Order"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "オーダ情報" (
+            "オーダNO", "オーダ種別", "品目コード", "着手予定日", "納期",
+            "有効期限", "計画数量", "場所コード", "ステータス", "MPS_ID", "親オーダID", "作成者", "更新者"
+        ) VALUES (
+            #{orderNumber},
+            #{orderType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler}::オーダ種別,
+            #{itemCode},
+            #{startDate},
+            #{dueDate},
+            #{expirationDate},
+            #{planQuantity},
+            #{locationCode},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
+            #{mpsId},
+            #{parentOrderId},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.plan.Order"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "オーダ情報" (
+            "オーダNO", "オーダ種別", "品目コード", "着手予定日", "納期",
+            "有効期限", "計画数量", "場所コード", "ステータス", "MPS_ID", "親オーダID", "作成者", "更新者"
+        ) VALUES (
+            #{orderNumber},
+            #{orderType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler},
+            #{itemCode},
+            #{startDate},
+            #{dueDate},
+            #{expirationDate},
+            #{planQuantity},
+            #{locationCode},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler},
+            #{mpsId},
+            #{parentOrderId},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="OrderResultMap">
+        SELECT * FROM "オーダ情報" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByOrderNumber" resultMap="OrderResultMap">
+        SELECT * FROM "オーダ情報" WHERE "オーダNO" = #{orderNumber}
+    </select>
+
+    <select id="findByMpsId" resultMap="OrderResultMap">
+        SELECT * FROM "オーダ情報" WHERE "MPS_ID" = #{mpsId} ORDER BY "納期"
+    </select>
+
+    <select id="findByParentOrderId" resultMap="OrderResultMap">
+        SELECT * FROM "オーダ情報" WHERE "親オーダID" = #{parentOrderId} ORDER BY "納期"
+    </select>
+
+    <select id="findAll" resultMap="OrderResultMap">
+        SELECT * FROM "オーダ情報" ORDER BY "納期"
+    </select>
+
+    <!-- PostgreSQL用 updateStatus -->
+    <update id="updateStatus" databaseId="postgresql">
+        UPDATE "オーダ情報"
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- H2用 updateStatus -->
+    <update id="updateStatus" databaseId="h2">
+        UPDATE "オーダ情報"
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <update id="updateParentOrderId">
+        UPDATE "オーダ情報"
+        SET "親オーダID" = #{parentOrderId}, "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "オーダ情報" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "オーダ情報"
+    </delete>
+</mapper>

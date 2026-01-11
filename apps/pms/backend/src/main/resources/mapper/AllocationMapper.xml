@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.AllocationMapper">
+
+    <!-- 日本語カラム名と英語プロパティ名のマッピング -->
+    <resultMap id="AllocationResultMap" type="com.example.pms.domain.model.plan.Allocation">
+        <id property="id" column="ID"/>
+        <result property="requirementId" column="所要ID"/>
+        <result property="allocationType" column="引当区分"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.AllocationTypeTypeHandler"/>
+        <result property="orderId" column="オーダID"/>
+        <result property="allocationDate" column="引当日"/>
+        <result property="allocatedQuantity" column="引当数量"/>
+        <result property="locationCode" column="場所コード"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.plan.Allocation"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "引当情報" (
+            "所要ID", "引当区分", "オーダID", "引当日", "引当数量", "場所コード"
+        ) VALUES (
+            #{requirementId},
+            #{allocationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.AllocationTypeTypeHandler}::引当区分,
+            #{orderId},
+            #{allocationDate},
+            #{allocatedQuantity},
+            #{locationCode}
+        )
+    </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.plan.Allocation"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "引当情報" (
+            "所要ID", "引当区分", "オーダID", "引当日", "引当数量", "場所コード"
+        ) VALUES (
+            #{requirementId},
+            #{allocationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.AllocationTypeTypeHandler},
+            #{orderId},
+            #{allocationDate},
+            #{allocatedQuantity},
+            #{locationCode}
+        )
+    </insert>
+
+    <select id="findById" resultMap="AllocationResultMap">
+        SELECT * FROM "引当情報" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByRequirementId" resultMap="AllocationResultMap">
+        SELECT * FROM "引当情報" WHERE "所要ID" = #{requirementId} ORDER BY "引当日"
+    </select>
+
+    <select id="findAll" resultMap="AllocationResultMap">
+        SELECT * FROM "引当情報" ORDER BY "引当日"
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "引当情報" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "引当情報"
+    </delete>
+</mapper>

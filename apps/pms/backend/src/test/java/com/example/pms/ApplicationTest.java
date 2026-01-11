@@ -1,12 +1,16 @@
 package com.example.pms;
 
+import com.example.pms.application.port.out.AllocationRepository;
 import com.example.pms.application.port.out.BomRepository;
 import com.example.pms.application.port.out.DefectRepository;
 import com.example.pms.application.port.out.DepartmentRepository;
 import com.example.pms.application.port.out.ItemRepository;
 import com.example.pms.application.port.out.LocationRepository;
+import com.example.pms.application.port.out.MpsRepository;
+import com.example.pms.application.port.out.OrderRepository;
 import com.example.pms.application.port.out.ProcessRepository;
 import com.example.pms.application.port.out.ProcessRouteRepository;
+import com.example.pms.application.port.out.RequirementRepository;
 import com.example.pms.application.port.out.StaffRepository;
 import com.example.pms.application.port.out.SupplierRepository;
 import com.example.pms.application.port.out.UnitPriceRepository;
@@ -32,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 基本的な機能が正常に動作することを検証する。
  */
 @DisplayName("アプリケーション起動スモークテスト")
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 class ApplicationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -86,6 +91,16 @@ class ApplicationTest extends BaseIntegrationTest {
 
             assertThat(appliedMigrations)
                     .anyMatch(migration -> "1".equals(migration.getVersion().getVersion()));
+        }
+
+        @Test
+        @DisplayName("V2 マイグレーションが適用されている")
+        void v2MigrationIsApplied() {
+            var info = flyway.info();
+            var appliedMigrations = info.applied();
+
+            assertThat(appliedMigrations)
+                    .anyMatch(migration -> "2".equals(migration.getVersion().getVersion()));
         }
     }
 
@@ -169,12 +184,37 @@ class ApplicationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("全12テーブルが存在する")
+        @DisplayName("基準生産計画テーブルが存在する")
+        void mpsTableExists() {
+            assertTableExists("基準生産計画");
+        }
+
+        @Test
+        @DisplayName("オーダ情報テーブルが存在する")
+        void orderTableExists() {
+            assertTableExists("オーダ情報");
+        }
+
+        @Test
+        @DisplayName("所要情報テーブルが存在する")
+        void requirementTableExists() {
+            assertTableExists("所要情報");
+        }
+
+        @Test
+        @DisplayName("引当情報テーブルが存在する")
+        void allocationTableExists() {
+            assertTableExists("引当情報");
+        }
+
+        @Test
+        @DisplayName("全16テーブルが存在する")
         void allTablesExist() {
             List<String> expectedTables = List.of(
                     "単位マスタ", "品目マスタ", "部品構成表", "カレンダマスタ",
                     "場所マスタ", "取引先マスタ", "部門マスタ", "担当者マスタ",
-                    "工程マスタ", "工程表", "単価マスタ", "欠点マスタ"
+                    "工程マスタ", "工程表", "単価マスタ", "欠点マスタ",
+                    "基準生産計画", "オーダ情報", "所要情報", "引当情報"
             );
 
             for (String tableName : expectedTables) {
@@ -236,6 +276,18 @@ class ApplicationTest extends BaseIntegrationTest {
 
         @Autowired
         private DefectRepository defectRepository;
+
+        @Autowired
+        private MpsRepository mpsRepository;
+
+        @Autowired
+        private OrderRepository orderRepository;
+
+        @Autowired
+        private RequirementRepository requirementRepository;
+
+        @Autowired
+        private AllocationRepository allocationRepository;
 
         @Test
         @DisplayName("UnitRepository が注入される")
@@ -310,7 +362,31 @@ class ApplicationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("全12リポジトリが注入される")
+        @DisplayName("MpsRepository が注入される")
+        void mpsRepositoryIsInjected() {
+            assertThat(mpsRepository).isNotNull();
+        }
+
+        @Test
+        @DisplayName("OrderRepository が注入される")
+        void orderRepositoryIsInjected() {
+            assertThat(orderRepository).isNotNull();
+        }
+
+        @Test
+        @DisplayName("RequirementRepository が注入される")
+        void requirementRepositoryIsInjected() {
+            assertThat(requirementRepository).isNotNull();
+        }
+
+        @Test
+        @DisplayName("AllocationRepository が注入される")
+        void allocationRepositoryIsInjected() {
+            assertThat(allocationRepository).isNotNull();
+        }
+
+        @Test
+        @DisplayName("全16リポジトリが注入される")
         void allRepositoriesAreInjected() {
             assertThat(unitRepository).isNotNull();
             assertThat(itemRepository).isNotNull();
@@ -324,6 +400,10 @@ class ApplicationTest extends BaseIntegrationTest {
             assertThat(processRouteRepository).isNotNull();
             assertThat(unitPriceRepository).isNotNull();
             assertThat(defectRepository).isNotNull();
+            assertThat(mpsRepository).isNotNull();
+            assertThat(orderRepository).isNotNull();
+            assertThat(requirementRepository).isNotNull();
+            assertThat(allocationRepository).isNotNull();
         }
     }
 
@@ -356,6 +436,24 @@ class ApplicationTest extends BaseIntegrationTest {
         @DisplayName("取引先区分 ENUM が存在する")
         void supplierTypeEnumExists() {
             assertEnumExists("取引先区分");
+        }
+
+        @Test
+        @DisplayName("計画ステータス ENUM が存在する")
+        void planStatusEnumExists() {
+            assertEnumExists("計画ステータス");
+        }
+
+        @Test
+        @DisplayName("オーダ種別 ENUM が存在する")
+        void orderTypeEnumExists() {
+            assertEnumExists("オーダ種別");
+        }
+
+        @Test
+        @DisplayName("引当区分 ENUM が存在する")
+        void allocationTypeEnumExists() {
+            assertEnumExists("引当区分");
         }
 
         private void assertEnumExists(String enumName) {
