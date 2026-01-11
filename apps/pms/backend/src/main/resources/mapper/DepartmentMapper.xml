@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.DepartmentMapper">
+
+    <resultMap id="DepartmentResultMap" type="com.example.pms.domain.model.department.Department">
+        <id property="departmentCode" column="部門コード"/>
+        <result property="departmentName" column="部門名"/>
+        <result property="departmentPath" column="部門パス"/>
+        <result property="lowestLevel" column="最下層区分"/>
+        <result property="validFrom" column="有効開始日"/>
+        <result property="validTo" column="有効終了日"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.department.Department">
+        INSERT INTO "部門マスタ" (
+            "部門コード", "部門名", "部門パス", "最下層区分", "有効開始日", "有効終了日",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{departmentCode}, #{departmentName}, #{departmentPath}, #{lowestLevel},
+            #{validFrom}, #{validTo}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findByDepartmentCode" resultMap="DepartmentResultMap">
+        SELECT * FROM "部門マスタ"
+        WHERE "部門コード" = #{departmentCode}
+    </select>
+
+    <select id="findAll" resultMap="DepartmentResultMap">
+        SELECT * FROM "部門マスタ"
+        ORDER BY "部門コード"
+    </select>
+
+    <update id="update" parameterType="com.example.pms.domain.model.department.Department">
+        UPDATE "部門マスタ" SET
+            "部門名" = #{departmentName},
+            "部門パス" = #{departmentPath},
+            "最下層区分" = #{lowestLevel},
+            "有効開始日" = #{validFrom},
+            "有効終了日" = #{validTo},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "部門コード" = #{departmentCode}
+    </update>
+
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "部門マスタ" CASCADE
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "部門マスタ"
+    </delete>
+</mapper>
