@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<ruleset name="Custom Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+         https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>PMD Custom Ruleset</description>
+
+    <!-- ベストプラクティス -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- テストでは複数アサートを許可 -->
+        <exclude name="UnitTestContainsTooManyAsserts"/>
+        <!-- ResultSet のチェックはテストコードでは必須ではない -->
+        <exclude name="CheckResultSet"/>
+        <!-- @SuppressWarnings アノテーションの不要チェックは無効化 -->
+        <exclude name="UnnecessaryWarningSuppression"/>
+    </rule>
+
+    <!-- コードスタイル -->
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="AtLeastOneConstructor"/>
+        <exclude name="OnlyOneReturn"/>
+        <exclude name="LongVariable"/>
+        <exclude name="ShortVariable"/>
+        <!-- final パラメータは強制しない -->
+        <exclude name="MethodArgumentCouldBeFinal"/>
+        <!-- ローカル変数の final は強制しない -->
+        <exclude name="LocalVariableCouldBeFinal"/>
+        <!-- デフォルトアクセス修飾子のコメントは強制しない -->
+        <exclude name="CommentDefaultAccessModifier"/>
+        <!-- var の使用を許可 -->
+        <exclude name="UseExplicitTypes"/>
+    </rule>
+
+    <!-- 設計 -->
+    <rule ref="category/java/design.xml">
+        <exclude name="LawOfDemeter"/>
+        <exclude name="LoosePackageCoupling"/>
+        <!-- Spring Boot Application クラスは例外 -->
+        <exclude name="UseUtilityClass"/>
+        <!-- データモデルはフィールド数が多くなることがある -->
+        <exclude name="TooManyFields"/>
+        <!-- リポジトリインターフェースはメソッド数が多くなることがある -->
+        <exclude name="TooManyMethods"/>
+    </rule>
+
+    <!-- マルチスレッド -->
+    <rule ref="category/java/multithreading.xml"/>
+
+    <!-- エラープローン -->
+    <rule ref="category/java/errorprone.xml">
+        <!-- テストで文字列リテラルの重複は許可 -->
+        <exclude name="AvoidDuplicateLiterals"/>
+        <!-- @TestConfiguration クラスはテストケースを持たない -->
+        <exclude name="TestClassWithoutTestCases"/>
+    </rule>
+
+    <!-- パフォーマンス -->
+    <rule ref="category/java/performance.xml"/>
+</ruleset>

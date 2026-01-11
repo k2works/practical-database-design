@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>ホーム</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- ページタイトル -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>ダッシュボード</h1>
+            <span class="text-muted" th:text="${#temporals.format(currentDate, 'yyyy年MM月dd日 (E)')}">2025年01月11日 (土)</span>
+        </div>
+
+        <!-- クイックアクセス -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-3">クイックアクセス</h5>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/items}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-box-seam fs-1 text-success mb-2"></i>
+                        <h6 class="card-title">品目マスタ</h6>
+                        <p class="card-text text-muted small">製品・部品・材料の管理</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/bom}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-diagram-3 fs-1 text-primary mb-2"></i>
+                        <h6 class="card-title">部品構成表</h6>
+                        <p class="card-text text-muted small">BOM管理</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/processes}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-gear-wide-connected fs-1 text-info mb-2"></i>
+                        <h6 class="card-title">工程マスタ</h6>
+                        <p class="card-text text-muted small">製造工程の管理</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/suppliers}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-building fs-1 text-secondary mb-2"></i>
+                        <h6 class="card-title">取引先マスタ</h6>
+                        <p class="card-text text-muted small">仕入先・顧客の管理</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- システム情報 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>システム情報</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <th style="width: 200px;">アプリケーション</th>
+                                <td>生産管理システム (PMS)</td>
+                            </tr>
+                            <tr>
+                                <th>アーキテクチャ</th>
+                                <td>モノリス（Spring Boot + Thymeleaf）</td>
+                            </tr>
+                            <tr>
+                                <th>データベース</th>
+                                <td>H2（デモモード） / PostgreSQL（本番）</td>
+                            </tr>
+                            <tr>
+                                <th>API ドキュメント</th>
+                                <td><a th:href="@{/swagger-ui.html}">Swagger UI</a></td>
+                            </tr>
+                            <tr>
+                                <th>データベースコンソール</th>
+                                <td><a th:href="@{/h2-console}">H2 Console</a>（デモモードのみ）</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

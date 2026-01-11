@@ -10,6 +10,7 @@ import path from 'path';
 export default function (gulp) {
     const SMS_BACKEND_DIR = path.join(process.cwd(), 'apps', 'sms', 'backend');
     const FAS_BACKEND_DIR = path.join(process.cwd(), 'apps', 'fas', 'backend');
+    const PMS_BACKEND_DIR = path.join(process.cwd(), 'apps', 'pms', 'backend');
 
     /**
      * SMS Backend のテストを実行
@@ -48,7 +49,25 @@ export default function (gulp) {
     });
 
     /**
+     * PMS Backend のテストを実行
+     */
+    gulp.task('test:pms:backend', (done) => {
+        try {
+            console.log('Running PMS Backend tests...');
+            const cmd = process.platform === 'win32' ? 'gradlew.bat test' : 'sh gradlew test';
+            execSync(cmd, {
+                cwd: PMS_BACKEND_DIR,
+                stdio: 'inherit'
+            });
+            done();
+        } catch (error) {
+            console.error('PMS Backend tests failed');
+            done(error);
+        }
+    });
+
+    /**
      * 全ての Backend テストを実行
      */
-    gulp.task('test:backend', gulp.parallel('test:sms:backend', 'test:fas:backend'));
+    gulp.task('test:backend', gulp.parallel('test:sms:backend', 'test:fas:backend', 'test:pms:backend'));
 }

@@ -23,6 +23,7 @@
 
           # Applications
           fas = import ./apps/fas/ops/nix/shell.nix { inherit packages; };
+          pms = import ./apps/pms/ops/nix/shell.nix { inherit packages; };
           sms = import ./apps/sms/ops/nix/shell.nix { inherit packages; };
         };
       }

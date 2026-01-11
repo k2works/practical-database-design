@@ -66,9 +66,11 @@ nav:
       - アウトライン: article/outline.md
       - 執筆ワークフロー: article/workflow.md
       - 運用ガイド: article/ops.md
+      - プロジェクトセットアップ手順書: article/project-setup-instruction.md
       - デプロイ:
           - SMS デモデプロイ: article/deploy-sms.md
           - FAS デモデプロイ: article/deploy-fas.md
+          - PMS デモデプロイ: article/deploy-pms.md
       - 第1部 基幹業務システムの全体像:
           - 第1章 基幹業務システムとは: article/part1/chapter01.md
           - 第2章 基幹業務システムの業務領域: article/part1/chapter02.md
@@ -143,3 +145,5 @@ nav:
           - C 用語集: article/appendix/glossary.md
       - データベース:
           - SchemaSpy ER図（SMS）: assets/schemaspy-output/sms/index.html
+          - SchemaSpy ER図（FAS）: assets/schemaspy-output/fas/index.html
+          - SchemaSpy ER図（PMS）: assets/schemaspy-output/pms/index.html
