@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * カレンダマスタリポジトリテスト.
  */
 @DisplayName("カレンダマスタリポジトリ")
+@SuppressWarnings({"PMD.AvoidInstantiatingObjectsInLoops", "PMD.BigIntegerInstantiation"})
 class WorkCalendarRepositoryImplTest extends BaseIntegrationTest {
 
     @Autowired

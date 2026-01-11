@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * BOMリポジトリテスト.
  */
 @DisplayName("BOMリポジトリ")
+@SuppressWarnings("PMD.BigIntegerInstantiation")
 class BomRepositoryImplTest extends BaseIntegrationTest {
 
     @Autowired
