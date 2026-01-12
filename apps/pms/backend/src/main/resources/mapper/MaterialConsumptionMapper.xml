@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.MaterialConsumptionMapper">
+
+    <resultMap id="materialConsumptionResultMap" type="com.example.pms.domain.model.cost.MaterialConsumption">
+        <id property="id" column="ID"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="materialCode" column="材料コード"/>
+        <result property="consumptionDate" column="消費日"/>
+        <result property="consumptionQuantity" column="消費数量"/>
+        <result property="unitPrice" column="単価"/>
+        <result property="consumptionAmount" column="消費金額"/>
+        <result property="isDirect" column="直接材料フラグ"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <select id="findById" resultMap="materialConsumptionResultMap">
+        SELECT * FROM "材料消費データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByWorkOrderNumber" resultMap="materialConsumptionResultMap">
+        SELECT * FROM "材料消費データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+        ORDER BY "消費日" ASC
+    </select>
+
+    <select id="findAll" resultMap="materialConsumptionResultMap">
+        SELECT * FROM "材料消費データ" ORDER BY "作業指示番号", "消費日"
+    </select>
+
+    <select id="sumDirectMaterialCostByWorkOrderNumber" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM("消費金額"), 0)
+        FROM "材料消費データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+          AND "直接材料フラグ" = true
+    </select>
+
+    <select id="sumIndirectMaterialCostByPeriod" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM("消費金額"), 0)
+        FROM "材料消費データ"
+        WHERE "消費日" BETWEEN #{startDate} AND #{endDate}
+          AND "直接材料フラグ" = false
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "材料消費データ" (
+            "作業指示番号", "材料コード", "消費日",
+            "消費数量", "単価", "消費金額", "直接材料フラグ", "備考"
+        ) VALUES (
+            #{workOrderNumber}, #{materialCode}, #{consumptionDate},
+            #{consumptionQuantity}, #{unitPrice}, #{consumptionAmount},
+            #{isDirect}, #{remarks}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE "材料消費データ"
+        SET "材料コード" = #{materialCode},
+            "消費日" = #{consumptionDate},
+            "消費数量" = #{consumptionQuantity},
+            "単価" = #{unitPrice},
+            "消費金額" = #{consumptionAmount},
+            "直接材料フラグ" = #{isDirect},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+          AND "バージョン" = #{version}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "材料消費データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteByWorkOrderNumber">
+        DELETE FROM "材料消費データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE FROM "材料消費データ"
+    </delete>
+
+</mapper>
