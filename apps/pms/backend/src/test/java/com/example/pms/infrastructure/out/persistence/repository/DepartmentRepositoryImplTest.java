@@ -61,6 +61,21 @@ class DepartmentRepositoryImplTest extends BaseIntegrationTest {
         }
 
         @Test
+        @DisplayName("部門コードで検索できる")
+        void canFindByDepartmentCode() {
+            Optional<Department> found = departmentRepository.findByDepartmentCode("D001");
+            assertThat(found).isPresent();
+            assertThat(found.get().getDepartmentName()).isEqualTo("製造部");
+        }
+
+        @Test
+        @DisplayName("存在しない部門コードで検索すると空を返す")
+        void returnsEmptyForNonExistentDepartmentCode() {
+            Optional<Department> found = departmentRepository.findByDepartmentCode("NOTEXIST");
+            assertThat(found).isEmpty();
+        }
+
+        @Test
         @DisplayName("全件取得できる")
         void canFindAll() {
             List<Department> found = departmentRepository.findAll();

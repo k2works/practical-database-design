@@ -92,10 +92,32 @@ class UnitPriceRepositoryImplTest extends BaseIntegrationTest {
         }
 
         @Test
+        @DisplayName("品目コードと仕入先コードで検索できる")
+        void canFindByItemCodeAndSupplierCode() {
+            Optional<UnitPrice> found = unitPriceRepository.findByItemCodeAndSupplierCode("PART001", "SUP001");
+            assertThat(found).isPresent();
+            assertThat(found.get().getPrice()).isEqualByComparingTo(new BigDecimal("1000.00"));
+        }
+
+        @Test
+        @DisplayName("存在しない品目コードと仕入先コードで検索すると空を返す")
+        void returnsEmptyForNonExistentItemCodeAndSupplierCode() {
+            Optional<UnitPrice> found = unitPriceRepository.findByItemCodeAndSupplierCode("NOTEXIST", "NOTEXIST");
+            assertThat(found).isEmpty();
+        }
+
+        @Test
         @DisplayName("品目コードで検索できる")
         void canFindByItemCode() {
             List<UnitPrice> found = unitPriceRepository.findByItemCode("PART001");
             assertThat(found).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("全件取得できる")
+        void canFindAll() {
+            List<UnitPrice> all = unitPriceRepository.findAll();
+            assertThat(all).hasSize(1);
         }
 
         @Test

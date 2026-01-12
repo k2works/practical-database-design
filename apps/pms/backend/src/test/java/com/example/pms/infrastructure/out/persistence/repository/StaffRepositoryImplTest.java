@@ -76,6 +76,48 @@ class StaffRepositoryImplTest extends BaseIntegrationTest {
         }
 
         @Test
+        @DisplayName("担当者コードで検索できる")
+        void canFindByStaffCode() {
+            Optional<Staff> found = staffRepository.findByStaffCode("S001");
+            assertThat(found).isPresent();
+            assertThat(found.get().getStaffName()).isEqualTo("山田太郎");
+        }
+
+        @Test
+        @DisplayName("存在しない担当者コードで検索すると空を返す")
+        void returnsEmptyForNonExistentStaffCode() {
+            Optional<Staff> found = staffRepository.findByStaffCode("NOTEXIST");
+            assertThat(found).isEmpty();
+        }
+
+        @Test
+        @DisplayName("世代管理対応で日付検索できる")
+        void canFindByStaffCodeAndDate() {
+            staffRepository.deleteAll();
+            staffRepository.save(Staff.builder()
+                    .staffCode("S001")
+                    .effectiveFrom(LocalDate.of(2024, 1, 1))
+                    .effectiveTo(LocalDate.of(2024, 6, 30))
+                    .staffName("山田太郎（旧）")
+                    .departmentCode("D001")
+                    .build());
+            staffRepository.save(Staff.builder()
+                    .staffCode("S001")
+                    .effectiveFrom(LocalDate.of(2024, 7, 1))
+                    .staffName("山田太郎（新）")
+                    .departmentCode("D001")
+                    .build());
+
+            Optional<Staff> v1 = staffRepository.findByStaffCodeAndDate("S001", LocalDate.of(2024, 3, 1));
+            Optional<Staff> v2 = staffRepository.findByStaffCodeAndDate("S001", LocalDate.of(2024, 8, 1));
+
+            assertThat(v1).isPresent();
+            assertThat(v1.get().getStaffName()).isEqualTo("山田太郎（旧）");
+            assertThat(v2).isPresent();
+            assertThat(v2.get().getStaffName()).isEqualTo("山田太郎（新）");
+        }
+
+        @Test
         @DisplayName("部門コードで検索できる")
         void canFindByDepartmentCode() {
             List<Staff> found = staffRepository.findByDepartmentCode("D001");

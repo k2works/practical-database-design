@@ -108,10 +108,32 @@ class ProcessRouteRepositoryImplTest extends BaseIntegrationTest {
         }
 
         @Test
+        @DisplayName("品目コードと工順で検索できる")
+        void canFindByItemCodeAndSequence() {
+            Optional<ProcessRoute> found = processRouteRepository.findByItemCodeAndSequence("PROD001", 1);
+            assertThat(found).isPresent();
+            assertThat(found.get().getProcessCode()).isEqualTo("P001");
+        }
+
+        @Test
+        @DisplayName("存在しない品目コードと工順で検索すると空を返す")
+        void returnsEmptyForNonExistentItemCodeAndSequence() {
+            Optional<ProcessRoute> found = processRouteRepository.findByItemCodeAndSequence("NOTEXIST", 1);
+            assertThat(found).isEmpty();
+        }
+
+        @Test
         @DisplayName("品目コードで検索できる")
         void canFindByItemCode() {
             List<ProcessRoute> found = processRouteRepository.findByItemCode("PROD001");
             assertThat(found).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("存在しない品目コードで検索すると空を返す")
+        void returnsEmptyForNonExistentItemCode() {
+            List<ProcessRoute> found = processRouteRepository.findByItemCode("NOTEXIST");
+            assertThat(found).isEmpty();
         }
 
         @Test

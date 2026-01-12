@@ -76,6 +76,21 @@ class ProcessRepositoryImplTest extends BaseIntegrationTest {
         }
 
         @Test
+        @DisplayName("工程コードで検索できる")
+        void canFindByProcessCode() {
+            Optional<Process> found = processRepository.findByProcessCode("P001");
+            assertThat(found).isPresent();
+            assertThat(found.get().getProcessName()).isEqualTo("組立工程");
+        }
+
+        @Test
+        @DisplayName("存在しない工程コードで検索すると空を返す")
+        void returnsEmptyForNonExistentProcessCode() {
+            Optional<Process> found = processRepository.findByProcessCode("NOTEXIST");
+            assertThat(found).isEmpty();
+        }
+
+        @Test
         @DisplayName("全件取得できる")
         void canFindAll() {
             List<Process> found = processRepository.findAll();
