@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.WorkOrderDetailMapper">
+
+    <resultMap id="WorkOrderDetailResultMap" type="com.example.pms.domain.model.process.WorkOrderDetail">
+        <id property="id" column="ID"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="sequence" column="工順"/>
+        <result property="processCode" column="工程コード"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.process.WorkOrderDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "作業指示明細データ" (
+            "作業指示番号", "工順", "工程コード", "作成者", "更新者"
+        ) VALUES (
+            #{workOrderNumber},
+            #{sequence},
+            #{processCode},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="WorkOrderDetailResultMap">
+        SELECT * FROM "作業指示明細データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByWorkOrderNumberAndSequence" resultMap="WorkOrderDetailResultMap">
+        SELECT * FROM "作業指示明細データ"
+        WHERE "作業指示番号" = #{workOrderNumber} AND "工順" = #{sequence}
+    </select>
+
+    <select id="findByWorkOrderNumber" resultMap="WorkOrderDetailResultMap">
+        SELECT * FROM "作業指示明細データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+        ORDER BY "工順"
+    </select>
+
+    <select id="findAll" resultMap="WorkOrderDetailResultMap">
+        SELECT * FROM "作業指示明細データ" ORDER BY "作業指示番号", "工順"
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "作業指示明細データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "作業指示明細データ"
+    </delete>
+</mapper>
