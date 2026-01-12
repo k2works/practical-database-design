@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ShipmentInspectionMapper">
+
+    <resultMap id="ShipmentInspectionResultMap" type="com.example.pms.domain.model.quality.ShipmentInspection">
+        <id property="id" column="ID"/>
+        <result property="inspectionNumber" column="出荷検査番号"/>
+        <result property="shipmentNumber" column="出荷番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="inspectionDate" column="検査日"/>
+        <result property="inspectorCode" column="検査担当者コード"/>
+        <result property="inspectionQuantity" column="検査数量"/>
+        <result property="passedQuantity" column="合格数"/>
+        <result property="failedQuantity" column="不合格数"/>
+        <result property="judgment" column="判定"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 検査結果を含むResultMap -->
+    <resultMap id="ShipmentInspectionWithResultsResultMap" type="com.example.pms.domain.model.quality.ShipmentInspection"
+               extends="ShipmentInspectionResultMap">
+        <collection property="results" ofType="com.example.pms.domain.model.quality.ShipmentInspectionResult"
+                    column="出荷検査番号" select="com.example.pms.infrastructure.out.persistence.mapper.ShipmentInspectionResultMapper.findByInspectionNumber"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "出荷検査データ" (
+            "出荷検査番号", "出荷番号", "品目コード",
+            "検査日", "検査担当者コード",
+            "検査数量", "合格数", "不合格数", "判定", "備考"
+        ) VALUES (
+            #{inspectionNumber}, #{shipmentNumber}, #{itemCode},
+            #{inspectionDate}, #{inspectorCode},
+            #{inspectionQuantity}, #{passedQuantity}, #{failedQuantity},
+            #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            #{remarks}
+        )
+    </insert>
+
+    <select id="findById" resultMap="ShipmentInspectionResultMap">
+        SELECT * FROM "出荷検査データ"
+        WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByInspectionNumber" resultMap="ShipmentInspectionResultMap">
+        SELECT * FROM "出荷検査データ"
+        WHERE "出荷検査番号" = #{inspectionNumber}
+    </select>
+
+    <select id="findByInspectionNumberWithResults" resultMap="ShipmentInspectionWithResultsResultMap">
+        SELECT * FROM "出荷検査データ"
+        WHERE "出荷検査番号" = #{inspectionNumber}
+    </select>
+
+    <select id="findByShipmentNumber" resultMap="ShipmentInspectionResultMap">
+        SELECT * FROM "出荷検査データ"
+        WHERE "出荷番号" = #{shipmentNumber}
+    </select>
+
+    <select id="findAll" resultMap="ShipmentInspectionResultMap">
+        SELECT * FROM "出荷検査データ"
+        ORDER BY "検査日" DESC, "出荷検査番号"
+    </select>
+
+    <update id="update">
+        UPDATE "出荷検査データ" SET
+            "検査数量" = #{inspectionQuantity},
+            "合格数" = #{passedQuantity},
+            "不合格数" = #{failedQuantity},
+            "判定" = #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "出荷検査番号" = #{inspectionNumber}
+        AND "バージョン" = #{version}
+    </update>
+
+    <delete id="deleteByInspectionNumber">
+        DELETE FROM "出荷検査データ"
+        WHERE "出荷検査番号" = #{inspectionNumber}
+    </delete>
+
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "出荷検査結果データ" CASCADE;
+        TRUNCATE TABLE "出荷検査データ" CASCADE
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "出荷検査結果データ";
+        DELETE FROM "出荷検査データ"
+    </delete>
+</mapper>

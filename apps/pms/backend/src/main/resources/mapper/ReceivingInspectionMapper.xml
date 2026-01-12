@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper">
+
+    <resultMap id="ReceivingInspectionResultMap" type="com.example.pms.domain.model.quality.ReceivingInspection">
+        <id property="id" column="ID"/>
+        <result property="inspectionNumber" column="受入検査番号"/>
+        <result property="receivingNumber" column="入荷番号"/>
+        <result property="purchaseOrderNumber" column="発注番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="supplierCode" column="仕入先コード"/>
+        <result property="inspectionDate" column="検査日"/>
+        <result property="inspectorCode" column="検査担当者コード"/>
+        <result property="inspectionQuantity" column="検査数量"/>
+        <result property="passedQuantity" column="合格数"/>
+        <result property="failedQuantity" column="不合格数"/>
+        <result property="judgment" column="判定"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- 検査結果を含むResultMap -->
+    <resultMap id="ReceivingInspectionWithResultsResultMap" type="com.example.pms.domain.model.quality.ReceivingInspection"
+               extends="ReceivingInspectionResultMap">
+        <collection property="results" ofType="com.example.pms.domain.model.quality.ReceivingInspectionResult"
+                    column="受入検査番号" select="com.example.pms.infrastructure.out.persistence.mapper.ReceivingInspectionResultMapper.findByInspectionNumber"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "受入検査データ" (
+            "受入検査番号", "入荷番号", "発注番号", "発注行番号", "品目コード",
+            "仕入先コード", "受入検査日", "検査日", "受入検査担当者コード", "検査担当者コード",
+            "諸口品目区分", "良品数", "不良品数", "検査数量", "合格数", "不合格数",
+            "判定", "備考", "作成日時", "更新日時"
+        ) VALUES (
+            #{inspectionNumber}, #{receivingNumber}, #{purchaseOrderNumber}, 1, #{itemCode},
+            #{supplierCode}, #{inspectionDate}, #{inspectionDate}, #{inspectorCode}, #{inspectorCode},
+            false, #{passedQuantity}, #{failedQuantity}, #{inspectionQuantity}, #{passedQuantity}, #{failedQuantity},
+            #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            #{remarks}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findById" resultMap="ReceivingInspectionResultMap">
+        SELECT * FROM "受入検査データ"
+        WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByInspectionNumber" resultMap="ReceivingInspectionResultMap">
+        SELECT * FROM "受入検査データ"
+        WHERE "受入検査番号" = #{inspectionNumber}
+    </select>
+
+    <select id="findByInspectionNumberWithResults" resultMap="ReceivingInspectionWithResultsResultMap">
+        SELECT * FROM "受入検査データ"
+        WHERE "受入検査番号" = #{inspectionNumber}
+    </select>
+
+    <select id="findByReceivingNumber" resultMap="ReceivingInspectionResultMap">
+        SELECT * FROM "受入検査データ"
+        WHERE "入荷番号" = #{receivingNumber}
+    </select>
+
+    <select id="findBySupplierCode" resultMap="ReceivingInspectionResultMap">
+        SELECT * FROM "受入検査データ"
+        WHERE "仕入先コード" = #{supplierCode}
+        ORDER BY "検査日" DESC
+    </select>
+
+    <select id="findAll" resultMap="ReceivingInspectionResultMap">
+        SELECT * FROM "受入検査データ"
+        ORDER BY "検査日" DESC, "受入検査番号"
+    </select>
+
+    <update id="update">
+        UPDATE "受入検査データ" SET
+            "検査数量" = #{inspectionQuantity},
+            "合格数" = #{passedQuantity},
+            "不合格数" = #{failedQuantity},
+            "判定" = #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "受入検査番号" = #{inspectionNumber}
+        AND "バージョン" = #{version}
+    </update>
+
+    <update id="updateJudgment">
+        UPDATE "受入検査データ" SET
+            "判定" = #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "受入検査番号" = #{inspectionNumber}
+        AND "バージョン" = #{version}
+    </update>
+
+    <delete id="deleteByInspectionNumber">
+        DELETE FROM "受入検査データ"
+        WHERE "受入検査番号" = #{inspectionNumber}
+    </delete>
+
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "受入検査結果データ" CASCADE;
+        TRUNCATE TABLE "受入検査データ" CASCADE
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "受入検査結果データ";
+        DELETE FROM "受入検査データ"
+    </delete>
+</mapper>
