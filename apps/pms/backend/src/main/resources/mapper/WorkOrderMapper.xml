@@ -26,6 +26,14 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 明細を含むResultMap（nested select） -->
+    <resultMap id="WorkOrderWithDetailsResultMap" type="com.example.pms.domain.model.process.WorkOrder"
+               extends="WorkOrderResultMap">
+        <collection property="details" ofType="com.example.pms.domain.model.process.WorkOrderDetail"
+                    column="作業指示番号" select="com.example.pms.infrastructure.out.persistence.mapper.WorkOrderDetailMapper.findByWorkOrderNumber"/>
     </resultMap>
 
     <!-- PostgreSQL用 INSERT -->
@@ -34,7 +42,7 @@
         INSERT INTO "作業指示データ" (
             "作業指示番号", "オーダ番号", "作業指示日", "品目コード", "作業指示数",
             "場所コード", "開始予定日", "完成予定日", "完成済数", "総良品数", "総不良品数",
-            "ステータス", "完了フラグ", "備考", "作成者", "更新者"
+            "ステータス", "完了フラグ", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{workOrderNumber},
             #{orderNumber},
@@ -51,7 +59,8 @@
             #{completedFlag},
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 
@@ -61,7 +70,7 @@
         INSERT INTO "作業指示データ" (
             "作業指示番号", "オーダ番号", "作業指示日", "品目コード", "作業指示数",
             "場所コード", "開始予定日", "完成予定日", "完成済数", "総良品数", "総不良品数",
-            "ステータス", "完了フラグ", "備考", "作成者", "更新者"
+            "ステータス", "完了フラグ", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{workOrderNumber},
             #{orderNumber},
@@ -78,7 +87,8 @@
             #{completedFlag},
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 
@@ -87,6 +97,11 @@
     </select>
 
     <select id="findByWorkOrderNumber" resultMap="WorkOrderResultMap">
+        SELECT * FROM "作業指示データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </select>
+
+    <!-- 明細を含めて取得 -->
+    <select id="findByWorkOrderNumberWithDetails" resultMap="WorkOrderWithDetailsResultMap">
         SELECT * FROM "作業指示データ" WHERE "作業指示番号" = #{workOrderNumber}
     </select>
 
@@ -111,6 +126,18 @@
     <select id="findAll" resultMap="WorkOrderResultMap">
         SELECT * FROM "作業指示データ" ORDER BY "作業指示日" DESC
     </select>
+
+    <!-- 完成数量更新（楽観ロック対応） -->
+    <update id="updateCompletionQuantities">
+        UPDATE "作業指示データ" SET
+            "完成済数" = "完成済数" + #{completedQuantity},
+            "総良品数" = "総良品数" + #{goodQuantity},
+            "総不良品数" = "総不良品数" + #{defectQuantity},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "作業指示番号" = #{workOrderNumber}
+          AND "バージョン" = #{version}
+    </update>
 
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">

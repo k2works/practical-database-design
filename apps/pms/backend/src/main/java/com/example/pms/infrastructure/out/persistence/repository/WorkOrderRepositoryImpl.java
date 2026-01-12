@@ -7,6 +7,7 @@ import com.example.pms.infrastructure.out.persistence.mapper.WorkOrderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,5 +53,14 @@ public class WorkOrderRepositoryImpl implements WorkOrderRepository {
     @Override
     public void deleteAll() {
         workOrderMapper.deleteAll();
+    }
+
+    @Override
+    public boolean updateCompletionQuantities(String workOrderNumber, BigDecimal completedQuantity,
+                                              BigDecimal goodQuantity, BigDecimal defectQuantity,
+                                              Integer expectedVersion) {
+        int updatedRows = workOrderMapper.updateCompletionQuantities(
+                workOrderNumber, completedQuantity, goodQuantity, defectQuantity, expectedVersion);
+        return updatedRows > 0;
     }
 }

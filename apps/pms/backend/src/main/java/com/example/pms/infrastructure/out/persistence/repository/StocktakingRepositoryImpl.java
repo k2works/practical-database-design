@@ -39,6 +39,11 @@ public class StocktakingRepositoryImpl implements StocktakingRepository {
     }
 
     @Override
+    public Optional<Stocktaking> findByStocktakingNumberWithDetails(String stocktakingNumber) {
+        return Optional.ofNullable(stocktakingMapper.findByStocktakingNumberWithDetails(stocktakingNumber));
+    }
+
+    @Override
     public List<Stocktaking> findByLocationCode(String locationCode) {
         return stocktakingMapper.findByLocationCode(locationCode);
     }

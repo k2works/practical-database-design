@@ -17,6 +17,14 @@ public interface StocktakingRepository {
 
     Optional<Stocktaking> findByStocktakingNumber(String stocktakingNumber);
 
+    /**
+     * 棚卸番号で検索（明細を含む）.
+     *
+     * @param stocktakingNumber 棚卸番号
+     * @return 明細を含む棚卸データ
+     */
+    Optional<Stocktaking> findByStocktakingNumberWithDetails(String stocktakingNumber);
+
     List<Stocktaking> findByLocationCode(String locationCode);
 
     List<Stocktaking> findByStatus(StocktakingStatus status);

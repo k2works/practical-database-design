@@ -19,13 +19,14 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.process.LaborHours"
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "工数実績データ" (
             "工数実績番号", "作業指示番号", "品目コード", "工順", "工程コード",
-            "部門コード", "担当者コード", "作業日", "工数", "備考", "作成者", "更新者"
+            "部門コード", "担当者コード", "作業日", "工数", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{laborHoursNumber},
             #{workOrderNumber},
@@ -38,7 +39,8 @@
             #{hours},
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 

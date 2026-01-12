@@ -17,13 +17,21 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 検査結果を含むResultMap（nested select） -->
+    <resultMap id="CompletionResultWithInspectionsResultMap" type="com.example.pms.domain.model.process.CompletionResult"
+               extends="CompletionResultResultMap">
+        <collection property="inspectionResults" ofType="com.example.pms.domain.model.process.InspectionResult"
+                    column="完成実績番号" select="com.example.pms.infrastructure.out.persistence.mapper.InspectionResultMapper.findByCompletionResultNumber"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.process.CompletionResult"
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "完成実績データ" (
             "完成実績番号", "作業指示番号", "品目コード", "完成日",
-            "完成数量", "良品数", "不良品数", "備考", "作成者", "更新者"
+            "完成数量", "良品数", "不良品数", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{completionResultNumber},
             #{workOrderNumber},
@@ -34,7 +42,8 @@
             #{defectQuantity},
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 
@@ -43,6 +52,11 @@
     </select>
 
     <select id="findByCompletionResultNumber" resultMap="CompletionResultResultMap">
+        SELECT * FROM "完成実績データ" WHERE "完成実績番号" = #{completionResultNumber}
+    </select>
+
+    <!-- 検査結果を含めて取得 -->
+    <select id="findByCompletionResultNumberWithInspections" resultMap="CompletionResultWithInspectionsResultMap">
         SELECT * FROM "完成実績データ" WHERE "完成実績番号" = #{completionResultNumber}
     </select>
 

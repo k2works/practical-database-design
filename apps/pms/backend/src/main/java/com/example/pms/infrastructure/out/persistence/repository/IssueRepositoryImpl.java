@@ -38,6 +38,11 @@ public class IssueRepositoryImpl implements IssueRepository {
     }
 
     @Override
+    public Optional<Issue> findByIssueNumberWithDetails(String issueNumber) {
+        return Optional.ofNullable(issueMapper.findByIssueNumberWithDetails(issueNumber));
+    }
+
+    @Override
     public List<Issue> findByWorkOrderNumber(String workOrderNumber) {
         return issueMapper.findByWorkOrderNumber(workOrderNumber);
     }

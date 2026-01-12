@@ -19,6 +19,11 @@ public interface IssueMapper {
 
     Issue findByIssueNumber(String issueNumber);
 
+    /**
+     * 払出番号で検索（明細を含む）.
+     */
+    Issue findByIssueNumberWithDetails(String issueNumber);
+
     List<Issue> findByWorkOrderNumber(String workOrderNumber);
 
     List<Issue> findByLocationCode(String locationCode);

@@ -170,4 +170,153 @@ class StockRepositoryImplTest extends BaseIntegrationTest {
             assertThat(all).hasSize(3);
         }
     }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLocking {
+
+        @BeforeEach
+        void setUpData() {
+            stockRepository.save(createStock("LOC001", "ITEM001", new BigDecimal("100.00")));
+        }
+
+        @Test
+        @DisplayName("正しいバージョンで在庫を増加できる")
+        void canIncreaseStockWithCorrectVersion() {
+            // Arrange
+            Optional<Stock> stock = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(stock).isPresent();
+            Integer currentVersion = stock.get().getVersion();
+
+            // Act
+            boolean result = stockRepository.increase("LOC001", "ITEM001",
+                    new BigDecimal("50.00"), currentVersion);
+
+            // Assert
+            assertThat(result).isTrue();
+            Optional<Stock> updated = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getStockQuantity()).isEqualByComparingTo(new BigDecimal("150.00"));
+            assertThat(updated.get().getVersion()).isEqualTo(currentVersion + 1);
+        }
+
+        @Test
+        @DisplayName("不正なバージョンで在庫増加は失敗する")
+        void failsToIncreaseStockWithWrongVersion() {
+            // Arrange
+            Optional<Stock> stock = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(stock).isPresent();
+            Integer wrongVersion = stock.get().getVersion() + 999;
+
+            // Act
+            boolean result = stockRepository.increase("LOC001", "ITEM001",
+                    new BigDecimal("50.00"), wrongVersion);
+
+            // Assert
+            assertThat(result).isFalse();
+            Optional<Stock> unchanged = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(unchanged).isPresent();
+            assertThat(unchanged.get().getStockQuantity()).isEqualByComparingTo(new BigDecimal("100.00"));
+        }
+
+        @Test
+        @DisplayName("正しいバージョンで在庫を減少できる")
+        void canDecreaseStockWithCorrectVersion() {
+            // Arrange
+            Optional<Stock> stock = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(stock).isPresent();
+            Integer currentVersion = stock.get().getVersion();
+
+            // Act
+            boolean result = stockRepository.decrease("LOC001", "ITEM001",
+                    new BigDecimal("30.00"), currentVersion);
+
+            // Assert
+            assertThat(result).isTrue();
+            Optional<Stock> updated = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getStockQuantity()).isEqualByComparingTo(new BigDecimal("70.00"));
+            assertThat(updated.get().getVersion()).isEqualTo(currentVersion + 1);
+        }
+
+        @Test
+        @DisplayName("不正なバージョンで在庫減少は失敗する")
+        void failsToDecreaseStockWithWrongVersion() {
+            // Arrange
+            Optional<Stock> stock = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(stock).isPresent();
+            Integer wrongVersion = stock.get().getVersion() + 999;
+
+            // Act
+            boolean result = stockRepository.decrease("LOC001", "ITEM001",
+                    new BigDecimal("30.00"), wrongVersion);
+
+            // Assert
+            assertThat(result).isFalse();
+            Optional<Stock> unchanged = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(unchanged).isPresent();
+            assertThat(unchanged.get().getStockQuantity()).isEqualByComparingTo(new BigDecimal("100.00"));
+        }
+
+        @Test
+        @DisplayName("正しいバージョンで在庫を調整できる")
+        void canAdjustStockWithCorrectVersion() {
+            // Arrange
+            Optional<Stock> stock = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(stock).isPresent();
+            Integer currentVersion = stock.get().getVersion();
+
+            Stock adjustedStock = Stock.builder()
+                    .id(stock.get().getId())
+                    .locationCode("LOC001")
+                    .itemCode("ITEM001")
+                    .stockQuantity(new BigDecimal("200.00"))
+                    .passedQuantity(new BigDecimal("180.00"))
+                    .defectiveQuantity(new BigDecimal("20.00"))
+                    .uninspectedQuantity(BigDecimal.ZERO)
+                    .updatedBy("adjust-user")
+                    .build();
+
+            // Act
+            boolean result = stockRepository.adjust(adjustedStock, currentVersion);
+
+            // Assert
+            assertThat(result).isTrue();
+            Optional<Stock> updated = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getStockQuantity()).isEqualByComparingTo(new BigDecimal("200.00"));
+            assertThat(updated.get().getPassedQuantity()).isEqualByComparingTo(new BigDecimal("180.00"));
+            assertThat(updated.get().getDefectiveQuantity()).isEqualByComparingTo(new BigDecimal("20.00"));
+            assertThat(updated.get().getVersion()).isEqualTo(currentVersion + 1);
+        }
+
+        @Test
+        @DisplayName("不正なバージョンで在庫調整は失敗する")
+        void failsToAdjustStockWithWrongVersion() {
+            // Arrange
+            Optional<Stock> stock = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(stock).isPresent();
+            Integer wrongVersion = stock.get().getVersion() + 999;
+
+            Stock adjustedStock = Stock.builder()
+                    .id(stock.get().getId())
+                    .locationCode("LOC001")
+                    .itemCode("ITEM001")
+                    .stockQuantity(new BigDecimal("200.00"))
+                    .passedQuantity(new BigDecimal("180.00"))
+                    .defectiveQuantity(new BigDecimal("20.00"))
+                    .uninspectedQuantity(BigDecimal.ZERO)
+                    .updatedBy("adjust-user")
+                    .build();
+
+            // Act
+            boolean result = stockRepository.adjust(adjustedStock, wrongVersion);
+
+            // Assert
+            assertThat(result).isFalse();
+            Optional<Stock> unchanged = stockRepository.findByLocationAndItem("LOC001", "ITEM001");
+            assertThat(unchanged).isPresent();
+            assertThat(unchanged.get().getStockQuantity()).isEqualByComparingTo(new BigDecimal("100.00"));
+        }
+    }
 }

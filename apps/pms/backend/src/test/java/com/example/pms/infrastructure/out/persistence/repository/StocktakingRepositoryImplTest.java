@@ -1,7 +1,9 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
+import com.example.pms.application.port.out.StocktakingDetailRepository;
 import com.example.pms.application.port.out.StocktakingRepository;
 import com.example.pms.domain.model.inventory.Stocktaking;
+import com.example.pms.domain.model.inventory.StocktakingDetail;
 import com.example.pms.domain.model.inventory.StocktakingStatus;
 import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -27,16 +30,30 @@ class StocktakingRepositoryImplTest extends BaseIntegrationTest {
     private StocktakingRepository stocktakingRepository;
 
     @Autowired
+    private StocktakingDetailRepository stocktakingDetailRepository;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setUp() {
+        stocktakingDetailRepository.deleteAll();
         stocktakingRepository.deleteAll();
 
         // Create required master data
         jdbcTemplate.execute("""
             INSERT INTO "場所マスタ" ("場所コード", "場所名", "場所区分")
             VALUES ('LOC001', 'テスト場所', '倉庫')
+            ON CONFLICT DO NOTHING
+            """);
+        jdbcTemplate.execute("""
+            INSERT INTO "品目マスタ" ("品目コード", "適用開始日", "品名", "品目区分")
+            VALUES ('ITEM001', '2024-01-01', 'テスト品目1', '製品')
+            ON CONFLICT DO NOTHING
+            """);
+        jdbcTemplate.execute("""
+            INSERT INTO "品目マスタ" ("品目コード", "適用開始日", "品名", "品目区分")
+            VALUES ('ITEM002', '2024-01-01', 'テスト品目2', '材料')
             ON CONFLICT DO NOTHING
             """);
     }
@@ -165,6 +182,76 @@ class StocktakingRepositoryImplTest extends BaseIntegrationTest {
 
             // Assert
             assertThat(all).hasSize(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        private StocktakingDetail createDetail(String stocktakingNumber, int lineNumber, String itemCode) {
+            return StocktakingDetail.builder()
+                    .stocktakingNumber(stocktakingNumber)
+                    .lineNumber(lineNumber)
+                    .itemCode(itemCode)
+                    .bookQuantity(new BigDecimal("100.00"))
+                    .actualQuantity(new BigDecimal("95.00"))
+                    .differenceQuantity(new BigDecimal("-5.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+        }
+
+        @Test
+        @DisplayName("明細を含めて取得できる")
+        void canFindWithDetails() {
+            // Arrange
+            Stocktaking stocktaking = createStocktaking("ST-REL-001", StocktakingStatus.ENTERED);
+            stocktakingRepository.save(stocktaking);
+
+            StocktakingDetail detail1 = createDetail("ST-REL-001", 1, "ITEM001");
+            StocktakingDetail detail2 = createDetail("ST-REL-001", 2, "ITEM002");
+            stocktakingDetailRepository.save(detail1);
+            stocktakingDetailRepository.save(detail2);
+
+            // Act
+            Optional<Stocktaking> found = stocktakingRepository.findByStocktakingNumberWithDetails("ST-REL-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getDetails()).hasSize(2);
+            assertThat(found.get().getDetails().get(0).getItemCode()).isEqualTo("ITEM001");
+            assertThat(found.get().getDetails().get(1).getItemCode()).isEqualTo("ITEM002");
+        }
+
+        @Test
+        @DisplayName("明細がない場合は空のリストを返す")
+        void returnsEmptyListWhenNoDetails() {
+            // Arrange
+            Stocktaking stocktaking = createStocktaking("ST-REL-002", StocktakingStatus.ISSUED);
+            stocktakingRepository.save(stocktaking);
+
+            // Act
+            Optional<Stocktaking> found = stocktakingRepository.findByStocktakingNumberWithDetails("ST-REL-002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getDetails()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("バージョンが取得できる")
+        void canGetVersion() {
+            // Arrange
+            Stocktaking stocktaking = createStocktaking("ST-VER-001", StocktakingStatus.ISSUED);
+            stocktakingRepository.save(stocktaking);
+
+            // Act
+            Optional<Stocktaking> found = stocktakingRepository.findByStocktakingNumber("ST-VER-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
         }
     }
 }

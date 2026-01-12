@@ -16,6 +16,14 @@ public interface IssueRepository {
 
     Optional<Issue> findByIssueNumber(String issueNumber);
 
+    /**
+     * 払出番号で検索（明細を含む）.
+     *
+     * @param issueNumber 払出番号
+     * @return 明細を含む払出データ
+     */
+    Optional<Issue> findByIssueNumberWithDetails(String issueNumber);
+
     List<Issue> findByWorkOrderNumber(String workOrderNumber);
 
     List<Issue> findByLocationCode(String locationCode);

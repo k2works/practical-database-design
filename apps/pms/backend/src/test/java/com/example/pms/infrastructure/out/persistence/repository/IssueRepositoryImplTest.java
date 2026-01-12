@@ -1,7 +1,9 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
+import com.example.pms.application.port.out.IssueDetailRepository;
 import com.example.pms.application.port.out.IssueRepository;
 import com.example.pms.domain.model.inventory.Issue;
+import com.example.pms.domain.model.inventory.IssueDetail;
 import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -26,10 +29,14 @@ class IssueRepositoryImplTest extends BaseIntegrationTest {
     private IssueRepository issueRepository;
 
     @Autowired
+    private IssueDetailRepository issueDetailRepository;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setUp() {
+        issueDetailRepository.deleteAll();
         issueRepository.deleteAll();
 
         // Create required master data
@@ -179,6 +186,59 @@ class IssueRepositoryImplTest extends BaseIntegrationTest {
 
             // Assert
             assertThat(all).hasSize(3);
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        private IssueDetail createDetail(String issueNumber, int lineNumber, String itemCode) {
+            return IssueDetail.builder()
+                    .issueNumber(issueNumber)
+                    .lineNumber(lineNumber)
+                    .itemCode(itemCode)
+                    .issueQuantity(new BigDecimal("10.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+        }
+
+        @Test
+        @DisplayName("明細を含めて取得できる")
+        void canFindWithDetails() {
+            // Arrange
+            Issue issue = createIssue("ISS-REL-001", "WO-001", "LOC001");
+            issueRepository.save(issue);
+
+            IssueDetail detail1 = createDetail("ISS-REL-001", 1, "ITEM001");
+            IssueDetail detail2 = createDetail("ISS-REL-001", 2, "ITEM001");
+            issueDetailRepository.save(detail1);
+            issueDetailRepository.save(detail2);
+
+            // Act
+            Optional<Issue> found = issueRepository.findByIssueNumberWithDetails("ISS-REL-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getDetails()).hasSize(2);
+            assertThat(found.get().getDetails().get(0).getLineNumber()).isEqualTo(1);
+            assertThat(found.get().getDetails().get(1).getLineNumber()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("明細がない場合は空のリストを返す")
+        void returnsEmptyListWhenNoDetails() {
+            // Arrange
+            Issue issue = createIssue("ISS-REL-002", "WO-001", "LOC001");
+            issueRepository.save(issue);
+
+            // Act
+            Optional<Issue> found = issueRepository.findByIssueNumberWithDetails("ISS-REL-002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getDetails()).isEmpty();
         }
     }
 }

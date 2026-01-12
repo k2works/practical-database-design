@@ -21,6 +21,11 @@ public interface StocktakingMapper {
 
     Stocktaking findByStocktakingNumber(String stocktakingNumber);
 
+    /**
+     * 棚卸番号で検索（明細を含む）.
+     */
+    Stocktaking findByStocktakingNumberWithDetails(String stocktakingNumber);
+
     List<Stocktaking> findByLocationCode(String locationCode);
 
     List<Stocktaking> findByStatus(@Param("status") StocktakingStatus status);

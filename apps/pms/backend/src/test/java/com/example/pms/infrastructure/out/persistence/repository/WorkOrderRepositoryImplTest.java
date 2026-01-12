@@ -193,4 +193,101 @@ class WorkOrderRepositoryImplTest extends BaseIntegrationTest {
             assertThat(all).hasSize(2);
         }
     }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLocking {
+
+        @BeforeEach
+        void setUpData() {
+            workOrderRepository.save(createWorkOrder("WO-OL-001", WorkOrderStatus.IN_PROGRESS));
+        }
+
+        @Test
+        @DisplayName("正しいバージョンで完成数量を更新できる")
+        void canUpdateCompletionQuantitiesWithCorrectVersion() {
+            // Arrange
+            Optional<WorkOrder> workOrder = workOrderRepository.findByWorkOrderNumber("WO-OL-001");
+            assertThat(workOrder).isPresent();
+            Integer currentVersion = workOrder.get().getVersion();
+
+            // Act
+            boolean result = workOrderRepository.updateCompletionQuantities(
+                    "WO-OL-001",
+                    new BigDecimal("10.00"),
+                    new BigDecimal("9.00"),
+                    new BigDecimal("1.00"),
+                    currentVersion);
+
+            // Assert
+            assertThat(result).isTrue();
+            Optional<WorkOrder> updated = workOrderRepository.findByWorkOrderNumber("WO-OL-001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getCompletedQuantity()).isEqualByComparingTo(new BigDecimal("10.00"));
+            assertThat(updated.get().getTotalGoodQuantity()).isEqualByComparingTo(new BigDecimal("9.00"));
+            assertThat(updated.get().getTotalDefectQuantity()).isEqualByComparingTo(new BigDecimal("1.00"));
+            assertThat(updated.get().getVersion()).isEqualTo(currentVersion + 1);
+        }
+
+        @Test
+        @DisplayName("不正なバージョンで完成数量更新は失敗する")
+        void failsToUpdateCompletionQuantitiesWithWrongVersion() {
+            // Arrange
+            Optional<WorkOrder> workOrder = workOrderRepository.findByWorkOrderNumber("WO-OL-001");
+            assertThat(workOrder).isPresent();
+            Integer wrongVersion = workOrder.get().getVersion() + 999;
+
+            // Act
+            boolean result = workOrderRepository.updateCompletionQuantities(
+                    "WO-OL-001",
+                    new BigDecimal("10.00"),
+                    new BigDecimal("9.00"),
+                    new BigDecimal("1.00"),
+                    wrongVersion);
+
+            // Assert
+            assertThat(result).isFalse();
+            Optional<WorkOrder> unchanged = workOrderRepository.findByWorkOrderNumber("WO-OL-001");
+            assertThat(unchanged).isPresent();
+            assertThat(unchanged.get().getCompletedQuantity()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(unchanged.get().getTotalGoodQuantity()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(unchanged.get().getTotalDefectQuantity()).isEqualByComparingTo(BigDecimal.ZERO);
+        }
+
+        @Test
+        @DisplayName("連続更新でバージョンがインクリメントされる")
+        void versionIncrementsOnSuccessiveUpdates() {
+            // Arrange
+            Optional<WorkOrder> workOrder = workOrderRepository.findByWorkOrderNumber("WO-OL-001");
+            assertThat(workOrder).isPresent();
+            Integer initialVersion = workOrder.get().getVersion();
+
+            // Act - First update
+            boolean result1 = workOrderRepository.updateCompletionQuantities(
+                    "WO-OL-001",
+                    new BigDecimal("5.00"),
+                    new BigDecimal("5.00"),
+                    BigDecimal.ZERO,
+                    initialVersion);
+
+            assertThat(result1).isTrue();
+
+            // Second update with new version
+            boolean result2 = workOrderRepository.updateCompletionQuantities(
+                    "WO-OL-001",
+                    new BigDecimal("5.00"),
+                    new BigDecimal("4.00"),
+                    new BigDecimal("1.00"),
+                    initialVersion + 1);
+
+            // Assert
+            assertThat(result2).isTrue();
+            Optional<WorkOrder> updated = workOrderRepository.findByWorkOrderNumber("WO-OL-001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getCompletedQuantity()).isEqualByComparingTo(new BigDecimal("10.00"));
+            assertThat(updated.get().getTotalGoodQuantity()).isEqualByComparingTo(new BigDecimal("9.00"));
+            assertThat(updated.get().getTotalDefectQuantity()).isEqualByComparingTo(new BigDecimal("1.00"));
+            assertThat(updated.get().getVersion()).isEqualTo(initialVersion + 2);
+        }
+    }
 }
