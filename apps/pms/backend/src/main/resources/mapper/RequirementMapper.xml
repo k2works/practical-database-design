@@ -17,6 +17,14 @@
         <result property="locationCode" column="場所コード"/>
         <result property="createdAt" column="作成日時"/>
         <result property="updatedAt" column="更新日時"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 引当を含むResultMap（nested select） -->
+    <resultMap id="RequirementWithAllocationsResultMap" type="com.example.pms.domain.model.plan.Requirement"
+               extends="RequirementResultMap">
+        <collection property="allocations" ofType="com.example.pms.domain.model.plan.Allocation"
+                    column="ID" select="com.example.pms.infrastructure.out.persistence.mapper.AllocationMapper.findByRequirementId"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.plan.Requirement"
@@ -41,6 +49,11 @@
     </select>
 
     <select id="findByRequirementNumber" resultMap="RequirementResultMap">
+        SELECT * FROM "所要情報" WHERE "所要NO" = #{requirementNumber}
+    </select>
+
+    <!-- 引当を含めて取得 -->
+    <select id="findByRequirementNumberWithAllocations" resultMap="RequirementWithAllocationsResultMap">
         SELECT * FROM "所要情報" WHERE "所要NO" = #{requirementNumber}
     </select>
 

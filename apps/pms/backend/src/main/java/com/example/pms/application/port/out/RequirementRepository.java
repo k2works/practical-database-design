@@ -28,6 +28,14 @@ public interface RequirementRepository {
     Optional<Requirement> findByRequirementNumber(String requirementNumber);
 
     /**
+     * 所要番号で所要情報を検索する（引当を含む）
+     *
+     * @param requirementNumber 所要番号
+     * @return 引当を含む所要情報
+     */
+    Optional<Requirement> findByRequirementNumberWithAllocations(String requirementNumber);
+
+    /**
      * オーダIDで所要情報を検索する
      */
     List<Requirement> findByOrderId(Integer orderId);

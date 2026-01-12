@@ -16,6 +16,7 @@
         <result property="locationCode" column="場所コード"/>
         <result property="createdAt" column="作成日時"/>
         <result property="updatedAt" column="更新日時"/>
+        <result property="version" column="バージョン"/>
     </resultMap>
 
     <!-- PostgreSQL用 INSERT -->

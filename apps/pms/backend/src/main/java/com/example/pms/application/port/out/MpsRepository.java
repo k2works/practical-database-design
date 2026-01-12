@@ -28,6 +28,14 @@ public interface MpsRepository {
     Optional<MasterProductionSchedule> findByMpsNumber(String mpsNumber);
 
     /**
+     * MPS番号で基準生産計画を検索する（オーダを含む）
+     *
+     * @param mpsNumber MPS番号
+     * @return オーダを含む基準生産計画
+     */
+    Optional<MasterProductionSchedule> findByMpsNumberWithOrders(String mpsNumber);
+
+    /**
      * ステータスで基準生産計画を検索する
      */
     List<MasterProductionSchedule> findByStatus(PlanStatus status);

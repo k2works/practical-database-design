@@ -37,6 +37,11 @@ public class RequirementRepositoryImpl implements RequirementRepository {
     }
 
     @Override
+    public Optional<Requirement> findByRequirementNumberWithAllocations(String requirementNumber) {
+        return Optional.ofNullable(requirementMapper.findByRequirementNumberWithAllocations(requirementNumber));
+    }
+
+    @Override
     public List<Requirement> findByOrderId(Integer orderId) {
         return requirementMapper.findByOrderId(orderId);
     }

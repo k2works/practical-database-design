@@ -12,6 +12,10 @@ public interface MasterProductionScheduleMapper {
     void insert(MasterProductionSchedule mps);
     MasterProductionSchedule findById(Integer id);
     MasterProductionSchedule findByMpsNumber(String mpsNumber);
+    /**
+     * MPS番号で検索（オーダを含む）.
+     */
+    MasterProductionSchedule findByMpsNumberWithOrders(String mpsNumber);
     List<MasterProductionSchedule> findByStatus(PlanStatus status);
     List<MasterProductionSchedule> findAll();
     void updateStatus(@Param("id") Integer id, @Param("status") PlanStatus status);

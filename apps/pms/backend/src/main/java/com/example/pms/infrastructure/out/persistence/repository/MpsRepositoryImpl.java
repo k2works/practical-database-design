@@ -37,6 +37,11 @@ public class MpsRepositoryImpl implements MpsRepository {
     }
 
     @Override
+    public Optional<MasterProductionSchedule> findByMpsNumberWithOrders(String mpsNumber) {
+        return Optional.ofNullable(mpsMapper.findByMpsNumberWithOrders(mpsNumber));
+    }
+
+    @Override
     public List<MasterProductionSchedule> findByStatus(PlanStatus status) {
         return mpsMapper.findByStatus(status);
     }

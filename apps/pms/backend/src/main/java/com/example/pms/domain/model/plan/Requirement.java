@@ -27,6 +27,9 @@ public class Requirement {
     private String locationCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
 
     // リレーション
     private Order order;

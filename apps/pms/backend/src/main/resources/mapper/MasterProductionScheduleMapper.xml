@@ -20,6 +20,14 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- オーダを含むResultMap（nested select） -->
+    <resultMap id="MasterProductionScheduleWithOrdersResultMap" type="com.example.pms.domain.model.plan.MasterProductionSchedule"
+               extends="MasterProductionScheduleResultMap">
+        <collection property="orders" ofType="com.example.pms.domain.model.plan.Order"
+                    column="ID" select="com.example.pms.infrastructure.out.persistence.mapper.OrderMapper.findByMpsId"/>
     </resultMap>
 
     <!-- PostgreSQL用 INSERT -->
@@ -67,6 +75,11 @@
     </select>
 
     <select id="findByMpsNumber" resultMap="MasterProductionScheduleResultMap">
+        SELECT * FROM "基準生産計画" WHERE "MPS番号" = #{mpsNumber}
+    </select>
+
+    <!-- オーダを含めて取得 -->
+    <select id="findByMpsNumberWithOrders" resultMap="MasterProductionScheduleWithOrdersResultMap">
         SELECT * FROM "基準生産計画" WHERE "MPS番号" = #{mpsNumber}
     </select>
 

@@ -37,6 +37,11 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
+    public Optional<Order> findByOrderNumberWithRequirements(String orderNumber) {
+        return Optional.ofNullable(orderMapper.findByOrderNumberWithRequirements(orderNumber));
+    }
+
+    @Override
     public List<Order> findByMpsId(Integer mpsId) {
         return orderMapper.findByMpsId(mpsId);
     }

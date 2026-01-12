@@ -12,6 +12,10 @@ public interface OrderMapper {
     void insert(Order order);
     Order findById(Integer id);
     Order findByOrderNumber(String orderNumber);
+    /**
+     * オーダ番号で検索（所要を含む）.
+     */
+    Order findByOrderNumberWithRequirements(String orderNumber);
     List<Order> findByMpsId(Integer mpsId);
     List<Order> findByParentOrderId(Integer parentOrderId);
     List<Order> findAll();

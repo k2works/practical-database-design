@@ -28,6 +28,14 @@ public interface OrderRepository {
     Optional<Order> findByOrderNumber(String orderNumber);
 
     /**
+     * オーダ番号でオーダを検索する（所要を含む）
+     *
+     * @param orderNumber オーダ番号
+     * @return 所要を含むオーダ
+     */
+    Optional<Order> findByOrderNumberWithRequirements(String orderNumber);
+
+    /**
      * MPS IDでオーダを検索する
      */
     List<Order> findByMpsId(Integer mpsId);
