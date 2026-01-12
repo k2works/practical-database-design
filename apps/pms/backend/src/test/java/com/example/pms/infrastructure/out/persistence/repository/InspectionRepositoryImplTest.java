@@ -1,9 +1,11 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
+import com.example.pms.application.port.out.AcceptanceRepository;
 import com.example.pms.application.port.out.InspectionRepository;
 import com.example.pms.application.port.out.PurchaseOrderDetailRepository;
 import com.example.pms.application.port.out.PurchaseOrderRepository;
 import com.example.pms.application.port.out.ReceivingRepository;
+import com.example.pms.domain.model.purchase.Acceptance;
 import com.example.pms.domain.model.purchase.Inspection;
 import com.example.pms.domain.model.purchase.PurchaseOrder;
 import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
@@ -34,6 +36,9 @@ class InspectionRepositoryImplTest extends BaseIntegrationTest {
     private InspectionRepository inspectionRepository;
 
     @Autowired
+    private AcceptanceRepository acceptanceRepository;
+
+    @Autowired
     private ReceivingRepository receivingRepository;
 
     @Autowired
@@ -48,6 +53,7 @@ class InspectionRepositoryImplTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        acceptanceRepository.deleteAll();
         inspectionRepository.deleteAll();
         receivingRepository.deleteAll();
         purchaseOrderDetailRepository.deleteAll();
@@ -202,6 +208,103 @@ class InspectionRepositoryImplTest extends BaseIntegrationTest {
 
             // Assert
             assertThat(all).hasSize(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        @Test
+        @DisplayName("受入検査データと検収を同時に取得できる")
+        void canFindInspectionWithAcceptances() {
+            // Arrange
+            Inspection inspection = createInspection("INS-001");
+            inspectionRepository.save(inspection);
+
+            // Create acceptances
+            Acceptance acceptance1 = Acceptance.builder()
+                    .acceptanceNumber("ACC-001")
+                    .inspectionNumber("INS-001")
+                    .purchaseOrderNumber(purchaseOrderNumber)
+                    .lineNumber(lineNumber)
+                    .acceptanceDate(LocalDate.of(2024, 1, 22))
+                    .acceptorCode("EMP001")
+                    .supplierCode("SUP001")
+                    .itemCode("ITEM001")
+                    .miscellaneousItemFlag(false)
+                    .acceptedQuantity(new BigDecimal("24.00"))
+                    .unitPrice(new BigDecimal("1000.00"))
+                    .amount(new BigDecimal("24000.00"))
+                    .taxAmount(new BigDecimal("2400.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            acceptanceRepository.save(acceptance1);
+
+            Acceptance acceptance2 = Acceptance.builder()
+                    .acceptanceNumber("ACC-002")
+                    .inspectionNumber("INS-001")
+                    .purchaseOrderNumber(purchaseOrderNumber)
+                    .lineNumber(lineNumber)
+                    .acceptanceDate(LocalDate.of(2024, 1, 23))
+                    .acceptorCode("EMP002")
+                    .supplierCode("SUP001")
+                    .itemCode("ITEM001")
+                    .miscellaneousItemFlag(false)
+                    .acceptedQuantity(new BigDecimal("24.00"))
+                    .unitPrice(new BigDecimal("1000.00"))
+                    .amount(new BigDecimal("24000.00"))
+                    .taxAmount(new BigDecimal("2400.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            acceptanceRepository.save(acceptance2);
+
+            // Act
+            Optional<Inspection> found = inspectionRepository.findByInspectionNumberWithAcceptances("INS-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getInspectionNumber()).isEqualTo("INS-001");
+            assertThat(found.get().getAcceptances()).isNotNull();
+            assertThat(found.get().getAcceptances()).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("検収がない場合は空リストを返す")
+        void returnsEmptyListWhenNoAcceptances() {
+            // Arrange
+            Inspection inspection = createInspection("INS-002");
+            inspectionRepository.save(inspection);
+
+            // Act
+            Optional<Inspection> found = inspectionRepository.findByInspectionNumberWithAcceptances("INS-002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getAcceptances()).isNotNull();
+            assertThat(found.get().getAcceptances()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+
+        @Test
+        @DisplayName("デフォルトバージョンは1である")
+        void defaultVersionIsOne() {
+            // Arrange
+            Inspection inspection = createInspection("INS-001");
+
+            // Act
+            inspectionRepository.save(inspection);
+            Optional<Inspection> found = inspectionRepository.findByInspectionNumber("INS-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
         }
     }
 }

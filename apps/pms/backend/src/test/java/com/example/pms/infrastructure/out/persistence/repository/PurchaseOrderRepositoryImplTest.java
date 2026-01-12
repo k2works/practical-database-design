@@ -1,7 +1,9 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
+import com.example.pms.application.port.out.PurchaseOrderDetailRepository;
 import com.example.pms.application.port.out.PurchaseOrderRepository;
 import com.example.pms.domain.model.purchase.PurchaseOrder;
+import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
 import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
 import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -25,8 +28,12 @@ class PurchaseOrderRepositoryImplTest extends BaseIntegrationTest {
     @Autowired
     private PurchaseOrderRepository purchaseOrderRepository;
 
+    @Autowired
+    private PurchaseOrderDetailRepository purchaseOrderDetailRepository;
+
     @BeforeEach
     void setUp() {
+        purchaseOrderDetailRepository.deleteAll();
         purchaseOrderRepository.deleteAll();
     }
 
@@ -179,6 +186,105 @@ class PurchaseOrderRepositoryImplTest extends BaseIntegrationTest {
             Optional<PurchaseOrder> updated = purchaseOrderRepository.findByPurchaseOrderNumber("PO-001");
             assertThat(updated).isPresent();
             assertThat(updated.get().getStatus()).isEqualTo(PurchaseOrderStatus.ORDERED);
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        @Test
+        @DisplayName("発注データと発注明細を同時に取得できる")
+        void canFindPurchaseOrderWithDetails() {
+            // Arrange
+            PurchaseOrder po = createPurchaseOrder("PO-001", PurchaseOrderStatus.ORDERED);
+            purchaseOrderRepository.save(po);
+
+            // Create purchase order details
+            PurchaseOrderDetail detail1 = PurchaseOrderDetail.builder()
+                    .purchaseOrderNumber("PO-001")
+                    .lineNumber(1)
+                    .itemCode("ITEM001")
+                    .miscellaneousItemFlag(false)
+                    .expectedReceivingDate(LocalDate.of(2024, 1, 20))
+                    .orderUnitPrice(new BigDecimal("1000.00"))
+                    .orderQuantity(new BigDecimal("100.00"))
+                    .receivedQuantity(BigDecimal.ZERO)
+                    .inspectedQuantity(BigDecimal.ZERO)
+                    .acceptedQuantity(BigDecimal.ZERO)
+                    .orderAmount(new BigDecimal("100000.00"))
+                    .taxAmount(new BigDecimal("10000.00"))
+                    .completedFlag(false)
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            purchaseOrderDetailRepository.save(detail1);
+
+            PurchaseOrderDetail detail2 = PurchaseOrderDetail.builder()
+                    .purchaseOrderNumber("PO-001")
+                    .lineNumber(2)
+                    .itemCode("ITEM002")
+                    .miscellaneousItemFlag(false)
+                    .expectedReceivingDate(LocalDate.of(2024, 1, 21))
+                    .orderUnitPrice(new BigDecimal("2000.00"))
+                    .orderQuantity(new BigDecimal("50.00"))
+                    .receivedQuantity(BigDecimal.ZERO)
+                    .inspectedQuantity(BigDecimal.ZERO)
+                    .acceptedQuantity(BigDecimal.ZERO)
+                    .orderAmount(new BigDecimal("100000.00"))
+                    .taxAmount(new BigDecimal("10000.00"))
+                    .completedFlag(false)
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            purchaseOrderDetailRepository.save(detail2);
+
+            // Act
+            Optional<PurchaseOrder> found = purchaseOrderRepository.findByPurchaseOrderNumberWithDetails("PO-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getPurchaseOrderNumber()).isEqualTo("PO-001");
+            assertThat(found.get().getDetails()).isNotNull();
+            assertThat(found.get().getDetails()).hasSize(2);
+            assertThat(found.get().getDetails().get(0).getLineNumber()).isEqualTo(1);
+            assertThat(found.get().getDetails().get(1).getLineNumber()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("明細がない場合は空リストを返す")
+        void returnsEmptyListWhenNoDetails() {
+            // Arrange
+            PurchaseOrder po = createPurchaseOrder("PO-002", PurchaseOrderStatus.CREATING);
+            purchaseOrderRepository.save(po);
+
+            // Act
+            Optional<PurchaseOrder> found = purchaseOrderRepository.findByPurchaseOrderNumberWithDetails("PO-002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getDetails()).isNotNull();
+            assertThat(found.get().getDetails()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+
+        @Test
+        @DisplayName("デフォルトバージョンは1である")
+        void defaultVersionIsOne() {
+            // Arrange
+            PurchaseOrder po = createPurchaseOrder("PO-001", PurchaseOrderStatus.CREATING);
+
+            // Act
+            purchaseOrderRepository.save(po);
+            Optional<PurchaseOrder> found = purchaseOrderRepository.findByPurchaseOrderNumber("PO-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
         }
     }
 }

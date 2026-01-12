@@ -1,8 +1,10 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
+import com.example.pms.application.port.out.InspectionRepository;
 import com.example.pms.application.port.out.PurchaseOrderDetailRepository;
 import com.example.pms.application.port.out.PurchaseOrderRepository;
 import com.example.pms.application.port.out.ReceivingRepository;
+import com.example.pms.domain.model.purchase.Inspection;
 import com.example.pms.domain.model.purchase.PurchaseOrder;
 import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
 import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
@@ -32,6 +34,9 @@ class ReceivingRepositoryImplTest extends BaseIntegrationTest {
     private ReceivingRepository receivingRepository;
 
     @Autowired
+    private InspectionRepository inspectionRepository;
+
+    @Autowired
     private PurchaseOrderRepository purchaseOrderRepository;
 
     @Autowired
@@ -42,6 +47,7 @@ class ReceivingRepositoryImplTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        inspectionRepository.deleteAll();
         receivingRepository.deleteAll();
         purchaseOrderDetailRepository.deleteAll();
         purchaseOrderRepository.deleteAll();
@@ -194,6 +200,97 @@ class ReceivingRepositoryImplTest extends BaseIntegrationTest {
 
             // Assert
             assertThat(all).hasSize(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        @Test
+        @DisplayName("入荷データと検査を同時に取得できる")
+        void canFindReceivingWithInspections() {
+            // Arrange
+            Receiving receiving = createReceiving("RCV-001", ReceivingType.NORMAL);
+            receivingRepository.save(receiving);
+
+            // Create inspections
+            Inspection inspection1 = Inspection.builder()
+                    .inspectionNumber("INS-001")
+                    .receivingNumber("RCV-001")
+                    .purchaseOrderNumber(purchaseOrderNumber)
+                    .lineNumber(lineNumber)
+                    .inspectionDate(LocalDate.of(2024, 1, 21))
+                    .inspectorCode("EMP001")
+                    .itemCode("ITEM001")
+                    .miscellaneousItemFlag(false)
+                    .goodQuantity(new BigDecimal("25.00"))
+                    .defectQuantity(new BigDecimal("0.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            inspectionRepository.save(inspection1);
+
+            Inspection inspection2 = Inspection.builder()
+                    .inspectionNumber("INS-002")
+                    .receivingNumber("RCV-001")
+                    .purchaseOrderNumber(purchaseOrderNumber)
+                    .lineNumber(lineNumber)
+                    .inspectionDate(LocalDate.of(2024, 1, 22))
+                    .inspectorCode("EMP002")
+                    .itemCode("ITEM001")
+                    .miscellaneousItemFlag(false)
+                    .goodQuantity(new BigDecimal("23.00"))
+                    .defectQuantity(new BigDecimal("2.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            inspectionRepository.save(inspection2);
+
+            // Act
+            Optional<Receiving> found = receivingRepository.findByReceivingNumberWithInspections("RCV-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getReceivingNumber()).isEqualTo("RCV-001");
+            assertThat(found.get().getInspections()).isNotNull();
+            assertThat(found.get().getInspections()).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("検査がない場合は空リストを返す")
+        void returnsEmptyListWhenNoInspections() {
+            // Arrange
+            Receiving receiving = createReceiving("RCV-002", ReceivingType.SPLIT);
+            receivingRepository.save(receiving);
+
+            // Act
+            Optional<Receiving> found = receivingRepository.findByReceivingNumberWithInspections("RCV-002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getInspections()).isNotNull();
+            assertThat(found.get().getInspections()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+
+        @Test
+        @DisplayName("デフォルトバージョンは1である")
+        void defaultVersionIsOne() {
+            // Arrange
+            Receiving receiving = createReceiving("RCV-001", ReceivingType.NORMAL);
+
+            // Act
+            receivingRepository.save(receiving);
+            Optional<Receiving> found = receivingRepository.findByReceivingNumber("RCV-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
         }
     }
 }
