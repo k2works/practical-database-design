@@ -65,12 +65,12 @@ class InspectionResultRepositoryImplTest extends BaseIntegrationTest {
             ON CONFLICT DO NOTHING
             """);
         jdbcTemplate.execute("""
-            INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点区分")
+            INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点分類")
             VALUES ('DEF001', 'キズ', '外観')
             ON CONFLICT DO NOTHING
             """);
         jdbcTemplate.execute("""
-            INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点区分")
+            INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点分類")
             VALUES ('DEF002', '寸法不良', '寸法')
             ON CONFLICT DO NOTHING
             """);

@@ -29,7 +29,7 @@ class DefectRepositoryImplTest extends BaseIntegrationTest {
         return Defect.builder()
                 .defectCode(code)
                 .defectName(name)
-                .defectType(type)
+                .defectCategory(type)
                 .build();
     }
 

@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class Defect {
     private String defectCode;
     private String defectName;
-    private String defectType;
+    private String defectCategory;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

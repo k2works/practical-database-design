@@ -7,16 +7,16 @@
     <resultMap id="DefectResultMap" type="com.example.pms.domain.model.defect.Defect">
         <id property="defectCode" column="欠点コード"/>
         <result property="defectName" column="欠点名"/>
-        <result property="defectType" column="欠点区分"/>
+        <result property="defectCategory" column="欠点分類"/>
         <result property="createdAt" column="作成日時"/>
         <result property="updatedAt" column="更新日時"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.defect.Defect">
         INSERT INTO "欠点マスタ" (
-            "欠点コード", "欠点名", "欠点区分", "作成日時", "更新日時"
+            "欠点コード", "欠点名", "欠点分類", "作成日時", "更新日時"
         ) VALUES (
-            #{defectCode}, #{defectName}, #{defectType}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            #{defectCode}, #{defectName}, #{defectCategory}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -33,7 +33,7 @@
     <update id="update" parameterType="com.example.pms.domain.model.defect.Defect">
         UPDATE "欠点マスタ" SET
             "欠点名" = #{defectName},
-            "欠点区分" = #{defectType},
+            "欠点分類" = #{defectCategory},
             "更新日時" = CURRENT_TIMESTAMP
         WHERE "欠点コード" = #{defectCode}
     </update>
