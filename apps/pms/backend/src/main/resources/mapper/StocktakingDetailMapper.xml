@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.StocktakingDetailMapper">
+
+    <resultMap id="StocktakingDetailResultMap" type="com.example.pms.domain.model.inventory.StocktakingDetail">
+        <id property="id" column="ID"/>
+        <result property="stocktakingNumber" column="棚卸番号"/>
+        <result property="lineNumber" column="棚卸行番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="bookQuantity" column="帳簿数量"/>
+        <result property="actualQuantity" column="実棚数量"/>
+        <result property="differenceQuantity" column="差異数量"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.inventory.StocktakingDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "棚卸明細データ" (
+            "棚卸番号", "棚卸行番号", "品目コード", "帳簿数量", "実棚数量", "差異数量",
+            "作成者", "更新者"
+        ) VALUES (
+            #{stocktakingNumber},
+            #{lineNumber},
+            #{itemCode},
+            #{bookQuantity},
+            #{actualQuantity},
+            #{differenceQuantity},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.example.pms.domain.model.inventory.StocktakingDetail">
+        UPDATE "棚卸明細データ" SET
+            "品目コード" = #{itemCode},
+            "帳簿数量" = #{bookQuantity},
+            "実棚数量" = #{actualQuantity},
+            "差異数量" = #{differenceQuantity},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <select id="findById" resultMap="StocktakingDetailResultMap">
+        SELECT * FROM "棚卸明細データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByStocktakingNumberAndLineNumber" resultMap="StocktakingDetailResultMap">
+        SELECT * FROM "棚卸明細データ"
+        WHERE "棚卸番号" = #{stocktakingNumber}
+          AND "棚卸行番号" = #{lineNumber}
+    </select>
+
+    <select id="findByStocktakingNumber" resultMap="StocktakingDetailResultMap">
+        SELECT * FROM "棚卸明細データ"
+        WHERE "棚卸番号" = #{stocktakingNumber}
+        ORDER BY "棚卸行番号"
+    </select>
+
+    <select id="findAll" resultMap="StocktakingDetailResultMap">
+        SELECT * FROM "棚卸明細データ" ORDER BY "棚卸番号", "棚卸行番号"
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "棚卸明細データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "棚卸明細データ"
+    </delete>
+</mapper>

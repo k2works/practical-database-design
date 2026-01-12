@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.IssueInstructionDetailMapper">
+
+    <resultMap id="IssueInstructionDetailResultMap" type="com.example.pms.domain.model.inventory.IssueInstructionDetail">
+        <id property="id" column="ID"/>
+        <result property="instructionNumber" column="払出指示番号"/>
+        <result property="lineNumber" column="払出行番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="routingSequence" column="工順"/>
+        <result property="issueQuantity" column="払出数量"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.inventory.IssueInstructionDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "払出指示明細データ" (
+            "払出指示番号", "払出行番号", "品目コード", "工順", "払出数量",
+            "作成者", "更新者"
+        ) VALUES (
+            #{instructionNumber},
+            #{lineNumber},
+            #{itemCode},
+            #{routingSequence},
+            #{issueQuantity},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.example.pms.domain.model.inventory.IssueInstructionDetail">
+        UPDATE "払出指示明細データ" SET
+            "品目コード" = #{itemCode},
+            "工順" = #{routingSequence},
+            "払出数量" = #{issueQuantity},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <select id="findById" resultMap="IssueInstructionDetailResultMap">
+        SELECT * FROM "払出指示明細データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByInstructionNumberAndLineNumber" resultMap="IssueInstructionDetailResultMap">
+        SELECT * FROM "払出指示明細データ"
+        WHERE "払出指示番号" = #{instructionNumber}
+          AND "払出行番号" = #{lineNumber}
+    </select>
+
+    <select id="findByInstructionNumber" resultMap="IssueInstructionDetailResultMap">
+        SELECT * FROM "払出指示明細データ"
+        WHERE "払出指示番号" = #{instructionNumber}
+        ORDER BY "払出行番号"
+    </select>
+
+    <select id="findAll" resultMap="IssueInstructionDetailResultMap">
+        SELECT * FROM "払出指示明細データ" ORDER BY "払出指示番号", "払出行番号"
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "払出指示明細データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "払出指示明細データ"
+    </delete>
+</mapper>

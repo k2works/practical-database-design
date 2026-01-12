@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.StocktakingMapper">
+
+    <resultMap id="StocktakingResultMap" type="com.example.pms.domain.model.inventory.Stocktaking">
+        <id property="id" column="ID"/>
+        <result property="stocktakingNumber" column="棚卸番号"/>
+        <result property="locationCode" column="場所コード"/>
+        <result property="stocktakingDate" column="棚卸日"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.inventory.Stocktaking"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "棚卸データ" (
+            "棚卸番号", "場所コード", "棚卸日", "ステータス", "作成者", "更新者"
+        ) VALUES (
+            #{stocktakingNumber},
+            #{locationCode},
+            #{stocktakingDate},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.inventory.Stocktaking"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "棚卸データ" (
+            "棚卸番号", "場所コード", "棚卸日", "ステータス", "作成者", "更新者"
+        ) VALUES (
+            #{stocktakingNumber},
+            #{locationCode},
+            #{stocktakingDate},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- PostgreSQL用 UPDATE -->
+    <update id="update" parameterType="com.example.pms.domain.model.inventory.Stocktaking" databaseId="postgresql">
+        UPDATE "棚卸データ" SET
+            "場所コード" = #{locationCode},
+            "棚卸日" = #{stocktakingDate},
+            "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス,
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- H2用 UPDATE -->
+    <update id="update" parameterType="com.example.pms.domain.model.inventory.Stocktaking" databaseId="h2">
+        UPDATE "棚卸データ" SET
+            "場所コード" = #{locationCode},
+            "棚卸日" = #{stocktakingDate},
+            "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <select id="findById" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByStocktakingNumber" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ" WHERE "棚卸番号" = #{stocktakingNumber}
+    </select>
+
+    <select id="findByLocationCode" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ" WHERE "場所コード" = #{locationCode} ORDER BY "棚卸日" DESC
+    </select>
+
+    <!-- PostgreSQL用 findByStatus -->
+    <select id="findByStatus" resultMap="StocktakingResultMap" databaseId="postgresql">
+        SELECT * FROM "棚卸データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}::棚卸ステータス
+        ORDER BY "棚卸日" DESC
+    </select>
+
+    <!-- H2用 findByStatus -->
+    <select id="findByStatus" resultMap="StocktakingResultMap" databaseId="h2">
+        SELECT * FROM "棚卸データ"
+        WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.StocktakingStatusTypeHandler}
+        ORDER BY "棚卸日" DESC
+    </select>
+
+    <select id="findAll" resultMap="StocktakingResultMap">
+        SELECT * FROM "棚卸データ" ORDER BY "棚卸日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "棚卸データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "棚卸データ"
+    </delete>
+</mapper>

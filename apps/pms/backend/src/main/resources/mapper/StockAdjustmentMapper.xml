@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.StockAdjustmentMapper">
+
+    <resultMap id="StockAdjustmentResultMap" type="com.example.pms.domain.model.inventory.StockAdjustment">
+        <id property="id" column="ID"/>
+        <result property="adjustmentNumber" column="在庫調整番号"/>
+        <result property="stocktakingNumber" column="棚卸番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="locationCode" column="場所コード"/>
+        <result property="adjustmentDate" column="調整日"/>
+        <result property="adjusterCode" column="調整担当者コード"/>
+        <result property="adjustmentQuantity" column="調整数"/>
+        <result property="reasonCode" column="理由コード"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.inventory.StockAdjustment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "在庫調整データ" (
+            "在庫調整番号", "棚卸番号", "品目コード", "場所コード", "調整日",
+            "調整担当者コード", "調整数", "理由コード", "作成者", "更新者"
+        ) VALUES (
+            #{adjustmentNumber},
+            #{stocktakingNumber},
+            #{itemCode},
+            #{locationCode},
+            #{adjustmentDate},
+            #{adjusterCode},
+            #{adjustmentQuantity},
+            #{reasonCode},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.example.pms.domain.model.inventory.StockAdjustment">
+        UPDATE "在庫調整データ" SET
+            "棚卸番号" = #{stocktakingNumber},
+            "品目コード" = #{itemCode},
+            "場所コード" = #{locationCode},
+            "調整日" = #{adjustmentDate},
+            "調整担当者コード" = #{adjusterCode},
+            "調整数" = #{adjustmentQuantity},
+            "理由コード" = #{reasonCode},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <select id="findById" resultMap="StockAdjustmentResultMap">
+        SELECT * FROM "在庫調整データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByAdjustmentNumber" resultMap="StockAdjustmentResultMap">
+        SELECT * FROM "在庫調整データ" WHERE "在庫調整番号" = #{adjustmentNumber}
+    </select>
+
+    <select id="findByStocktakingNumber" resultMap="StockAdjustmentResultMap">
+        SELECT * FROM "在庫調整データ" WHERE "棚卸番号" = #{stocktakingNumber} ORDER BY "調整日" DESC
+    </select>
+
+    <select id="findByLocationCode" resultMap="StockAdjustmentResultMap">
+        SELECT * FROM "在庫調整データ" WHERE "場所コード" = #{locationCode} ORDER BY "調整日" DESC
+    </select>
+
+    <select id="findAll" resultMap="StockAdjustmentResultMap">
+        SELECT * FROM "在庫調整データ" ORDER BY "調整日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "在庫調整データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "在庫調整データ"
+    </delete>
+</mapper>

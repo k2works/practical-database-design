@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.IssueMapper">
+
+    <resultMap id="IssueResultMap" type="com.example.pms.domain.model.inventory.Issue">
+        <id property="id" column="ID"/>
+        <result property="issueNumber" column="払出番号"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="routingSequence" column="工順"/>
+        <result property="locationCode" column="場所コード"/>
+        <result property="issueDate" column="払出日"/>
+        <result property="issuerCode" column="払出担当者コード"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.inventory.Issue"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "払出データ" (
+            "払出番号", "作業指示番号", "工順", "場所コード", "払出日", "払出担当者コード",
+            "作成者", "更新者"
+        ) VALUES (
+            #{issueNumber},
+            #{workOrderNumber},
+            #{routingSequence},
+            #{locationCode},
+            #{issueDate},
+            #{issuerCode},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.example.pms.domain.model.inventory.Issue">
+        UPDATE "払出データ" SET
+            "作業指示番号" = #{workOrderNumber},
+            "工順" = #{routingSequence},
+            "場所コード" = #{locationCode},
+            "払出日" = #{issueDate},
+            "払出担当者コード" = #{issuerCode},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
+    <select id="findById" resultMap="IssueResultMap">
+        SELECT * FROM "払出データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByIssueNumber" resultMap="IssueResultMap">
+        SELECT * FROM "払出データ" WHERE "払出番号" = #{issueNumber}
+    </select>
+
+    <select id="findByWorkOrderNumber" resultMap="IssueResultMap">
+        SELECT * FROM "払出データ" WHERE "作業指示番号" = #{workOrderNumber} ORDER BY "払出日" DESC
+    </select>
+
+    <select id="findByLocationCode" resultMap="IssueResultMap">
+        SELECT * FROM "払出データ" WHERE "場所コード" = #{locationCode} ORDER BY "払出日" DESC
+    </select>
+
+    <select id="findAll" resultMap="IssueResultMap">
+        SELECT * FROM "払出データ" ORDER BY "払出日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "払出データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "払出データ"
+    </delete>
+</mapper>
