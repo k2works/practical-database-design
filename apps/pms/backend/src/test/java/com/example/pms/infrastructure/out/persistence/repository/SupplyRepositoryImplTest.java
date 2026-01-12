@@ -221,4 +221,91 @@ class SupplyRepositoryImplTest extends BaseIntegrationTest {
             assertThat(all).hasSize(2);
         }
     }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        @Test
+        @DisplayName("支給データと支給明細を同時に取得できる")
+        void canFindSupplyWithDetails() {
+            // Arrange
+            Supply supply = createSupply("SUP-001", SupplyType.FREE);
+            supplyRepository.save(supply);
+
+            // Create supply details
+            com.example.pms.domain.model.subcontract.SupplyDetail detail1 =
+                    com.example.pms.domain.model.subcontract.SupplyDetail.builder()
+                    .supplyNumber("SUP-001")
+                    .lineNumber(1)
+                    .itemCode("ITEM001")
+                    .quantity(new BigDecimal("10.00"))
+                    .unitPrice(new BigDecimal("100.00"))
+                    .amount(new BigDecimal("1000.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            supplyDetailRepository.save(detail1);
+
+            com.example.pms.domain.model.subcontract.SupplyDetail detail2 =
+                    com.example.pms.domain.model.subcontract.SupplyDetail.builder()
+                    .supplyNumber("SUP-001")
+                    .lineNumber(2)
+                    .itemCode("ITEM002")
+                    .quantity(new BigDecimal("20.00"))
+                    .unitPrice(new BigDecimal("200.00"))
+                    .amount(new BigDecimal("4000.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            supplyDetailRepository.save(detail2);
+
+            // Act
+            Optional<Supply> found = supplyRepository.findBySupplyNumberWithDetails("SUP-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getSupplyNumber()).isEqualTo("SUP-001");
+            assertThat(found.get().getDetails()).isNotNull();
+            assertThat(found.get().getDetails()).hasSize(2);
+            assertThat(found.get().getDetails().get(0).getLineNumber()).isEqualTo(1);
+            assertThat(found.get().getDetails().get(1).getLineNumber()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("明細がない場合は空リストを返す")
+        void returnsEmptyListWhenNoDetails() {
+            // Arrange
+            Supply supply = createSupply("SUP-002", SupplyType.PAID);
+            supplyRepository.save(supply);
+
+            // Act
+            Optional<Supply> found = supplyRepository.findBySupplyNumberWithDetails("SUP-002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getDetails()).isNotNull();
+            assertThat(found.get().getDetails()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+
+        @Test
+        @DisplayName("デフォルトバージョンは1である")
+        void defaultVersionIsOne() {
+            // Arrange
+            Supply supply = createSupply("SUP-001", SupplyType.FREE);
+
+            // Act
+            supplyRepository.save(supply);
+            Optional<Supply> found = supplyRepository.findBySupplyNumber("SUP-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
+        }
+    }
 }

@@ -209,4 +209,87 @@ class ConsumptionRepositoryImplTest extends BaseIntegrationTest {
             assertThat(all).hasSize(2);
         }
     }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        @Test
+        @DisplayName("消費データと消費明細を同時に取得できる")
+        void canFindConsumptionWithDetails() {
+            // Arrange
+            Consumption consumption = createConsumption("CON-001");
+            consumptionRepository.save(consumption);
+
+            // Create consumption details
+            com.example.pms.domain.model.subcontract.ConsumptionDetail detail1 =
+                    com.example.pms.domain.model.subcontract.ConsumptionDetail.builder()
+                    .consumptionNumber("CON-001")
+                    .lineNumber(1)
+                    .itemCode("ITEM001")
+                    .quantity(new BigDecimal("5.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            consumptionDetailRepository.save(detail1);
+
+            com.example.pms.domain.model.subcontract.ConsumptionDetail detail2 =
+                    com.example.pms.domain.model.subcontract.ConsumptionDetail.builder()
+                    .consumptionNumber("CON-001")
+                    .lineNumber(2)
+                    .itemCode("ITEM002")
+                    .quantity(new BigDecimal("10.00"))
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            consumptionDetailRepository.save(detail2);
+
+            // Act
+            Optional<Consumption> found = consumptionRepository.findByConsumptionNumberWithDetails("CON-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getConsumptionNumber()).isEqualTo("CON-001");
+            assertThat(found.get().getDetails()).isNotNull();
+            assertThat(found.get().getDetails()).hasSize(2);
+            assertThat(found.get().getDetails().get(0).getLineNumber()).isEqualTo(1);
+            assertThat(found.get().getDetails().get(1).getLineNumber()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("明細がない場合は空リストを返す")
+        void returnsEmptyListWhenNoDetails() {
+            // Arrange
+            Consumption consumption = createConsumption("CON-002");
+            consumptionRepository.save(consumption);
+
+            // Act
+            Optional<Consumption> found = consumptionRepository.findByConsumptionNumberWithDetails("CON-002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getDetails()).isNotNull();
+            assertThat(found.get().getDetails()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+
+        @Test
+        @DisplayName("デフォルトバージョンは1である")
+        void defaultVersionIsOne() {
+            // Arrange
+            Consumption consumption = createConsumption("CON-001");
+
+            // Act
+            consumptionRepository.save(consumption);
+            Optional<Consumption> found = consumptionRepository.findByConsumptionNumber("CON-001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
+        }
+    }
 }
