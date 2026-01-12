@@ -16,6 +16,14 @@ public interface ReceivingRepository {
 
     Optional<Receiving> findByReceivingNumber(String receivingNumber);
 
+    /**
+     * 入荷番号で検索（検査を含む）.
+     *
+     * @param receivingNumber 入荷番号
+     * @return 検査を含む入荷データ
+     */
+    Optional<Receiving> findByReceivingNumberWithInspections(String receivingNumber);
+
     List<Receiving> findByPurchaseOrderNumber(String purchaseOrderNumber);
 
     List<Receiving> findByPurchaseOrderNumberAndLineNumber(

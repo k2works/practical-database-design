@@ -36,6 +36,11 @@ public class InspectionRepositoryImpl implements InspectionRepository {
     }
 
     @Override
+    public Optional<Inspection> findByInspectionNumberWithAcceptances(String inspectionNumber) {
+        return Optional.ofNullable(inspectionMapper.findByInspectionNumberWithAcceptances(inspectionNumber));
+    }
+
+    @Override
     public List<Inspection> findByReceivingNumber(String receivingNumber) {
         return inspectionMapper.findByReceivingNumber(receivingNumber);
     }

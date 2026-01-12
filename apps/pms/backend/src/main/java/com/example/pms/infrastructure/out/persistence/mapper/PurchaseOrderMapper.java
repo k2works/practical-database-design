@@ -12,6 +12,12 @@ public interface PurchaseOrderMapper {
     void insert(PurchaseOrder purchaseOrder);
     PurchaseOrder findById(Integer id);
     PurchaseOrder findByPurchaseOrderNumber(String purchaseOrderNumber);
+
+    /**
+     * 発注番号で検索（明細を含む）.
+     */
+    PurchaseOrder findByPurchaseOrderNumberWithDetails(String purchaseOrderNumber);
+
     List<PurchaseOrder> findBySupplierCode(String supplierCode);
     List<PurchaseOrder> findByStatus(PurchaseOrderStatus status);
     List<PurchaseOrder> findAll();

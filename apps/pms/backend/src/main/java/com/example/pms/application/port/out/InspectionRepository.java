@@ -16,6 +16,14 @@ public interface InspectionRepository {
 
     Optional<Inspection> findByInspectionNumber(String inspectionNumber);
 
+    /**
+     * 受入検査番号で検索（検収を含む）.
+     *
+     * @param inspectionNumber 受入検査番号
+     * @return 検収を含む検査データ
+     */
+    Optional<Inspection> findByInspectionNumberWithAcceptances(String inspectionNumber);
+
     List<Inspection> findByReceivingNumber(String receivingNumber);
 
     List<Inspection> findAll();

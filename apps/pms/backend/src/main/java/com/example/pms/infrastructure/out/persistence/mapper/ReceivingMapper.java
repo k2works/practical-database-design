@@ -11,6 +11,12 @@ public interface ReceivingMapper {
     void insert(Receiving receiving);
     Receiving findById(Integer id);
     Receiving findByReceivingNumber(String receivingNumber);
+
+    /**
+     * 入荷番号で検索（検査を含む）.
+     */
+    Receiving findByReceivingNumberWithInspections(String receivingNumber);
+
     List<Receiving> findByPurchaseOrderNumber(String purchaseOrderNumber);
     List<Receiving> findByPurchaseOrderNumberAndLineNumber(
             @Param("purchaseOrderNumber") String purchaseOrderNumber,

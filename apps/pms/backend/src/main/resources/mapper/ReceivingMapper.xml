@@ -21,6 +21,14 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 検査を含むResultMap（nested select） -->
+    <resultMap id="ReceivingWithInspectionsResultMap" type="com.example.pms.domain.model.purchase.Receiving"
+               extends="ReceivingResultMap">
+        <collection property="inspections" ofType="com.example.pms.domain.model.purchase.Inspection"
+                    column="入荷番号" select="com.example.pms.infrastructure.out.persistence.mapper.InspectionMapper.findByReceivingNumber"/>
     </resultMap>
 
     <!-- PostgreSQL用 INSERT -->
@@ -72,6 +80,11 @@
     </select>
 
     <select id="findByReceivingNumber" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ" WHERE "入荷番号" = #{receivingNumber}
+    </select>
+
+    <!-- 検査を含めて取得 -->
+    <select id="findByReceivingNumberWithInspections" resultMap="ReceivingWithInspectionsResultMap">
         SELECT * FROM "入荷受入データ" WHERE "入荷番号" = #{receivingNumber}
     </select>
 

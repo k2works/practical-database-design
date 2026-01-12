@@ -18,6 +18,14 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 明細を含むResultMap（nested select） -->
+    <resultMap id="PurchaseOrderWithDetailsResultMap" type="com.example.pms.domain.model.purchase.PurchaseOrder"
+               extends="PurchaseOrderResultMap">
+        <collection property="details" ofType="com.example.pms.domain.model.purchase.PurchaseOrderDetail"
+                    column="発注番号" select="com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderDetailMapper.findByPurchaseOrderNumber"/>
     </resultMap>
 
     <!-- PostgreSQL用 INSERT -->
@@ -63,6 +71,11 @@
     </select>
 
     <select id="findByPurchaseOrderNumber" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" WHERE "発注番号" = #{purchaseOrderNumber}
+    </select>
+
+    <!-- 明細を含めて取得 -->
+    <select id="findByPurchaseOrderNumberWithDetails" resultMap="PurchaseOrderWithDetailsResultMap">
         SELECT * FROM "発注データ" WHERE "発注番号" = #{purchaseOrderNumber}
     </select>
 

@@ -21,6 +21,14 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 検収を含むResultMap（nested select） -->
+    <resultMap id="InspectionWithAcceptancesResultMap" type="com.example.pms.domain.model.purchase.Inspection"
+               extends="InspectionResultMap">
+        <collection property="acceptances" ofType="com.example.pms.domain.model.purchase.Acceptance"
+                    column="受入検査番号" select="com.example.pms.infrastructure.out.persistence.mapper.AcceptanceMapper.findByInspectionNumber"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.purchase.Inspection"
@@ -51,6 +59,11 @@
     </select>
 
     <select id="findByInspectionNumber" resultMap="InspectionResultMap">
+        SELECT * FROM "受入検査データ" WHERE "受入検査番号" = #{inspectionNumber}
+    </select>
+
+    <!-- 検収を含めて取得 -->
+    <select id="findByInspectionNumberWithAcceptances" resultMap="InspectionWithAcceptancesResultMap">
         SELECT * FROM "受入検査データ" WHERE "受入検査番号" = #{inspectionNumber}
     </select>
 

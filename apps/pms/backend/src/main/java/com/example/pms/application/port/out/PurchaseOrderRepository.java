@@ -17,6 +17,14 @@ public interface PurchaseOrderRepository {
 
     Optional<PurchaseOrder> findByPurchaseOrderNumber(String purchaseOrderNumber);
 
+    /**
+     * 発注番号で検索（明細を含む）.
+     *
+     * @param purchaseOrderNumber 発注番号
+     * @return 明細を含む発注データ
+     */
+    Optional<PurchaseOrder> findByPurchaseOrderNumberWithDetails(String purchaseOrderNumber);
+
     List<PurchaseOrder> findBySupplierCode(String supplierCode);
 
     List<PurchaseOrder> findByStatus(PurchaseOrderStatus status);

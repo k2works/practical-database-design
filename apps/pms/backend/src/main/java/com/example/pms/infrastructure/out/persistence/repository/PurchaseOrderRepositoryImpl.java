@@ -37,6 +37,11 @@ public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
     }
 
     @Override
+    public Optional<PurchaseOrder> findByPurchaseOrderNumberWithDetails(String purchaseOrderNumber) {
+        return Optional.ofNullable(purchaseOrderMapper.findByPurchaseOrderNumberWithDetails(purchaseOrderNumber));
+    }
+
+    @Override
     public List<PurchaseOrder> findBySupplierCode(String supplierCode) {
         return purchaseOrderMapper.findBySupplierCode(supplierCode);
     }

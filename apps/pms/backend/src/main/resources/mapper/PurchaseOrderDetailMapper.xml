@@ -27,6 +27,7 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.purchase.PurchaseOrderDetail"

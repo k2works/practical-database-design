@@ -36,6 +36,11 @@ public class ReceivingRepositoryImpl implements ReceivingRepository {
     }
 
     @Override
+    public Optional<Receiving> findByReceivingNumberWithInspections(String receivingNumber) {
+        return Optional.ofNullable(receivingMapper.findByReceivingNumberWithInspections(receivingNumber));
+    }
+
+    @Override
     public List<Receiving> findByPurchaseOrderNumber(String purchaseOrderNumber) {
         return receivingMapper.findByPurchaseOrderNumber(purchaseOrderNumber);
     }
