@@ -27,6 +27,9 @@ public class Stock {
     private String createdBy;
     private LocalDateTime updatedAt;
     private String updatedBy;
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
 
     public static Stock empty(String locationCode, String itemCode) {
         return Stock.builder()

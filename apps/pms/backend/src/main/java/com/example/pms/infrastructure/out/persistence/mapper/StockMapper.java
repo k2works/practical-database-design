@@ -4,6 +4,7 @@ import com.example.pms.domain.model.inventory.Stock;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -28,4 +29,34 @@ public interface StockMapper {
     List<Stock> findAll();
 
     void deleteAll();
+
+    /**
+     * 在庫増加（楽観ロック対応）.
+     *
+     * @return 更新行数（0 ならバージョン競合）
+     */
+    int increaseStock(@Param("locationCode") String locationCode,
+                      @Param("itemCode") String itemCode,
+                      @Param("quantity") BigDecimal quantity,
+                      @Param("expectedVersion") Integer expectedVersion,
+                      @Param("updatedBy") String updatedBy);
+
+    /**
+     * 在庫減少（楽観ロック対応）.
+     *
+     * @return 更新行数（0 ならバージョン競合）
+     */
+    int decreaseStock(@Param("locationCode") String locationCode,
+                      @Param("itemCode") String itemCode,
+                      @Param("quantity") BigDecimal quantity,
+                      @Param("expectedVersion") Integer expectedVersion,
+                      @Param("updatedBy") String updatedBy);
+
+    /**
+     * 在庫調整（楽観ロック対応）.
+     *
+     * @return 更新行数（0 ならバージョン競合）
+     */
+    int updateWithOptimisticLock(@Param("stock") Stock stock,
+                                 @Param("expectedVersion") Integer expectedVersion);
 }

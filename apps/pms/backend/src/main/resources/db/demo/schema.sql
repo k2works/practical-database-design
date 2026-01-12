@@ -767,6 +767,7 @@ CREATE TABLE IF NOT EXISTS "在庫情報" (
     "作成者" VARCHAR(50),
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
+    "バージョン" INTEGER DEFAULT 1 NOT NULL,
     CONSTRAINT uk_在庫_場所_品目 UNIQUE ("場所コード", "品目コード")
 );
 
@@ -886,7 +887,8 @@ CREATE TABLE IF NOT EXISTS "棚卸データ" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "作成者" VARCHAR(50),
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "更新者" VARCHAR(50)
+    "更新者" VARCHAR(50),
+    "バージョン" INTEGER DEFAULT 1 NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_棚卸_場所 ON "棚卸データ" ("場所コード");

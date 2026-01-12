@@ -6,6 +6,7 @@ import com.example.pms.infrastructure.out.persistence.mapper.StockMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class StockRepositoryImpl implements StockRepository {
 
+    private static final String SYSTEM_USER = "system";
     private final StockMapper stockMapper;
 
     @Override
@@ -55,5 +57,27 @@ public class StockRepositoryImpl implements StockRepository {
     @Override
     public void deleteAll() {
         stockMapper.deleteAll();
+    }
+
+    @Override
+    public boolean increase(String locationCode, String itemCode,
+                            BigDecimal quantity, Integer expectedVersion) {
+        int updatedRows = stockMapper.increaseStock(
+                locationCode, itemCode, quantity, expectedVersion, SYSTEM_USER);
+        return updatedRows > 0;
+    }
+
+    @Override
+    public boolean decrease(String locationCode, String itemCode,
+                            BigDecimal quantity, Integer expectedVersion) {
+        int updatedRows = stockMapper.decreaseStock(
+                locationCode, itemCode, quantity, expectedVersion, SYSTEM_USER);
+        return updatedRows > 0;
+    }
+
+    @Override
+    public boolean adjust(Stock stock, Integer expectedVersion) {
+        int updatedRows = stockMapper.updateWithOptimisticLock(stock, expectedVersion);
+        return updatedRows > 0;
     }
 }
