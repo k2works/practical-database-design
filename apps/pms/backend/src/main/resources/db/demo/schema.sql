@@ -497,7 +497,8 @@ CREATE TABLE IF NOT EXISTS "支給データ" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "作成者" VARCHAR(50),
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "更新者" VARCHAR(50)
+    "更新者" VARCHAR(50),
+    "バージョン" INTEGER DEFAULT 1 NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_支給データ_発注番号 ON "支給データ"("発注番号", "発注行番号");
@@ -519,11 +520,14 @@ CREATE TABLE IF NOT EXISTS "支給明細データ" (
     "支給数" DECIMAL(15, 2) NOT NULL,
     "支給単価" DECIMAL(15, 2) NOT NULL,
     "支給金額" DECIMAL(15, 2) NOT NULL,
+    "消費済数量" DECIMAL(18, 4) DEFAULT 0,
+    "残数量" DECIMAL(18, 4),
     "備考" TEXT,
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "作成者" VARCHAR(50),
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
+    "バージョン" INTEGER DEFAULT 1 NOT NULL,
     CONSTRAINT uk_支給明細 UNIQUE ("支給番号", "支給行番号")
 );
 
@@ -547,7 +551,8 @@ CREATE TABLE IF NOT EXISTS "消費データ" (
     "作成日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "作成者" VARCHAR(50),
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "更新者" VARCHAR(50)
+    "更新者" VARCHAR(50),
+    "バージョン" INTEGER DEFAULT 1 NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_消費データ_入荷番号 ON "消費データ"("入荷番号");
@@ -572,6 +577,7 @@ CREATE TABLE IF NOT EXISTS "消費明細データ" (
     "作成者" VARCHAR(50),
     "更新日時" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "更新者" VARCHAR(50),
+    "バージョン" INTEGER DEFAULT 1 NOT NULL,
     CONSTRAINT uk_消費明細 UNIQUE ("消費番号", "消費行番号")
 );
 
@@ -780,8 +786,9 @@ CREATE INDEX IF NOT EXISTS idx_在庫_品目 ON "在庫情報" ("品目コード
 -- 外部キー（H2の制約対応）
 ALTER TABLE "在庫情報" ADD CONSTRAINT IF NOT EXISTS fk_在庫_場所
     FOREIGN KEY ("場所コード") REFERENCES "場所マスタ"("場所コード");
-ALTER TABLE "在庫情報" ADD CONSTRAINT IF NOT EXISTS fk_在庫_品目
-    FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
+-- 品目マスタは世代管理対応（複合キー）のため、品目コードのみでの外部キー参照は不可
+-- ALTER TABLE "在庫情報" ADD CONSTRAINT IF NOT EXISTS fk_在庫_品目
+--     FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
 
 -- --------------------------------------------------
 -- 払出指示データ
@@ -828,8 +835,9 @@ CREATE TABLE IF NOT EXISTS "払出指示明細データ" (
 -- 外部キー（H2の制約対応）
 ALTER TABLE "払出指示明細データ" ADD CONSTRAINT IF NOT EXISTS fk_払出指示明細_払出指示
     FOREIGN KEY ("払出指示番号") REFERENCES "払出指示データ"("払出指示番号");
-ALTER TABLE "払出指示明細データ" ADD CONSTRAINT IF NOT EXISTS fk_払出指示明細_品目
-    FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
+-- 品目マスタは世代管理対応（複合キー）のため、品目コードのみでの外部キー参照は不可
+-- ALTER TABLE "払出指示明細データ" ADD CONSTRAINT IF NOT EXISTS fk_払出指示明細_品目
+--     FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
 
 -- --------------------------------------------------
 -- 払出データ
@@ -875,8 +883,9 @@ CREATE TABLE IF NOT EXISTS "払出明細データ" (
 -- 外部キー（H2の制約対応）
 ALTER TABLE "払出明細データ" ADD CONSTRAINT IF NOT EXISTS fk_払出明細_払出
     FOREIGN KEY ("払出番号") REFERENCES "払出データ"("払出番号");
-ALTER TABLE "払出明細データ" ADD CONSTRAINT IF NOT EXISTS fk_払出明細_品目
-    FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
+-- 品目マスタは世代管理対応（複合キー）のため、品目コードのみでの外部キー参照は不可
+-- ALTER TABLE "払出明細データ" ADD CONSTRAINT IF NOT EXISTS fk_払出明細_品目
+--     FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
 
 -- --------------------------------------------------
 -- 棚卸データ（H2では棚卸ステータスをVARCHARで管理）
@@ -922,8 +931,9 @@ CREATE TABLE IF NOT EXISTS "棚卸明細データ" (
 -- 外部キー（H2の制約対応）
 ALTER TABLE "棚卸明細データ" ADD CONSTRAINT IF NOT EXISTS fk_棚卸明細_棚卸
     FOREIGN KEY ("棚卸番号") REFERENCES "棚卸データ"("棚卸番号");
-ALTER TABLE "棚卸明細データ" ADD CONSTRAINT IF NOT EXISTS fk_棚卸明細_品目
-    FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
+-- 品目マスタは世代管理対応（複合キー）のため、品目コードのみでの外部キー参照は不可
+-- ALTER TABLE "棚卸明細データ" ADD CONSTRAINT IF NOT EXISTS fk_棚卸明細_品目
+--     FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
 
 -- --------------------------------------------------
 -- 在庫調整データ
@@ -949,7 +959,8 @@ CREATE INDEX IF NOT EXISTS idx_在庫調整_棚卸 ON "在庫調整データ" ("
 -- 外部キー（H2の制約対応）
 ALTER TABLE "在庫調整データ" ADD CONSTRAINT IF NOT EXISTS fk_在庫調整_棚卸
     FOREIGN KEY ("棚卸番号") REFERENCES "棚卸データ"("棚卸番号");
-ALTER TABLE "在庫調整データ" ADD CONSTRAINT IF NOT EXISTS fk_在庫調整_品目
-    FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
+-- 品目マスタは世代管理対応（複合キー）のため、品目コードのみでの外部キー参照は不可
+-- ALTER TABLE "在庫調整データ" ADD CONSTRAINT IF NOT EXISTS fk_在庫調整_品目
+--     FOREIGN KEY ("品目コード") REFERENCES "品目マスタ"("品目コード");
 ALTER TABLE "在庫調整データ" ADD CONSTRAINT IF NOT EXISTS fk_在庫調整_場所
     FOREIGN KEY ("場所コード") REFERENCES "場所マスタ"("場所コード");
