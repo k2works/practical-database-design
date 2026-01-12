@@ -16,6 +16,14 @@ public interface SupplyRepository {
 
     Optional<Supply> findBySupplyNumber(String supplyNumber);
 
+    /**
+     * 支給番号で検索（明細を含む）.
+     *
+     * @param supplyNumber 支給番号
+     * @return 明細を含む支給データ
+     */
+    Optional<Supply> findBySupplyNumberWithDetails(String supplyNumber);
+
     List<Supply> findByPurchaseOrderNumber(String purchaseOrderNumber);
 
     List<Supply> findByPurchaseOrderNumberAndLineNumber(

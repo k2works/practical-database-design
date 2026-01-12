@@ -19,6 +19,14 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 明細を含むResultMap（nested select） -->
+    <resultMap id="SupplyWithDetailsResultMap" type="com.example.pms.domain.model.subcontract.Supply"
+               extends="SupplyResultMap">
+        <collection property="details" ofType="com.example.pms.domain.model.subcontract.SupplyDetail"
+                    column="支給番号" select="com.example.pms.infrastructure.out.persistence.mapper.SupplyDetailMapper.findBySupplyNumber"/>
     </resultMap>
 
     <!-- PostgreSQL用 INSERT -->
@@ -26,7 +34,7 @@
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "支給データ" (
             "支給番号", "発注番号", "発注行番号", "取引先コード",
-            "支給日", "支給担当者コード", "支給区分", "備考", "作成者", "更新者"
+            "支給日", "支給担当者コード", "支給区分", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{supplyNumber},
             #{purchaseOrderNumber},
@@ -37,7 +45,8 @@
             #{supplyType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler}::支給区分,
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 
@@ -46,7 +55,7 @@
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
         INSERT INTO "支給データ" (
             "支給番号", "発注番号", "発注行番号", "取引先コード",
-            "支給日", "支給担当者コード", "支給区分", "備考", "作成者", "更新者"
+            "支給日", "支給担当者コード", "支給区分", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{supplyNumber},
             #{purchaseOrderNumber},
@@ -57,7 +66,8 @@
             #{supplyType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler},
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 
@@ -66,6 +76,11 @@
     </select>
 
     <select id="findBySupplyNumber" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" WHERE "支給番号" = #{supplyNumber}
+    </select>
+
+    <!-- 明細を含めて取得 -->
+    <select id="findBySupplyNumberWithDetails" resultMap="SupplyWithDetailsResultMap">
         SELECT * FROM "支給データ" WHERE "支給番号" = #{supplyNumber}
     </select>
 

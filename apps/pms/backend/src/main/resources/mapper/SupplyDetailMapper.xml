@@ -12,17 +12,21 @@
         <result property="quantity" column="支給数"/>
         <result property="unitPrice" column="支給単価"/>
         <result property="amount" column="支給金額"/>
+        <result property="consumedQuantity" column="消費済数量"/>
+        <result property="remainingQuantity" column="残数量"/>
         <result property="remarks" column="備考"/>
         <result property="createdAt" column="作成日時"/>
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.SupplyDetail"
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "支給明細データ" (
-            "支給番号", "支給行番号", "品目コード", "支給数", "支給単価", "支給金額", "備考", "作成者", "更新者"
+            "支給番号", "支給行番号", "品目コード", "支給数", "支給単価", "支給金額",
+            "消費済数量", "残数量", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{supplyNumber},
             #{lineNumber},
@@ -30,9 +34,12 @@
             #{quantity},
             #{unitPrice},
             #{amount},
+            #{consumedQuantity},
+            #{remainingQuantity},
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 

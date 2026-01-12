@@ -36,6 +36,11 @@ public class SupplyRepositoryImpl implements SupplyRepository {
     }
 
     @Override
+    public Optional<Supply> findBySupplyNumberWithDetails(String supplyNumber) {
+        return Optional.ofNullable(supplyMapper.findBySupplyNumberWithDetails(supplyNumber));
+    }
+
+    @Override
     public List<Supply> findByPurchaseOrderNumber(String purchaseOrderNumber) {
         return supplyMapper.findByPurchaseOrderNumber(purchaseOrderNumber);
     }

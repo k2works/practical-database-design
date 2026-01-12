@@ -10,6 +10,12 @@ public interface ConsumptionMapper {
     void insert(Consumption consumption);
     Consumption findById(Integer id);
     Consumption findByConsumptionNumber(String consumptionNumber);
+
+    /**
+     * 消費番号で検索（明細を含む）.
+     */
+    Consumption findByConsumptionNumberWithDetails(String consumptionNumber);
+
     List<Consumption> findByReceivingNumber(String receivingNumber);
     List<Consumption> findBySupplierCode(String supplierCode);
     List<Consumption> findAll();

@@ -15,12 +15,13 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.ConsumptionDetail"
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "消費明細データ" (
-            "消費番号", "消費行番号", "品目コード", "消費数量", "備考", "作成者", "更新者"
+            "消費番号", "消費行番号", "品目コード", "消費数量", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{consumptionNumber},
             #{lineNumber},
@@ -28,7 +29,8 @@
             #{quantity},
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 

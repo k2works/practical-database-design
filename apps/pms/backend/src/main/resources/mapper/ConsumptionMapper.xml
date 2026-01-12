@@ -15,12 +15,20 @@
         <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
         <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 明細を含むResultMap（nested select） -->
+    <resultMap id="ConsumptionWithDetailsResultMap" type="com.example.pms.domain.model.subcontract.Consumption"
+               extends="ConsumptionResultMap">
+        <collection property="details" ofType="com.example.pms.domain.model.subcontract.ConsumptionDetail"
+                    column="消費番号" select="com.example.pms.infrastructure.out.persistence.mapper.ConsumptionDetailMapper.findByConsumptionNumber"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.Consumption"
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "消費データ" (
-            "消費番号", "入荷番号", "消費日", "取引先コード", "備考", "作成者", "更新者"
+            "消費番号", "入荷番号", "消費日", "取引先コード", "備考", "作成者", "更新者", "バージョン"
         ) VALUES (
             #{consumptionNumber},
             #{receivingNumber},
@@ -28,7 +36,8 @@
             #{supplierCode},
             #{remarks},
             #{createdBy},
-            #{updatedBy}
+            #{updatedBy},
+            #{version}
         )
     </insert>
 
@@ -37,6 +46,11 @@
     </select>
 
     <select id="findByConsumptionNumber" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" WHERE "消費番号" = #{consumptionNumber}
+    </select>
+
+    <!-- 明細を含めて取得 -->
+    <select id="findByConsumptionNumberWithDetails" resultMap="ConsumptionWithDetailsResultMap">
         SELECT * FROM "消費データ" WHERE "消費番号" = #{consumptionNumber}
     </select>
 

@@ -36,6 +36,11 @@ public class ConsumptionRepositoryImpl implements ConsumptionRepository {
     }
 
     @Override
+    public Optional<Consumption> findByConsumptionNumberWithDetails(String consumptionNumber) {
+        return Optional.ofNullable(consumptionMapper.findByConsumptionNumberWithDetails(consumptionNumber));
+    }
+
+    @Override
     public List<Consumption> findByReceivingNumber(String receivingNumber) {
         return consumptionMapper.findByReceivingNumber(receivingNumber);
     }
