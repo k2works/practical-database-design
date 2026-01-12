@@ -1,7 +1,10 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
+import com.example.pms.application.port.out.AllocationRepository;
 import com.example.pms.application.port.out.OrderRepository;
 import com.example.pms.application.port.out.RequirementRepository;
+import com.example.pms.domain.model.plan.Allocation;
+import com.example.pms.domain.model.plan.AllocationType;
 import com.example.pms.domain.model.plan.Order;
 import com.example.pms.domain.model.plan.OrderType;
 import com.example.pms.domain.model.plan.PlanStatus;
@@ -30,12 +33,16 @@ class RequirementRepositoryImplTest extends BaseIntegrationTest {
     private RequirementRepository requirementRepository;
 
     @Autowired
+    private AllocationRepository allocationRepository;
+
+    @Autowired
     private OrderRepository orderRepository;
 
     private Integer orderId;
 
     @BeforeEach
     void setUp() {
+        allocationRepository.deleteAll();
         requirementRepository.deleteAll();
         orderRepository.deleteAll();
 
@@ -204,6 +211,85 @@ class RequirementRepositoryImplTest extends BaseIntegrationTest {
             assertThat(updated).isPresent();
             assertThat(updated.get().getAllocatedQuantity()).isEqualByComparingTo(requiredQty);
             assertThat(updated.get().getShortageQuantity()).isEqualByComparingTo(BigDecimal.ZERO);
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        @Test
+        @DisplayName("所要情報と引当を同時に取得できる")
+        void canFindRequirementWithAllocations() {
+            // Arrange
+            Requirement requirement = createRequirement("REQ001", orderId);
+            requirementRepository.save(requirement);
+            Optional<Requirement> savedReq = requirementRepository.findByRequirementNumber("REQ001");
+            assertThat(savedReq).isPresent();
+
+            // Create allocations
+            Allocation allocation1 = Allocation.builder()
+                    .requirementId(savedReq.get().getId())
+                    .allocationType(AllocationType.INVENTORY)
+                    .allocationDate(LocalDate.of(2024, 1, 5))
+                    .allocatedQuantity(new BigDecimal("20.00"))
+                    .locationCode("WH001")
+                    .build();
+            allocationRepository.save(allocation1);
+
+            Allocation allocation2 = Allocation.builder()
+                    .requirementId(savedReq.get().getId())
+                    .allocationType(AllocationType.PURCHASE_ORDER)
+                    .allocationDate(LocalDate.of(2024, 1, 6))
+                    .allocatedQuantity(new BigDecimal("30.00"))
+                    .locationCode("WH001")
+                    .build();
+            allocationRepository.save(allocation2);
+
+            // Act
+            Optional<Requirement> found = requirementRepository.findByRequirementNumberWithAllocations("REQ001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getRequirementNumber()).isEqualTo("REQ001");
+            assertThat(found.get().getAllocations()).isNotNull();
+            assertThat(found.get().getAllocations()).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("引当がない場合は空リストを返す")
+        void returnsEmptyListWhenNoAllocations() {
+            // Arrange
+            Requirement requirement = createRequirement("REQ002", orderId);
+            requirementRepository.save(requirement);
+
+            // Act
+            Optional<Requirement> found = requirementRepository.findByRequirementNumberWithAllocations("REQ002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getAllocations()).isNotNull();
+            assertThat(found.get().getAllocations()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+
+        @Test
+        @DisplayName("デフォルトバージョンは1である")
+        void defaultVersionIsOne() {
+            // Arrange
+            Requirement requirement = createRequirement("REQ001", orderId);
+
+            // Act
+            requirementRepository.save(requirement);
+            Optional<Requirement> found = requirementRepository.findByRequirementNumber("REQ001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
         }
     }
 }

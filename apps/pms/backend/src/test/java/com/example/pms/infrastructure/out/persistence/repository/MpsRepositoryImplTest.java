@@ -1,7 +1,10 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
 import com.example.pms.application.port.out.MpsRepository;
+import com.example.pms.application.port.out.OrderRepository;
 import com.example.pms.domain.model.plan.MasterProductionSchedule;
+import com.example.pms.domain.model.plan.Order;
+import com.example.pms.domain.model.plan.OrderType;
 import com.example.pms.domain.model.plan.PlanStatus;
 import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,8 +29,12 @@ class MpsRepositoryImplTest extends BaseIntegrationTest {
     @Autowired
     private MpsRepository mpsRepository;
 
+    @Autowired
+    private OrderRepository orderRepository;
+
     @BeforeEach
     void setUp() {
+        orderRepository.deleteAll();
         mpsRepository.deleteAll();
     }
 
@@ -184,6 +191,97 @@ class MpsRepositoryImplTest extends BaseIntegrationTest {
             Optional<MasterProductionSchedule> updated = mpsRepository.findByMpsNumber("MPS001");
             assertThat(updated).isPresent();
             assertThat(updated.get().getStatus()).isEqualTo(PlanStatus.CONFIRMED);
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        @Test
+        @DisplayName("基準生産計画とオーダを同時に取得できる")
+        void canFindMpsWithOrders() {
+            // Arrange
+            MasterProductionSchedule mps = createMps("MPS001", "PROD001", PlanStatus.DRAFT);
+            mpsRepository.save(mps);
+            Optional<MasterProductionSchedule> savedMps = mpsRepository.findByMpsNumber("MPS001");
+            assertThat(savedMps).isPresent();
+
+            // Create orders
+            Order order1 = Order.builder()
+                    .orderNumber("ORD001")
+                    .orderType(OrderType.MANUFACTURING)
+                    .itemCode("ITEM001")
+                    .startDate(LocalDate.of(2024, 1, 1))
+                    .dueDate(LocalDate.of(2024, 1, 15))
+                    .planQuantity(new BigDecimal("100.00"))
+                    .locationCode("WH001")
+                    .status(PlanStatus.DRAFT)
+                    .mpsId(savedMps.get().getId())
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            orderRepository.save(order1);
+
+            Order order2 = Order.builder()
+                    .orderNumber("ORD002")
+                    .orderType(OrderType.PURCHASE)
+                    .itemCode("ITEM002")
+                    .startDate(LocalDate.of(2024, 1, 2))
+                    .dueDate(LocalDate.of(2024, 1, 16))
+                    .planQuantity(new BigDecimal("50.00"))
+                    .locationCode("WH001")
+                    .status(PlanStatus.DRAFT)
+                    .mpsId(savedMps.get().getId())
+                    .createdBy("test-user")
+                    .updatedBy("test-user")
+                    .build();
+            orderRepository.save(order2);
+
+            // Act
+            Optional<MasterProductionSchedule> found = mpsRepository.findByMpsNumberWithOrders("MPS001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getMpsNumber()).isEqualTo("MPS001");
+            assertThat(found.get().getOrders()).isNotNull();
+            assertThat(found.get().getOrders()).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("オーダがない場合は空リストを返す")
+        void returnsEmptyListWhenNoOrders() {
+            // Arrange
+            MasterProductionSchedule mps = createMps("MPS002", "PROD002", PlanStatus.DRAFT);
+            mpsRepository.save(mps);
+
+            // Act
+            Optional<MasterProductionSchedule> found = mpsRepository.findByMpsNumberWithOrders("MPS002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getOrders()).isNotNull();
+            assertThat(found.get().getOrders()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+
+        @Test
+        @DisplayName("デフォルトバージョンは1である")
+        void defaultVersionIsOne() {
+            // Arrange
+            MasterProductionSchedule mps = createMps("MPS001", "PROD001", PlanStatus.DRAFT);
+
+            // Act
+            mpsRepository.save(mps);
+            Optional<MasterProductionSchedule> found = mpsRepository.findByMpsNumber("MPS001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
         }
     }
 }

@@ -2,10 +2,12 @@ package com.example.pms.infrastructure.out.persistence.repository;
 
 import com.example.pms.application.port.out.MpsRepository;
 import com.example.pms.application.port.out.OrderRepository;
+import com.example.pms.application.port.out.RequirementRepository;
 import com.example.pms.domain.model.plan.MasterProductionSchedule;
 import com.example.pms.domain.model.plan.Order;
 import com.example.pms.domain.model.plan.OrderType;
 import com.example.pms.domain.model.plan.PlanStatus;
+import com.example.pms.domain.model.plan.Requirement;
 import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,8 +34,12 @@ class OrderRepositoryImplTest extends BaseIntegrationTest {
     @Autowired
     private MpsRepository mpsRepository;
 
+    @Autowired
+    private RequirementRepository requirementRepository;
+
     @BeforeEach
     void setUp() {
+        requirementRepository.deleteAll();
         orderRepository.deleteAll();
         mpsRepository.deleteAll();
     }
@@ -289,6 +295,91 @@ class OrderRepositoryImplTest extends BaseIntegrationTest {
             List<Order> children = orderRepository.findByParentOrderId(savedParent.get().getId());
             assertThat(children).hasSize(1);
             assertThat(children.get(0).getOrderNumber()).isEqualTo("ORD_CHILD");
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+
+        @Test
+        @DisplayName("オーダと所要を同時に取得できる")
+        void canFindOrderWithRequirements() {
+            // Arrange
+            Order order = createOrder("ORD001", OrderType.MANUFACTURING, PlanStatus.DRAFT);
+            orderRepository.save(order);
+            Optional<Order> savedOrder = orderRepository.findByOrderNumber("ORD001");
+            assertThat(savedOrder).isPresent();
+
+            // Create requirements
+            Requirement requirement1 = Requirement.builder()
+                    .requirementNumber("REQ001")
+                    .orderId(savedOrder.get().getId())
+                    .itemCode("PART001")
+                    .dueDate(LocalDate.of(2024, 1, 10))
+                    .requiredQuantity(new BigDecimal("50.00"))
+                    .allocatedQuantity(BigDecimal.ZERO)
+                    .shortageQuantity(new BigDecimal("50.00"))
+                    .locationCode("WH001")
+                    .build();
+            requirementRepository.save(requirement1);
+
+            Requirement requirement2 = Requirement.builder()
+                    .requirementNumber("REQ002")
+                    .orderId(savedOrder.get().getId())
+                    .itemCode("PART002")
+                    .dueDate(LocalDate.of(2024, 1, 11))
+                    .requiredQuantity(new BigDecimal("30.00"))
+                    .allocatedQuantity(BigDecimal.ZERO)
+                    .shortageQuantity(new BigDecimal("30.00"))
+                    .locationCode("WH001")
+                    .build();
+            requirementRepository.save(requirement2);
+
+            // Act
+            Optional<Order> found = orderRepository.findByOrderNumberWithRequirements("ORD001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getOrderNumber()).isEqualTo("ORD001");
+            assertThat(found.get().getRequirements()).isNotNull();
+            assertThat(found.get().getRequirements()).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("所要がない場合は空リストを返す")
+        void returnsEmptyListWhenNoRequirements() {
+            // Arrange
+            Order order = createOrder("ORD002", OrderType.PURCHASE, PlanStatus.DRAFT);
+            orderRepository.save(order);
+
+            // Act
+            Optional<Order> found = orderRepository.findByOrderNumberWithRequirements("ORD002");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getRequirements()).isNotNull();
+            assertThat(found.get().getRequirements()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+
+        @Test
+        @DisplayName("デフォルトバージョンは1である")
+        void defaultVersionIsOne() {
+            // Arrange
+            Order order = createOrder("ORD001", OrderType.MANUFACTURING, PlanStatus.DRAFT);
+
+            // Act
+            orderRepository.save(order);
+            Optional<Order> found = orderRepository.findByOrderNumber("ORD001");
+
+            // Assert
+            assertThat(found).isPresent();
+            assertThat(found.get().getVersion()).isEqualTo(1);
         }
     }
 }
