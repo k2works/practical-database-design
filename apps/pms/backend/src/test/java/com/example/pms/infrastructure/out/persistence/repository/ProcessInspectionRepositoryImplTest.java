@@ -1,6 +1,7 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
 import com.example.pms.application.port.out.ProcessInspectionRepository;
+import com.example.pms.application.port.out.ProcessInspectionResultRepository;
 import com.example.pms.domain.model.quality.InspectionJudgment;
 import com.example.pms.domain.model.quality.ProcessInspection;
 import com.example.pms.testsetup.BaseIntegrationTest;
@@ -197,6 +198,115 @@ class ProcessInspectionRepositoryImplTest extends BaseIntegrationTest {
 
             assertThat(processInspectionRepository.findByInspectionNumber("PI-001")).isEmpty();
             assertThat(processInspectionRepository.findAll()).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+        @Test
+        @DisplayName("更新時にバージョンがインクリメントされる")
+        void versionIncrementedOnUpdate() {
+            processInspectionRepository.save(createProcessInspection("PI-001", "WO-001"));
+
+            Optional<ProcessInspection> saved = processInspectionRepository.findByInspectionNumber("PI-001");
+            assertThat(saved).isPresent();
+            assertThat(saved.get().getVersion()).isEqualTo(1);
+
+            ProcessInspection toUpdate = saved.get();
+            toUpdate.setRemarks("更新後の備考");
+            processInspectionRepository.update(toUpdate);
+
+            Optional<ProcessInspection> updated = processInspectionRepository.findByInspectionNumber("PI-001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getVersion()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("古いバージョンで更新すると失敗する")
+        void updateFailsWithOldVersion() {
+            processInspectionRepository.save(createProcessInspection("PI-001", "WO-001"));
+
+            Optional<ProcessInspection> inspectorA = processInspectionRepository.findByInspectionNumber("PI-001");
+            Optional<ProcessInspection> inspectorB = processInspectionRepository.findByInspectionNumber("PI-001");
+
+            assertThat(inspectorA).isPresent();
+            assertThat(inspectorB).isPresent();
+
+            ProcessInspection updateA = inspectorA.get();
+            updateA.setRemarks("担当者Aの更新");
+            int resultA = processInspectionRepository.update(updateA);
+            assertThat(resultA).isEqualTo(1);
+
+            ProcessInspection updateB = inspectorB.get();
+            updateB.setRemarks("担当者Bの更新");
+            int resultB = processInspectionRepository.update(updateB);
+            assertThat(resultB).isEqualTo(0);
+
+            Optional<ProcessInspection> finalResult = processInspectionRepository.findByInspectionNumber("PI-001");
+            assertThat(finalResult).isPresent();
+            assertThat(finalResult.get().getRemarks()).isEqualTo("担当者Aの更新");
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+        @Autowired
+        private ProcessInspectionResultRepository processInspectionResultRepository;
+
+        @BeforeEach
+        void setUpRelationData() {
+            jdbcTemplate.execute("""
+                INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点分類")
+                VALUES ('DEF001', 'キズ', '外観')
+                ON CONFLICT DO NOTHING
+                """);
+            jdbcTemplate.execute("""
+                INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点分類")
+                VALUES ('DEF002', '寸法不良', '寸法')
+                ON CONFLICT DO NOTHING
+                """);
+
+            processInspectionRepository.save(createProcessInspection("PI-001", "WO-001"));
+        }
+
+        @Test
+        @DisplayName("検査結果を含めて取得できる")
+        void canFindWithResults() {
+            processInspectionResultRepository.save(
+                    com.example.pms.domain.model.quality.ProcessInspectionResult.builder()
+                            .inspectionNumber("PI-001")
+                            .defectCode("DEF001")
+                            .quantity(new BigDecimal("1.00"))
+                            .remarks("キズ1件")
+                            .build());
+            processInspectionResultRepository.save(
+                    com.example.pms.domain.model.quality.ProcessInspectionResult.builder()
+                            .inspectionNumber("PI-001")
+                            .defectCode("DEF002")
+                            .quantity(new BigDecimal("1.00"))
+                            .remarks("寸法不良1件")
+                            .build());
+
+            Optional<ProcessInspection> found = processInspectionRepository
+                    .findByInspectionNumberWithResults("PI-001");
+
+            assertThat(found).isPresent();
+            assertThat(found.get().getResults()).hasSize(2);
+            assertThat(found.get().getResults())
+                    .extracting("defectCode")
+                    .containsExactlyInAnyOrder("DEF001", "DEF002");
+        }
+
+        @Test
+        @DisplayName("検査結果が空の場合も取得できる")
+        void canFindWithEmptyResults() {
+            Optional<ProcessInspection> found = processInspectionRepository
+                    .findByInspectionNumberWithResults("PI-001");
+
+            assertThat(found).isPresent();
+            assertThat(found.get().getResults()).isEmpty();
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
 import com.example.pms.application.port.out.ShipmentInspectionRepository;
+import com.example.pms.application.port.out.ShipmentInspectionResultRepository;
 import com.example.pms.domain.model.quality.InspectionJudgment;
 import com.example.pms.domain.model.quality.ShipmentInspection;
 import com.example.pms.testsetup.BaseIntegrationTest;
@@ -170,6 +171,115 @@ class ShipmentInspectionRepositoryImplTest extends BaseIntegrationTest {
 
             assertThat(shipmentInspectionRepository.findByInspectionNumber("SI-001")).isEmpty();
             assertThat(shipmentInspectionRepository.findAll()).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+        @Test
+        @DisplayName("更新時にバージョンがインクリメントされる")
+        void versionIncrementedOnUpdate() {
+            shipmentInspectionRepository.save(createShipmentInspection("SI-001", "SHP-001"));
+
+            Optional<ShipmentInspection> saved = shipmentInspectionRepository.findByInspectionNumber("SI-001");
+            assertThat(saved).isPresent();
+            assertThat(saved.get().getVersion()).isEqualTo(1);
+
+            ShipmentInspection toUpdate = saved.get();
+            toUpdate.setRemarks("更新後の備考");
+            shipmentInspectionRepository.update(toUpdate);
+
+            Optional<ShipmentInspection> updated = shipmentInspectionRepository.findByInspectionNumber("SI-001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getVersion()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("古いバージョンで更新すると失敗する")
+        void updateFailsWithOldVersion() {
+            shipmentInspectionRepository.save(createShipmentInspection("SI-001", "SHP-001"));
+
+            Optional<ShipmentInspection> inspectorA = shipmentInspectionRepository.findByInspectionNumber("SI-001");
+            Optional<ShipmentInspection> inspectorB = shipmentInspectionRepository.findByInspectionNumber("SI-001");
+
+            assertThat(inspectorA).isPresent();
+            assertThat(inspectorB).isPresent();
+
+            ShipmentInspection updateA = inspectorA.get();
+            updateA.setRemarks("担当者Aの更新");
+            int resultA = shipmentInspectionRepository.update(updateA);
+            assertThat(resultA).isEqualTo(1);
+
+            ShipmentInspection updateB = inspectorB.get();
+            updateB.setRemarks("担当者Bの更新");
+            int resultB = shipmentInspectionRepository.update(updateB);
+            assertThat(resultB).isEqualTo(0);
+
+            Optional<ShipmentInspection> finalResult = shipmentInspectionRepository.findByInspectionNumber("SI-001");
+            assertThat(finalResult).isPresent();
+            assertThat(finalResult.get().getRemarks()).isEqualTo("担当者Aの更新");
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+        @Autowired
+        private ShipmentInspectionResultRepository shipmentInspectionResultRepository;
+
+        @BeforeEach
+        void setUpRelationData() {
+            jdbcTemplate.execute("""
+                INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点分類")
+                VALUES ('DEF001', 'キズ', '外観')
+                ON CONFLICT DO NOTHING
+                """);
+            jdbcTemplate.execute("""
+                INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点分類")
+                VALUES ('DEF002', '寸法不良', '寸法')
+                ON CONFLICT DO NOTHING
+                """);
+
+            shipmentInspectionRepository.save(createShipmentInspection("SI-001", "SHP-001"));
+        }
+
+        @Test
+        @DisplayName("検査結果を含めて取得できる")
+        void canFindWithResults() {
+            shipmentInspectionResultRepository.save(
+                    com.example.pms.domain.model.quality.ShipmentInspectionResult.builder()
+                            .inspectionNumber("SI-001")
+                            .defectCode("DEF001")
+                            .quantity(new BigDecimal("1.00"))
+                            .remarks("キズ1件")
+                            .build());
+            shipmentInspectionResultRepository.save(
+                    com.example.pms.domain.model.quality.ShipmentInspectionResult.builder()
+                            .inspectionNumber("SI-001")
+                            .defectCode("DEF002")
+                            .quantity(new BigDecimal("1.00"))
+                            .remarks("寸法不良1件")
+                            .build());
+
+            Optional<ShipmentInspection> found = shipmentInspectionRepository
+                    .findByInspectionNumberWithResults("SI-001");
+
+            assertThat(found).isPresent();
+            assertThat(found.get().getResults()).hasSize(2);
+            assertThat(found.get().getResults())
+                    .extracting("defectCode")
+                    .containsExactlyInAnyOrder("DEF001", "DEF002");
+        }
+
+        @Test
+        @DisplayName("検査結果が空の場合も取得できる")
+        void canFindWithEmptyResults() {
+            Optional<ShipmentInspection> found = shipmentInspectionRepository
+                    .findByInspectionNumberWithResults("SI-001");
+
+            assertThat(found).isPresent();
+            assertThat(found.get().getResults()).isEmpty();
         }
     }
 }

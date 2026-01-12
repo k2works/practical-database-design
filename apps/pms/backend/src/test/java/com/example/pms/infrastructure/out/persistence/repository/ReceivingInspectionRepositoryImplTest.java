@@ -1,6 +1,7 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
 import com.example.pms.application.port.out.ReceivingInspectionRepository;
+import com.example.pms.application.port.out.ReceivingInspectionResultRepository;
 import com.example.pms.domain.model.quality.InspectionJudgment;
 import com.example.pms.domain.model.quality.ReceivingInspection;
 import com.example.pms.testsetup.BaseIntegrationTest;
@@ -222,6 +223,140 @@ class ReceivingInspectionRepositoryImplTest extends BaseIntegrationTest {
 
             assertThat(receivingInspectionRepository.findByInspectionNumber("RI-001")).isEmpty();
             assertThat(receivingInspectionRepository.findAll()).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+        @Test
+        @DisplayName("更新時にバージョンがインクリメントされる")
+        void versionIncrementedOnUpdate() {
+            receivingInspectionRepository.save(createReceivingInspection("RI-001", "RCV-001"));
+
+            Optional<ReceivingInspection> saved = receivingInspectionRepository.findByInspectionNumber("RI-001");
+            assertThat(saved).isPresent();
+            assertThat(saved.get().getVersion()).isEqualTo(1);
+
+            ReceivingInspection toUpdate = saved.get();
+            toUpdate.setRemarks("更新後の備考");
+            receivingInspectionRepository.update(toUpdate);
+
+            Optional<ReceivingInspection> updated = receivingInspectionRepository.findByInspectionNumber("RI-001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getVersion()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("古いバージョンで更新すると失敗する")
+        void updateFailsWithOldVersion() {
+            receivingInspectionRepository.save(createReceivingInspection("RI-001", "RCV-001"));
+
+            // 2人の担当者が同時に検査データを取得
+            Optional<ReceivingInspection> inspectorA = receivingInspectionRepository.findByInspectionNumber("RI-001");
+            Optional<ReceivingInspection> inspectorB = receivingInspectionRepository.findByInspectionNumber("RI-001");
+
+            assertThat(inspectorA).isPresent();
+            assertThat(inspectorB).isPresent();
+
+            // 担当者Aが先に更新（成功）
+            ReceivingInspection updateA = inspectorA.get();
+            updateA.setRemarks("担当者Aの更新");
+            int resultA = receivingInspectionRepository.update(updateA);
+            assertThat(resultA).isEqualTo(1);
+
+            // 担当者Bが古いバージョンで更新（失敗）
+            ReceivingInspection updateB = inspectorB.get();
+            updateB.setRemarks("担当者Bの更新");
+            int resultB = receivingInspectionRepository.update(updateB);
+            assertThat(resultB).isEqualTo(0);
+
+            // データは担当者Aの更新内容
+            Optional<ReceivingInspection> finalResult = receivingInspectionRepository.findByInspectionNumber("RI-001");
+            assertThat(finalResult).isPresent();
+            assertThat(finalResult.get().getRemarks()).isEqualTo("担当者Aの更新");
+        }
+
+        @Test
+        @DisplayName("判定更新時にバージョンがインクリメントされる")
+        void versionIncrementedOnJudgmentUpdate() {
+            receivingInspectionRepository.save(createReceivingInspection("RI-001", "RCV-001"));
+
+            Optional<ReceivingInspection> saved = receivingInspectionRepository.findByInspectionNumber("RI-001");
+            assertThat(saved).isPresent();
+
+            ReceivingInspection toUpdate = saved.get();
+            toUpdate.setJudgment(InspectionJudgment.FAILED);
+            receivingInspectionRepository.updateJudgment(toUpdate);
+
+            Optional<ReceivingInspection> updated = receivingInspectionRepository.findByInspectionNumber("RI-001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getVersion()).isEqualTo(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+        @Autowired
+        private ReceivingInspectionResultRepository receivingInspectionResultRepository;
+
+        @BeforeEach
+        void setUpRelationData() {
+            // 欠点マスタを追加
+            jdbcTemplate.execute("""
+                INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点分類")
+                VALUES ('DEF001', 'キズ', '外観')
+                ON CONFLICT DO NOTHING
+                """);
+            jdbcTemplate.execute("""
+                INSERT INTO "欠点マスタ" ("欠点コード", "欠点名", "欠点分類")
+                VALUES ('DEF002', '寸法不良', '寸法')
+                ON CONFLICT DO NOTHING
+                """);
+
+            // 検査データを作成
+            receivingInspectionRepository.save(createReceivingInspection("RI-001", "RCV-001"));
+        }
+
+        @Test
+        @DisplayName("検査結果を含めて取得できる")
+        void canFindWithResults() {
+            // 検査結果を追加
+            receivingInspectionResultRepository.save(
+                    com.example.pms.domain.model.quality.ReceivingInspectionResult.builder()
+                            .inspectionNumber("RI-001")
+                            .defectCode("DEF001")
+                            .quantity(new BigDecimal("1.00"))
+                            .remarks("キズ1件")
+                            .build());
+            receivingInspectionResultRepository.save(
+                    com.example.pms.domain.model.quality.ReceivingInspectionResult.builder()
+                            .inspectionNumber("RI-001")
+                            .defectCode("DEF002")
+                            .quantity(new BigDecimal("1.00"))
+                            .remarks("寸法不良1件")
+                            .build());
+
+            // リレーション付きで取得
+            Optional<ReceivingInspection> found = receivingInspectionRepository
+                    .findByInspectionNumberWithResults("RI-001");
+
+            assertThat(found).isPresent();
+            assertThat(found.get().getResults()).hasSize(2);
+            assertThat(found.get().getResults())
+                    .extracting("defectCode")
+                    .containsExactlyInAnyOrder("DEF001", "DEF002");
+        }
+
+        @Test
+        @DisplayName("検査結果が空の場合も取得できる")
+        void canFindWithEmptyResults() {
+            Optional<ReceivingInspection> found = receivingInspectionRepository
+                    .findByInspectionNumberWithResults("RI-001");
+
+            assertThat(found).isPresent();
+            assertThat(found.get().getResults()).isEmpty();
         }
     }
 }

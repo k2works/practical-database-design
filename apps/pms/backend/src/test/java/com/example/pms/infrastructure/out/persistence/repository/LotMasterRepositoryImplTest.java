@@ -1,6 +1,8 @@
 package com.example.pms.infrastructure.out.persistence.repository;
 
+import com.example.pms.application.port.out.LotCompositionRepository;
 import com.example.pms.application.port.out.LotMasterRepository;
+import com.example.pms.domain.model.quality.LotComposition;
 import com.example.pms.domain.model.quality.LotMaster;
 import com.example.pms.domain.model.quality.LotType;
 import com.example.pms.testsetup.BaseIntegrationTest;
@@ -220,6 +222,121 @@ class LotMasterRepositoryImplTest extends BaseIntegrationTest {
             Optional<LotMaster> found = lotMasterRepository.findByLotNumber("LOT-VALID");
             assertThat(found).isPresent();
             assertThat(found.get().isExpired()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("楽観ロック")
+    class OptimisticLock {
+        @Test
+        @DisplayName("更新時にバージョンがインクリメントされる")
+        void versionIncrementedOnUpdate() {
+            lotMasterRepository.save(createLotMaster("LOT-001", "ITEM001", LotType.PURCHASED));
+
+            Optional<LotMaster> saved = lotMasterRepository.findByLotNumber("LOT-001");
+            assertThat(saved).isPresent();
+            assertThat(saved.get().getVersion()).isEqualTo(1);
+
+            LotMaster toUpdate = saved.get();
+            toUpdate.setRemarks("更新後の備考");
+            lotMasterRepository.update(toUpdate);
+
+            Optional<LotMaster> updated = lotMasterRepository.findByLotNumber("LOT-001");
+            assertThat(updated).isPresent();
+            assertThat(updated.get().getVersion()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("古いバージョンで更新すると失敗する")
+        void updateFailsWithOldVersion() {
+            lotMasterRepository.save(createLotMaster("LOT-001", "ITEM001", LotType.PURCHASED));
+
+            // 2人のユーザーが同時にロットデータを取得
+            Optional<LotMaster> userA = lotMasterRepository.findByLotNumber("LOT-001");
+            Optional<LotMaster> userB = lotMasterRepository.findByLotNumber("LOT-001");
+
+            assertThat(userA).isPresent();
+            assertThat(userB).isPresent();
+
+            // ユーザーAが先に更新（成功）
+            LotMaster updateA = userA.get();
+            updateA.setRemarks("ユーザーAの更新");
+            int resultA = lotMasterRepository.update(updateA);
+            assertThat(resultA).isEqualTo(1);
+
+            // ユーザーBが古いバージョンで更新（失敗）
+            LotMaster updateB = userB.get();
+            updateB.setRemarks("ユーザーBの更新");
+            int resultB = lotMasterRepository.update(updateB);
+            assertThat(resultB).isEqualTo(0);
+
+            // データはユーザーAの更新内容
+            Optional<LotMaster> finalResult = lotMasterRepository.findByLotNumber("LOT-001");
+            assertThat(finalResult).isPresent();
+            assertThat(finalResult.get().getRemarks()).isEqualTo("ユーザーAの更新");
+        }
+    }
+
+    @Nested
+    @DisplayName("リレーション")
+    class Relation {
+        @Autowired
+        private LotCompositionRepository lotCompositionRepository;
+
+        @BeforeEach
+        void setUpRelationData() {
+            // 子ロット（材料）を作成
+            lotMasterRepository.save(createLotMaster("LOT-CHILD1", "ITEM001", LotType.PURCHASED));
+            lotMasterRepository.save(createLotMaster("LOT-CHILD2", "ITEM001", LotType.PURCHASED));
+
+            // 親ロット（製品）を作成
+            LotMaster parentLot = LotMaster.builder()
+                    .lotNumber("LOT-PARENT-REL")
+                    .itemCode("ITEM002")
+                    .lotType(LotType.MANUFACTURED)
+                    .manufactureDate(LocalDate.of(2024, 1, 20))
+                    .quantity(new BigDecimal("100.00"))
+                    .warehouseCode("WH001")
+                    .build();
+            lotMasterRepository.save(parentLot);
+        }
+
+        @Test
+        @DisplayName("構成を含めて取得できる")
+        void canFindWithCompositions() {
+            // ロット構成を追加
+            lotCompositionRepository.save(
+                    LotComposition.builder()
+                            .parentLotNumber("LOT-PARENT-REL")
+                            .childLotNumber("LOT-CHILD1")
+                            .usedQuantity(new BigDecimal("30.00"))
+                            .build());
+            lotCompositionRepository.save(
+                    LotComposition.builder()
+                            .parentLotNumber("LOT-PARENT-REL")
+                            .childLotNumber("LOT-CHILD2")
+                            .usedQuantity(new BigDecimal("20.00"))
+                            .build());
+
+            // リレーション付きで取得
+            Optional<LotMaster> found = lotMasterRepository
+                    .findByLotNumberWithCompositions("LOT-PARENT-REL");
+
+            assertThat(found).isPresent();
+            assertThat(found.get().getChildLotRelations()).hasSize(2);
+            assertThat(found.get().getChildLotRelations())
+                    .extracting("childLotNumber")
+                    .containsExactlyInAnyOrder("LOT-CHILD1", "LOT-CHILD2");
+        }
+
+        @Test
+        @DisplayName("構成が空の場合も取得できる")
+        void canFindWithEmptyCompositions() {
+            Optional<LotMaster> found = lotMasterRepository
+                    .findByLotNumberWithCompositions("LOT-PARENT-REL");
+
+            assertThat(found).isPresent();
+            assertThat(found.get().getChildLotRelations()).isEmpty();
         }
     }
 }
