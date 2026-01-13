@@ -13,6 +13,11 @@
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
+    <!-- Seed データクラスの除外（データ投入ユーティリティ） -->
+    <Match>
+        <Package name="com.example.pms.infrastructure.in.seed"/>
+    </Match>
+
     <!-- テストクラスの除外 -->
     <Match>
         <Source name="~.*Test\.java"/>
