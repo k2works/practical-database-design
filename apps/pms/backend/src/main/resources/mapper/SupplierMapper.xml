@@ -111,4 +111,40 @@
     <delete id="deleteAll" databaseId="h2">
         DELETE FROM "取引先マスタ"
     </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="SupplierResultMap">
+        SELECT * FROM "取引先マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("取引先コード" LIKE '%' || #{keyword} || '%'
+                 OR "取引先名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "取引先コード", "適用開始日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "取引先マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("取引先コード" LIKE '%' || #{keyword} || '%'
+                 OR "取引先名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
+
+    <!-- 取引先コードと適用開始日で検索 -->
+    <select id="findBySupplierCodeAndEffectiveFrom" resultMap="SupplierResultMap">
+        SELECT * FROM "取引先マスタ"
+        WHERE "取引先コード" = #{supplierCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </select>
+
+    <!-- 取引先削除 -->
+    <delete id="deleteBySupplierCodeAndEffectiveFrom">
+        DELETE FROM "取引先マスタ"
+        WHERE "取引先コード" = #{supplierCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </delete>
 </mapper>

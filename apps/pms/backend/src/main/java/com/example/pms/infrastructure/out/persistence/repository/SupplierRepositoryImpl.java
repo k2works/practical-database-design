@@ -50,4 +50,24 @@ public class SupplierRepositoryImpl implements SupplierRepository {
     public void deleteAll() {
         supplierMapper.deleteAll();
     }
+
+    @Override
+    public List<Supplier> findWithPagination(String keyword, int limit, int offset) {
+        return supplierMapper.findWithPagination(keyword, limit, offset);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return supplierMapper.count(keyword);
+    }
+
+    @Override
+    public Optional<Supplier> findBySupplierCodeAndEffectiveFrom(String supplierCode, LocalDate effectiveFrom) {
+        return supplierMapper.findBySupplierCodeAndEffectiveFrom(supplierCode, effectiveFrom);
+    }
+
+    @Override
+    public void deleteBySupplierCodeAndEffectiveFrom(String supplierCode, LocalDate effectiveFrom) {
+        supplierMapper.deleteBySupplierCodeAndEffectiveFrom(supplierCode, effectiveFrom);
+    }
 }

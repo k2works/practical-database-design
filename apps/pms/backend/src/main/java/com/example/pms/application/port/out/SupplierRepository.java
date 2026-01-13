@@ -22,4 +22,39 @@ public interface SupplierRepository {
     void update(Supplier supplier);
 
     void deleteAll();
+
+    /**
+     * ページネーション付きで取引先を検索する.
+     *
+     * @param keyword 検索キーワード（取引先コードまたは取引先名）
+     * @param limit 取得件数
+     * @param offset オフセット
+     * @return 取引先リスト
+     */
+    List<Supplier> findWithPagination(String keyword, int limit, int offset);
+
+    /**
+     * 検索条件に一致する取引先の件数を取得する.
+     *
+     * @param keyword 検索キーワード
+     * @return 件数
+     */
+    long count(String keyword);
+
+    /**
+     * 取引先コードと適用開始日で取引先を検索する.
+     *
+     * @param supplierCode 取引先コード
+     * @param effectiveFrom 適用開始日
+     * @return 取引先
+     */
+    Optional<Supplier> findBySupplierCodeAndEffectiveFrom(String supplierCode, LocalDate effectiveFrom);
+
+    /**
+     * 取引先を削除する.
+     *
+     * @param supplierCode 取引先コード
+     * @param effectiveFrom 適用開始日
+     */
+    void deleteBySupplierCodeAndEffectiveFrom(String supplierCode, LocalDate effectiveFrom);
 }

@@ -17,4 +17,12 @@ public interface SupplierMapper {
     List<Supplier> findAll();
     void update(Supplier supplier);
     void deleteAll();
+    List<Supplier> findWithPagination(@Param("keyword") String keyword,
+                                      @Param("limit") int limit,
+                                      @Param("offset") int offset);
+    long count(@Param("keyword") String keyword);
+    Optional<Supplier> findBySupplierCodeAndEffectiveFrom(@Param("supplierCode") String supplierCode,
+                                                         @Param("effectiveFrom") LocalDate effectiveFrom);
+    void deleteBySupplierCodeAndEffectiveFrom(@Param("supplierCode") String supplierCode,
+                                              @Param("effectiveFrom") LocalDate effectiveFrom);
 }
