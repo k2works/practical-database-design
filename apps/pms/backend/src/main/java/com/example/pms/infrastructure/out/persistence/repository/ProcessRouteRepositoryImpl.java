@@ -51,4 +51,19 @@ public class ProcessRouteRepositoryImpl implements ProcessRouteRepository {
     public void deleteAll() {
         processRouteMapper.deleteAll();
     }
+
+    @Override
+    public List<ProcessRoute> findWithPagination(String itemCode, int limit, int offset) {
+        return processRouteMapper.findWithPagination(itemCode, limit, offset);
+    }
+
+    @Override
+    public long count(String itemCode) {
+        return processRouteMapper.count(itemCode);
+    }
+
+    @Override
+    public void deleteByItemCodeAndSequence(String itemCode, Integer sequence) {
+        processRouteMapper.deleteByItemCodeAndSequence(itemCode, sequence);
+    }
 }

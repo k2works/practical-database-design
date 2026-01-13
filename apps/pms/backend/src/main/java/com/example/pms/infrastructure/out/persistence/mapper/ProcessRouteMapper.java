@@ -17,4 +17,14 @@ public interface ProcessRouteMapper {
     void update(ProcessRoute processRoute);
     void deleteByItemCode(String itemCode);
     void deleteAll();
+
+    List<ProcessRoute> findWithPagination(
+            @Param("itemCode") String itemCode,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
+
+    long count(@Param("itemCode") String itemCode);
+
+    void deleteByItemCodeAndSequence(@Param("itemCode") String itemCode,
+                                     @Param("sequence") Integer sequence);
 }
