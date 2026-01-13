@@ -42,10 +42,6 @@ public class MrpService implements MrpUseCase {
     public MrpResult execute(LocalDate startDate, LocalDate endDate) {
         // 品目マスタを取得
         List<Item> items = itemRepository.findAll();
-        Map<String, Item> itemMap = new HashMap<>();
-        for (Item item : items) {
-            itemMap.put(item.getItemCode(), item);
-        }
 
         // 在庫情報を取得
         List<Stock> stocks = stockRepository.findAll();
