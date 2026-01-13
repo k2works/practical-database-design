@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>単価編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>単価編集</h1>
+            <a th:href="@{/prices}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/prices/{itemCode}/{supplierCode}/{effectiveFrom}(itemCode=${itemCode},supplierCode=${supplierCode},effectiveFrom=${#temporals.format(effectiveFrom, 'yyyy-MM-dd')})}" th:object="${form}" method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="itemCode" class="form-label">品目コード</label>
+                            <input type="text" id="itemCode" th:field="*{itemCode}"
+                                   class="form-control" readonly>
+                            <div class="form-text">品目コードは変更できません</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="supplierCode" class="form-label">取引先コード</label>
+                            <input type="text" id="supplierCode" th:field="*{supplierCode}"
+                                   class="form-control" readonly>
+                            <div class="form-text">取引先コードは変更できません</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="effectiveFrom" class="form-label">適用開始日</label>
+                            <input type="date" id="effectiveFrom" th:field="*{effectiveFrom}"
+                                   class="form-control" readonly>
+                            <div class="form-text">適用開始日は変更できません</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="effectiveTo" class="form-label">適用停止日</label>
+                            <input type="date" id="effectiveTo" th:field="*{effectiveTo}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('effectiveTo')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('effectiveTo')}" class="invalid-feedback"
+                                 th:errors="*{effectiveTo}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">単価 <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" id="price" th:field="*{price}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('price')} ? 'is-invalid'"
+                                   placeholder="例: 1000">
+                            <div th:if="${#fields.hasErrors('price')}" class="invalid-feedback"
+                                 th:errors="*{price}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="currencyCode" class="form-label">通貨コード</label>
+                            <select id="currencyCode" th:field="*{currencyCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('currencyCode')} ? 'is-invalid'">
+                                <option value="JPY">JPY（日本円）</option>
+                                <option value="USD">USD（米ドル）</option>
+                                <option value="EUR">EUR（ユーロ）</option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('currencyCode')}" class="invalid-feedback"
+                                 th:errors="*{currencyCode}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                        <a th:href="@{/prices}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

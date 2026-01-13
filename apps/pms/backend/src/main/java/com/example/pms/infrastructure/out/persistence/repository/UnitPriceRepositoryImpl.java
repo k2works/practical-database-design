@@ -52,4 +52,24 @@ public class UnitPriceRepositoryImpl implements UnitPriceRepository {
     public void deleteAll() {
         unitPriceMapper.deleteAll();
     }
+
+    @Override
+    public List<UnitPrice> findWithPagination(String itemCode, int limit, int offset) {
+        return unitPriceMapper.findWithPagination(itemCode, limit, offset);
+    }
+
+    @Override
+    public long count(String itemCode) {
+        return unitPriceMapper.count(itemCode);
+    }
+
+    @Override
+    public Optional<UnitPrice> findByKey(String itemCode, String supplierCode, LocalDate effectiveFrom) {
+        return unitPriceMapper.findByKey(itemCode, supplierCode, effectiveFrom);
+    }
+
+    @Override
+    public void deleteByKey(String itemCode, String supplierCode, LocalDate effectiveFrom) {
+        unitPriceMapper.deleteByKey(itemCode, supplierCode, effectiveFrom);
+    }
 }

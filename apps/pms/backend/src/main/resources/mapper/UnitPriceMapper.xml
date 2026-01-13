@@ -71,4 +71,40 @@
     <delete id="deleteAll" databaseId="h2">
         DELETE FROM "単価マスタ"
     </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="UnitPriceResultMap">
+        SELECT * FROM "単価マスタ"
+        WHERE 1=1
+        <if test="itemCode != null and itemCode != ''">
+            AND "品目コード" LIKE '%' || #{itemCode} || '%'
+        </if>
+        ORDER BY "品目コード", "取引先コード", "適用開始日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "単価マスタ"
+        WHERE 1=1
+        <if test="itemCode != null and itemCode != ''">
+            AND "品目コード" LIKE '%' || #{itemCode} || '%'
+        </if>
+    </select>
+
+    <!-- 複合キーで検索 -->
+    <select id="findByKey" resultMap="UnitPriceResultMap">
+        SELECT * FROM "単価マスタ"
+        WHERE "品目コード" = #{itemCode}
+          AND "取引先コード" = #{supplierCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </select>
+
+    <!-- 単価削除 -->
+    <delete id="deleteByKey">
+        DELETE FROM "単価マスタ"
+        WHERE "品目コード" = #{itemCode}
+          AND "取引先コード" = #{supplierCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </delete>
 </mapper>

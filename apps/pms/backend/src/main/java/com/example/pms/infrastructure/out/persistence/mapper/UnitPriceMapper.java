@@ -20,4 +20,14 @@ public interface UnitPriceMapper {
     List<UnitPrice> findAll();
     void update(UnitPrice unitPrice);
     void deleteAll();
+    List<UnitPrice> findWithPagination(@Param("itemCode") String itemCode,
+                                       @Param("limit") int limit,
+                                       @Param("offset") int offset);
+    long count(@Param("itemCode") String itemCode);
+    Optional<UnitPrice> findByKey(@Param("itemCode") String itemCode,
+                                  @Param("supplierCode") String supplierCode,
+                                  @Param("effectiveFrom") LocalDate effectiveFrom);
+    void deleteByKey(@Param("itemCode") String itemCode,
+                     @Param("supplierCode") String supplierCode,
+                     @Param("effectiveFrom") LocalDate effectiveFrom);
 }
