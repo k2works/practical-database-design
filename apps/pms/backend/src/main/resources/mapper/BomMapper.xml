@@ -134,8 +134,7 @@
 
     <!-- H2用 再帰CTEによる全階層展開 -->
     <select id="explode" resultMap="BomExplosionResultMap" databaseId="h2">
-        WITH RECURSIVE bom_explosion AS (
-            -- 基底: 直接の子品目
+        WITH RECURSIVE bom_explosion("親品目コード", "子品目コード", "適用開始日", "適用停止日", "基準数量", "必要数量", "不良率", "工順", "階層", "累計数量") AS (
             SELECT
                 "親品目コード",
                 "子品目コード",
@@ -145,15 +144,14 @@
                 "必要数量",
                 "不良率",
                 "工順",
-                1 as "階層",
-                CAST("必要数量" AS DECIMAL) as "累計数量"
+                1,
+                CAST("必要数量" AS DECIMAL)
             FROM "部品構成表"
             WHERE "親品目コード" = #{itemCode}
               AND ("適用停止日" IS NULL OR "適用停止日" >= CURRENT_DATE)
 
             UNION ALL
 
-            -- 再帰: 子品目の子品目
             SELECT
                 b."親品目コード",
                 b."子品目コード",
@@ -168,7 +166,7 @@
             FROM "部品構成表" b
             INNER JOIN bom_explosion be ON b."親品目コード" = be."子品目コード"
             WHERE (b."適用停止日" IS NULL OR b."適用停止日" >= CURRENT_DATE)
-              AND be."階層" &lt; 10  -- 無限ループ防止
+              AND be."階層" &lt; 10
         )
         SELECT
             "親品目コード",
