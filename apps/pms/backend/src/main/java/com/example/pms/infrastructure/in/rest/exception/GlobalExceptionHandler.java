@@ -20,9 +20,9 @@ import java.time.Instant;
 import java.util.stream.Collectors;
 
 /**
- * グローバル例外ハンドラ.
+ * REST API 用グローバル例外ハンドラ.
  */
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "com.example.pms.infrastructure.in.rest")
 @SuppressWarnings("PMD.GuardLogStatement")
 public class GlobalExceptionHandler {
 
