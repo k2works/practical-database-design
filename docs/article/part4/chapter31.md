@@ -133,27 +133,18 @@ E 社では、特殊な表面処理を外注先に委託しています。
 ### 組織図（営業部・生産管理部・製造部・品質管理部・購買部・倉庫部・外注管理部）
 
 ```plantuml
-@startuml
-
+@startwbs
 title E精密工業株式会社 組織図
 
-rectangle "E精密工業株式会社" {
-  rectangle "営業部\n(SALES)" as sales
-  rectangle "生産管理部\n(PROD-PLAN)" as prodplan
-  rectangle "製造部\n(MFG)" as mfg
-  rectangle "品質管理部\n(QUALITY)" as quality
-  rectangle "購買部\n(PURCHASE)" as purchase
-  rectangle "倉庫部\n(WAREHOUSE)" as warehouse
-  rectangle "外注管理部\n(OUTSOURCE)" as outsource
-}
-
-sales -[hidden]right- prodplan
-prodplan -[hidden]right- mfg
-mfg -[hidden]right- quality
-purchase -[hidden]right- warehouse
-warehouse -[hidden]right- outsource
-
-@enduml
+* E精密工業株式会社
+** 営業部（SALES）
+** 生産管理部（PROD-PLAN）
+** 製造部（MFG）
+** 品質管理部（QUALITY）
+** 購買部（PURCHASE）
+** 倉庫部（WAREHOUSE）
+** 外注管理部（OUTSOURCE）
+@endwbs
 ```
 
 ```
