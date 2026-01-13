@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>カレンダー一覧</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>カレンダー一覧</h1>
+            <a th:href="@{/calendars/new}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> 新規登録
+            </a>
+        </div>
+
+        <!-- 検索フォーム -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/calendars}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="keyword" class="form-label">キーワード</label>
+                        <input type="text" id="keyword" name="keyword" class="form-control"
+                               th:value="${keyword}" placeholder="カレンダーコードまたは備考">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-secondary me-2">
+                            <i class="bi bi-search"></i> 検索
+                        </button>
+                        <a th:href="@{/calendars}" class="btn btn-outline-secondary">クリア</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- カレンダー一覧テーブル -->
+        <div class="card">
+            <div class="card-body">
+                <!-- 件数表示 -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">
+                        全 <span th:text="${totalElements}">0</span> 件
+                        <span th:if="${totalPages > 0}">
+                            （<span th:text="${currentPage + 1}">1</span> / <span th:text="${totalPages}">1</span> ページ）
+                        </span>
+                    </span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(calendars)}" class="alert alert-info">
+                    カレンダーが登録されていません。
+                </div>
+                <table th:if="${not #lists.isEmpty(calendars)}" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>カレンダーコード</th>
+                            <th>日付</th>
+                            <th>日付区分</th>
+                            <th>稼働時間</th>
+                            <th>備考</th>
+                            <th style="width: 150px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="calendar : ${calendars}">
+                            <td th:text="${calendar.calendarCode}"></td>
+                            <td th:text="${#temporals.format(calendar.date, 'yyyy-MM-dd')}"></td>
+                            <td th:text="${calendar.dateType?.displayName}"></td>
+                            <td th:text="${calendar.workingHours}"></td>
+                            <td th:text="${calendar.note}"></td>
+                            <td>
+                                <a th:href="@{/calendars/{calendarCode}/{date}/edit(calendarCode=${calendar.calendarCode},date=${#temporals.format(calendar.date, 'yyyy-MM-dd')})}"
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{/calendars/{calendarCode}/{date}/delete(calendarCode=${calendar.calendarCode},date=${#temporals.format(calendar.date, 'yyyy-MM-dd')})}"
+                                      method="post" style="display: inline;"
+                                      onsubmit="return confirm('削除してもよろしいですか？');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ページネーション -->
+                <nav th:if="${totalPages > 1}" aria-label="カレンダー一覧ページネーション">
+                    <ul class="pagination justify-content-center mb-0">
+                        <!-- 前へ -->
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/calendars(page=${currentPage - 1},size=${size},keyword=${keyword})}">
+                                前へ
+                            </a>
+                        </li>
+
+                        <!-- ページ番号 -->
+                        <th:block th:with="startPage=${currentPage > 2 ? currentPage - 2 : 0},
+                                          endPage=${startPage + 4 < totalPages ? startPage + 4 : totalPages - 1}">
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                                th:classappend="${pageNum == currentPage} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/calendars(page=${pageNum},size=${size},keyword=${keyword})}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+                            <li th:if="${endPage < totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        </th:block>
+
+                        <!-- 次へ -->
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/calendars(page=${currentPage + 1},size=${size},keyword=${keyword})}">
+                                次へ
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

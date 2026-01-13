@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>カレンダー編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>カレンダー編集</h1>
+            <a th:href="@{/calendars}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/calendars/{calendarCode}/{date}(calendarCode=${calendarCode},date=${#temporals.format(date, 'yyyy-MM-dd')})}" th:object="${form}" method="post">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="calendarCode" class="form-label">カレンダーコード</label>
+                            <input type="text" id="calendarCode" th:field="*{calendarCode}"
+                                   class="form-control" readonly>
+                            <div class="form-text">カレンダーコードは変更できません</div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="date" class="form-label">日付</label>
+                            <input type="date" id="date" th:field="*{date}"
+                                   class="form-control" readonly>
+                            <div class="form-text">日付は変更できません</div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="dateType" class="form-label">日付区分 <span class="text-danger">*</span></label>
+                            <select id="dateType" th:field="*{dateType}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('dateType')} ? 'is-invalid'">
+                                <option value="">-- 選択してください --</option>
+                                <option th:each="type : ${dateTypes}"
+                                        th:value="${type}"
+                                        th:text="${type.displayName}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('dateType')}" class="invalid-feedback"
+                                 th:errors="*{dateType}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="workingHours" class="form-label">稼働時間</label>
+                            <input type="number" id="workingHours" th:field="*{workingHours}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('workingHours')} ? 'is-invalid'"
+                                   step="0.5" min="0" max="24"
+                                   placeholder="例: 8.0">
+                            <div th:if="${#fields.hasErrors('workingHours')}" class="invalid-feedback"
+                                 th:errors="*{workingHours}"></div>
+                        </div>
+
+                        <div class="col-md-8 mb-3">
+                            <label for="note" class="form-label">備考</label>
+                            <input type="text" id="note" th:field="*{note}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('note')} ? 'is-invalid'"
+                                   placeholder="例: 年末年始休暇">
+                            <div th:if="${#fields.hasErrors('note')}" class="invalid-feedback"
+                                 th:errors="*{note}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                        <a th:href="@{/calendars}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
