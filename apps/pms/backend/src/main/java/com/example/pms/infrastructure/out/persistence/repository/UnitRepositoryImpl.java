@@ -36,6 +36,16 @@ public class UnitRepositoryImpl implements UnitRepository {
     }
 
     @Override
+    public List<Unit> findWithPagination(String keyword, int limit, int offset) {
+        return unitMapper.findWithPagination(keyword, limit, offset);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return unitMapper.count(keyword);
+    }
+
+    @Override
     public void update(Unit unit) {
         unitMapper.update(unit);
     }

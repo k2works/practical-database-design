@@ -39,6 +39,28 @@
         ORDER BY "単位コード"
     </select>
 
+    <select id="findWithPagination" resultMap="UnitResultMap">
+        SELECT * FROM "単位マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("単位コード" LIKE '%' || #{keyword} || '%'
+                 OR "単位記号" LIKE '%' || #{keyword} || '%'
+                 OR "単位名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "単位コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "単位マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("単位コード" LIKE '%' || #{keyword} || '%'
+                 OR "単位記号" LIKE '%' || #{keyword} || '%'
+                 OR "単位名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
+
     <update id="update" parameterType="com.example.pms.domain.model.unit.Unit">
         UPDATE "単位マスタ" SET
             "単位記号" = #{unitSymbol},

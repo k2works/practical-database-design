@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>単位編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>単位編集</h1>
+            <a th:href="@{/units}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/units/{unitCode}(unitCode=${unitCode})}" th:object="${form}" method="post">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="unitCode" class="form-label">単位コード</label>
+                            <input type="text" id="unitCode" th:field="*{unitCode}"
+                                   class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="unitSymbol" class="form-label">単位記号 <span class="text-danger">*</span></label>
+                            <input type="text" id="unitSymbol" th:field="*{unitSymbol}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('unitSymbol')} ? 'is-invalid'"
+                                   placeholder="例: 個">
+                            <div th:if="${#fields.hasErrors('unitSymbol')}" class="invalid-feedback"
+                                 th:errors="*{unitSymbol}"></div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="unitName" class="form-label">単位名 <span class="text-danger">*</span></label>
+                            <input type="text" id="unitName" th:field="*{unitName}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('unitName')} ? 'is-invalid'"
+                                   placeholder="例: 個数">
+                            <div th:if="${#fields.hasErrors('unitName')}" class="invalid-feedback"
+                                 th:errors="*{unitName}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                        <a th:href="@{/units}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

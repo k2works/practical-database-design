@@ -33,6 +33,24 @@ public interface UnitRepository {
     List<Unit> findAll();
 
     /**
+     * ページネーション付きで取得する.
+     *
+     * @param keyword 検索キーワード
+     * @param limit 取得件数
+     * @param offset オフセット
+     * @return 単位リスト
+     */
+    List<Unit> findWithPagination(String keyword, int limit, int offset);
+
+    /**
+     * 件数を取得する.
+     *
+     * @param keyword 検索キーワード
+     * @return 件数
+     */
+    long count(String keyword);
+
+    /**
      * 単位を更新する.
      *
      * @param unit 単位
