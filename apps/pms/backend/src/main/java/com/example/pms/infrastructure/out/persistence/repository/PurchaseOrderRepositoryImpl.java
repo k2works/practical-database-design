@@ -3,6 +3,7 @@ package com.example.pms.infrastructure.out.persistence.repository;
 import com.example.pms.application.port.out.PurchaseOrderRepository;
 import com.example.pms.domain.model.purchase.PurchaseOrder;
 import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
+import com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderDetailMapper;
 import com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderMapper;
 import org.springframework.stereotype.Repository;
 
@@ -16,14 +17,23 @@ import java.util.Optional;
 public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
 
     private final PurchaseOrderMapper purchaseOrderMapper;
+    private final PurchaseOrderDetailMapper purchaseOrderDetailMapper;
 
-    public PurchaseOrderRepositoryImpl(PurchaseOrderMapper purchaseOrderMapper) {
+    public PurchaseOrderRepositoryImpl(
+            PurchaseOrderMapper purchaseOrderMapper,
+            PurchaseOrderDetailMapper purchaseOrderDetailMapper) {
         this.purchaseOrderMapper = purchaseOrderMapper;
+        this.purchaseOrderDetailMapper = purchaseOrderDetailMapper;
     }
 
     @Override
     public void save(PurchaseOrder purchaseOrder) {
         purchaseOrderMapper.insert(purchaseOrder);
+        if (purchaseOrder.getDetails() != null) {
+            for (var detail : purchaseOrder.getDetails()) {
+                purchaseOrderDetailMapper.insert(detail);
+            }
+        }
     }
 
     @Override

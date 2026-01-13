@@ -46,9 +46,11 @@ public class PurchaseOrderService implements PurchaseOrderUseCase {
     public PurchaseOrder createOrder(CreatePurchaseOrderCommand command) {
         String orderNumber = generateOrderNumber();
 
-        List<PurchaseOrderDetail> details = command.getDetails().stream()
-            .map(d -> createDetail(orderNumber, d))
-            .toList();
+        List<PurchaseOrderDetail> details = new java.util.ArrayList<>();
+        int lineNumber = 1;
+        for (var d : command.getDetails()) {
+            details.add(createDetail(orderNumber, lineNumber++, d));
+        }
 
         PurchaseOrder order = PurchaseOrder.builder()
             .purchaseOrderNumber(orderNumber)
@@ -67,18 +69,22 @@ public class PurchaseOrderService implements PurchaseOrderUseCase {
 
     private PurchaseOrderDetail createDetail(
             String orderNumber,
+            int lineNumber,
             CreatePurchaseOrderCommand.PurchaseOrderDetailCommand d) {
-        BigDecimal orderAmount = d.getOrderQuantity()
-            .multiply(d.getOrderUnitPrice() != null ? d.getOrderUnitPrice() : BigDecimal.ZERO);
+        BigDecimal unitPrice = d.getOrderUnitPrice() != null ? d.getOrderUnitPrice() : BigDecimal.ZERO;
+        BigDecimal orderAmount = d.getOrderQuantity().multiply(unitPrice);
 
         return PurchaseOrderDetail.builder()
             .purchaseOrderNumber(orderNumber)
+            .lineNumber(lineNumber)
             .itemCode(d.getItemCode())
             .deliveryLocationCode(d.getDeliveryLocationCode())
+            .miscellaneousItemFlag(false)
             .expectedReceivingDate(d.getExpectedReceivingDate())
             .orderQuantity(d.getOrderQuantity())
-            .orderUnitPrice(d.getOrderUnitPrice())
+            .orderUnitPrice(unitPrice)
             .orderAmount(orderAmount)
+            .taxAmount(BigDecimal.ZERO)
             .receivedQuantity(BigDecimal.ZERO)
             .inspectedQuantity(BigDecimal.ZERO)
             .acceptedQuantity(BigDecimal.ZERO)
