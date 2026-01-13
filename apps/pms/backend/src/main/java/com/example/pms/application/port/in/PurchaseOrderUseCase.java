@@ -1,6 +1,7 @@
 package com.example.pms.application.port.in;
 
 import com.example.pms.application.port.in.command.CreatePurchaseOrderCommand;
+import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.purchase.PurchaseOrder;
 import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
 
@@ -56,4 +57,14 @@ public interface PurchaseOrderUseCase {
      * @return 発注リスト
      */
     List<PurchaseOrder> getOrdersByStatus(PurchaseOrderStatus status);
+
+    /**
+     * ページネーション付きで発注を取得する.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param status ステータス（null可）
+     * @return ページネーション結果
+     */
+    PageResult<PurchaseOrder> getOrders(int page, int size, PurchaseOrderStatus status);
 }

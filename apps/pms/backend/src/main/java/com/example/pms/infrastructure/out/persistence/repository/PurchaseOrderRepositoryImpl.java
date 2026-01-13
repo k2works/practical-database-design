@@ -75,4 +75,14 @@ public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
     public void deleteAll() {
         purchaseOrderMapper.deleteAll();
     }
+
+    @Override
+    public List<PurchaseOrder> findWithPagination(PurchaseOrderStatus status, int limit, int offset) {
+        return purchaseOrderMapper.findWithPagination(status, limit, offset);
+    }
+
+    @Override
+    public long count(PurchaseOrderStatus status) {
+        return purchaseOrderMapper.count(status);
+    }
 }

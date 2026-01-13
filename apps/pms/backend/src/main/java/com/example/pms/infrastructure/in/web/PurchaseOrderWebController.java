@@ -4,6 +4,7 @@ import com.example.pms.application.port.in.ItemUseCase;
 import com.example.pms.application.port.in.PurchaseOrderUseCase;
 import com.example.pms.application.port.in.command.CreatePurchaseOrderCommand;
 import com.example.pms.application.port.out.SupplierRepository;
+import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.item.Item;
 import com.example.pms.domain.model.item.ItemCategory;
 import com.example.pms.domain.model.purchase.PurchaseOrder;
@@ -61,17 +62,18 @@ public class PurchaseOrderWebController {
      */
     @GetMapping
     public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) PurchaseOrderStatus status,
             Model model) {
 
-        List<PurchaseOrder> orders;
-        if (status != null) {
-            orders = purchaseOrderUseCase.getOrdersByStatus(status);
-        } else {
-            orders = purchaseOrderUseCase.getAllOrders();
-        }
+        PageResult<PurchaseOrder> pageResult = purchaseOrderUseCase.getOrders(page, size, status);
 
-        model.addAttribute("orders", orders);
+        model.addAttribute("orders", pageResult.getContent());
+        model.addAttribute("currentPage", pageResult.getPage());
+        model.addAttribute("totalPages", pageResult.getTotalPages());
+        model.addAttribute("totalElements", pageResult.getTotalElements());
+        model.addAttribute("size", size);
         model.addAttribute("statuses", PurchaseOrderStatus.values());
         model.addAttribute("selectedStatus", status);
         return "purchase-orders/list";

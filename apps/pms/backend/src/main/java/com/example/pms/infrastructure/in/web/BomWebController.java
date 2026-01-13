@@ -4,7 +4,9 @@ import com.example.pms.application.port.in.BomUseCase;
 import com.example.pms.application.port.in.ItemUseCase;
 import com.example.pms.domain.model.bom.Bom;
 import com.example.pms.domain.model.bom.BomExplosion;
+import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +24,9 @@ import java.util.List;
 @RequestMapping("/bom")
 public class BomWebController {
 
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final BomUseCase bomUseCase;
     private final ItemUseCase itemUseCase;
 
@@ -33,13 +38,35 @@ public class BomWebController {
     /**
      * BOM 一覧画面を表示する.
      *
+     * @param page ページ番号
+     * @param size ページサイズ
+     * @param category 品目区分
+     * @param keyword 検索キーワード
      * @param model モデル
      * @return ビュー名
      */
     @GetMapping
-    public String list(Model model) {
-        List<Item> items = itemUseCase.getAllItems();
-        model.addAttribute("items", items);
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) ItemCategory category,
+            @RequestParam(required = false) String keyword,
+            Model model) {
+
+        int pageSize = Math.min(size, MAX_PAGE_SIZE);
+        if (pageSize <= 0) {
+            pageSize = DEFAULT_PAGE_SIZE;
+        }
+
+        PageResult<Item> pageResult = itemUseCase.getItems(page, pageSize, category, keyword);
+
+        model.addAttribute("items", pageResult.getContent());
+        model.addAttribute("page", pageResult);
+        model.addAttribute("currentSize", pageSize);
+        model.addAttribute("categories", ItemCategory.values());
+        model.addAttribute("selectedCategory", category);
+        model.addAttribute("keyword", keyword);
+
         return "bom/list";
     }
 

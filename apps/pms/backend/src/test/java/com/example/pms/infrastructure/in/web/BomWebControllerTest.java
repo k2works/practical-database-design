@@ -5,11 +5,13 @@ import com.example.pms.application.port.in.ItemUseCase;
 import com.example.pms.domain.exception.ItemNotFoundException;
 import com.example.pms.domain.model.bom.Bom;
 import com.example.pms.domain.model.bom.BomExplosion;
+import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.item.Item;
 import com.example.pms.domain.model.item.ItemCategory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -47,12 +49,78 @@ class BomWebControllerTest {
         @DisplayName("BOM 一覧画面を表示できる")
         void shouldDisplayBomList() throws Exception {
             Item item = createTestItem("PROD-001", "テスト製品");
-            Mockito.when(itemUseCase.getAllItems()).thenReturn(List.of(item));
+            PageResult<Item> pageResult = new PageResult<>(List.of(item), 0, 20, 1);
+            Mockito.when(itemUseCase.getItems(
+                    ArgumentMatchers.eq(0),
+                    ArgumentMatchers.eq(20),
+                    ArgumentMatchers.isNull(),
+                    ArgumentMatchers.isNull()))
+                .thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/bom"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("bom/list"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("items"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("items"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("page"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("categories"));
+        }
+
+        @Test
+        @DisplayName("品目区分でフィルタできる")
+        void shouldFilterByCategory() throws Exception {
+            Item product = createTestItem("PROD-001", "製品A");
+            PageResult<Item> pageResult = new PageResult<>(List.of(product), 0, 20, 1);
+            Mockito.when(itemUseCase.getItems(
+                    ArgumentMatchers.eq(0),
+                    ArgumentMatchers.eq(20),
+                    ArgumentMatchers.eq(ItemCategory.PRODUCT),
+                    ArgumentMatchers.isNull()))
+                .thenReturn(pageResult);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/bom")
+                    .param("category", "PRODUCT"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("bom/list"))
+                .andExpect(MockMvcResultMatchers.model().attribute("selectedCategory", ItemCategory.PRODUCT));
+        }
+
+        @Test
+        @DisplayName("キーワードで検索できる")
+        void shouldSearchByKeyword() throws Exception {
+            Item item = createTestItem("PROD-001", "テスト製品");
+            PageResult<Item> pageResult = new PageResult<>(List.of(item), 0, 20, 1);
+            Mockito.when(itemUseCase.getItems(
+                    ArgumentMatchers.eq(0),
+                    ArgumentMatchers.eq(20),
+                    ArgumentMatchers.isNull(),
+                    ArgumentMatchers.eq("テスト")))
+                .thenReturn(pageResult);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/bom")
+                    .param("keyword", "テスト"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("bom/list"))
+                .andExpect(MockMvcResultMatchers.model().attribute("keyword", "テスト"));
+        }
+
+        @Test
+        @DisplayName("ページネーションパラメータが渡される")
+        void shouldPassPaginationParams() throws Exception {
+            Item item = createTestItem("PROD-001", "テスト製品");
+            PageResult<Item> pageResult = new PageResult<>(List.of(item), 2, 50, 150);
+            Mockito.when(itemUseCase.getItems(
+                    ArgumentMatchers.eq(2),
+                    ArgumentMatchers.eq(50),
+                    ArgumentMatchers.isNull(),
+                    ArgumentMatchers.isNull()))
+                .thenReturn(pageResult);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/bom")
+                    .param("page", "2")
+                    .param("size", "50"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("bom/list"))
+                .andExpect(MockMvcResultMatchers.model().attribute("currentSize", 50));
         }
     }
 

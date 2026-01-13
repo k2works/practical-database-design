@@ -3,6 +3,7 @@ package com.example.pms.infrastructure.in.web;
 import com.example.pms.application.port.in.ItemUseCase;
 import com.example.pms.application.port.in.PurchaseOrderUseCase;
 import com.example.pms.application.port.out.SupplierRepository;
+import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.item.Item;
 import com.example.pms.domain.model.item.ItemCategory;
 import com.example.pms.domain.model.purchase.PurchaseOrder;
@@ -60,27 +61,57 @@ class PurchaseOrderWebControllerTest {
         @DisplayName("発注一覧画面を表示できる")
         void shouldDisplayOrderList() throws Exception {
             PurchaseOrder order = createTestOrder("PO-001", PurchaseOrderStatus.CREATING);
-            Mockito.when(purchaseOrderUseCase.getAllOrders()).thenReturn(List.of(order));
+            PageResult<PurchaseOrder> pageResult = new PageResult<>(List.of(order), 0, 20, 1);
+            Mockito.when(purchaseOrderUseCase.getOrders(
+                    ArgumentMatchers.anyInt(),
+                    ArgumentMatchers.anyInt(),
+                    ArgumentMatchers.isNull()
+            )).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/purchase-orders"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("purchase-orders/list"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("orders"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("statuses"));
+                .andExpect(MockMvcResultMatchers.model().attributeExists("statuses"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("currentPage"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("totalPages"));
         }
 
         @Test
         @DisplayName("ステータスでフィルタできる")
         void shouldFilterByStatus() throws Exception {
             PurchaseOrder order = createTestOrder("PO-001", PurchaseOrderStatus.ORDERED);
-            Mockito.when(purchaseOrderUseCase.getOrdersByStatus(PurchaseOrderStatus.ORDERED))
-                .thenReturn(List.of(order));
+            PageResult<PurchaseOrder> pageResult = new PageResult<>(List.of(order), 0, 20, 1);
+            Mockito.when(purchaseOrderUseCase.getOrders(
+                    ArgumentMatchers.anyInt(),
+                    ArgumentMatchers.anyInt(),
+                    ArgumentMatchers.eq(PurchaseOrderStatus.ORDERED)
+            )).thenReturn(pageResult);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/purchase-orders")
                     .param("status", "ORDERED"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("purchase-orders/list"))
                 .andExpect(MockMvcResultMatchers.model().attribute("selectedStatus", PurchaseOrderStatus.ORDERED));
+        }
+
+        @Test
+        @DisplayName("ページネーションパラメータを指定できる")
+        void shouldAcceptPaginationParams() throws Exception {
+            PurchaseOrder order = createTestOrder("PO-001", PurchaseOrderStatus.CREATING);
+            PageResult<PurchaseOrder> pageResult = new PageResult<>(List.of(order), 1, 10, 15);
+            Mockito.when(purchaseOrderUseCase.getOrders(
+                    ArgumentMatchers.eq(1),
+                    ArgumentMatchers.eq(10),
+                    ArgumentMatchers.isNull()
+            )).thenReturn(pageResult);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/purchase-orders")
+                    .param("page", "1")
+                    .param("size", "10"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.model().attribute("currentPage", 1))
+                .andExpect(MockMvcResultMatchers.model().attribute("totalPages", 2));
         }
     }
 

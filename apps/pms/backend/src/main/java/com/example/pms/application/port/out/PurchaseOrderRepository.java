@@ -34,4 +34,22 @@ public interface PurchaseOrderRepository {
     void updateStatus(Integer id, PurchaseOrderStatus status);
 
     void deleteAll();
+
+    /**
+     * ページネーション付きで発注を取得.
+     *
+     * @param status ステータス（null可）
+     * @param limit 取得件数
+     * @param offset オフセット
+     * @return 発注リスト
+     */
+    List<PurchaseOrder> findWithPagination(PurchaseOrderStatus status, int limit, int offset);
+
+    /**
+     * 条件に一致する発注の件数を取得.
+     *
+     * @param status ステータス（null可）
+     * @return 件数
+     */
+    long count(PurchaseOrderStatus status);
 }

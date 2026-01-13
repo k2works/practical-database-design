@@ -5,6 +5,7 @@ import com.example.pms.application.port.in.command.CreatePurchaseOrderCommand;
 import com.example.pms.application.port.out.PurchaseOrderRepository;
 import com.example.pms.domain.exception.InvalidOrderStateException;
 import com.example.pms.domain.exception.PurchaseOrderNotFoundException;
+import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.purchase.PurchaseOrder;
 import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
 import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
@@ -131,6 +132,15 @@ public class PurchaseOrderService implements PurchaseOrderUseCase {
     @Transactional(readOnly = true)
     public List<PurchaseOrder> getOrdersByStatus(PurchaseOrderStatus status) {
         return purchaseOrderRepository.findByStatus(status);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<PurchaseOrder> getOrders(int page, int size, PurchaseOrderStatus status) {
+        int offset = page * size;
+        List<PurchaseOrder> orders = purchaseOrderRepository.findWithPagination(status, size, offset);
+        long totalElements = purchaseOrderRepository.count(status);
+        return new PageResult<>(orders, page, size, totalElements);
     }
 
     private String generateOrderNumber() {

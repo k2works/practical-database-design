@@ -122,4 +122,44 @@
     <delete id="deleteAll" databaseId="h2">
         DELETE FROM "発注データ"
     </delete>
+
+    <!-- PostgreSQL用 ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="PurchaseOrderResultMap" databaseId="postgresql">
+        SELECT * FROM "発注データ"
+        WHERE 1=1
+        <if test="status != null">
+            AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス
+        </if>
+        ORDER BY "発注日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- H2用 ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="PurchaseOrderResultMap" databaseId="h2">
+        SELECT * FROM "発注データ"
+        WHERE 1=1
+        <if test="status != null">
+            AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}
+        </if>
+        ORDER BY "発注日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- PostgreSQL用 件数取得 -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "発注データ"
+        WHERE 1=1
+        <if test="status != null">
+            AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス
+        </if>
+    </select>
+
+    <!-- H2用 件数取得 -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "発注データ"
+        WHERE 1=1
+        <if test="status != null">
+            AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}
+        </if>
+    </select>
 </mapper>

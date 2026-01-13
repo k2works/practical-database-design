@@ -23,4 +23,17 @@ public interface PurchaseOrderMapper {
     List<PurchaseOrder> findAll();
     void updateStatus(@Param("id") Integer id, @Param("status") PurchaseOrderStatus status);
     void deleteAll();
+
+    /**
+     * ページネーション付きで発注を取得.
+     */
+    List<PurchaseOrder> findWithPagination(
+            @Param("status") PurchaseOrderStatus status,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
+
+    /**
+     * 条件に一致する発注の件数を取得.
+     */
+    long count(@Param("status") PurchaseOrderStatus status);
 }

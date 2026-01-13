@@ -55,6 +55,16 @@
         <!-- 発注一覧テーブル -->
         <div class="card">
             <div class="card-body">
+                <!-- 件数表示 -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">
+                        全 <span th:text="${totalElements}">0</span> 件
+                        <span th:if="${totalPages > 0}">
+                            （<span th:text="${currentPage + 1}">1</span> / <span th:text="${totalPages}">1</span> ページ）
+                        </span>
+                    </span>
+                </div>
+
                 <div th:if="${#lists.isEmpty(orders)}" class="alert alert-info">
                     発注が登録されていません。
                 </div>
@@ -92,6 +102,45 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- ページネーション -->
+                <nav th:if="${totalPages > 1}" aria-label="発注一覧ページネーション">
+                    <ul class="pagination justify-content-center mb-0">
+                        <!-- 前へ -->
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/purchase-orders(page=${currentPage - 1},size=${size},status=${selectedStatus})}">
+                                前へ
+                            </a>
+                        </li>
+
+                        <!-- ページ番号 -->
+                        <th:block th:with="startPage=${currentPage > 2 ? currentPage - 2 : 0},
+                                          endPage=${startPage + 4 < totalPages ? startPage + 4 : totalPages - 1}">
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                                th:classappend="${pageNum == currentPage} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/purchase-orders(page=${pageNum},size=${size},status=${selectedStatus})}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+                            <li th:if="${endPage < totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        </th:block>
+
+                        <!-- 次へ -->
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/purchase-orders(page=${currentPage + 1},size=${size},status=${selectedStatus})}">
+                                次へ
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
