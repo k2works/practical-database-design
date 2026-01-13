@@ -126,7 +126,9 @@ nav:
           - 研究3 gRPCサービスの実装: article/study/study3-3.md
           - 研究4 GraphQLサービスの実装: article/study/study3-4.md
       - 研究 生産管理システム実装編:
-          - 研究1 モノリスサービスの実装: article/study/study4-1.md
+          - 概要: article/study/study4-1.md
+          - 研究1 モノリスサービスの実装:
+              - 第33章 モノリスアーキテクチャの基礎: article/study/pms/chapter33.md
           - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study4-2.md
           - 研究3 gRPCサービスの実装: article/study/study4-3.md
           - 研究4 GraphQLサービスの実装: article/study/study4-4.md
