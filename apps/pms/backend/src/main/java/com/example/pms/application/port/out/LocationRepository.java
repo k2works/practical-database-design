@@ -49,7 +49,32 @@ public interface LocationRepository {
     void update(Location location);
 
     /**
+     * 場所コードで削除する.
+     *
+     * @param locationCode 場所コード
+     */
+    void deleteByLocationCode(String locationCode);
+
+    /**
      * 全件削除する.
      */
     void deleteAll();
+
+    /**
+     * ページネーション付きで場所を検索する.
+     *
+     * @param keyword 検索キーワード（場所コードまたは場所名）
+     * @param limit 取得件数
+     * @param offset オフセット
+     * @return 場所リスト
+     */
+    List<Location> findWithPagination(String keyword, int limit, int offset);
+
+    /**
+     * 検索条件に一致する場所の件数を取得する.
+     *
+     * @param keyword 検索キーワード
+     * @return 件数
+     */
+    long count(String keyword);
 }

@@ -97,6 +97,11 @@
         WHERE "場所コード" = #{locationCode}
     </update>
 
+    <delete id="deleteByLocationCode">
+        DELETE FROM "場所マスタ"
+        WHERE "場所コード" = #{locationCode}
+    </delete>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "場所マスタ" CASCADE
@@ -106,4 +111,26 @@
     <delete id="deleteAll" databaseId="h2">
         DELETE FROM "場所マスタ"
     </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="LocationResultMap">
+        SELECT * FROM "場所マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("場所コード" LIKE '%' || #{keyword} || '%'
+                 OR "場所名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "場所コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "場所マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("場所コード" LIKE '%' || #{keyword} || '%'
+                 OR "場所名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
 </mapper>

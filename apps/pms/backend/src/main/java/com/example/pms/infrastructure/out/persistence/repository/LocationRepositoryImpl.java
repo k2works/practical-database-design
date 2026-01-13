@@ -47,7 +47,22 @@ public class LocationRepositoryImpl implements LocationRepository {
     }
 
     @Override
+    public void deleteByLocationCode(String locationCode) {
+        locationMapper.deleteByLocationCode(locationCode);
+    }
+
+    @Override
     public void deleteAll() {
         locationMapper.deleteAll();
+    }
+
+    @Override
+    public List<Location> findWithPagination(String keyword, int limit, int offset) {
+        return locationMapper.findWithPagination(keyword, limit, offset);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return locationMapper.count(keyword);
     }
 }
