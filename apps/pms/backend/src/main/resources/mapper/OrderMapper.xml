@@ -105,6 +105,34 @@
         SELECT * FROM "オーダ情報" ORDER BY "納期"
     </select>
 
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="OrderResultMap">
+        SELECT * FROM "オーダ情報"
+        <where>
+            <if test="status != null">
+                AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("オーダNO" LIKE '%' || #{keyword} || '%' OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "納期" DESC, "オーダNO"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "オーダ情報"
+        <where>
+            <if test="status != null">
+                AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("オーダNO" LIKE '%' || #{keyword} || '%' OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
     <!-- PostgreSQL用 updateStatus -->
     <update id="updateStatus" databaseId="postgresql">
         UPDATE "オーダ情報"

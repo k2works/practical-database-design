@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>オーダ詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>オーダ詳細</h1>
+            <a th:href="@{/orders}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <!-- オーダ情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">オーダ情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">オーダNO</dt>
+                            <dd class="col-sm-8" th:text="${order.orderNumber}"></dd>
+
+                            <dt class="col-sm-4">オーダ種別</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge"
+                                      th:classappend="${order.orderType.name() == 'MANUFACTURING'} ? 'bg-info' : 'bg-warning'"
+                                      th:text="${order.orderType.displayName}"></span>
+                            </dd>
+
+                            <dt class="col-sm-4">品目コード</dt>
+                            <dd class="col-sm-8" th:text="${order.itemCode}"></dd>
+
+                            <dt class="col-sm-4">計画数量</dt>
+                            <dd class="col-sm-8" th:text="${#numbers.formatDecimal(order.planQuantity, 1, 'COMMA', 2, 'POINT')}"></dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">着手予定日</dt>
+                            <dd class="col-sm-8" th:text="${order.startDate}"></dd>
+
+                            <dt class="col-sm-4">納期</dt>
+                            <dd class="col-sm-8" th:text="${order.dueDate}"></dd>
+
+                            <dt class="col-sm-4">有効期限</dt>
+                            <dd class="col-sm-8" th:text="${order.expirationDate}"></dd>
+
+                            <dt class="col-sm-4">ステータス</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge"
+                                      th:classappend="${order.status.name() == 'DRAFT'} ? 'bg-secondary' :
+                                                      (${order.status.name() == 'CONFIRMED'} ? 'bg-primary' :
+                                                      (${order.status.name() == 'CANCELLED'} ? 'bg-danger' : 'bg-success'))"
+                                      th:text="${order.status.displayName}"></span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">場所コード</dt>
+                            <dd class="col-sm-8" th:text="${order.locationCode}"></dd>
+
+                            <dt class="col-sm-4">MPS ID</dt>
+                            <dd class="col-sm-8" th:text="${order.mpsId ?: '-'}"></dd>
+
+                            <dt class="col-sm-4">親オーダID</dt>
+                            <dd class="col-sm-8" th:text="${order.parentOrderId ?: '-'}"></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 所要情報 -->
+        <div class="card" th:if="${order.requirements != null and not #lists.isEmpty(order.requirements)}">
+            <div class="card-header">
+                <h5 class="mb-0">所要情報</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>品目コード</th>
+                            <th>所要日</th>
+                            <th class="text-end">所要量</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="req : ${order.requirements}">
+                            <td th:text="${req.itemCode}"></td>
+                            <td th:text="${req.requirementDate}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(req.requiredQuantity, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

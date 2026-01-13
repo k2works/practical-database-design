@@ -57,6 +57,16 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
+    public List<Order> findWithPagination(PlanStatus status, String keyword, int limit, int offset) {
+        return orderMapper.findWithPagination(status, keyword, limit, offset);
+    }
+
+    @Override
+    public long count(PlanStatus status, String keyword) {
+        return orderMapper.count(status, keyword);
+    }
+
+    @Override
     public void updateStatus(Integer id, PlanStatus status) {
         orderMapper.updateStatus(id, status);
     }

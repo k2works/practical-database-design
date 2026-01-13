@@ -51,6 +51,26 @@ public interface OrderRepository {
     List<Order> findAll();
 
     /**
+     * ページネーション付きでオーダを検索する
+     *
+     * @param status ステータス（オプション）
+     * @param keyword キーワード（オーダNOまたは品目コード）
+     * @param limit 取得件数
+     * @param offset オフセット
+     * @return オーダのリスト
+     */
+    List<Order> findWithPagination(PlanStatus status, String keyword, int limit, int offset);
+
+    /**
+     * 検索条件に合致するオーダの件数を取得する
+     *
+     * @param status ステータス（オプション）
+     * @param keyword キーワード（オーダNOまたは品目コード）
+     * @return 件数
+     */
+    long count(PlanStatus status, String keyword);
+
+    /**
      * ステータスを更新する
      */
     void updateStatus(Integer id, PlanStatus status);
