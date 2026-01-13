@@ -44,4 +44,21 @@ public class ProcessService implements ProcessUseCase {
     public List<Process> getAllProcesses() {
         return processRepository.findAll();
     }
+
+    @Override
+    public Process createProcess(Process process) {
+        processRepository.save(process);
+        return process;
+    }
+
+    @Override
+    public Process updateProcess(String processCode, Process process) {
+        processRepository.update(process);
+        return process;
+    }
+
+    @Override
+    public void deleteProcess(String processCode) {
+        processRepository.deleteByProcessCode(processCode);
+    }
 }

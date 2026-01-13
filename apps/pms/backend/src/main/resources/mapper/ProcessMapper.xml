@@ -70,4 +70,10 @@
                  OR "工程名" LIKE '%' || #{keyword} || '%')
         </if>
     </select>
+
+    <!-- 工程削除 -->
+    <delete id="deleteByProcessCode">
+        DELETE FROM "工程マスタ"
+        WHERE "工程コード" = #{processCode}
+    </delete>
 </mapper>

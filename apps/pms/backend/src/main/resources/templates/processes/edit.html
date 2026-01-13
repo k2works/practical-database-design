@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>工程編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>工程編集</h1>
+            <a th:href="@{/processes}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/processes/{processCode}(processCode=${processCode})}" th:object="${form}" method="post">
+                    <div class="mb-3">
+                        <label for="processCode" class="form-label">工程コード</label>
+                        <input type="text" id="processCode" th:field="*{processCode}"
+                               class="form-control" readonly>
+                        <div class="form-text">工程コードは変更できません</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="processName" class="form-label">工程名 <span class="text-danger">*</span></label>
+                        <input type="text" id="processName" th:field="*{processName}"
+                               class="form-control" th:classappend="${#fields.hasErrors('processName')} ? 'is-invalid'"
+                               placeholder="例: 組立工程">
+                        <div th:if="${#fields.hasErrors('processName')}" class="invalid-feedback"
+                             th:errors="*{processName}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="processType" class="form-label">工程区分</label>
+                        <input type="text" id="processType" th:field="*{processType}"
+                               class="form-control" th:classappend="${#fields.hasErrors('processType')} ? 'is-invalid'"
+                               placeholder="例: 加工">
+                        <div th:if="${#fields.hasErrors('processType')}" class="invalid-feedback"
+                             th:errors="*{processType}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="locationCode" class="form-label">場所コード</label>
+                        <input type="text" id="locationCode" th:field="*{locationCode}"
+                               class="form-control" th:classappend="${#fields.hasErrors('locationCode')} ? 'is-invalid'"
+                               placeholder="例: LOC-001">
+                        <div th:if="${#fields.hasErrors('locationCode')}" class="invalid-feedback"
+                             th:errors="*{locationCode}"></div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                        <a th:href="@{/processes}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

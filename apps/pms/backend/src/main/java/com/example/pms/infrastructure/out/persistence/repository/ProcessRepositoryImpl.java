@@ -51,4 +51,9 @@ public class ProcessRepositoryImpl implements ProcessRepository {
     public long count(String keyword) {
         return processMapper.count(keyword);
     }
+
+    @Override
+    public void deleteByProcessCode(String processCode) {
+        processMapper.deleteByProcessCode(processCode);
+    }
 }

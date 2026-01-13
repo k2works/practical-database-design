@@ -32,4 +32,11 @@ public interface ProcessRepository {
      * @return 件数
      */
     long count(String keyword);
+
+    /**
+     * 工程コードで削除.
+     *
+     * @param processCode 工程コード
+     */
+    void deleteByProcessCode(String processCode);
 }

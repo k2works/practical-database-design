@@ -34,4 +34,28 @@ public interface ProcessUseCase {
      * @return 工程リスト
      */
     List<Process> getAllProcesses();
+
+    /**
+     * 工程を登録する.
+     *
+     * @param process 工程
+     * @return 登録した工程
+     */
+    Process createProcess(Process process);
+
+    /**
+     * 工程を更新する.
+     *
+     * @param processCode 工程コード
+     * @param process 工程
+     * @return 更新した工程
+     */
+    Process updateProcess(String processCode, Process process);
+
+    /**
+     * 工程を削除する.
+     *
+     * @param processCode 工程コード
+     */
+    void deleteProcess(String processCode);
 }

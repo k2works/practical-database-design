@@ -21,4 +21,6 @@ public interface ProcessMapper {
             @Param("offset") int offset);
 
     long count(@Param("keyword") String keyword);
+
+    void deleteByProcessCode(String processCode);
 }

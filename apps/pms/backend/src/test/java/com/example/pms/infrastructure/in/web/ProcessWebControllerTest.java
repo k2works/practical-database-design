@@ -109,6 +109,51 @@ class ProcessWebControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("GET /processes/new - 工程登録画面")
+    class NewProcess {
+
+        @Test
+        @DisplayName("工程登録画面を表示できる")
+        void shouldDisplayNewForm() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.get("/processes/new"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("processes/new"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("form"));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /processes - 工程登録処理")
+    class CreateProcess {
+
+        @Test
+        @DisplayName("工程を登録できる")
+        void shouldCreateProcess() throws Exception {
+            Process created = createTestProcess("NEW-001", "新規工程");
+            Mockito.when(processUseCase.createProcess(ArgumentMatchers.any())).thenReturn(created);
+
+            mockMvc.perform(MockMvcRequestBuilders.post("/processes")
+                    .param("processCode", "NEW-001")
+                    .param("processName", "新規工程")
+                    .param("processType", "加工"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/processes"))
+                .andExpect(MockMvcResultMatchers.flash().attributeExists("successMessage"));
+        }
+
+        @Test
+        @DisplayName("バリデーションエラー時は入力画面に戻る")
+        void shouldReturnFormOnValidationError() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.post("/processes")
+                    .param("processCode", "")
+                    .param("processName", ""))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("processes/new"))
+                .andExpect(MockMvcResultMatchers.model().attributeHasFieldErrors("form", "processCode", "processName"));
+        }
+    }
+
     private Process createTestProcess(String code, String name) {
         return Process.builder()
             .processCode(code)
