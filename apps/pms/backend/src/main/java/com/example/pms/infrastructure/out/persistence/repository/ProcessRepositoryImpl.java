@@ -41,4 +41,14 @@ public class ProcessRepositoryImpl implements ProcessRepository {
     public void deleteAll() {
         processMapper.deleteAll();
     }
+
+    @Override
+    public List<Process> findWithPagination(String keyword, int limit, int offset) {
+        return processMapper.findWithPagination(keyword, limit, offset);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return processMapper.count(keyword);
+    }
 }

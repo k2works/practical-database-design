@@ -14,4 +14,22 @@ public interface ProcessRepository {
     List<Process> findAll();
     void update(Process process);
     void deleteAll();
+
+    /**
+     * ページネーション付きで工程を取得.
+     *
+     * @param keyword 検索キーワード（null可）
+     * @param limit 取得件数
+     * @param offset オフセット
+     * @return 工程リスト
+     */
+    List<Process> findWithPagination(String keyword, int limit, int offset);
+
+    /**
+     * 条件に一致する工程の件数を取得.
+     *
+     * @param keyword 検索キーワード（null可）
+     * @return 件数
+     */
+    long count(String keyword);
 }

@@ -48,4 +48,26 @@
     <delete id="deleteAll" databaseId="h2">
         DELETE FROM "工程マスタ"
     </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="ProcessResultMap">
+        SELECT * FROM "工程マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("工程コード" LIKE '%' || #{keyword} || '%'
+                 OR "工程名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "工程コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "工程マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("工程コード" LIKE '%' || #{keyword} || '%'
+                 OR "工程名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
 </mapper>
