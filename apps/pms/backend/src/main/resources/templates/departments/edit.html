@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>部門編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>部門編集</h1>
+            <a th:href="@{/departments}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/departments/{departmentCode}(departmentCode=${departmentCode})}" th:object="${form}" method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="departmentCode" class="form-label">部門コード</label>
+                            <input type="text" id="departmentCode" th:field="*{departmentCode}"
+                                   class="form-control" readonly>
+                            <div class="form-text">部門コードは変更できません</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="departmentName" class="form-label">部門名 <span class="text-danger">*</span></label>
+                            <input type="text" id="departmentName" th:field="*{departmentName}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('departmentName')} ? 'is-invalid'"
+                                   placeholder="例: 製造部">
+                            <div th:if="${#fields.hasErrors('departmentName')}" class="invalid-feedback"
+                                 th:errors="*{departmentName}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="validFrom" class="form-label">有効開始日 <span class="text-danger">*</span></label>
+                            <input type="date" id="validFrom" th:field="*{validFrom}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('validFrom')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('validFrom')}" class="invalid-feedback"
+                                 th:errors="*{validFrom}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="validTo" class="form-label">有効終了日</label>
+                            <input type="date" id="validTo" th:field="*{validTo}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('validTo')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('validTo')}" class="invalid-feedback"
+                                 th:errors="*{validTo}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                        <a th:href="@{/departments}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

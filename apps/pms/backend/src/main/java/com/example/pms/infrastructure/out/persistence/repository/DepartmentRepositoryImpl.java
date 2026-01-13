@@ -38,7 +38,22 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
     }
 
     @Override
+    public void deleteByDepartmentCode(String departmentCode) {
+        departmentMapper.deleteByDepartmentCode(departmentCode);
+    }
+
+    @Override
     public void deleteAll() {
         departmentMapper.deleteAll();
+    }
+
+    @Override
+    public List<Department> findWithPagination(String keyword, int limit, int offset) {
+        return departmentMapper.findWithPagination(keyword, limit, offset);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return departmentMapper.count(keyword);
     }
 }

@@ -46,6 +46,11 @@
         WHERE "部門コード" = #{departmentCode}
     </update>
 
+    <delete id="deleteByDepartmentCode">
+        DELETE FROM "部門マスタ"
+        WHERE "部門コード" = #{departmentCode}
+    </delete>
+
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "部門マスタ" CASCADE
     </delete>
@@ -53,4 +58,26 @@
     <delete id="deleteAll" databaseId="h2">
         DELETE FROM "部門マスタ"
     </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="DepartmentResultMap">
+        SELECT * FROM "部門マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("部門コード" LIKE '%' || #{keyword} || '%'
+                 OR "部門名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "部門コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "部門マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("部門コード" LIKE '%' || #{keyword} || '%'
+                 OR "部門名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
 </mapper>
