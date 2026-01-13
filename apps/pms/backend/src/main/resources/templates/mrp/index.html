@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>MRP 実行</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="mb-4">
+            <h1>MRP 実行（所要量展開）</h1>
+            <p class="text-muted">生産計画に基づいて所要量を計算し、計画オーダと在庫不足を算出します。</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">実行条件</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/mrp/execute}" th:object="${form}" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="startDate" class="form-label">開始日 <span class="text-danger">*</span></label>
+                            <input type="date" id="startDate" th:field="*{startDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('startDate')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="endDate" class="form-label">終了日 <span class="text-danger">*</span></label>
+                            <input type="date" id="endDate" th:field="*{endDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('endDate')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-play-fill"></i> MRP 実行
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 説明 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">MRP とは</h5>
+            </div>
+            <div class="card-body">
+                <p>MRP（Material Requirements Planning：所要量展開）は、生産計画に基づいて以下を計算します：</p>
+                <ul>
+                    <li><strong>計画オーダ</strong>：いつ、何を、どれだけ生産・発注する必要があるか</li>
+                    <li><strong>在庫不足</strong>：どの品目がいつ不足するか</li>
+                </ul>
+                <p class="mb-0">BOM（部品表）と在庫情報、リードタイムを使用して計算します。</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

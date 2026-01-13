@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>構成表</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>構成表</h1>
+            <div>
+                <a th:href="@{/bom/{code}/explode(code=${parentItem.itemCode})}" class="btn btn-success">
+                    <i class="bi bi-arrow-down-circle"></i> 部品展開
+                </a>
+                <a th:href="@{/bom}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧へ戻る
+                </a>
+            </div>
+        </div>
+
+        <!-- 親品目情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">親品目</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-2">品目コード</dt>
+                    <dd class="col-sm-4" th:text="${parentItem.itemCode}"></dd>
+                    <dt class="col-sm-2">品名</dt>
+                    <dd class="col-sm-4" th:text="${parentItem.itemName}"></dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- 子部品一覧 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">子部品一覧</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(bomList)}" class="alert alert-info">
+                    この品目には子部品が登録されていません。
+                </div>
+                <table th:if="${not #lists.isEmpty(bomList)}" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>順序</th>
+                            <th>子品目コード</th>
+                            <th>基準数量</th>
+                            <th>所要量</th>
+                            <th>不良率</th>
+                            <th>適用開始日</th>
+                            <th>適用停止日</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="bom : ${bomList}">
+                            <td th:text="${bom.sequence}"></td>
+                            <td>
+                                <a th:href="@{/items/{code}(code=${bom.childItemCode})}"
+                                   th:text="${bom.childItemCode}"></a>
+                            </td>
+                            <td th:text="${bom.baseQuantity}"></td>
+                            <td th:text="${bom.requiredQuantity}"></td>
+                            <td th:text="${bom.defectRate}"></td>
+                            <td th:text="${bom.effectiveFrom}"></td>
+                            <td th:text="${bom.effectiveTo ?: '-'}"></td>
+                            <td>
+                                <a th:href="@{/bom/{code}(code=${bom.childItemCode})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-diagram-3"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

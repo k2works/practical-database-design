@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>MRP 実行結果</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>MRP 実行結果</h1>
+            <a th:href="@{/mrp}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 条件入力へ戻る
+            </a>
+        </div>
+
+        <!-- 実行情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">実行情報</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-2">実行日時</dt>
+                    <dd class="col-sm-4" th:text="${#temporals.format(result.executionTime, 'yyyy-MM-dd HH:mm:ss')}"></dd>
+                    <dt class="col-sm-2">対象期間</dt>
+                    <dd class="col-sm-4" th:text="${result.periodStart} + ' 〜 ' + ${result.periodEnd}"></dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- 計画オーダ -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">計画オーダ</h5>
+                <span class="badge bg-primary" th:text="${#lists.size(result.plannedOrders)} + '件'"></span>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(result.plannedOrders)}" class="alert alert-info mb-0">
+                    計画オーダはありません。
+                </div>
+                <table th:if="${not #lists.isEmpty(result.plannedOrders)}" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>品目コード</th>
+                            <th>品名</th>
+                            <th>オーダ種別</th>
+                            <th class="text-end">数量</th>
+                            <th>納期</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${result.plannedOrders}">
+                            <td>
+                                <a th:href="@{/items/{code}(code=${order.itemCode})}"
+                                   th:text="${order.itemCode}"></a>
+                            </td>
+                            <td th:text="${order.itemName}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${order.orderType == 'PURCHASE'} ? 'bg-info' : 'bg-success'"
+                                      th:text="${order.orderType == 'PURCHASE'} ? '発注' : '製造'"></span>
+                            </td>
+                            <td class="text-end" th:text="${order.quantity}"></td>
+                            <td th:text="${order.dueDate}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 在庫不足品目 -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">在庫不足品目</h5>
+                <span class="badge bg-danger" th:text="${#lists.size(result.shortageItems)} + '件'"></span>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(result.shortageItems)}" class="alert alert-success mb-0">
+                    在庫不足はありません。
+                </div>
+                <table th:if="${not #lists.isEmpty(result.shortageItems)}" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>品目コード</th>
+                            <th>品名</th>
+                            <th class="text-end">不足数量</th>
+                            <th>推奨発注日</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="shortage : ${result.shortageItems}">
+                            <td>
+                                <a th:href="@{/items/{code}(code=${shortage.itemCode})}"
+                                   th:text="${shortage.itemCode}"></a>
+                            </td>
+                            <td th:text="${shortage.itemName}"></td>
+                            <td class="text-end text-danger fw-bold" th:text="${shortage.shortageQuantity}"></td>
+                            <td th:text="${shortage.recommendedOrderDate}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
