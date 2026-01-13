@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>品目編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>品目編集</h1>
+            <a th:href="@{/items/{code}(code=${itemCode})}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 詳細へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/items/{code}(code=${itemCode})}" th:object="${form}" method="post">
+                    <!-- 基本情報 -->
+                    <h5 class="mb-3">基本情報</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="itemCode" class="form-label">品目コード</label>
+                            <input type="text" id="itemCode" th:value="${itemCode}"
+                                   class="form-control" readonly disabled>
+                            <input type="hidden" th:field="*{itemCode}">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="itemName" class="form-label">品名 <span class="text-danger">*</span></label>
+                            <input type="text" id="itemName" th:field="*{itemName}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('itemName')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('itemName')}" th:errors="*{itemName}"></div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="itemCategory" class="form-label">品目区分 <span class="text-danger">*</span></label>
+                            <select id="itemCategory" th:field="*{itemCategory}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('itemCategory')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="cat : ${categories}"
+                                        th:value="${cat}"
+                                        th:text="${cat.displayName}"></option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('itemCategory')}" th:errors="*{itemCategory}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="unitCode" class="form-label">単位コード</label>
+                            <input type="text" id="unitCode" th:field="*{unitCode}" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="effectiveFrom" class="form-label">適用開始日</label>
+                            <input type="date" id="effectiveFrom" th:field="*{effectiveFrom}" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="effectiveTo" class="form-label">適用停止日</label>
+                            <input type="date" id="effectiveTo" th:field="*{effectiveTo}" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- 計画パラメータ -->
+                    <h5 class="mb-3 mt-4">計画パラメータ</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label for="leadTime" class="form-label">リードタイム（日）</label>
+                            <input type="number" id="leadTime" th:field="*{leadTime}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('leadTime')} ? 'is-invalid'" min="0">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('leadTime')}" th:errors="*{leadTime}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="safetyLeadTime" class="form-label">安全リードタイム（日）</label>
+                            <input type="number" id="safetyLeadTime" th:field="*{safetyLeadTime}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('safetyLeadTime')} ? 'is-invalid'" min="0">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('safetyLeadTime')}" th:errors="*{safetyLeadTime}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="safetyStock" class="form-label">安全在庫数</label>
+                            <input type="number" id="safetyStock" th:field="*{safetyStock}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('safetyStock')} ? 'is-invalid'" min="0" step="0.01">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('safetyStock')}" th:errors="*{safetyStock}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="yieldRate" class="form-label">歩留率（%）</label>
+                            <input type="number" id="yieldRate" th:field="*{yieldRate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('yieldRate')} ? 'is-invalid'" min="0" max="100" step="0.01">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('yieldRate')}" th:errors="*{yieldRate}"></div>
+                        </div>
+                    </div>
+
+                    <!-- ロット管理 -->
+                    <h5 class="mb-3 mt-4">ロット管理</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label for="minLotSize" class="form-label">最小ロット数</label>
+                            <input type="number" id="minLotSize" th:field="*{minLotSize}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('minLotSize')} ? 'is-invalid'" min="0" step="0.01">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('minLotSize')}" th:errors="*{minLotSize}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="lotIncrement" class="form-label">刻みロット数</label>
+                            <input type="number" id="lotIncrement" th:field="*{lotIncrement}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('lotIncrement')} ? 'is-invalid'" min="0" step="0.01">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('lotIncrement')}" th:errors="*{lotIncrement}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="maxLotSize" class="form-label">最大ロット数</label>
+                            <input type="number" id="maxLotSize" th:field="*{maxLotSize}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('maxLotSize')} ? 'is-invalid'" min="0" step="0.01">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('maxLotSize')}" th:errors="*{maxLotSize}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="shelfLife" class="form-label">有効期間（日）</label>
+                            <input type="number" id="shelfLife" th:field="*{shelfLife}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('shelfLife')} ? 'is-invalid'" min="0">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('shelfLife')}" th:errors="*{shelfLife}"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                        <a th:href="@{/items/{code}(code=${itemCode})}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

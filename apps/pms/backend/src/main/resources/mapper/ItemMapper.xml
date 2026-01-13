@@ -127,6 +127,27 @@
         ORDER BY "品目コード", "適用開始日" DESC
     </select>
 
+    <!-- PostgreSQL用 findByCategory -->
+    <select id="findByCategory" resultMap="ItemResultMap" databaseId="postgresql">
+        SELECT * FROM "品目マスタ"
+        WHERE "品目区分" = #{category, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler}::品目区分
+        ORDER BY "品目コード", "適用開始日" DESC
+    </select>
+
+    <!-- H2用 findByCategory -->
+    <select id="findByCategory" resultMap="ItemResultMap" databaseId="h2">
+        SELECT * FROM "品目マスタ"
+        WHERE "品目区分" = #{category, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler}
+        ORDER BY "品目コード", "適用開始日" DESC
+    </select>
+
+    <select id="searchByKeyword" resultMap="ItemResultMap">
+        SELECT * FROM "品目マスタ"
+        WHERE "品目コード" LIKE '%' || #{keyword} || '%'
+           OR "品名" LIKE '%' || #{keyword} || '%'
+        ORDER BY "品目コード", "適用開始日" DESC
+    </select>
+
     <!-- PostgreSQL用 UPDATE -->
     <update id="update" parameterType="com.example.pms.domain.model.item.Item" databaseId="postgresql">
         UPDATE "品目マスタ" SET
@@ -163,6 +184,11 @@
         WHERE "ID" = #{id}
     </update>
 
+    <delete id="deleteByItemCode">
+        DELETE FROM "品目マスタ"
+        WHERE "品目コード" = #{itemCode}
+    </delete>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "品目マスタ" CASCADE
@@ -172,4 +198,64 @@
     <delete id="deleteAll" databaseId="h2">
         DELETE FROM "品目マスタ"
     </delete>
+
+    <!-- ページネーション付き検索（PostgreSQL） -->
+    <select id="findWithPagination" resultMap="ItemResultMap" databaseId="postgresql">
+        SELECT * FROM "品目マスタ"
+        <where>
+            <if test="category != null">
+                "品目区分" = #{category, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler}::品目区分
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("品目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("品名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "品目コード", "適用開始日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- ページネーション付き検索（H2） -->
+    <select id="findWithPagination" resultMap="ItemResultMap" databaseId="h2">
+        SELECT * FROM "品目マスタ"
+        <where>
+            <if test="category != null">
+                "品目区分" = #{category, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("品目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("品名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "品目コード", "適用開始日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得（PostgreSQL） -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "品目マスタ"
+        <where>
+            <if test="category != null">
+                "品目区分" = #{category, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler}::品目区分
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("品目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("品名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 件数取得（H2） -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "品目マスタ"
+        <where>
+            <if test="category != null">
+                "品目区分" = #{category, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (LOWER("品目コード") LIKE LOWER('%' || #{keyword} || '%')
+                     OR LOWER("品名") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
 </mapper>

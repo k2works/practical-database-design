@@ -2,6 +2,7 @@ package com.example.pms.infrastructure.out.persistence.repository;
 
 import com.example.pms.application.port.out.ItemRepository;
 import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
 import com.example.pms.infrastructure.out.persistence.mapper.ItemMapper;
 import org.springframework.stereotype.Repository;
 
@@ -42,12 +43,37 @@ public class ItemRepositoryImpl implements ItemRepository {
     }
 
     @Override
+    public List<Item> findByCategory(ItemCategory category) {
+        return itemMapper.findByCategory(category);
+    }
+
+    @Override
+    public List<Item> searchByKeyword(String keyword) {
+        return itemMapper.searchByKeyword(keyword);
+    }
+
+    @Override
     public void update(Item item) {
         itemMapper.update(item);
     }
 
     @Override
+    public void deleteByItemCode(String itemCode) {
+        itemMapper.deleteByItemCode(itemCode);
+    }
+
+    @Override
     public void deleteAll() {
         itemMapper.deleteAll();
+    }
+
+    @Override
+    public List<Item> findWithPagination(ItemCategory category, String keyword, int limit, int offset) {
+        return itemMapper.findWithPagination(category, keyword, limit, offset);
+    }
+
+    @Override
+    public long count(ItemCategory category, String keyword) {
+        return itemMapper.count(category, keyword);
     }
 }

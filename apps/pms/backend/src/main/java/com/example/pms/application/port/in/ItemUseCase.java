@@ -2,7 +2,9 @@ package com.example.pms.application.port.in;
 
 import com.example.pms.application.port.in.command.CreateItemCommand;
 import com.example.pms.application.port.in.command.UpdateItemCommand;
+import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
 
 import java.util.List;
 
@@ -17,6 +19,22 @@ public interface ItemUseCase {
      * @return 品目リスト
      */
     List<Item> getAllItems();
+
+    /**
+     * 品目区分で品目を取得する.
+     *
+     * @param category 品目区分
+     * @return 品目リスト
+     */
+    List<Item> getItemsByCategory(ItemCategory category);
+
+    /**
+     * キーワードで品目を検索する.
+     *
+     * @param keyword 検索キーワード
+     * @return 品目リスト
+     */
+    List<Item> searchItems(String keyword);
 
     /**
      * 品目コードで品目を取得する.
@@ -49,4 +67,15 @@ public interface ItemUseCase {
      * @param itemCode 品目コード
      */
     void deleteItem(String itemCode);
+
+    /**
+     * ページネーション付きで品目を取得する.
+     *
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ
+     * @param category 品目区分（null可）
+     * @param keyword 検索キーワード（null可）
+     * @return ページネーション結果
+     */
+    PageResult<Item> getItems(int page, int size, ItemCategory category, String keyword);
 }

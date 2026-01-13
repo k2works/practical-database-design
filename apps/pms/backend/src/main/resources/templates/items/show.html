@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>品目詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>品目詳細</h1>
+            <div>
+                <a th:href="@{/items/{code}/edit(code=${item.itemCode})}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/items}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧へ戻る
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">基本情報</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">品目コード</dt>
+                    <dd class="col-sm-9" th:text="${item.itemCode}"></dd>
+
+                    <dt class="col-sm-3">品名</dt>
+                    <dd class="col-sm-9" th:text="${item.itemName}"></dd>
+
+                    <dt class="col-sm-3">品目区分</dt>
+                    <dd class="col-sm-9" th:text="${item.itemCategory?.displayName}"></dd>
+
+                    <dt class="col-sm-3">単位コード</dt>
+                    <dd class="col-sm-9" th:text="${item.unitCode ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">適用開始日</dt>
+                    <dd class="col-sm-9" th:text="${item.effectiveFrom}"></dd>
+
+                    <dt class="col-sm-3">適用停止日</dt>
+                    <dd class="col-sm-9" th:text="${item.effectiveTo ?: '-'}"></dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">計画パラメータ</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">リードタイム</dt>
+                    <dd class="col-sm-9" th:text="${item.leadTime}">日</dd>
+
+                    <dt class="col-sm-3">安全リードタイム</dt>
+                    <dd class="col-sm-9" th:text="${item.safetyLeadTime}">日</dd>
+
+                    <dt class="col-sm-3">安全在庫数</dt>
+                    <dd class="col-sm-9" th:text="${item.safetyStock}"></dd>
+
+                    <dt class="col-sm-3">歩留率</dt>
+                    <dd class="col-sm-9" th:text="${item.yieldRate}">%</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">ロット管理</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">最小ロット数</dt>
+                    <dd class="col-sm-9" th:text="${item.minLotSize}"></dd>
+
+                    <dt class="col-sm-3">刻みロット数</dt>
+                    <dd class="col-sm-9" th:text="${item.lotIncrement}"></dd>
+
+                    <dt class="col-sm-3">最大ロット数</dt>
+                    <dd class="col-sm-9" th:text="${item.maxLotSize ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">有効期間</dt>
+                    <dd class="col-sm-9" th:text="${item.shelfLife ?: '-'}">日</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

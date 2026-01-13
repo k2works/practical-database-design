@@ -6,7 +6,9 @@ import com.example.pms.application.port.in.command.UpdateItemCommand;
 import com.example.pms.application.port.out.ItemRepository;
 import com.example.pms.domain.exception.DuplicateItemException;
 import com.example.pms.domain.exception.ItemNotFoundException;
+import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,18 @@ public class ItemService implements ItemUseCase {
     @Transactional(readOnly = true)
     public List<Item> getAllItems() {
         return itemRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Item> getItemsByCategory(ItemCategory category) {
+        return itemRepository.findByCategory(category);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Item> searchItems(String keyword) {
+        return itemRepository.searchByKeyword(keyword);
     }
 
     @Override
@@ -99,8 +113,15 @@ public class ItemService implements ItemUseCase {
     public void deleteItem(String itemCode) {
         itemRepository.findByItemCode(itemCode)
             .orElseThrow(() -> new ItemNotFoundException(itemCode));
-        // Note: 既存の ItemRepository には deleteByCode がないため、
-        // 削除機能は ItemRepository に追加するか、論理削除を検討する必要がある
-        throw new UnsupportedOperationException("品目の削除は現在サポートされていません");
+        itemRepository.deleteByItemCode(itemCode);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<Item> getItems(int page, int size, ItemCategory category, String keyword) {
+        int offset = page * size;
+        List<Item> items = itemRepository.findWithPagination(category, keyword, size, offset);
+        long totalElements = itemRepository.count(category, keyword);
+        return new PageResult<>(items, page, size, totalElements);
     }
 }
