@@ -43,6 +43,36 @@ jobs:
       - name: Run Quality Check and Test
         run: nix develop .#pms --command bash -c "cd apps/pms/backend && ./gradlew fullCheck"
 
+      - name: Show SpotBugs Report on Failure
+        if: failure()
+        run: |
+          echo "=== SpotBugs Report ==="
+          if [ -f apps/pms/backend/build/reports/spotbugs/main.xml ]; then
+            cat apps/pms/backend/build/reports/spotbugs/main.xml
+          else
+            echo "SpotBugs XML report not found"
+          fi
+
+      - name: Show Checkstyle Report on Failure
+        if: failure()
+        run: |
+          echo "=== Checkstyle Report ==="
+          if [ -f apps/pms/backend/build/reports/checkstyle/main.xml ]; then
+            cat apps/pms/backend/build/reports/checkstyle/main.xml
+          else
+            echo "Checkstyle XML report not found"
+          fi
+
+      - name: Show PMD Report on Failure
+        if: failure()
+        run: |
+          echo "=== PMD Report ==="
+          if [ -f apps/pms/backend/build/reports/pmd/main.xml ]; then
+            cat apps/pms/backend/build/reports/pmd/main.xml
+          else
+            echo "PMD XML report not found"
+          fi
+
       - name: Upload Test Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,3 +86,13 @@ jobs:
         with:
           name: pms-backend-jacoco-report
           path: apps/pms/backend/build/reports/jacoco/test/html
+
+      - name: Upload Static Analysis Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pms-backend-static-analysis
+          path: |
+            apps/pms/backend/build/reports/spotbugs/
+            apps/pms/backend/build/reports/checkstyle/
+            apps/pms/backend/build/reports/pmd/
