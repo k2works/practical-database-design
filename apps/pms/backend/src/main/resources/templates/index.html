@@ -19,6 +19,7 @@
             <div class="col-12">
                 <h5 class="mb-3">クイックアクセス</h5>
             </div>
+            <!-- マスタ・生産計画 -->
             <div class="col-md-3 col-sm-6 mb-3">
                 <a th:href="@{/items}" class="card text-decoration-none h-100 quick-access-card">
                     <div class="card-body text-center">
@@ -38,20 +39,57 @@
                 </a>
             </div>
             <div class="col-md-3 col-sm-6 mb-3">
-                <a th:href="@{/processes}" class="card text-decoration-none h-100 quick-access-card">
+                <a th:href="@{/orders}" class="card text-decoration-none h-100 quick-access-card">
                     <div class="card-body text-center">
-                        <i class="bi bi-gear-wide-connected fs-1 text-info mb-2"></i>
-                        <h6 class="card-title">工程マスタ</h6>
-                        <p class="card-text text-muted small">製造工程の管理</p>
+                        <i class="bi bi-clipboard-data fs-1 text-warning mb-2"></i>
+                        <h6 class="card-title">オーダ一覧</h6>
+                        <p class="card-text text-muted small">製造・購買オーダ管理</p>
                     </div>
                 </a>
             </div>
             <div class="col-md-3 col-sm-6 mb-3">
-                <a th:href="@{/suppliers}" class="card text-decoration-none h-100 quick-access-card">
+                <a th:href="@{/work-orders}" class="card text-decoration-none h-100 quick-access-card">
                     <div class="card-body text-center">
-                        <i class="bi bi-building fs-1 text-secondary mb-2"></i>
-                        <h6 class="card-title">取引先マスタ</h6>
-                        <p class="card-text text-muted small">仕入先・顧客の管理</p>
+                        <i class="bi bi-list-task fs-1 text-info mb-2"></i>
+                        <h6 class="card-title">作業指示</h6>
+                        <p class="card-text text-muted small">製造作業の指示・管理</p>
+                    </div>
+                </a>
+            </div>
+            <!-- 購買・在庫・品質・原価 -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/purchase-orders}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-cart-check fs-1 text-secondary mb-2"></i>
+                        <h6 class="card-title">発注一覧</h6>
+                        <p class="card-text text-muted small">購買発注の管理</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/stocks}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-archive fs-1 text-success mb-2"></i>
+                        <h6 class="card-title">在庫照会</h6>
+                        <p class="card-text text-muted small">在庫数量・状態の確認</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/inspections}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check2-circle fs-1 text-primary mb-2"></i>
+                        <h6 class="card-title">検査実績</h6>
+                        <p class="card-text text-muted small">品質検査の記録</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a th:href="@{/manufacturing-costs}" class="card text-decoration-none h-100 quick-access-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-currency-yen fs-1 text-danger mb-2"></i>
+                        <h6 class="card-title">製造原価</h6>
+                        <p class="card-text text-muted small">原価計算・分析</p>
                     </div>
                 </a>
             </div>
