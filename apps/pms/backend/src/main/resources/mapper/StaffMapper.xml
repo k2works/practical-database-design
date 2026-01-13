@@ -71,4 +71,38 @@
     <delete id="deleteAll" databaseId="h2">
         DELETE FROM "担当者マスタ"
     </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="StaffResultMap">
+        SELECT * FROM "担当者マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("担当者コード" LIKE '%' || #{keyword} || '%'
+                OR "担当者名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "担当者コード", "適用開始日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "担当者マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("担当者コード" LIKE '%' || #{keyword} || '%'
+                OR "担当者名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
+
+    <select id="findByStaffCodeAndEffectiveFrom" resultMap="StaffResultMap">
+        SELECT * FROM "担当者マスタ"
+        WHERE "担当者コード" = #{staffCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </select>
+
+    <delete id="deleteByStaffCodeAndEffectiveFrom">
+        DELETE FROM "担当者マスタ"
+        WHERE "担当者コード" = #{staffCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </delete>
 </mapper>

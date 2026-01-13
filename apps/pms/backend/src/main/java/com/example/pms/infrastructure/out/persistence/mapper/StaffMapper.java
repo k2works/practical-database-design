@@ -18,4 +18,19 @@ public interface StaffMapper {
     List<Staff> findAll();
     void update(Staff staff);
     void deleteAll();
+
+    List<Staff> findWithPagination(
+            @Param("keyword") String keyword,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
+
+    long count(@Param("keyword") String keyword);
+
+    Optional<Staff> findByStaffCodeAndEffectiveFrom(
+            @Param("staffCode") String staffCode,
+            @Param("effectiveFrom") LocalDate effectiveFrom);
+
+    void deleteByStaffCodeAndEffectiveFrom(
+            @Param("staffCode") String staffCode,
+            @Param("effectiveFrom") LocalDate effectiveFrom);
 }

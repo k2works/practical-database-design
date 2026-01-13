@@ -52,4 +52,24 @@ public class StaffRepositoryImpl implements StaffRepository {
     public void deleteAll() {
         staffMapper.deleteAll();
     }
+
+    @Override
+    public List<Staff> findWithPagination(String keyword, int limit, int offset) {
+        return staffMapper.findWithPagination(keyword, limit, offset);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return staffMapper.count(keyword);
+    }
+
+    @Override
+    public Optional<Staff> findByStaffCodeAndEffectiveFrom(String staffCode, LocalDate effectiveFrom) {
+        return staffMapper.findByStaffCodeAndEffectiveFrom(staffCode, effectiveFrom);
+    }
+
+    @Override
+    public void deleteByStaffCodeAndEffectiveFrom(String staffCode, LocalDate effectiveFrom) {
+        staffMapper.deleteByStaffCodeAndEffectiveFrom(staffCode, effectiveFrom);
+    }
 }
