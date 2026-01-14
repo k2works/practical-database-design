@@ -51,6 +51,26 @@ public class AcceptanceRepositoryImpl implements AcceptanceRepository {
     }
 
     @Override
+    public List<Acceptance> findWithPagination(int offset, int limit, String keyword) {
+        return acceptanceMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return acceptanceMapper.count(keyword);
+    }
+
+    @Override
+    public void update(Acceptance acceptance) {
+        acceptanceMapper.update(acceptance);
+    }
+
+    @Override
+    public void deleteByAcceptanceNumber(String acceptanceNumber) {
+        acceptanceMapper.deleteByAcceptanceNumber(acceptanceNumber);
+    }
+
+    @Override
     public void deleteAll() {
         acceptanceMapper.deleteAll();
     }

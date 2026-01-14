@@ -22,5 +22,37 @@ public interface AcceptanceRepository {
 
     List<Acceptance> findAll();
 
+    /**
+     * ページネーション付きで検収を取得する.
+     *
+     * @param offset オフセット
+     * @param limit 取得件数
+     * @param keyword キーワード（null可）
+     * @return 検収リスト
+     */
+    List<Acceptance> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 検収の件数を取得する.
+     *
+     * @param keyword キーワード（null可）
+     * @return 件数
+     */
+    long count(String keyword);
+
+    /**
+     * 検収を更新する.
+     *
+     * @param acceptance 検収
+     */
+    void update(Acceptance acceptance);
+
+    /**
+     * 検収を削除する.
+     *
+     * @param acceptanceNumber 検収番号
+     */
+    void deleteByAcceptanceNumber(String acceptanceNumber);
+
     void deleteAll();
 }

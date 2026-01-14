@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>検収詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>検収詳細</h1>
+            <div>
+                <a th:href="@{/acceptances/{no}/edit(no=${acceptance.acceptanceNumber})}"
+                   class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/acceptances}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <!-- 基本情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">基本情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">検収番号</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.acceptanceNumber}"></dd>
+
+                            <dt class="col-sm-4">検収日</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.acceptanceDate}"></dd>
+
+                            <dt class="col-sm-4">検収担当者</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.acceptorCode ?: '-'}"></dd>
+
+                            <dt class="col-sm-4">発注番号</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.purchaseOrderNumber}"></dd>
+
+                            <dt class="col-sm-4">発注行番号</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.lineNumber}"></dd>
+
+                            <dt class="col-sm-4">受入検査番号</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.inspectionNumber ?: '-'}"></dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">取引先コード</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.supplierCode}"></dd>
+
+                            <dt class="col-sm-4">品目コード</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.itemCode}"></dd>
+
+                            <dt class="col-sm-4">諸口品目区分</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.miscellaneousItemFlag} ? 'はい' : 'いいえ'"></dd>
+
+                            <dt class="col-sm-4">検収数</dt>
+                            <dd class="col-sm-8" th:text="${#numbers.formatDecimal(acceptance.acceptedQuantity, 1, 'COMMA', 2, 'POINT')}"></dd>
+
+                            <dt class="col-sm-4">検収単価</dt>
+                            <dd class="col-sm-8" th:text="${#numbers.formatDecimal(acceptance.unitPrice, 1, 'COMMA', 2, 'POINT')}"></dd>
+
+                            <dt class="col-sm-4">検収金額</dt>
+                            <dd class="col-sm-8" th:text="${#numbers.formatDecimal(acceptance.amount, 1, 'COMMA', 0, 'POINT')}"></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 金額情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">金額情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">検収消費税額</dt>
+                            <dd class="col-sm-8" th:text="${acceptance.taxAmount != null ? #numbers.formatDecimal(acceptance.taxAmount, 1, 'COMMA', 0, 'POINT') : '-'}"></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 備考 -->
+        <div class="card mb-4" th:if="${acceptance.remarks != null and acceptance.remarks != ''}">
+            <div class="card-header">
+                <h5 class="mb-0">備考</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0" th:text="${acceptance.remarks}"></p>
+            </div>
+        </div>
+
+        <!-- 操作ボタン -->
+        <div class="d-flex justify-content-end">
+            <form th:action="@{/acceptances/{no}/delete(no=${acceptance.acceptanceNumber})}"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('この検収を削除しますか？');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> 削除
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
