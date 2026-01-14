@@ -33,6 +33,16 @@ public class DefectRepositoryImpl implements DefectRepository {
     }
 
     @Override
+    public List<Defect> findWithPagination(int offset, int limit, String keyword) {
+        return defectMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return defectMapper.count(keyword);
+    }
+
+    @Override
     public void update(Defect defect) {
         defectMapper.update(defect);
     }

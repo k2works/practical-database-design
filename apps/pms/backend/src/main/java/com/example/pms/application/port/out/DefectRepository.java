@@ -12,6 +12,8 @@ public interface DefectRepository {
     void save(Defect defect);
     Optional<Defect> findByDefectCode(String defectCode);
     List<Defect> findAll();
+    List<Defect> findWithPagination(int offset, int limit, String keyword);
+    long count(String keyword);
     void update(Defect defect);
     void deleteByDefectCode(String defectCode);
     void deleteAll();

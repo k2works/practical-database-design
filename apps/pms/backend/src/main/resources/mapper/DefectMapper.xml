@@ -30,6 +30,30 @@
         ORDER BY "欠点コード"
     </select>
 
+    <select id="findWithPagination" resultMap="DefectResultMap">
+        SELECT * FROM "欠点マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("欠点コード" LIKE '%' || #{keyword} || '%'
+                OR "欠点名" LIKE '%' || #{keyword} || '%'
+                OR "欠点分類" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "欠点コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "欠点マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("欠点コード" LIKE '%' || #{keyword} || '%'
+                OR "欠点名" LIKE '%' || #{keyword} || '%'
+                OR "欠点分類" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
     <update id="update" parameterType="com.example.pms.domain.model.defect.Defect">
         UPDATE "欠点マスタ" SET
             "欠点名" = #{defectName},
