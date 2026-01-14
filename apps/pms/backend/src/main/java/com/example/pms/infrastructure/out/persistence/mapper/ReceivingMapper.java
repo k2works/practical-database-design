@@ -22,5 +22,20 @@ public interface ReceivingMapper {
             @Param("purchaseOrderNumber") String purchaseOrderNumber,
             @Param("lineNumber") Integer lineNumber);
     List<Receiving> findAll();
+
+    List<Receiving> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("receivingType") String receivingType,
+            @Param("keyword") String keyword);
+
+    long count(
+            @Param("receivingType") String receivingType,
+            @Param("keyword") String keyword);
+
+    void update(Receiving receiving);
+
+    void deleteByReceivingNumber(String receivingNumber);
+
     void deleteAll();
 }

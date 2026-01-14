@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>入荷受入詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>入荷受入詳細</h1>
+            <div>
+                <a th:href="@{/receivings/{no}/edit(no=${receiving.receivingNumber})}"
+                   class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/receivings}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <!-- 基本情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">基本情報</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">入荷番号</dt>
+                            <dd class="col-sm-8" th:text="${receiving.receivingNumber}"></dd>
+
+                            <dt class="col-sm-4">入荷日</dt>
+                            <dd class="col-sm-8" th:text="${receiving.receivingDate}"></dd>
+
+                            <dt class="col-sm-4">入荷種別</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge"
+                                      th:classappend="${receiving.receivingType.name() == 'NORMAL'} ? 'bg-primary' :
+                                                      (${receiving.receivingType.name() == 'SPLIT'} ? 'bg-info' : 'bg-warning')"
+                                      th:text="${receiving.receivingType.displayName}"></span>
+                            </dd>
+
+                            <dt class="col-sm-4">発注番号</dt>
+                            <dd class="col-sm-8" th:text="${receiving.purchaseOrderNumber}"></dd>
+
+                            <dt class="col-sm-4">発注行番号</dt>
+                            <dd class="col-sm-8" th:text="${receiving.lineNumber}"></dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">品目コード</dt>
+                            <dd class="col-sm-8" th:text="${receiving.itemCode}"></dd>
+
+                            <dt class="col-sm-4">入荷数量</dt>
+                            <dd class="col-sm-8" th:text="${#numbers.formatDecimal(receiving.receivingQuantity, 1, 'COMMA', 2, 'POINT')}"></dd>
+
+                            <dt class="col-sm-4">入荷担当者</dt>
+                            <dd class="col-sm-8" th:text="${receiving.receiverCode ?: '-'}"></dd>
+
+                            <dt class="col-sm-4">諸口品目区分</dt>
+                            <dd class="col-sm-8" th:text="${receiving.miscellaneousItemFlag} ? 'はい' : 'いいえ'"></dd>
+
+                            <dt class="col-sm-4">備考</dt>
+                            <dd class="col-sm-8" th:text="${receiving.remarks ?: '-'}"></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 検査情報 -->
+        <div class="card mb-4" th:if="${receiving.inspections != null and not #lists.isEmpty(receiving.inspections)}">
+            <div class="card-header">
+                <h5 class="mb-0">検査情報</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>検査番号</th>
+                            <th>検査日</th>
+                            <th>検査結果</th>
+                            <th class="text-end">検査数量</th>
+                            <th class="text-end">合格数量</th>
+                            <th class="text-end">不合格数量</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="inspection : ${receiving.inspections}">
+                            <td th:text="${inspection.inspectionNumber}"></td>
+                            <td th:text="${inspection.inspectionDate}"></td>
+                            <td th:text="${inspection.result?.displayName ?: '-'}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(inspection.inspectionQuantity, 1, 'COMMA', 2, 'POINT')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(inspection.acceptedQuantity, 1, 'COMMA', 2, 'POINT')}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(inspection.rejectedQuantity, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 操作ボタン -->
+        <div class="d-flex justify-content-end">
+            <form th:action="@{/receivings/{no}/delete(no=${receiving.receivingNumber})}"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('この入荷受入を削除しますか？');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> 削除
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

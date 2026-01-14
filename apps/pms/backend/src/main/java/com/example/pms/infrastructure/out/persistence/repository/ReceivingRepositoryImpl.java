@@ -57,6 +57,26 @@ public class ReceivingRepositoryImpl implements ReceivingRepository {
     }
 
     @Override
+    public List<Receiving> findWithPagination(int offset, int limit, String receivingType, String keyword) {
+        return receivingMapper.findWithPagination(offset, limit, receivingType, keyword);
+    }
+
+    @Override
+    public long count(String receivingType, String keyword) {
+        return receivingMapper.count(receivingType, keyword);
+    }
+
+    @Override
+    public void update(Receiving receiving) {
+        receivingMapper.update(receiving);
+    }
+
+    @Override
+    public void deleteByReceivingNumber(String receivingNumber) {
+        receivingMapper.deleteByReceivingNumber(receivingNumber);
+    }
+
+    @Override
     public void deleteAll() {
         receivingMapper.deleteAll();
     }

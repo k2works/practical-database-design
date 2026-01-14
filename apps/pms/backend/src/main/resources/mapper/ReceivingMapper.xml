@@ -102,6 +102,113 @@
         SELECT * FROM "入荷受入データ" ORDER BY "入荷日" DESC
     </select>
 
+    <!-- ページネーション付き検索（PostgreSQL用） -->
+    <select id="findWithPagination" resultMap="ReceivingResultMap" databaseId="postgresql">
+        SELECT * FROM "入荷受入データ"
+        <where>
+            <if test="receivingType != null">
+                AND "入荷受入区分" = #{receivingType}::入荷受入区分
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("入荷番号" LIKE '%' || #{keyword} || '%'
+                     OR "発注番号" LIKE '%' || #{keyword} || '%'
+                     OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "入荷日" DESC, "入荷番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- ページネーション付き検索（H2用） -->
+    <select id="findWithPagination" resultMap="ReceivingResultMap" databaseId="h2">
+        SELECT * FROM "入荷受入データ"
+        <where>
+            <if test="receivingType != null">
+                AND "入荷受入区分" = #{receivingType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("入荷番号" LIKE '%' || #{keyword} || '%'
+                     OR "発注番号" LIKE '%' || #{keyword} || '%'
+                     OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "入荷日" DESC, "入荷番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得（PostgreSQL用） -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "入荷受入データ"
+        <where>
+            <if test="receivingType != null">
+                AND "入荷受入区分" = #{receivingType}::入荷受入区分
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("入荷番号" LIKE '%' || #{keyword} || '%'
+                     OR "発注番号" LIKE '%' || #{keyword} || '%'
+                     OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 件数取得（H2用） -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "入荷受入データ"
+        <where>
+            <if test="receivingType != null">
+                AND "入荷受入区分" = #{receivingType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("入荷番号" LIKE '%' || #{keyword} || '%'
+                     OR "発注番号" LIKE '%' || #{keyword} || '%'
+                     OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 更新（PostgreSQL用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.purchase.Receiving" databaseId="postgresql">
+        UPDATE "入荷受入データ"
+        SET "発注番号" = #{purchaseOrderNumber},
+            "発注行番号" = #{lineNumber},
+            "入荷日" = #{receivingDate},
+            "入荷担当者コード" = #{receiverCode},
+            "入荷受入区分" = #{receivingType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler}::入荷受入区分,
+            "品目コード" = #{itemCode},
+            "諸口品目区分" = #{miscellaneousItemFlag},
+            "入荷数量" = #{receivingQuantity},
+            "入荷備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "入荷番号" = #{receivingNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 更新（H2用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.purchase.Receiving" databaseId="h2">
+        UPDATE "入荷受入データ"
+        SET "発注番号" = #{purchaseOrderNumber},
+            "発注行番号" = #{lineNumber},
+            "入荷日" = #{receivingDate},
+            "入荷担当者コード" = #{receiverCode},
+            "入荷受入区分" = #{receivingType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler},
+            "品目コード" = #{itemCode},
+            "諸口品目区分" = #{miscellaneousItemFlag},
+            "入荷数量" = #{receivingQuantity},
+            "入荷備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "入荷番号" = #{receivingNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 削除 -->
+    <delete id="deleteByReceivingNumber">
+        DELETE FROM "入荷受入データ" WHERE "入荷番号" = #{receivingNumber}
+    </delete>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "入荷受入データ" CASCADE
