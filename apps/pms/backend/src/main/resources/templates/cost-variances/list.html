@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>原価差異一覧</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>原価差異一覧</h1>
+            <a th:href="@{/cost-variances/new}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> 新規登録
+            </a>
+        </div>
+
+        <!-- 検索フォーム -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/cost-variances}" method="get" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="keyword" class="form-label">キーワード</label>
+                        <input type="text" id="keyword" name="keyword" class="form-control"
+                               th:value="${keyword}" placeholder="作業指示番号・品目コードで検索">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-secondary me-2">
+                            <i class="bi bi-search"></i> 検索
+                        </button>
+                        <a th:href="@{/cost-variances}" class="btn btn-outline-secondary">クリア</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 原価差異一覧テーブル -->
+        <div class="card">
+            <div class="card-body">
+                <!-- 件数表示 -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">
+                        全 <span th:text="${totalElements}">0</span> 件
+                        <span th:if="${totalPages > 0}">
+                            （<span th:text="${currentPage + 1}">1</span> / <span th:text="${totalPages}">1</span> ページ）
+                        </span>
+                    </span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(varianceList)}" class="alert alert-info">
+                    原価差異が登録されていません。
+                </div>
+                <table th:if="${not #lists.isEmpty(varianceList)}" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>作業指示番号</th>
+                            <th>品目コード</th>
+                            <th class="text-end">材料費差異</th>
+                            <th class="text-end">労務費差異</th>
+                            <th class="text-end">経費差異</th>
+                            <th class="text-end">総差異</th>
+                            <th>判定</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="variance : ${varianceList}">
+                            <td>
+                                <a th:href="@{/cost-variances/{num}(num=${variance.workOrderNumber})}"
+                                   th:text="${variance.workOrderNumber}"></a>
+                            </td>
+                            <td th:text="${variance.itemCode}"></td>
+                            <td class="text-end" th:classappend="${variance.materialCostVariance > 0} ? 'text-danger' : (${variance.materialCostVariance < 0} ? 'text-success' : '')"
+                                th:text="${#numbers.formatDecimal(variance.materialCostVariance, 1, 0)}"></td>
+                            <td class="text-end" th:classappend="${variance.laborCostVariance > 0} ? 'text-danger' : (${variance.laborCostVariance < 0} ? 'text-success' : '')"
+                                th:text="${#numbers.formatDecimal(variance.laborCostVariance, 1, 0)}"></td>
+                            <td class="text-end" th:classappend="${variance.expenseVariance > 0} ? 'text-danger' : (${variance.expenseVariance < 0} ? 'text-success' : '')"
+                                th:text="${#numbers.formatDecimal(variance.expenseVariance, 1, 0)}"></td>
+                            <td class="text-end" th:classappend="${variance.totalVariance > 0} ? 'text-danger fw-bold' : (${variance.totalVariance < 0} ? 'text-success fw-bold' : '')"
+                                th:text="${#numbers.formatDecimal(variance.totalVariance, 1, 0)}"></td>
+                            <td>
+                                <span th:if="${variance.favorable}" class="badge bg-success">有利</span>
+                                <span th:if="${variance.unfavorable}" class="badge bg-danger">不利</span>
+                                <span th:if="${!variance.favorable and !variance.unfavorable}" class="badge bg-secondary">-</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/cost-variances/{num}(num=${variance.workOrderNumber})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a th:href="@{/cost-variances/{num}/edit(num=${variance.workOrderNumber})}"
+                                   class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{/cost-variances/{num}/delete(num=${variance.workOrderNumber})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('この原価差異を削除しますか？');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ページネーション -->
+                <nav th:if="${totalPages > 1}" aria-label="原価差異一覧ページネーション">
+                    <ul class="pagination justify-content-center mb-0">
+                        <!-- 前へ -->
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/cost-variances(page=${currentPage - 1},size=${size},keyword=${keyword})}">
+                                前へ
+                            </a>
+                        </li>
+
+                        <!-- ページ番号 -->
+                        <th:block th:with="startPage=${currentPage > 2 ? currentPage - 2 : 0},
+                                          endPage=${startPage + 4 < totalPages ? startPage + 4 : totalPages - 1}">
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                                th:classappend="${pageNum == currentPage} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/cost-variances(page=${pageNum},size=${size},keyword=${keyword})}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+                            <li th:if="${endPage < totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        </th:block>
+
+                        <!-- 次へ -->
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/cost-variances(page=${currentPage + 1},size=${size},keyword=${keyword})}">
+                                次へ
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

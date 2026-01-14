@@ -21,6 +21,21 @@ public class CostVarianceRepositoryImpl implements CostVarianceRepository {
     }
 
     @Override
+    public List<CostVariance> findWithPagination(int offset, int limit, String keyword) {
+        return mapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return mapper.count(keyword);
+    }
+
+    @Override
+    public int update(CostVariance variance) {
+        return mapper.update(variance);
+    }
+
+    @Override
     public void save(CostVariance variance) {
         mapper.insert(variance);
     }

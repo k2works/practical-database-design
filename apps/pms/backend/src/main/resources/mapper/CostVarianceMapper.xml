@@ -14,6 +14,28 @@
         <result property="createdAt" column="作成日時"/>
     </resultMap>
 
+    <select id="findWithPagination" resultMap="costVarianceResultMap">
+        SELECT * FROM "原価差異データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "作業指示番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "原価差異データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
     <select id="findById" resultMap="costVarianceResultMap">
         SELECT * FROM "原価差異データ" WHERE "ID" = #{id}
     </select>
@@ -49,6 +71,16 @@
             #{expenseVariance}, #{totalVariance}
         )
     </insert>
+
+    <update id="update">
+        UPDATE "原価差異データ"
+        SET "品目コード" = #{itemCode},
+            "材料費差異" = #{materialCostVariance},
+            "労務費差異" = #{laborCostVariance},
+            "経費差異" = #{expenseVariance},
+            "総差異" = #{totalVariance}
+        WHERE "作業指示番号" = #{workOrderNumber}
+    </update>
 
     <delete id="deleteByWorkOrderNumber">
         DELETE FROM "原価差異データ" WHERE "作業指示番号" = #{workOrderNumber}
