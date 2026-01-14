@@ -26,5 +26,7 @@ public interface StocktakingDetailMapper {
 
     List<StocktakingDetail> findAll();
 
+    void deleteByStocktakingNumber(String stocktakingNumber);
+
     void deleteAll();
 }

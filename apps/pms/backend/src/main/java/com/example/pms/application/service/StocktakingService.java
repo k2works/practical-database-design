@@ -1,9 +1,11 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.StocktakingUseCase;
+import com.example.pms.application.port.out.StocktakingDetailRepository;
 import com.example.pms.application.port.out.StocktakingRepository;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.inventory.Stocktaking;
+import com.example.pms.domain.model.inventory.StocktakingDetail;
 import com.example.pms.domain.model.inventory.StocktakingStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +23,13 @@ import java.util.Optional;
 public class StocktakingService implements StocktakingUseCase {
 
     private final StocktakingRepository stocktakingRepository;
+    private final StocktakingDetailRepository stocktakingDetailRepository;
 
-    public StocktakingService(StocktakingRepository stocktakingRepository) {
+    public StocktakingService(
+            StocktakingRepository stocktakingRepository,
+            StocktakingDetailRepository stocktakingDetailRepository) {
         this.stocktakingRepository = stocktakingRepository;
+        this.stocktakingDetailRepository = stocktakingDetailRepository;
     }
 
     @Override
@@ -64,7 +70,11 @@ public class StocktakingService implements StocktakingUseCase {
         normalizeOptionalFields(stocktaking);
 
         stocktakingRepository.save(stocktaking);
-        return stocktakingRepository.findByStocktakingNumber(stocktakingNumber)
+
+        // 明細を保存
+        saveDetails(stocktakingNumber, stocktaking.getDetails());
+
+        return stocktakingRepository.findByStocktakingNumberWithDetails(stocktakingNumber)
             .orElseThrow(() -> new IllegalStateException("棚卸の登録に失敗しました"));
     }
 
@@ -96,13 +106,33 @@ public class StocktakingService implements StocktakingUseCase {
         existing.setUpdatedBy("system");
 
         stocktakingRepository.save(existing);
-        return stocktakingRepository.findByStocktakingNumber(stocktakingNumber)
+
+        // 明細を更新（削除して再作成）
+        stocktakingDetailRepository.deleteByStocktakingNumber(stocktakingNumber);
+        saveDetails(stocktakingNumber, stocktaking.getDetails());
+
+        return stocktakingRepository.findByStocktakingNumberWithDetails(stocktakingNumber)
             .orElseThrow(() -> new IllegalStateException("棚卸の更新に失敗しました"));
     }
 
     @Override
     public void deleteStocktaking(String stocktakingNumber) {
+        stocktakingDetailRepository.deleteByStocktakingNumber(stocktakingNumber);
         stocktakingRepository.deleteByStocktakingNumber(stocktakingNumber);
+    }
+
+    private void saveDetails(String stocktakingNumber, List<StocktakingDetail> details) {
+        if (details == null || details.isEmpty()) {
+            return;
+        }
+        int lineNumber = 1;
+        for (StocktakingDetail detail : details) {
+            detail.setStocktakingNumber(stocktakingNumber);
+            detail.setLineNumber(lineNumber++);
+            detail.setCreatedBy("system");
+            detail.setUpdatedBy("system");
+            stocktakingDetailRepository.save(detail);
+        }
     }
 
     private String generateStocktakingNumber() {

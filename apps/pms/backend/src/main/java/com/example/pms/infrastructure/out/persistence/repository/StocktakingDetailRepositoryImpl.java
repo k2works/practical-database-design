@@ -50,6 +50,11 @@ public class StocktakingDetailRepositoryImpl implements StocktakingDetailReposit
     }
 
     @Override
+    public void deleteByStocktakingNumber(String stocktakingNumber) {
+        stocktakingDetailMapper.deleteByStocktakingNumber(stocktakingNumber);
+    }
+
+    @Override
     public void deleteAll() {
         stocktakingDetailMapper.deleteAll();
     }

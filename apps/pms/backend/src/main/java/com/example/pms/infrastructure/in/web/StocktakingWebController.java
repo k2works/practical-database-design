@@ -1,5 +1,6 @@
 package com.example.pms.infrastructure.in.web;
 
+import com.example.pms.application.port.in.ItemUseCase;
 import com.example.pms.application.port.in.LocationUseCase;
 import com.example.pms.application.port.in.StocktakingUseCase;
 import com.example.pms.domain.model.common.PageResult;
@@ -29,12 +30,15 @@ public class StocktakingWebController {
 
     private final StocktakingUseCase stocktakingUseCase;
     private final LocationUseCase locationUseCase;
+    private final ItemUseCase itemUseCase;
 
     public StocktakingWebController(
             StocktakingUseCase stocktakingUseCase,
-            LocationUseCase locationUseCase) {
+            LocationUseCase locationUseCase,
+            ItemUseCase itemUseCase) {
         this.stocktakingUseCase = stocktakingUseCase;
         this.locationUseCase = locationUseCase;
+        this.itemUseCase = itemUseCase;
     }
 
     /**
@@ -43,6 +47,7 @@ public class StocktakingWebController {
     private void addMasterData(Model model) {
         model.addAttribute("locations", locationUseCase.getAllLocations());
         model.addAttribute("statusList", Arrays.asList(StocktakingStatus.values()));
+        model.addAttribute("items", itemUseCase.getAllItems());
     }
 
     /**
@@ -125,7 +130,7 @@ public class StocktakingWebController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        return stocktakingUseCase.getStocktaking(stocktakingNumber)
+        return stocktakingUseCase.getStocktakingWithDetails(stocktakingNumber)
             .map(stocktaking -> {
                 model.addAttribute("form", StocktakingForm.fromEntity(stocktaking));
                 addMasterData(model);

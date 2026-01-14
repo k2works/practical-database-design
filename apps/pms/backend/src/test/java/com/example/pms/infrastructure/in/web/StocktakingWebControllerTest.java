@@ -1,5 +1,6 @@
 package com.example.pms.infrastructure.in.web;
 
+import com.example.pms.application.port.in.ItemUseCase;
 import com.example.pms.application.port.in.LocationUseCase;
 import com.example.pms.application.port.in.StocktakingUseCase;
 import com.example.pms.domain.model.common.PageResult;
@@ -40,9 +41,13 @@ class StocktakingWebControllerTest {
     @MockitoBean
     private LocationUseCase locationUseCase;
 
+    @MockitoBean
+    private ItemUseCase itemUseCase;
+
     @BeforeEach
     void setUp() {
         Mockito.when(locationUseCase.getAllLocations()).thenReturn(Collections.emptyList());
+        Mockito.when(itemUseCase.getAllItems()).thenReturn(Collections.emptyList());
     }
 
     @Nested
@@ -191,7 +196,7 @@ class StocktakingWebControllerTest {
         @DisplayName("棚卸編集画面を表示できる")
         void shouldDisplayEditForm() throws Exception {
             Stocktaking stocktaking = createTestStocktaking("ST-001", "LOC-001");
-            Mockito.when(stocktakingUseCase.getStocktaking("ST-001"))
+            Mockito.when(stocktakingUseCase.getStocktakingWithDetails("ST-001"))
                 .thenReturn(Optional.of(stocktaking));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/ST-001/edit"))
@@ -204,7 +209,7 @@ class StocktakingWebControllerTest {
         @Test
         @DisplayName("棚卸が見つからない場合は一覧にリダイレクト")
         void shouldRedirectWhenNotFound() throws Exception {
-            Mockito.when(stocktakingUseCase.getStocktaking("ST-999"))
+            Mockito.when(stocktakingUseCase.getStocktakingWithDetails("ST-999"))
                 .thenReturn(Optional.empty());
 
             mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/ST-999/edit"))

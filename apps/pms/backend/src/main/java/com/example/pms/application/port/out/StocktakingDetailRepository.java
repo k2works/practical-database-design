@@ -20,5 +20,7 @@ public interface StocktakingDetailRepository {
 
     List<StocktakingDetail> findAll();
 
+    void deleteByStocktakingNumber(String stocktakingNumber);
+
     void deleteAll();
 }

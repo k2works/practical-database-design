@@ -65,6 +65,10 @@
         SELECT * FROM "棚卸明細データ" ORDER BY "棚卸番号", "棚卸行番号"
     </select>
 
+    <delete id="deleteByStocktakingNumber">
+        DELETE FROM "棚卸明細データ" WHERE "棚卸番号" = #{stocktakingNumber}
+    </delete>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "棚卸明細データ" CASCADE
