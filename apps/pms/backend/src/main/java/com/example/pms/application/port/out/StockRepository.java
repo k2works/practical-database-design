@@ -23,6 +23,24 @@ public interface StockRepository {
 
     List<Stock> findAll();
 
+    /**
+     * ページネーション対応の在庫一覧取得.
+     *
+     * @param offset  オフセット
+     * @param limit   取得件数
+     * @param keyword 検索キーワード
+     * @return 在庫リスト
+     */
+    List<Stock> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 在庫件数を取得する.
+     *
+     * @param keyword 検索キーワード
+     * @return 件数
+     */
+    long count(String keyword);
+
     void deleteAll();
 
     /**

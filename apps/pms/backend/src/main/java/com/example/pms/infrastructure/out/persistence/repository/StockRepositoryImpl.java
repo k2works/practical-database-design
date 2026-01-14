@@ -55,6 +55,16 @@ public class StockRepositoryImpl implements StockRepository {
     }
 
     @Override
+    public List<Stock> findWithPagination(int offset, int limit, String keyword) {
+        return stockMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return stockMapper.count(keyword);
+    }
+
+    @Override
     public void deleteAll() {
         stockMapper.deleteAll();
     }

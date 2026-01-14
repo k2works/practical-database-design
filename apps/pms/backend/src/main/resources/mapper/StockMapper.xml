@@ -107,6 +107,54 @@
         SELECT * FROM "在庫情報" ORDER BY "場所コード", "品目コード"
     </select>
 
+    <!-- PostgreSQL用 ページネーション -->
+    <select id="findWithPagination" resultMap="StockResultMap" databaseId="postgresql">
+        SELECT * FROM "在庫情報"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("場所コード" ILIKE '%' || #{keyword} || '%'
+                OR "品目コード" ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "場所コード", "品目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- H2用 ページネーション -->
+    <select id="findWithPagination" resultMap="StockResultMap" databaseId="h2">
+        SELECT * FROM "在庫情報"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("場所コード") LIKE LOWER('%' || #{keyword} || '%')
+                OR LOWER("品目コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "場所コード", "品目コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- PostgreSQL用 件数カウント -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "在庫情報"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("場所コード" ILIKE '%' || #{keyword} || '%'
+                OR "品目コード" ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- H2用 件数カウント -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "在庫情報"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("場所コード") LIKE LOWER('%' || #{keyword} || '%')
+                OR LOWER("品目コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "在庫情報" CASCADE

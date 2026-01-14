@@ -28,6 +28,12 @@ public interface StockMapper {
 
     List<Stock> findAll();
 
+    List<Stock> findWithPagination(@Param("offset") int offset,
+                                   @Param("limit") int limit,
+                                   @Param("keyword") String keyword);
+
+    long count(@Param("keyword") String keyword);
+
     void deleteAll();
 
     /**
