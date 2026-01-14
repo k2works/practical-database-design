@@ -43,6 +43,28 @@
                     select="com.example.pms.infrastructure.out.persistence.mapper.OverheadAllocationMapper.findByWorkOrderNumber"/>
     </resultMap>
 
+    <select id="findWithPagination" resultMap="actualCostResultMap">
+        SELECT * FROM "実際原価データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "作業指示番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "実際原価データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
     <select id="findById" resultMap="actualCostResultMap">
         SELECT * FROM "実際原価データ" WHERE "ID" = #{id}
     </select>

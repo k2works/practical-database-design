@@ -22,6 +22,16 @@ public class ActualCostRepositoryImpl implements ActualCostRepository {
     }
 
     @Override
+    public List<ActualCost> findWithPagination(int offset, int limit, String keyword) {
+        return mapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return mapper.count(keyword);
+    }
+
+    @Override
     public void save(ActualCost actualCost) {
         mapper.insert(actualCost);
     }

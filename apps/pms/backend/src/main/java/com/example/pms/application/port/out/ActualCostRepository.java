@@ -11,6 +11,24 @@ import java.util.Optional;
  */
 public interface ActualCostRepository {
 
+    /**
+     * ページネーション付きで実際原価を取得する.
+     *
+     * @param offset  オフセット
+     * @param limit   リミット
+     * @param keyword キーワード（オプション）
+     * @return 実際原価リスト
+     */
+    List<ActualCost> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 実際原価の件数を取得する.
+     *
+     * @param keyword キーワード（オプション）
+     * @return 件数
+     */
+    long count(String keyword);
+
     void save(ActualCost actualCost);
 
     int update(ActualCost actualCost);

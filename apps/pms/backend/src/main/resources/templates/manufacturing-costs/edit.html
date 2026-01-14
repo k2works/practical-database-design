@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>製造原価編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>製造原価編集</h1>
+            <a th:href="@{/manufacturing-costs}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/manufacturing-costs/{num}(num=${form.workOrderNumber})}" th:object="${form}" method="post">
+                    <input type="hidden" th:field="*{workOrderNumber}">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="workOrderNumber" class="form-label">作業指示番号</label>
+                            <input type="text" id="workOrderNumber" th:value="${form.workOrderNumber}"
+                                   class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="itemCode" class="form-label">品目コード <span class="text-danger">*</span></label>
+                            <select id="itemCode" th:field="*{itemCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('itemCode')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="item : ${items}"
+                                        th:value="${item.itemCode}"
+                                        th:text="${item.itemCode + ' - ' + item.itemName}"></option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('itemCode')}" class="invalid-feedback"
+                                 th:errors="*{itemCode}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="completedQuantity" class="form-label">完成数量 <span class="text-danger">*</span></label>
+                            <input type="number" id="completedQuantity" th:field="*{completedQuantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('completedQuantity')} ? 'is-invalid'"
+                                   step="0.01" min="0">
+                            <div th:if="${#fields.hasErrors('completedQuantity')}" class="invalid-feedback"
+                                 th:errors="*{completedQuantity}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="actualMaterialCost" class="form-label">実際材料費 <span class="text-danger">*</span></label>
+                            <input type="number" id="actualMaterialCost" th:field="*{actualMaterialCost}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('actualMaterialCost')} ? 'is-invalid'"
+                                   step="1" min="0">
+                            <div th:if="${#fields.hasErrors('actualMaterialCost')}" class="invalid-feedback"
+                                 th:errors="*{actualMaterialCost}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="actualLaborCost" class="form-label">実際労務費 <span class="text-danger">*</span></label>
+                            <input type="number" id="actualLaborCost" th:field="*{actualLaborCost}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('actualLaborCost')} ? 'is-invalid'"
+                                   step="1" min="0">
+                            <div th:if="${#fields.hasErrors('actualLaborCost')}" class="invalid-feedback"
+                                 th:errors="*{actualLaborCost}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="actualExpense" class="form-label">実際経費 <span class="text-danger">*</span></label>
+                            <input type="number" id="actualExpense" th:field="*{actualExpense}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('actualExpense')} ? 'is-invalid'"
+                                   step="1" min="0">
+                            <div th:if="${#fields.hasErrors('actualExpense')}" class="invalid-feedback"
+                                 th:errors="*{actualExpense}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a th:href="@{/manufacturing-costs}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

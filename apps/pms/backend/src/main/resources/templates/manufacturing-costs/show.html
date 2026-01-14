@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>製造原価詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>製造原価詳細</h1>
+            <div>
+                <a th:href="@{/manufacturing-costs/{num}/edit(num=${actualCost.workOrderNumber})}" class="btn btn-secondary">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/manufacturing-costs}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th style="width: 200px;">作業指示番号</th>
+                            <td th:text="${actualCost.workOrderNumber}"></td>
+                        </tr>
+                        <tr>
+                            <th>品目コード</th>
+                            <td th:text="${actualCost.itemCode}"></td>
+                        </tr>
+                        <tr>
+                            <th>完成数量</th>
+                            <td th:text="${#numbers.formatDecimal(actualCost.completedQuantity, 1, 2)}"></td>
+                        </tr>
+                        <tr>
+                            <th>実際材料費</th>
+                            <td th:text="${#numbers.formatDecimal(actualCost.actualMaterialCost, 1, 0)}"></td>
+                        </tr>
+                        <tr>
+                            <th>実際労務費</th>
+                            <td th:text="${#numbers.formatDecimal(actualCost.actualLaborCost, 1, 0)}"></td>
+                        </tr>
+                        <tr>
+                            <th>実際経費</th>
+                            <td th:text="${#numbers.formatDecimal(actualCost.actualExpense, 1, 0)}"></td>
+                        </tr>
+                        <tr>
+                            <th>実際製造原価</th>
+                            <td>
+                                <strong th:text="${#numbers.formatDecimal(actualCost.actualManufacturingCost, 1, 0)}"></strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>単位原価</th>
+                            <td th:text="${#numbers.formatDecimal(actualCost.unitCost, 1, 4)}"></td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td th:text="${actualCost.createdAt != null ? #temporals.format(actualCost.createdAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></td>
+                        </tr>
+                        <tr>
+                            <th>更新日時</th>
+                            <td th:text="${actualCost.updatedAt != null ? #temporals.format(actualCost.updatedAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-end">
+                    <form th:action="@{/manufacturing-costs/{num}/delete(num=${actualCost.workOrderNumber})}"
+                          method="post" class="d-inline"
+                          onsubmit="return confirm('この製造原価を削除しますか？');">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> 削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

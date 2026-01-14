@@ -13,6 +13,18 @@ import java.util.List;
 @Mapper
 public interface ActualCostMapper {
 
+    /**
+     * ページネーション付きで実際原価を取得する.
+     */
+    List<ActualCost> findWithPagination(@Param("offset") int offset,
+                                         @Param("limit") int limit,
+                                         @Param("keyword") String keyword);
+
+    /**
+     * 実際原価の件数を取得する.
+     */
+    long count(@Param("keyword") String keyword);
+
     void insert(ActualCost actualCost);
 
     int update(ActualCost actualCost);
