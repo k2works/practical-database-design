@@ -50,6 +50,26 @@ public class LaborHoursRepositoryImpl implements LaborHoursRepository {
     }
 
     @Override
+    public List<LaborHours> findWithPagination(int offset, int limit, String keyword) {
+        return laborHoursMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return laborHoursMapper.count(keyword);
+    }
+
+    @Override
+    public void update(LaborHours laborHours) {
+        laborHoursMapper.update(laborHours);
+    }
+
+    @Override
+    public void deleteByLaborHoursNumber(String laborHoursNumber) {
+        laborHoursMapper.deleteByLaborHoursNumber(laborHoursNumber);
+    }
+
+    @Override
     public void deleteAll() {
         laborHoursMapper.deleteAll();
     }

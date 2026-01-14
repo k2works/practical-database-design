@@ -26,5 +26,13 @@ public interface LaborHoursMapper {
 
     List<LaborHours> findAll();
 
+    List<LaborHours> findWithPagination(@Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
+
+    long count(@Param("keyword") String keyword);
+
+    void update(LaborHours laborHours);
+
+    void deleteByLaborHoursNumber(String laborHoursNumber);
+
     void deleteAll();
 }

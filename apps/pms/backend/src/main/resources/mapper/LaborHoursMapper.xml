@@ -68,6 +68,81 @@
         SELECT * FROM "工数実績データ" ORDER BY "作業日" DESC, "工数実績番号"
     </select>
 
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="LaborHoursResultMap">
+        SELECT * FROM "工数実績データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (
+                    "工数実績番号" LIKE '%' || #{keyword} || '%'
+                    OR "作業指示番号" LIKE '%' || #{keyword} || '%'
+                    OR "品目コード" LIKE '%' || #{keyword} || '%'
+                    OR "工程コード" LIKE '%' || #{keyword} || '%'
+                    OR "担当者コード" LIKE '%' || #{keyword} || '%'
+                )
+            </if>
+        </where>
+        ORDER BY "作業日" DESC, "工数実績番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "工数実績データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (
+                    "工数実績番号" LIKE '%' || #{keyword} || '%'
+                    OR "作業指示番号" LIKE '%' || #{keyword} || '%'
+                    OR "品目コード" LIKE '%' || #{keyword} || '%'
+                    OR "工程コード" LIKE '%' || #{keyword} || '%'
+                    OR "担当者コード" LIKE '%' || #{keyword} || '%'
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 更新（PostgreSQL用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.process.LaborHours" databaseId="postgresql">
+        UPDATE "工数実績データ" SET
+            "作業指示番号" = #{workOrderNumber},
+            "品目コード" = #{itemCode},
+            "工順" = #{sequence},
+            "工程コード" = #{processCode},
+            "部門コード" = #{departmentCode},
+            "担当者コード" = #{employeeCode},
+            "作業日" = #{workDate},
+            "工数" = #{hours},
+            "備考" = #{remarks},
+            "更新者" = #{updatedBy},
+            "更新日時" = NOW(),
+            "バージョン" = "バージョン" + 1
+        WHERE "工数実績番号" = #{laborHoursNumber}
+    </update>
+
+    <!-- 更新（H2用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.process.LaborHours" databaseId="h2">
+        UPDATE "工数実績データ" SET
+            "作業指示番号" = #{workOrderNumber},
+            "品目コード" = #{itemCode},
+            "工順" = #{sequence},
+            "工程コード" = #{processCode},
+            "部門コード" = #{departmentCode},
+            "担当者コード" = #{employeeCode},
+            "作業日" = #{workDate},
+            "工数" = #{hours},
+            "備考" = #{remarks},
+            "更新者" = #{updatedBy},
+            "更新日時" = CURRENT_TIMESTAMP(),
+            "バージョン" = "バージョン" + 1
+        WHERE "工数実績番号" = #{laborHoursNumber}
+    </update>
+
+    <!-- 工数実績番号で削除 -->
+    <delete id="deleteByLaborHoursNumber">
+        DELETE FROM "工数実績データ" WHERE "工数実績番号" = #{laborHoursNumber}
+    </delete>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "工数実績データ" CASCADE
