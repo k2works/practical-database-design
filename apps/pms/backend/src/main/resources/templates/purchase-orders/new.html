@@ -49,17 +49,23 @@
                     </div>
 
                     <!-- 明細 -->
-                    <h5 class="mb-3 mt-4">発注明細 <span class="text-danger">*</span></h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+                        <h5 class="mb-0">発注明細 <span class="text-danger">*</span></h5>
+                        <button type="button" class="btn btn-success btn-sm" id="addDetailBtn">
+                            <i class="bi bi-plus-lg"></i> 明細追加
+                        </button>
+                    </div>
                     <div th:if="${#fields.hasErrors('details')}" class="alert alert-danger" th:errors="*{details}"></div>
 
                     <div id="details-container">
+                        <!-- 既存明細（バリデーションエラー時） -->
                         <div th:each="detail, stat : *{details}" class="card mb-3 detail-row">
                             <div class="card-body">
-                                <div class="row">
+                                <div class="row align-items-end">
                                     <div class="col-md-3">
                                         <label class="form-label">品目 <span class="text-danger">*</span></label>
                                         <select th:field="*{details[__${stat.index}__].itemCode}"
-                                                class="form-select" th:classappend="${#fields.hasErrors('details[' + stat.index + '].itemCode')} ? 'is-invalid'">
+                                                class="form-select item-select" th:classappend="${#fields.hasErrors('details[' + stat.index + '].itemCode')} ? 'is-invalid'">
                                             <option value="">選択してください</option>
                                             <option th:each="item : ${items}"
                                                     th:value="${item.itemCode}"
@@ -85,47 +91,97 @@
                                                class="form-control" th:classappend="${#fields.hasErrors('details[' + stat.index + '].orderUnitPrice')} ? 'is-invalid'" min="0" step="0.01">
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('details[' + stat.index + '].orderUnitPrice')}" th:errors="*{details[__${stat.index}__].orderUnitPrice}"></div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <label class="form-label">備考</label>
                                         <input type="text" th:field="*{details[__${stat.index}__].detailRemarks}" class="form-control">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-detail-btn" title="削除">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 明細がない場合のデフォルト行 -->
+                        <div th:if="${#lists.isEmpty(form.details)}" class="card mb-3 detail-row">
+                            <div class="card-body">
+                                <div class="row align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label">品目 <span class="text-danger">*</span></label>
+                                        <select name="details[0].itemCode" class="form-select item-select">
+                                            <option value="">選択してください</option>
+                                            <option th:each="item : ${items}"
+                                                    th:value="${item.itemCode}"
+                                                    th:text="${item.itemName}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">納入予定日 <span class="text-danger">*</span></label>
+                                        <input type="date" name="details[0].expectedReceivingDate" class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">数量 <span class="text-danger">*</span></label>
+                                        <input type="number" name="details[0].orderQuantity" class="form-control" min="1" step="0.01">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">単価 <span class="text-danger">*</span></label>
+                                        <input type="number" name="details[0].orderUnitPrice" class="form-control" min="0" step="0.01">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">備考</label>
+                                        <input type="text" name="details[0].detailRemarks" class="form-control">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-detail-btn" title="削除">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 明細がない場合のデフォルト行 -->
-                    <div th:if="${#lists.isEmpty(form.details)}" class="card mb-3">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <label class="form-label">品目 <span class="text-danger">*</span></label>
-                                    <select name="details[0].itemCode" class="form-select">
-                                        <option value="">選択してください</option>
-                                        <option th:each="item : ${items}"
-                                                th:value="${item.itemCode}"
-                                                th:text="${item.itemName}"></option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">納入予定日 <span class="text-danger">*</span></label>
-                                    <input type="date" name="details[0].expectedReceivingDate" class="form-control">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">数量 <span class="text-danger">*</span></label>
-                                    <input type="number" name="details[0].orderQuantity" class="form-control" min="1" step="0.01">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">単価 <span class="text-danger">*</span></label>
-                                    <input type="number" name="details[0].orderUnitPrice" class="form-control" min="0" step="0.01">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">備考</label>
-                                    <input type="text" name="details[0].detailRemarks" class="form-control">
+                    <!-- 明細行テンプレート（JavaScript用、非表示） -->
+                    <template id="detail-row-template">
+                        <div class="card mb-3 detail-row">
+                            <div class="card-body">
+                                <div class="row align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label">品目 <span class="text-danger">*</span></label>
+                                        <select class="form-select item-select" data-field="itemCode">
+                                            <option value="">選択してください</option>
+                                            <option th:each="item : ${items}"
+                                                    th:value="${item.itemCode}"
+                                                    th:text="${item.itemName}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">納入予定日 <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" data-field="expectedReceivingDate">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">数量 <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" data-field="orderQuantity" min="1" step="0.01">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">単価 <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" data-field="orderUnitPrice" min="0" step="0.01">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">備考</label>
+                                        <input type="text" class="form-control" data-field="detailRemarks">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-detail-btn" title="削除">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </template>
 
                     <div class="mt-4">
                         <button type="submit" class="btn btn-primary">
@@ -137,5 +193,71 @@
             </div>
         </div>
     </div>
+    <th:block layout:fragment="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const container = document.getElementById('details-container');
+                const template = document.getElementById('detail-row-template');
+                const addBtn = document.getElementById('addDetailBtn');
+
+                // 行番号を再採番する関数
+                function reindexRows() {
+                    const rows = container.querySelectorAll('.detail-row');
+                    rows.forEach((row, index) => {
+                        // name属性を更新
+                        row.querySelectorAll('[name], [data-field]').forEach(field => {
+                            const dataField = field.getAttribute('data-field');
+                            if (dataField) {
+                                field.name = `details[${index}].${dataField}`;
+                                field.removeAttribute('data-field');
+                            } else if (field.name) {
+                                field.name = field.name.replace(/details\[\d+\]/, `details[${index}]`);
+                            }
+                        });
+                        // id属性を更新（重複防止）
+                        row.querySelectorAll('[id]').forEach(field => {
+                            if (field.id) {
+                                field.id = field.id.replace(/details\d+/, `details${index}`);
+                            }
+                        });
+                    });
+                }
+
+                // 明細行を追加
+                addBtn.addEventListener('click', function() {
+                    const clone = template.content.cloneNode(true);
+                    container.appendChild(clone);
+                    reindexRows();
+                    updateRemoveButtons();
+                });
+
+                // 削除ボタンの状態を更新
+                function updateRemoveButtons() {
+                    const rows = container.querySelectorAll('.detail-row');
+                    const removeButtons = container.querySelectorAll('.remove-detail-btn');
+                    // 1行しかない場合は削除ボタンを無効化
+                    removeButtons.forEach(btn => {
+                        btn.disabled = rows.length <= 1;
+                    });
+                }
+
+                // 明細行を削除（イベント委譲）
+                container.addEventListener('click', function(e) {
+                    if (e.target.closest('.remove-detail-btn')) {
+                        const rows = container.querySelectorAll('.detail-row');
+                        if (rows.length > 1) {
+                            const row = e.target.closest('.detail-row');
+                            row.remove();
+                            reindexRows();
+                            updateRemoveButtons();
+                        }
+                    }
+                });
+
+                // 初期状態で削除ボタンの状態を更新
+                updateRemoveButtons();
+            });
+        </script>
+    </th:block>
 </body>
 </html>
