@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>基準生産計画登録</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>基準生産計画登録</h1>
+            <a th:href="@{/mps}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/mps}" th:object="${form}" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="planDate" class="form-label">計画日 <span class="text-danger">*</span></label>
+                            <input type="date" id="planDate" th:field="*{planDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('planDate')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('planDate')}" class="invalid-feedback"
+                                 th:errors="*{planDate}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dueDate" class="form-label">納期 <span class="text-danger">*</span></label>
+                            <input type="date" id="dueDate" th:field="*{dueDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('dueDate')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('dueDate')}" class="invalid-feedback"
+                                 th:errors="*{dueDate}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="itemCode" class="form-label">品目 <span class="text-danger">*</span></label>
+                            <select id="itemCode" th:field="*{itemCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('itemCode')} ? 'is-invalid'">
+                                <option value="">-- 品目を選択 --</option>
+                                <option th:each="item : ${items}"
+                                        th:value="${item.itemCode}"
+                                        th:text="${item.itemCode + ' - ' + item.itemName}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('itemCode')}" class="invalid-feedback"
+                                 th:errors="*{itemCode}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="planQuantity" class="form-label">計画数量 <span class="text-danger">*</span></label>
+                            <input type="number" id="planQuantity" th:field="*{planQuantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('planQuantity')} ? 'is-invalid'"
+                                   step="0.01" min="0.01" placeholder="例: 100">
+                            <div th:if="${#fields.hasErrors('planQuantity')}" class="invalid-feedback"
+                                 th:errors="*{planQuantity}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="locationCode" class="form-label">場所</label>
+                            <select id="locationCode" th:field="*{locationCode}" class="form-select">
+                                <option value="">-- 場所を選択 --</option>
+                                <option th:each="location : ${locations}"
+                                        th:value="${location.locationCode}"
+                                        th:text="${location.locationCode + ' - ' + location.locationName}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">備考</label>
+                        <textarea id="remarks" th:field="*{remarks}" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a th:href="@{/mps}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 登録
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

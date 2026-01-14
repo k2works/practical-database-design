@@ -46,6 +46,33 @@ public interface MpsRepository {
     List<MasterProductionSchedule> findAll();
 
     /**
+     * ページネーション付きで基準生産計画を検索する
+     *
+     * @param status ステータス（オプション）
+     * @param keyword キーワード（MPS番号または品目コード）
+     * @param limit 取得件数
+     * @param offset オフセット
+     * @return 基準生産計画のリスト
+     */
+    List<MasterProductionSchedule> findWithPagination(PlanStatus status, String keyword, int limit, int offset);
+
+    /**
+     * 検索条件に合致する基準生産計画の件数を取得する
+     *
+     * @param status ステータス（オプション）
+     * @param keyword キーワード（MPS番号または品目コード）
+     * @return 件数
+     */
+    long count(PlanStatus status, String keyword);
+
+    /**
+     * 基準生産計画を更新する
+     *
+     * @param mps 更新内容
+     */
+    void update(MasterProductionSchedule mps);
+
+    /**
      * ステータスを更新する
      */
     void updateStatus(Integer id, PlanStatus status);

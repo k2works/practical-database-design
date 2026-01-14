@@ -52,6 +52,21 @@ public class MpsRepositoryImpl implements MpsRepository {
     }
 
     @Override
+    public List<MasterProductionSchedule> findWithPagination(PlanStatus status, String keyword, int limit, int offset) {
+        return mpsMapper.findWithPagination(status, keyword, limit, offset);
+    }
+
+    @Override
+    public long count(PlanStatus status, String keyword) {
+        return mpsMapper.count(status, keyword);
+    }
+
+    @Override
+    public void update(MasterProductionSchedule mps) {
+        mpsMapper.update(mps);
+    }
+
+    @Override
     public void updateStatus(Integer id, PlanStatus status) {
         mpsMapper.updateStatus(id, status);
     }
