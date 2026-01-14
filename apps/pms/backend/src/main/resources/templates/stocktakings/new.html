@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>棚卸登録</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>棚卸登録</h1>
+            <a th:href="@{/stocktakings}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/stocktakings}" th:object="${form}" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="locationCode" class="form-label">場所コード <span class="text-danger">*</span></label>
+                            <select id="locationCode" th:field="*{locationCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('locationCode')} ? 'is-invalid'">
+                                <option value="">-- 場所を選択 --</option>
+                                <option th:each="location : ${locations}"
+                                        th:value="${location.locationCode}"
+                                        th:text="${location.locationCode + ' - ' + location.locationName}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('locationCode')}" class="invalid-feedback"
+                                 th:errors="*{locationCode}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="stocktakingDate" class="form-label">棚卸日 <span class="text-danger">*</span></label>
+                            <input type="date" id="stocktakingDate" th:field="*{stocktakingDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('stocktakingDate')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('stocktakingDate')}" class="invalid-feedback"
+                                 th:errors="*{stocktakingDate}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">ステータス <span class="text-danger">*</span></label>
+                            <select id="status" th:field="*{status}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('status')} ? 'is-invalid'">
+                                <option value="">-- ステータスを選択 --</option>
+                                <option th:each="s : ${statusList}"
+                                        th:value="${s.name()}"
+                                        th:text="${s.displayName}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('status')}" class="invalid-feedback"
+                                 th:errors="*{status}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a th:href="@{/stocktakings}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 登録
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

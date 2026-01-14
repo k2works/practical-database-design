@@ -31,5 +31,30 @@ public interface StocktakingRepository {
 
     List<Stocktaking> findAll();
 
+    /**
+     * ページネーション付きで検索.
+     *
+     * @param offset オフセット
+     * @param limit 件数
+     * @param keyword キーワード（オプション）
+     * @return 棚卸リスト
+     */
+    List<Stocktaking> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 件数をカウント.
+     *
+     * @param keyword キーワード（オプション）
+     * @return 件数
+     */
+    long count(String keyword);
+
+    /**
+     * 棚卸番号で削除.
+     *
+     * @param stocktakingNumber 棚卸番号
+     */
+    void deleteByStocktakingNumber(String stocktakingNumber);
+
     void deleteAll();
 }

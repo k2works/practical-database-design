@@ -32,5 +32,13 @@ public interface StocktakingMapper {
 
     List<Stocktaking> findAll();
 
+    List<Stocktaking> findWithPagination(@Param("offset") int offset,
+                                          @Param("limit") int limit,
+                                          @Param("keyword") String keyword);
+
+    long count(@Param("keyword") String keyword);
+
+    void deleteByStocktakingNumber(String stocktakingNumber);
+
     void deleteAll();
 }

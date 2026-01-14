@@ -113,6 +113,59 @@
         SELECT * FROM "棚卸データ" ORDER BY "棚卸日" DESC
     </select>
 
+    <!-- PostgreSQL用 ページネーション -->
+    <select id="findWithPagination" resultMap="StocktakingResultMap" databaseId="postgresql">
+        SELECT * FROM "棚卸データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("棚卸番号" ILIKE '%' || #{keyword} || '%'
+                OR "場所コード" ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "棚卸日" DESC, "棚卸番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- H2用 ページネーション -->
+    <select id="findWithPagination" resultMap="StocktakingResultMap" databaseId="h2">
+        SELECT * FROM "棚卸データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("棚卸番号") LIKE LOWER('%' || #{keyword} || '%')
+                OR LOWER("場所コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "棚卸日" DESC, "棚卸番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- PostgreSQL用 件数カウント -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "棚卸データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("棚卸番号" ILIKE '%' || #{keyword} || '%'
+                OR "場所コード" ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- H2用 件数カウント -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "棚卸データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("棚卸番号") LIKE LOWER('%' || #{keyword} || '%')
+                OR LOWER("場所コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 棚卸番号で削除 -->
+    <delete id="deleteByStocktakingNumber">
+        DELETE FROM "棚卸データ" WHERE "棚卸番号" = #{stocktakingNumber}
+    </delete>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "棚卸データ" CASCADE

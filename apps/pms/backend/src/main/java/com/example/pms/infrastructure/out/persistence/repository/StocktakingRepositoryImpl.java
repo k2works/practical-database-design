@@ -59,6 +59,21 @@ public class StocktakingRepositoryImpl implements StocktakingRepository {
     }
 
     @Override
+    public List<Stocktaking> findWithPagination(int offset, int limit, String keyword) {
+        return stocktakingMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return stocktakingMapper.count(keyword);
+    }
+
+    @Override
+    public void deleteByStocktakingNumber(String stocktakingNumber) {
+        stocktakingMapper.deleteByStocktakingNumber(stocktakingNumber);
+    }
+
+    @Override
     public void deleteAll() {
         stocktakingMapper.deleteAll();
     }
