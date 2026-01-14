@@ -45,6 +45,26 @@ public class CompletionResultRepositoryImpl implements CompletionResultRepositor
     }
 
     @Override
+    public List<CompletionResult> findWithPagination(int offset, int limit, String keyword) {
+        return completionResultMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return completionResultMapper.count(keyword);
+    }
+
+    @Override
+    public void update(CompletionResult completionResult) {
+        completionResultMapper.update(completionResult);
+    }
+
+    @Override
+    public void deleteByCompletionResultNumber(String completionResultNumber) {
+        completionResultMapper.deleteByCompletionResultNumber(completionResultNumber);
+    }
+
+    @Override
     public void deleteAll() {
         completionResultMapper.deleteAll();
     }

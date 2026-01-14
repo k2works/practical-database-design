@@ -20,5 +20,37 @@ public interface CompletionResultRepository {
 
     List<CompletionResult> findAll();
 
+    /**
+     * ページネーション付きで完成実績を取得する.
+     *
+     * @param offset オフセット
+     * @param limit リミット
+     * @param keyword キーワード
+     * @return 完成実績リスト
+     */
+    List<CompletionResult> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 完成実績の件数を取得する.
+     *
+     * @param keyword キーワード
+     * @return 件数
+     */
+    long count(String keyword);
+
+    /**
+     * 完成実績を更新する.
+     *
+     * @param completionResult 完成実績
+     */
+    void update(CompletionResult completionResult);
+
+    /**
+     * 完成実績番号で削除する.
+     *
+     * @param completionResultNumber 完成実績番号
+     */
+    void deleteByCompletionResultNumber(String completionResultNumber);
+
     void deleteAll();
 }

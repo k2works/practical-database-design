@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>完成実績登録</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>完成実績登録</h1>
+            <a th:href="@{/completion-results}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/completion-results}" th:object="${form}" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="workOrderNumber" class="form-label">作業指示番号 <span class="text-danger">*</span></label>
+                            <select id="workOrderNumber" th:field="*{workOrderNumber}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('workOrderNumber')} ? 'is-invalid'">
+                                <option value="">-- 作業指示を選択 --</option>
+                                <option th:each="workOrder : ${workOrders}"
+                                        th:value="${workOrder.workOrderNumber}"
+                                        th:text="${workOrder.workOrderNumber + ' (' + workOrder.itemCode + ')'}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('workOrderNumber')}" class="invalid-feedback"
+                                 th:errors="*{workOrderNumber}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="itemCode" class="form-label">品目 <span class="text-danger">*</span></label>
+                            <select id="itemCode" th:field="*{itemCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('itemCode')} ? 'is-invalid'">
+                                <option value="">-- 品目を選択 --</option>
+                                <option th:each="item : ${items}"
+                                        th:value="${item.itemCode}"
+                                        th:text="${item.itemCode + ' - ' + item.itemName}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('itemCode')}" class="invalid-feedback"
+                                 th:errors="*{itemCode}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="completionDate" class="form-label">完成日 <span class="text-danger">*</span></label>
+                            <input type="date" id="completionDate" th:field="*{completionDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('completionDate')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('completionDate')}" class="invalid-feedback"
+                                 th:errors="*{completionDate}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="completedQuantity" class="form-label">完成数量 <span class="text-danger">*</span></label>
+                            <input type="number" id="completedQuantity" th:field="*{completedQuantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('completedQuantity')} ? 'is-invalid'"
+                                   step="0.01" min="0" placeholder="例: 100">
+                            <div th:if="${#fields.hasErrors('completedQuantity')}" class="invalid-feedback"
+                                 th:errors="*{completedQuantity}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="goodQuantity" class="form-label">良品数</label>
+                            <input type="number" id="goodQuantity" th:field="*{goodQuantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('goodQuantity')} ? 'is-invalid'"
+                                   step="0.01" min="0" placeholder="例: 95">
+                            <div th:if="${#fields.hasErrors('goodQuantity')}" class="invalid-feedback"
+                                 th:errors="*{goodQuantity}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="defectQuantity" class="form-label">不良品数</label>
+                            <input type="number" id="defectQuantity" th:field="*{defectQuantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('defectQuantity')} ? 'is-invalid'"
+                                   step="0.01" min="0" placeholder="例: 5">
+                            <div th:if="${#fields.hasErrors('defectQuantity')}" class="invalid-feedback"
+                                 th:errors="*{defectQuantity}"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">備考</label>
+                        <textarea id="remarks" th:field="*{remarks}" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a th:href="@{/completion-results}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 登録
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

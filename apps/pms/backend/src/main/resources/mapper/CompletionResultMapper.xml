@@ -70,6 +70,73 @@
         SELECT * FROM "完成実績データ" ORDER BY "完成日" DESC
     </select>
 
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="CompletionResultResultMap">
+        SELECT * FROM "完成実績データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (
+                    "完成実績番号" LIKE '%' || #{keyword} || '%'
+                    OR "作業指示番号" LIKE '%' || #{keyword} || '%'
+                    OR "品目コード" LIKE '%' || #{keyword} || '%'
+                )
+            </if>
+        </where>
+        ORDER BY "完成日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "完成実績データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (
+                    "完成実績番号" LIKE '%' || #{keyword} || '%'
+                    OR "作業指示番号" LIKE '%' || #{keyword} || '%'
+                    OR "品目コード" LIKE '%' || #{keyword} || '%'
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 更新（PostgreSQL用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.process.CompletionResult" databaseId="postgresql">
+        UPDATE "完成実績データ" SET
+            "作業指示番号" = #{workOrderNumber},
+            "品目コード" = #{itemCode},
+            "完成日" = #{completionDate},
+            "完成数量" = #{completedQuantity},
+            "良品数" = #{goodQuantity},
+            "不良品数" = #{defectQuantity},
+            "備考" = #{remarks},
+            "更新者" = #{updatedBy},
+            "更新日時" = NOW(),
+            "バージョン" = "バージョン" + 1
+        WHERE "完成実績番号" = #{completionResultNumber}
+    </update>
+
+    <!-- 更新（H2用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.process.CompletionResult" databaseId="h2">
+        UPDATE "完成実績データ" SET
+            "作業指示番号" = #{workOrderNumber},
+            "品目コード" = #{itemCode},
+            "完成日" = #{completionDate},
+            "完成数量" = #{completedQuantity},
+            "良品数" = #{goodQuantity},
+            "不良品数" = #{defectQuantity},
+            "備考" = #{remarks},
+            "更新者" = #{updatedBy},
+            "更新日時" = CURRENT_TIMESTAMP(),
+            "バージョン" = "バージョン" + 1
+        WHERE "完成実績番号" = #{completionResultNumber}
+    </update>
+
+    <!-- 完成実績番号で削除 -->
+    <delete id="deleteByCompletionResultNumber">
+        DELETE FROM "完成実績データ" WHERE "完成実績番号" = #{completionResultNumber}
+    </delete>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "完成実績データ" CASCADE
