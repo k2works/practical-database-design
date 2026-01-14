@@ -45,7 +45,8 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="acceptanceDate" class="form-label">検収日 <span class="text-danger">*</span></label>
-                            <input type="date" id="acceptanceDate" th:field="*{acceptanceDate}"
+                            <input type="date" id="acceptanceDate" name="acceptanceDate"
+                                   th:value="${form.acceptanceDate != null ? #temporals.format(form.acceptanceDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('acceptanceDate')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('acceptanceDate')}" class="invalid-feedback"
                                  th:errors="*{acceptanceDate}"></div>

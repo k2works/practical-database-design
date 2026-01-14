@@ -34,7 +34,8 @@
                         </div>
                         <div class="col-md-6">
                             <label for="workOrderDate" class="form-label">作業指示日 <span class="text-danger">*</span></label>
-                            <input type="date" id="workOrderDate" th:field="*{workOrderDate}"
+                            <input type="date" id="workOrderDate" name="workOrderDate"
+                                   th:value="${form.workOrderDate != null ? #temporals.format(form.workOrderDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('workOrderDate')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('workOrderDate')}" class="invalid-feedback"
                                  th:errors="*{workOrderDate}"></div>
@@ -97,12 +98,14 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="plannedStartDate" class="form-label">開始予定日</label>
-                            <input type="date" id="plannedStartDate" th:field="*{plannedStartDate}"
+                            <input type="date" id="plannedStartDate" name="plannedStartDate"
+                                   th:value="${form.plannedStartDate != null ? #temporals.format(form.plannedStartDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control">
                         </div>
                         <div class="col-md-6">
                             <label for="plannedEndDate" class="form-label">完成予定日</label>
-                            <input type="date" id="plannedEndDate" th:field="*{plannedEndDate}"
+                            <input type="date" id="plannedEndDate" name="plannedEndDate"
+                                   th:value="${form.plannedEndDate != null ? #temporals.format(form.plannedEndDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control">
                         </div>
                     </div>

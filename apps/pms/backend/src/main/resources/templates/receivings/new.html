@@ -21,7 +21,8 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="receivingDate" class="form-label">入荷日 <span class="text-danger">*</span></label>
-                            <input type="date" id="receivingDate" th:field="*{receivingDate}"
+                            <input type="date" id="receivingDate" name="receivingDate"
+                                   th:value="${form.receivingDate != null ? #temporals.format(form.receivingDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('receivingDate')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('receivingDate')}" class="invalid-feedback"
                                  th:errors="*{receivingDate}"></div>

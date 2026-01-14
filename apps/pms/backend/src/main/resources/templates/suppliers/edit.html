@@ -64,14 +64,16 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="effectiveFrom" class="form-label">適用開始日</label>
-                            <input type="date" id="effectiveFrom" th:field="*{effectiveFrom}"
+                            <input type="date" id="effectiveFrom" name="effectiveFrom"
+                                   th:value="${form.effectiveFrom != null ? #temporals.format(form.effectiveFrom, 'yyyy-MM-dd') : ''}"
                                    class="form-control" readonly>
                             <div class="form-text">適用開始日は変更できません</div>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label for="effectiveTo" class="form-label">適用停止日</label>
-                            <input type="date" id="effectiveTo" th:field="*{effectiveTo}"
+                            <input type="date" id="effectiveTo" name="effectiveTo"
+                                   th:value="${form.effectiveTo != null ? #temporals.format(form.effectiveTo, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('effectiveTo')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('effectiveTo')}" class="invalid-feedback"
                                  th:errors="*{effectiveTo}"></div>

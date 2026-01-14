@@ -88,7 +88,8 @@
                         </div>
                         <div class="col-md-4">
                             <label for="workDate" class="form-label">作業日 <span class="text-danger">*</span></label>
-                            <input type="date" id="workDate" th:field="*{workDate}"
+                            <input type="date" id="workDate" name="workDate"
+                                   th:value="${form.workDate != null ? #temporals.format(form.workDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('workDate')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('workDate')}" class="invalid-feedback"
                                  th:errors="*{workDate}"></div>

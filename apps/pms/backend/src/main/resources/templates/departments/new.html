@@ -62,7 +62,8 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="validFrom" class="form-label">有効開始日 <span class="text-danger">*</span></label>
-                            <input type="date" id="validFrom" th:field="*{validFrom}"
+                            <input type="date" id="validFrom" name="validFrom"
+                                   th:value="${form.validFrom != null ? #temporals.format(form.validFrom, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('validFrom')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('validFrom')}" class="invalid-feedback"
                                  th:errors="*{validFrom}"></div>
@@ -70,7 +71,8 @@
 
                         <div class="col-md-6 mb-3">
                             <label for="validTo" class="form-label">有効終了日</label>
-                            <input type="date" id="validTo" th:field="*{validTo}"
+                            <input type="date" id="validTo" name="validTo"
+                                   th:value="${form.validTo != null ? #temporals.format(form.validTo, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('validTo')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('validTo')}" class="invalid-feedback"
                                  th:errors="*{validTo}"></div>

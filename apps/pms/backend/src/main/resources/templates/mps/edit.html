@@ -36,14 +36,16 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="planDate" class="form-label">計画日 <span class="text-danger">*</span></label>
-                            <input type="date" id="planDate" th:field="*{planDate}"
+                            <input type="date" id="planDate" name="planDate"
+                                   th:value="${form.planDate != null ? #temporals.format(form.planDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('planDate')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('planDate')}" class="invalid-feedback"
                                  th:errors="*{planDate}"></div>
                         </div>
                         <div class="col-md-6">
                             <label for="dueDate" class="form-label">納期 <span class="text-danger">*</span></label>
-                            <input type="date" id="dueDate" th:field="*{dueDate}"
+                            <input type="date" id="dueDate" name="dueDate"
+                                   th:value="${form.dueDate != null ? #temporals.format(form.dueDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('dueDate')} ? 'is-invalid'">
                             <div th:if="${#fields.hasErrors('dueDate')}" class="invalid-feedback"
                                  th:errors="*{dueDate}"></div>

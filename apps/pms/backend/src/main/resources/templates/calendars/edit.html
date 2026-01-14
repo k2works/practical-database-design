@@ -28,7 +28,8 @@
 
                         <div class="col-md-4 mb-3">
                             <label for="date" class="form-label">日付</label>
-                            <input type="date" id="date" th:field="*{date}"
+                            <input type="date" id="date" name="date"
+                                   th:value="${form.date != null ? #temporals.format(form.date, 'yyyy-MM-dd') : ''}"
                                    class="form-control" readonly>
                             <div class="form-text">日付は変更できません</div>
                         </div>

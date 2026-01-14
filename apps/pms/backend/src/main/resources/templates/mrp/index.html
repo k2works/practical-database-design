@@ -22,13 +22,15 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label for="startDate" class="form-label">開始日 <span class="text-danger">*</span></label>
-                            <input type="date" id="startDate" th:field="*{startDate}"
+                            <input type="date" id="startDate" name="startDate"
+                                   th:value="${form.startDate != null ? #temporals.format(form.startDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('startDate')} ? 'is-invalid'">
                             <div class="invalid-feedback" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
                         </div>
                         <div class="col-md-4">
                             <label for="endDate" class="form-label">終了日 <span class="text-danger">*</span></label>
-                            <input type="date" id="endDate" th:field="*{endDate}"
+                            <input type="date" id="endDate" name="endDate"
+                                   th:value="${form.endDate != null ? #temporals.format(form.endDate, 'yyyy-MM-dd') : ''}"
                                    class="form-control" th:classappend="${#fields.hasErrors('endDate')} ? 'is-invalid'">
                             <div class="invalid-feedback" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
                         </div>

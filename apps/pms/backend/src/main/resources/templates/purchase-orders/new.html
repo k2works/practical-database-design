@@ -75,7 +75,8 @@
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label">納入予定日 <span class="text-danger">*</span></label>
-                                        <input type="date" th:field="*{details[__${stat.index}__].expectedReceivingDate}"
+                                        <input type="date" th:name="'details[' + ${stat.index} + '].expectedReceivingDate'"
+                                               th:value="${detail.expectedReceivingDate != null ? #temporals.format(detail.expectedReceivingDate, 'yyyy-MM-dd') : ''}"
                                                class="form-control" th:classappend="${#fields.hasErrors('details[' + stat.index + '].expectedReceivingDate')} ? 'is-invalid'">
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('details[' + stat.index + '].expectedReceivingDate')}" th:errors="*{details[__${stat.index}__].expectedReceivingDate}"></div>
                                     </div>
