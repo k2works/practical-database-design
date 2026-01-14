@@ -20,7 +20,11 @@ public class InspectionResultRepositoryImpl implements InspectionResultRepositor
 
     @Override
     public void save(InspectionResult inspectionResult) {
-        inspectionResultMapper.insert(inspectionResult);
+        if (inspectionResult.getId() == null) {
+            inspectionResultMapper.insert(inspectionResult);
+        } else {
+            inspectionResultMapper.update(inspectionResult);
+        }
     }
 
     @Override
@@ -44,6 +48,21 @@ public class InspectionResultRepositoryImpl implements InspectionResultRepositor
     @Override
     public List<InspectionResult> findAll() {
         return inspectionResultMapper.findAll();
+    }
+
+    @Override
+    public List<InspectionResult> findWithPagination(int offset, int limit, String keyword) {
+        return inspectionResultMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return inspectionResultMapper.count(keyword);
+    }
+
+    @Override
+    public void deleteById(Integer id) {
+        inspectionResultMapper.deleteById(id);
     }
 
     @Override

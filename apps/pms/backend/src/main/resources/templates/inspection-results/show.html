@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>検査実績詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>検査実績詳細</h1>
+            <div>
+                <a th:href="@{/inspection-results/{id}/edit(id=${inspectionResult.id})}" class="btn btn-secondary">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/inspection-results}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th style="width: 200px;">ID</th>
+                            <td th:text="${inspectionResult.id}"></td>
+                        </tr>
+                        <tr>
+                            <th>完成実績番号</th>
+                            <td th:text="${inspectionResult.completionResultNumber}"></td>
+                        </tr>
+                        <tr>
+                            <th>欠点コード</th>
+                            <td th:text="${inspectionResult.defectCode}"></td>
+                        </tr>
+                        <tr>
+                            <th>数量</th>
+                            <td th:text="${inspectionResult.quantity != null ? #numbers.formatDecimal(inspectionResult.quantity, 1, 'COMMA', 2, 'POINT') : '-'}"></td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td th:text="${inspectionResult.createdAt != null ? #temporals.format(inspectionResult.createdAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></td>
+                        </tr>
+                        <tr>
+                            <th>作成者</th>
+                            <td th:text="${inspectionResult.createdBy}"></td>
+                        </tr>
+                        <tr>
+                            <th>更新日時</th>
+                            <td th:text="${inspectionResult.updatedAt != null ? #temporals.format(inspectionResult.updatedAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></td>
+                        </tr>
+                        <tr>
+                            <th>更新者</th>
+                            <td th:text="${inspectionResult.updatedBy}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-end">
+                    <form th:action="@{/inspection-results/{id}/delete(id=${inspectionResult.id})}"
+                          method="post" class="d-inline"
+                          onsubmit="return confirm('この検査実績を削除しますか？');">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> 削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

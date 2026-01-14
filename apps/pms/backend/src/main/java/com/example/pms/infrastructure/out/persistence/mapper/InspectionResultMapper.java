@@ -14,6 +14,8 @@ public interface InspectionResultMapper {
 
     void insert(InspectionResult inspectionResult);
 
+    void update(InspectionResult inspectionResult);
+
     InspectionResult findById(Integer id);
 
     InspectionResult findByCompletionResultNumberAndDefectCode(
@@ -23,6 +25,15 @@ public interface InspectionResultMapper {
     List<InspectionResult> findByCompletionResultNumber(String completionResultNumber);
 
     List<InspectionResult> findAll();
+
+    List<InspectionResult> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("keyword") String keyword);
+
+    long count(@Param("keyword") String keyword);
+
+    void deleteById(Integer id);
 
     void deleteAll();
 }

@@ -21,5 +21,30 @@ public interface InspectionResultRepository {
 
     List<InspectionResult> findAll();
 
+    /**
+     * ページネーション付きで検索.
+     *
+     * @param offset オフセット
+     * @param limit 件数
+     * @param keyword キーワード（オプション）
+     * @return 検査実績リスト
+     */
+    List<InspectionResult> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 件数をカウント.
+     *
+     * @param keyword キーワード（オプション）
+     * @return 件数
+     */
+    long count(String keyword);
+
+    /**
+     * IDで削除.
+     *
+     * @param id ID
+     */
+    void deleteById(Integer id);
+
     void deleteAll();
 }

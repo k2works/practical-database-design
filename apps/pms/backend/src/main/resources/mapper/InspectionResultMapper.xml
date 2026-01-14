@@ -27,6 +27,16 @@
         )
     </insert>
 
+    <update id="update" parameterType="com.example.pms.domain.model.process.InspectionResult">
+        UPDATE "完成検査結果データ" SET
+            "完成実績番号" = #{completionResultNumber},
+            "欠点コード" = #{defectCode},
+            "数量" = #{quantity},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy}
+        WHERE "ID" = #{id}
+    </update>
+
     <select id="findById" resultMap="InspectionResultResultMap">
         SELECT * FROM "完成検査結果データ" WHERE "ID" = #{id}
     </select>
@@ -45,6 +55,32 @@
     <select id="findAll" resultMap="InspectionResultResultMap">
         SELECT * FROM "完成検査結果データ" ORDER BY "完成実績番号", "欠点コード"
     </select>
+
+    <select id="findWithPagination" resultMap="InspectionResultResultMap">
+        SELECT * FROM "完成検査結果データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("完成実績番号" LIKE '%' || #{keyword} || '%'
+                OR "欠点コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "ID" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "完成検査結果データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("完成実績番号" LIKE '%' || #{keyword} || '%'
+                OR "欠点コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM "完成検査結果データ" WHERE "ID" = #{id}
+    </delete>
 
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
