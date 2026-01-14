@@ -30,5 +30,23 @@ public interface IssueRepository {
 
     List<Issue> findAll();
 
+    /**
+     * ページネーション対応の払出履歴一覧取得.
+     *
+     * @param offset  オフセット
+     * @param limit   取得件数
+     * @param keyword 検索キーワード
+     * @return 払出リスト
+     */
+    List<Issue> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 払出履歴件数を取得する.
+     *
+     * @param keyword 検索キーワード
+     * @return 件数
+     */
+    long count(String keyword);
+
     void deleteAll();
 }

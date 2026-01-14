@@ -78,6 +78,58 @@
         SELECT * FROM "払出データ" ORDER BY "払出日" DESC
     </select>
 
+    <!-- PostgreSQL用 ページネーション -->
+    <select id="findWithPagination" resultMap="IssueResultMap" databaseId="postgresql">
+        SELECT * FROM "払出データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("払出番号" ILIKE '%' || #{keyword} || '%'
+                OR "作業指示番号" ILIKE '%' || #{keyword} || '%'
+                OR "場所コード" ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "払出日" DESC, "払出番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- H2用 ページネーション -->
+    <select id="findWithPagination" resultMap="IssueResultMap" databaseId="h2">
+        SELECT * FROM "払出データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("払出番号") LIKE LOWER('%' || #{keyword} || '%')
+                OR LOWER("作業指示番号") LIKE LOWER('%' || #{keyword} || '%')
+                OR LOWER("場所コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+        ORDER BY "払出日" DESC, "払出番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- PostgreSQL用 件数カウント -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "払出データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("払出番号" ILIKE '%' || #{keyword} || '%'
+                OR "作業指示番号" ILIKE '%' || #{keyword} || '%'
+                OR "場所コード" ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- H2用 件数カウント -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "払出データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (LOWER("払出番号") LIKE LOWER('%' || #{keyword} || '%')
+                OR LOWER("作業指示番号") LIKE LOWER('%' || #{keyword} || '%')
+                OR LOWER("場所コード") LIKE LOWER('%' || #{keyword} || '%'))
+            </if>
+        </where>
+    </select>
+
     <!-- PostgreSQL用 DELETE -->
     <delete id="deleteAll" databaseId="postgresql">
         TRUNCATE TABLE "払出データ" CASCADE

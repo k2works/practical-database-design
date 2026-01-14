@@ -58,6 +58,16 @@ public class IssueRepositoryImpl implements IssueRepository {
     }
 
     @Override
+    public List<Issue> findWithPagination(int offset, int limit, String keyword) {
+        return issueMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return issueMapper.count(keyword);
+    }
+
+    @Override
     public void deleteAll() {
         issueMapper.deleteAll();
     }
