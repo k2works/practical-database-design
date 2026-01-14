@@ -11,6 +11,24 @@ import java.util.Optional;
 public interface ShipmentInspectionRepository {
     void save(ShipmentInspection inspection);
 
+    /**
+     * ページネーション付きで検索する.
+     *
+     * @param offset オフセット
+     * @param limit リミット
+     * @param keyword キーワード（オプション）
+     * @return 出荷検査実績リスト
+     */
+    List<ShipmentInspection> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 件数をカウントする.
+     *
+     * @param keyword キーワード（オプション）
+     * @return 件数
+     */
+    long count(String keyword);
+
     Optional<ShipmentInspection> findById(Integer id);
 
     Optional<ShipmentInspection> findByInspectionNumber(String inspectionNumber);

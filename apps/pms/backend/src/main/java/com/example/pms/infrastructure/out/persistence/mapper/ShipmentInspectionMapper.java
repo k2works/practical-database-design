@@ -2,6 +2,7 @@ package com.example.pms.infrastructure.out.persistence.mapper;
 
 import com.example.pms.domain.model.quality.ShipmentInspection;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,6 +12,12 @@ import java.util.List;
 @Mapper
 public interface ShipmentInspectionMapper {
     void insert(ShipmentInspection inspection);
+
+    List<ShipmentInspection> findWithPagination(@Param("offset") int offset,
+                                                @Param("limit") int limit,
+                                                @Param("keyword") String keyword);
+
+    long count(@Param("keyword") String keyword);
 
     ShipmentInspection findById(Integer id);
 

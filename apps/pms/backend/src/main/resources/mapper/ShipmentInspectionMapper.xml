@@ -29,6 +29,30 @@
                     column="出荷検査番号" select="com.example.pms.infrastructure.out.persistence.mapper.ShipmentInspectionResultMapper.findByInspectionNumber"/>
     </resultMap>
 
+    <select id="findWithPagination" resultMap="ShipmentInspectionResultMap">
+        SELECT * FROM "出荷検査データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("出荷検査番号" LIKE '%' || #{keyword} || '%'
+                OR "出荷番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "検査日" DESC, "出荷検査番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "出荷検査データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("出荷検査番号" LIKE '%' || #{keyword} || '%'
+                OR "出荷番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "出荷検査データ" (
             "出荷検査番号", "出荷番号", "品目コード",

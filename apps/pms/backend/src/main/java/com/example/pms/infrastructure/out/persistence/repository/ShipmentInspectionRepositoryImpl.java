@@ -26,6 +26,16 @@ public class ShipmentInspectionRepositoryImpl implements ShipmentInspectionRepos
     }
 
     @Override
+    public List<ShipmentInspection> findWithPagination(int offset, int limit, String keyword) {
+        return shipmentInspectionMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return shipmentInspectionMapper.count(keyword);
+    }
+
+    @Override
     public Optional<ShipmentInspection> findById(Integer id) {
         return Optional.ofNullable(shipmentInspectionMapper.findById(id));
     }
