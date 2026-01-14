@@ -162,7 +162,7 @@ class StocktakingWebControllerTest {
         @DisplayName("棚卸詳細画面を表示できる")
         void shouldDisplayStocktakingDetail() throws Exception {
             Stocktaking stocktaking = createTestStocktaking("ST-001", "LOC-001");
-            Mockito.when(stocktakingUseCase.getStocktaking("ST-001"))
+            Mockito.when(stocktakingUseCase.getStocktakingWithDetails("ST-001"))
                 .thenReturn(Optional.of(stocktaking));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/ST-001"))
@@ -174,7 +174,7 @@ class StocktakingWebControllerTest {
         @Test
         @DisplayName("棚卸が見つからない場合は一覧にリダイレクト")
         void shouldRedirectWhenNotFound() throws Exception {
-            Mockito.when(stocktakingUseCase.getStocktaking("ST-999"))
+            Mockito.when(stocktakingUseCase.getStocktakingWithDetails("ST-999"))
                 .thenReturn(Optional.empty());
 
             mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/ST-999"))

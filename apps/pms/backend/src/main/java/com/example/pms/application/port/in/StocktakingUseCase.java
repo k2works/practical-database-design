@@ -29,12 +29,20 @@ public interface StocktakingUseCase {
     List<Stocktaking> getAllStocktakings();
 
     /**
-     * 棚卸番号で棚卸を取得する.
+     * 棚卸番号で棚卸を取得する（明細なし）.
      *
      * @param stocktakingNumber 棚卸番号
      * @return 棚卸
      */
     Optional<Stocktaking> getStocktaking(String stocktakingNumber);
+
+    /**
+     * 棚卸番号で棚卸を取得する（明細付き）.
+     *
+     * @param stocktakingNumber 棚卸番号
+     * @return 棚卸（明細を含む）
+     */
+    Optional<Stocktaking> getStocktakingWithDetails(String stocktakingNumber);
 
     /**
      * 棚卸を登録する.

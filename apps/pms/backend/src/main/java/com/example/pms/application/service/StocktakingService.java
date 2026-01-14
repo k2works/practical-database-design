@@ -44,6 +44,12 @@ public class StocktakingService implements StocktakingUseCase {
     @Override
     @Transactional(readOnly = true)
     public Optional<Stocktaking> getStocktaking(String stocktakingNumber) {
+        return stocktakingRepository.findByStocktakingNumber(stocktakingNumber);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Stocktaking> getStocktakingWithDetails(String stocktakingNumber) {
         return stocktakingRepository.findByStocktakingNumberWithDetails(stocktakingNumber);
     }
 

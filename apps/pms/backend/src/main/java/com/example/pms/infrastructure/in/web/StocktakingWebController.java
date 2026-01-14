@@ -105,7 +105,7 @@ public class StocktakingWebController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        return stocktakingUseCase.getStocktaking(stocktakingNumber)
+        return stocktakingUseCase.getStocktakingWithDetails(stocktakingNumber)
             .map(stocktaking -> {
                 model.addAttribute("stocktaking", stocktaking);
                 return "inventory-counts/show";
