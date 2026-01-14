@@ -66,6 +66,30 @@
         ORDER BY "製造日" DESC, "ロット番号"
     </select>
 
+    <!-- ページネーションで取得 -->
+    <select id="findWithPagination" resultMap="LotMasterResultMap">
+        SELECT * FROM "ロットマスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("ロット番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "製造日" DESC, "ロット番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "ロットマスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("ロット番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
     <!-- トレースフォワード: 子ロットから製造ロットを追跡 -->
     <select id="traceForward" resultMap="LotMasterResultMap" databaseId="postgresql">
         WITH RECURSIVE lot_tree AS (

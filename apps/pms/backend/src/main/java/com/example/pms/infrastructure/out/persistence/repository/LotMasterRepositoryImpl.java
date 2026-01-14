@@ -51,6 +51,16 @@ public class LotMasterRepositoryImpl implements LotMasterRepository {
     }
 
     @Override
+    public List<LotMaster> findWithPagination(int offset, int limit, String keyword) {
+        return lotMasterMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return lotMasterMapper.count(keyword);
+    }
+
+    @Override
     public List<LotMaster> traceForward(String lotNumber) {
         return lotMasterMapper.traceForward(lotNumber);
     }

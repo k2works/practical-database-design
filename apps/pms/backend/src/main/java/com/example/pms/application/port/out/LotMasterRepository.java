@@ -21,6 +21,24 @@ public interface LotMasterRepository {
 
     List<LotMaster> findAll();
 
+    /**
+     * ページネーションでロットマスタを取得する.
+     *
+     * @param offset オフセット
+     * @param limit リミット
+     * @param keyword 検索キーワード
+     * @return ロットマスタリスト
+     */
+    List<LotMaster> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * ロットマスタの件数を取得する.
+     *
+     * @param keyword 検索キーワード
+     * @return 件数
+     */
+    long count(String keyword);
+
     List<LotMaster> traceForward(String lotNumber);
 
     List<LotMaster> traceBack(String lotNumber);

@@ -2,6 +2,7 @@ package com.example.pms.infrastructure.out.persistence.mapper;
 
 import com.example.pms.domain.model.quality.LotMaster;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -21,6 +22,27 @@ public interface LotMasterMapper {
     List<LotMaster> findByItemCode(String itemCode);
 
     List<LotMaster> findAll();
+
+    /**
+     * ページネーションでロットマスタを取得する.
+     *
+     * @param offset オフセット
+     * @param limit リミット
+     * @param keyword 検索キーワード
+     * @return ロットマスタリスト
+     */
+    List<LotMaster> findWithPagination(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("keyword") String keyword);
+
+    /**
+     * ロットマスタの件数を取得する.
+     *
+     * @param keyword 検索キーワード
+     * @return 件数
+     */
+    long count(@Param("keyword") String keyword);
 
     List<LotMaster> traceForward(String lotNumber);
 
