@@ -10,14 +10,14 @@
     <div layout:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>棚卸編集</h1>
-            <a th:href="@{/stocktakings}" class="btn btn-outline-secondary">
+            <a th:href="@{/inventory-counts}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> 一覧に戻る
             </a>
         </div>
 
         <div class="card">
             <div class="card-body">
-                <form th:action="@{/stocktakings/{no}(no=${form.stocktakingNumber})}" th:object="${form}" method="post">
+                <form th:action="@{/inventory-counts/{no}(no=${form.stocktakingNumber})}" th:object="${form}" method="post">
                     <input type="hidden" th:field="*{id}">
                     <input type="hidden" th:field="*{stocktakingNumber}">
                     <input type="hidden" th:field="*{version}">
@@ -66,7 +66,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end">
-                        <a th:href="@{/stocktakings}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <a th:href="@{/inventory-counts}" class="btn btn-outline-secondary me-2">キャンセル</a>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg"></i> 更新
                         </button>

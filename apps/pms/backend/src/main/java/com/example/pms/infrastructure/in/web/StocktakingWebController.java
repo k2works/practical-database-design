@@ -24,7 +24,7 @@ import java.util.Arrays;
  * 棚卸画面コントローラー.
  */
 @Controller
-@RequestMapping("/stocktakings")
+@RequestMapping("/inventory-counts")
 public class StocktakingWebController {
 
     private final StocktakingUseCase stocktakingUseCase;
@@ -63,7 +63,7 @@ public class StocktakingWebController {
         model.addAttribute("totalElements", pageResult.getTotalElements());
         model.addAttribute("size", size);
         model.addAttribute("keyword", keyword);
-        return "stocktakings/list";
+        return "inventory-counts/list";
     }
 
     /**
@@ -73,7 +73,7 @@ public class StocktakingWebController {
     public String newForm(Model model) {
         model.addAttribute("form", new StocktakingForm());
         addMasterData(model);
-        return "stocktakings/new";
+        return "inventory-counts/new";
     }
 
     /**
@@ -88,12 +88,12 @@ public class StocktakingWebController {
 
         if (bindingResult.hasErrors()) {
             addMasterData(model);
-            return "stocktakings/new";
+            return "inventory-counts/new";
         }
 
         stocktakingUseCase.createStocktaking(form.toEntity());
         redirectAttributes.addFlashAttribute("successMessage", "棚卸を登録しました");
-        return "redirect:/stocktakings";
+        return "redirect:/inventory-counts";
     }
 
     /**
@@ -108,11 +108,11 @@ public class StocktakingWebController {
         return stocktakingUseCase.getStocktaking(stocktakingNumber)
             .map(stocktaking -> {
                 model.addAttribute("stocktaking", stocktaking);
-                return "stocktakings/show";
+                return "inventory-counts/show";
             })
             .orElseGet(() -> {
                 redirectAttributes.addFlashAttribute("errorMessage", "棚卸が見つかりません");
-                return "redirect:/stocktakings";
+                return "redirect:/inventory-counts";
             });
     }
 
@@ -129,11 +129,11 @@ public class StocktakingWebController {
             .map(stocktaking -> {
                 model.addAttribute("form", StocktakingForm.fromEntity(stocktaking));
                 addMasterData(model);
-                return "stocktakings/edit";
+                return "inventory-counts/edit";
             })
             .orElseGet(() -> {
                 redirectAttributes.addFlashAttribute("errorMessage", "棚卸が見つかりません");
-                return "redirect:/stocktakings";
+                return "redirect:/inventory-counts";
             });
     }
 
@@ -150,12 +150,12 @@ public class StocktakingWebController {
 
         if (bindingResult.hasErrors()) {
             addMasterData(model);
-            return "stocktakings/edit";
+            return "inventory-counts/edit";
         }
 
         stocktakingUseCase.updateStocktaking(stocktakingNumber, form.toEntity());
         redirectAttributes.addFlashAttribute("successMessage", "棚卸を更新しました");
-        return "redirect:/stocktakings";
+        return "redirect:/inventory-counts";
     }
 
     /**
@@ -168,6 +168,6 @@ public class StocktakingWebController {
 
         stocktakingUseCase.deleteStocktaking(stocktakingNumber);
         redirectAttributes.addFlashAttribute("successMessage", "棚卸を削除しました");
-        return "redirect:/stocktakings";
+        return "redirect:/inventory-counts";
     }
 }

@@ -46,7 +46,7 @@ class StocktakingWebControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /stocktakings - 棚卸一覧")
+    @DisplayName("GET /inventory-counts - 棚卸一覧")
     class ListStocktakings {
 
         @Test
@@ -60,9 +60,9 @@ class StocktakingWebControllerTest {
                     ArgumentMatchers.isNull()))
                 .thenReturn(pageResult);
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/stocktakings"))
+            mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("stocktakings/list"))
+                .andExpect(MockMvcResultMatchers.view().name("inventory-counts/list"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("stocktakingList"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("currentPage"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("totalPages"));
@@ -79,10 +79,10 @@ class StocktakingWebControllerTest {
                     ArgumentMatchers.eq("ST-001")))
                 .thenReturn(pageResult);
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/stocktakings")
+            mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts")
                     .param("keyword", "ST-001"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("stocktakings/list"))
+                .andExpect(MockMvcResultMatchers.view().name("inventory-counts/list"))
                 .andExpect(MockMvcResultMatchers.model().attribute("keyword", "ST-001"));
         }
 
@@ -97,7 +97,7 @@ class StocktakingWebControllerTest {
                     ArgumentMatchers.isNull()))
                 .thenReturn(pageResult);
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/stocktakings")
+            mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts")
                     .param("page", "1")
                     .param("size", "10"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -107,22 +107,22 @@ class StocktakingWebControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /stocktakings/new - 棚卸登録画面")
+    @DisplayName("GET /inventory-counts/new - 棚卸登録画面")
     class NewStocktaking {
 
         @Test
         @DisplayName("棚卸登録画面を表示できる")
         void shouldDisplayNewForm() throws Exception {
-            mockMvc.perform(MockMvcRequestBuilders.get("/stocktakings/new"))
+            mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/new"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("stocktakings/new"))
+                .andExpect(MockMvcResultMatchers.view().name("inventory-counts/new"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("form"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("statusList"));
         }
     }
 
     @Nested
-    @DisplayName("POST /stocktakings - 棚卸登録処理")
+    @DisplayName("POST /inventory-counts - 棚卸登録処理")
     class CreateStocktaking {
 
         @Test
@@ -133,29 +133,29 @@ class StocktakingWebControllerTest {
                     ArgumentMatchers.any(Stocktaking.class)))
                 .thenReturn(created);
 
-            mockMvc.perform(MockMvcRequestBuilders.post("/stocktakings")
+            mockMvc.perform(MockMvcRequestBuilders.post("/inventory-counts")
                     .param("locationCode", "LOC-001")
                     .param("stocktakingDate", "2024-01-20")
                     .param("status", "ISSUED"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/stocktakings"))
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/inventory-counts"))
                 .andExpect(MockMvcResultMatchers.flash().attributeExists("successMessage"));
         }
 
         @Test
         @DisplayName("バリデーションエラー時は入力画面に戻る")
         void shouldReturnFormOnValidationError() throws Exception {
-            mockMvc.perform(MockMvcRequestBuilders.post("/stocktakings")
+            mockMvc.perform(MockMvcRequestBuilders.post("/inventory-counts")
                     .param("locationCode", "")
                     .param("stocktakingDate", ""))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("stocktakings/new"))
+                .andExpect(MockMvcResultMatchers.view().name("inventory-counts/new"))
                 .andExpect(MockMvcResultMatchers.model().attributeHasFieldErrors("form", "locationCode"));
         }
     }
 
     @Nested
-    @DisplayName("GET /stocktakings/{stocktakingNumber} - 棚卸詳細画面")
+    @DisplayName("GET /inventory-counts/{stocktakingNumber} - 棚卸詳細画面")
     class ShowStocktaking {
 
         @Test
@@ -165,9 +165,9 @@ class StocktakingWebControllerTest {
             Mockito.when(stocktakingUseCase.getStocktaking("ST-001"))
                 .thenReturn(Optional.of(stocktaking));
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/stocktakings/ST-001"))
+            mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/ST-001"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("stocktakings/show"))
+                .andExpect(MockMvcResultMatchers.view().name("inventory-counts/show"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("stocktaking"));
         }
 
@@ -177,14 +177,14 @@ class StocktakingWebControllerTest {
             Mockito.when(stocktakingUseCase.getStocktaking("ST-999"))
                 .thenReturn(Optional.empty());
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/stocktakings/ST-999"))
+            mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/ST-999"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/stocktakings"));
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/inventory-counts"));
         }
     }
 
     @Nested
-    @DisplayName("GET /stocktakings/{stocktakingNumber}/edit - 棚卸編集画面")
+    @DisplayName("GET /inventory-counts/{stocktakingNumber}/edit - 棚卸編集画面")
     class EditStocktaking {
 
         @Test
@@ -194,9 +194,9 @@ class StocktakingWebControllerTest {
             Mockito.when(stocktakingUseCase.getStocktaking("ST-001"))
                 .thenReturn(Optional.of(stocktaking));
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/stocktakings/ST-001/edit"))
+            mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/ST-001/edit"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("stocktakings/edit"))
+                .andExpect(MockMvcResultMatchers.view().name("inventory-counts/edit"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("form"))
                 .andExpect(MockMvcResultMatchers.model().attributeExists("statusList"));
         }
@@ -207,14 +207,14 @@ class StocktakingWebControllerTest {
             Mockito.when(stocktakingUseCase.getStocktaking("ST-999"))
                 .thenReturn(Optional.empty());
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/stocktakings/ST-999/edit"))
+            mockMvc.perform(MockMvcRequestBuilders.get("/inventory-counts/ST-999/edit"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/stocktakings"));
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/inventory-counts"));
         }
     }
 
     @Nested
-    @DisplayName("POST /stocktakings/{stocktakingNumber} - 棚卸更新処理")
+    @DisplayName("POST /inventory-counts/{stocktakingNumber} - 棚卸更新処理")
     class UpdateStocktaking {
 
         @Test
@@ -226,26 +226,26 @@ class StocktakingWebControllerTest {
                     ArgumentMatchers.any()))
                 .thenReturn(updated);
 
-            mockMvc.perform(MockMvcRequestBuilders.post("/stocktakings/ST-001")
+            mockMvc.perform(MockMvcRequestBuilders.post("/inventory-counts/ST-001")
                     .param("locationCode", "LOC-001")
                     .param("stocktakingDate", "2024-01-20")
                     .param("status", "ENTERED"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/stocktakings"))
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/inventory-counts"))
                 .andExpect(MockMvcResultMatchers.flash().attributeExists("successMessage"));
         }
     }
 
     @Nested
-    @DisplayName("POST /stocktakings/{stocktakingNumber}/delete - 棚卸削除処理")
+    @DisplayName("POST /inventory-counts/{stocktakingNumber}/delete - 棚卸削除処理")
     class DeleteStocktaking {
 
         @Test
         @DisplayName("棚卸を削除できる")
         void shouldDeleteStocktaking() throws Exception {
-            mockMvc.perform(MockMvcRequestBuilders.post("/stocktakings/ST-001/delete"))
+            mockMvc.perform(MockMvcRequestBuilders.post("/inventory-counts/ST-001/delete"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/stocktakings"))
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/inventory-counts"))
                 .andExpect(MockMvcResultMatchers.flash().attributeExists("successMessage"));
 
             Mockito.verify(stocktakingUseCase).deleteStocktaking("ST-001");

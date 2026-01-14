@@ -10,7 +10,7 @@
     <div layout:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>棚卸一覧</h1>
-            <a th:href="@{/stocktakings/new}" class="btn btn-primary">
+            <a th:href="@{/inventory-counts/new}" class="btn btn-primary">
                 <i class="bi bi-plus-lg"></i> 新規登録
             </a>
         </div>
@@ -18,7 +18,7 @@
         <!-- 検索フォーム -->
         <div class="card mb-4">
             <div class="card-body">
-                <form th:action="@{/stocktakings}" method="get" class="row g-3">
+                <form th:action="@{/inventory-counts}" method="get" class="row g-3">
                     <div class="col-md-6">
                         <label for="keyword" class="form-label">キーワード</label>
                         <input type="text" id="keyword" name="keyword" class="form-control"
@@ -28,7 +28,7 @@
                         <button type="submit" class="btn btn-secondary me-2">
                             <i class="bi bi-search"></i> 検索
                         </button>
-                        <a th:href="@{/stocktakings}" class="btn btn-outline-secondary">クリア</a>
+                        <a th:href="@{/inventory-counts}" class="btn btn-outline-secondary">クリア</a>
                     </div>
                 </form>
             </div>
@@ -63,7 +63,7 @@
                     <tbody>
                         <tr th:each="stocktaking : ${stocktakingList}">
                             <td>
-                                <a th:href="@{/stocktakings/{no}(no=${stocktaking.stocktakingNumber})}"
+                                <a th:href="@{/inventory-counts/{no}(no=${stocktaking.stocktakingNumber})}"
                                    th:text="${stocktaking.stocktakingNumber}"></a>
                             </td>
                             <td th:text="${stocktaking.locationCode ?: '-'}"></td>
@@ -77,15 +77,15 @@
                                 <span th:if="${stocktaking.status == null}">-</span>
                             </td>
                             <td>
-                                <a th:href="@{/stocktakings/{no}(no=${stocktaking.stocktakingNumber})}"
+                                <a th:href="@{/inventory-counts/{no}(no=${stocktaking.stocktakingNumber})}"
                                    class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a th:href="@{/stocktakings/{no}/edit(no=${stocktaking.stocktakingNumber})}"
+                                <a th:href="@{/inventory-counts/{no}/edit(no=${stocktaking.stocktakingNumber})}"
                                    class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form th:action="@{/stocktakings/{no}/delete(no=${stocktaking.stocktakingNumber})}"
+                                <form th:action="@{/inventory-counts/{no}/delete(no=${stocktaking.stocktakingNumber})}"
                                       method="post" class="d-inline"
                                       onsubmit="return confirm('この棚卸を削除しますか？');">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -103,7 +103,7 @@
                         <!-- 前へ -->
                         <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
                             <a class="page-link"
-                               th:href="@{/stocktakings(page=${currentPage - 1},size=${size},keyword=${keyword})}">
+                               th:href="@{/inventory-counts(page=${currentPage - 1},size=${size},keyword=${keyword})}">
                                 前へ
                             </a>
                         </li>
@@ -118,7 +118,7 @@
                                 th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
                                 th:classappend="${pageNum == currentPage} ? 'active'">
                                 <a class="page-link"
-                                   th:href="@{/stocktakings(page=${pageNum},size=${size},keyword=${keyword})}"
+                                   th:href="@{/inventory-counts(page=${pageNum},size=${size},keyword=${keyword})}"
                                    th:text="${pageNum + 1}">1</a>
                             </li>
                             <li th:if="${endPage < totalPages - 1}" class="page-item disabled">
@@ -129,7 +129,7 @@
                         <!-- 次へ -->
                         <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
                             <a class="page-link"
-                               th:href="@{/stocktakings(page=${currentPage + 1},size=${size},keyword=${keyword})}">
+                               th:href="@{/inventory-counts(page=${currentPage + 1},size=${size},keyword=${keyword})}">
                                 次へ
                             </a>
                         </li>
