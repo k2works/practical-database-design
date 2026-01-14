@@ -26,6 +26,39 @@ public interface WorkOrderMapper {
 
     List<WorkOrder> findAll();
 
+    /**
+     * ページネーション付きで作業指示を取得する.
+     *
+     * @param offset オフセット
+     * @param limit リミット
+     * @param keyword キーワード（オプション）
+     * @return 作業指示のリスト
+     */
+    List<WorkOrder> findWithPagination(@Param("offset") int offset, @Param("limit") int limit,
+                                        @Param("keyword") String keyword);
+
+    /**
+     * 作業指示の件数を取得する.
+     *
+     * @param keyword キーワード（オプション）
+     * @return 件数
+     */
+    long count(@Param("keyword") String keyword);
+
+    /**
+     * 作業指示を更新する.
+     *
+     * @param workOrder 作業指示
+     */
+    void update(WorkOrder workOrder);
+
+    /**
+     * 作業指示番号で削除する.
+     *
+     * @param workOrderNumber 作業指示番号
+     */
+    void deleteByWorkOrderNumber(@Param("workOrderNumber") String workOrderNumber);
+
     void deleteAll();
 
     /**

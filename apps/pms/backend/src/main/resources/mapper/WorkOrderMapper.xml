@@ -127,6 +127,89 @@
         SELECT * FROM "作業指示データ" ORDER BY "作業指示日" DESC
     </select>
 
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="WorkOrderResultMap">
+        SELECT * FROM "作業指示データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "オーダ番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%'
+                OR "場所コード" LIKE '%' || #{keyword} || '%'
+                OR "備考" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "作業指示日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "作業指示データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "オーダ番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%'
+                OR "場所コード" LIKE '%' || #{keyword} || '%'
+                OR "備考" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- PostgreSQL用 UPDATE -->
+    <update id="update" parameterType="com.example.pms.domain.model.process.WorkOrder" databaseId="postgresql">
+        UPDATE "作業指示データ" SET
+            "オーダ番号" = #{orderNumber},
+            "作業指示日" = #{workOrderDate},
+            "品目コード" = #{itemCode},
+            "作業指示数" = #{orderQuantity},
+            "場所コード" = #{locationCode},
+            "開始予定日" = #{plannedStartDate},
+            "完成予定日" = #{plannedEndDate},
+            "実績開始日" = #{actualStartDate},
+            "実績完了日" = #{actualEndDate},
+            "完成済数" = #{completedQuantity},
+            "総良品数" = #{totalGoodQuantity},
+            "総不良品数" = #{totalDefectQuantity},
+            "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.WorkOrderStatusTypeHandler}::作業指示ステータス,
+            "完了フラグ" = #{completedFlag},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "作業指示番号" = #{workOrderNumber}
+    </update>
+
+    <!-- H2用 UPDATE -->
+    <update id="update" parameterType="com.example.pms.domain.model.process.WorkOrder" databaseId="h2">
+        UPDATE "作業指示データ" SET
+            "オーダ番号" = #{orderNumber},
+            "作業指示日" = #{workOrderDate},
+            "品目コード" = #{itemCode},
+            "作業指示数" = #{orderQuantity},
+            "場所コード" = #{locationCode},
+            "開始予定日" = #{plannedStartDate},
+            "完成予定日" = #{plannedEndDate},
+            "実績開始日" = #{actualStartDate},
+            "実績完了日" = #{actualEndDate},
+            "完成済数" = #{completedQuantity},
+            "総良品数" = #{totalGoodQuantity},
+            "総不良品数" = #{totalDefectQuantity},
+            "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.WorkOrderStatusTypeHandler},
+            "完了フラグ" = #{completedFlag},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "作業指示番号" = #{workOrderNumber}
+    </update>
+
+    <!-- DELETE BY WORK ORDER NUMBER -->
+    <delete id="deleteByWorkOrderNumber">
+        DELETE FROM "作業指示データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </delete>
+
     <!-- 完成数量更新（楽観ロック対応） -->
     <update id="updateCompletionQuantities">
         UPDATE "作業指示データ" SET

@@ -51,6 +51,26 @@ public class WorkOrderRepositoryImpl implements WorkOrderRepository {
     }
 
     @Override
+    public List<WorkOrder> findWithPagination(int offset, int limit, String keyword) {
+        return workOrderMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return workOrderMapper.count(keyword);
+    }
+
+    @Override
+    public void update(WorkOrder workOrder) {
+        workOrderMapper.update(workOrder);
+    }
+
+    @Override
+    public void deleteByWorkOrderNumber(String workOrderNumber) {
+        workOrderMapper.deleteByWorkOrderNumber(workOrderNumber);
+    }
+
+    @Override
     public void deleteAll() {
         workOrderMapper.deleteAll();
     }

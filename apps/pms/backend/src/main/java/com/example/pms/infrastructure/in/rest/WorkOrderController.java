@@ -69,8 +69,9 @@ public class WorkOrderController {
     @GetMapping("/{workOrderNumber}")
     @Operation(summary = "作業指示詳細の取得")
     public ResponseEntity<WorkOrderResponse> getWorkOrder(@PathVariable String workOrderNumber) {
-        WorkOrder workOrder = workOrderUseCase.getWorkOrder(workOrderNumber);
-        return ResponseEntity.ok(WorkOrderResponse.from(workOrder));
+        return workOrderUseCase.getWorkOrder(workOrderNumber)
+            .map(workOrder -> ResponseEntity.ok(WorkOrderResponse.from(workOrder)))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     /**
