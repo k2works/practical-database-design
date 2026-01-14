@@ -26,6 +26,16 @@ public class ProcessInspectionRepositoryImpl implements ProcessInspectionReposit
     }
 
     @Override
+    public List<ProcessInspection> findWithPagination(int offset, int limit, String keyword) {
+        return processInspectionMapper.findWithPagination(offset, limit, keyword);
+    }
+
+    @Override
+    public long count(String keyword) {
+        return processInspectionMapper.count(keyword);
+    }
+
+    @Override
     public Optional<ProcessInspection> findById(Integer id) {
         return Optional.ofNullable(processInspectionMapper.findById(id));
     }

@@ -11,6 +11,24 @@ import java.util.Optional;
 public interface ProcessInspectionRepository {
     void save(ProcessInspection inspection);
 
+    /**
+     * ページネーション付きで検索する.
+     *
+     * @param offset オフセット
+     * @param limit リミット
+     * @param keyword キーワード（オプション）
+     * @return 工程検査リスト
+     */
+    List<ProcessInspection> findWithPagination(int offset, int limit, String keyword);
+
+    /**
+     * 件数をカウントする.
+     *
+     * @param keyword キーワード（オプション）
+     * @return 件数
+     */
+    long count(String keyword);
+
     Optional<ProcessInspection> findById(Integer id);
 
     Optional<ProcessInspection> findByInspectionNumber(String inspectionNumber);

@@ -30,6 +30,32 @@
                     column="工程検査番号" select="com.example.pms.infrastructure.out.persistence.mapper.ProcessInspectionResultMapper.findByInspectionNumber"/>
     </resultMap>
 
+    <select id="findWithPagination" resultMap="ProcessInspectionResultMap">
+        SELECT * FROM "工程検査データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("工程検査番号" LIKE '%' || #{keyword} || '%'
+                OR "作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "工程コード" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "検査日" DESC, "工程検査番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "工程検査データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("工程検査番号" LIKE '%' || #{keyword} || '%'
+                OR "作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "工程コード" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "工程検査データ" (
             "工程検査番号", "作業指示番号", "工程コード", "品目コード",

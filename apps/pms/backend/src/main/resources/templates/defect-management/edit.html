@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>不良管理編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>不良管理編集</h1>
+            <a th:href="@{/defect-management}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/defect-management/{num}(num=${form.inspectionNumber})}" th:object="${form}" method="post">
+                    <input type="hidden" th:field="*{inspectionNumber}">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="inspectionNumber" class="form-label">検査番号</label>
+                            <input type="text" id="inspectionNumber" th:value="${form.inspectionNumber}"
+                                   class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="workOrderNumber" class="form-label">作業指示番号 <span class="text-danger">*</span></label>
+                            <select id="workOrderNumber" th:field="*{workOrderNumber}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('workOrderNumber')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="wo : ${workOrders}"
+                                        th:value="${wo.workOrderNumber}"
+                                        th:text="${wo.workOrderNumber}"></option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('workOrderNumber')}" class="invalid-feedback"
+                                 th:errors="*{workOrderNumber}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="processCode" class="form-label">工程コード <span class="text-danger">*</span></label>
+                            <select id="processCode" th:field="*{processCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('processCode')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="process : ${processes}"
+                                        th:value="${process.processCode}"
+                                        th:text="${process.processCode + ' - ' + process.processName}"></option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('processCode')}" class="invalid-feedback"
+                                 th:errors="*{processCode}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="itemCode" class="form-label">品目コード <span class="text-danger">*</span></label>
+                            <select id="itemCode" th:field="*{itemCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('itemCode')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="item : ${items}"
+                                        th:value="${item.itemCode}"
+                                        th:text="${item.itemCode + ' - ' + item.itemName}"></option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('itemCode')}" class="invalid-feedback"
+                                 th:errors="*{itemCode}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="inspectionDate" class="form-label">検査日 <span class="text-danger">*</span></label>
+                            <input type="date" id="inspectionDate" th:field="*{inspectionDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('inspectionDate')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('inspectionDate')}" class="invalid-feedback"
+                                 th:errors="*{inspectionDate}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="inspectorCode" class="form-label">検査担当者コード</label>
+                            <input type="text" id="inspectorCode" th:field="*{inspectorCode}"
+                                   class="form-control"
+                                   placeholder="例: STAFF-001">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="inspectionQuantity" class="form-label">検査数量 <span class="text-danger">*</span></label>
+                            <input type="number" id="inspectionQuantity" th:field="*{inspectionQuantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('inspectionQuantity')} ? 'is-invalid'"
+                                   step="0.01" min="0">
+                            <div th:if="${#fields.hasErrors('inspectionQuantity')}" class="invalid-feedback"
+                                 th:errors="*{inspectionQuantity}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="passedQuantity" class="form-label">合格数 <span class="text-danger">*</span></label>
+                            <input type="number" id="passedQuantity" th:field="*{passedQuantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('passedQuantity')} ? 'is-invalid'"
+                                   step="0.01" min="0">
+                            <div th:if="${#fields.hasErrors('passedQuantity')}" class="invalid-feedback"
+                                 th:errors="*{passedQuantity}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="failedQuantity" class="form-label">不合格数 <span class="text-danger">*</span></label>
+                            <input type="number" id="failedQuantity" th:field="*{failedQuantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('failedQuantity')} ? 'is-invalid'"
+                                   step="0.01" min="0">
+                            <div th:if="${#fields.hasErrors('failedQuantity')}" class="invalid-feedback"
+                                 th:errors="*{failedQuantity}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="judgment" class="form-label">判定 <span class="text-danger">*</span></label>
+                            <select id="judgment" th:field="*{judgment}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('judgment')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option value="PASSED">合格</option>
+                                <option value="FAILED">不合格</option>
+                                <option value="HOLD">保留</option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('judgment')}" class="invalid-feedback"
+                                 th:errors="*{judgment}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="remarks" class="form-label">備考</label>
+                            <textarea id="remarks" th:field="*{remarks}" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a th:href="@{/defect-management}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
