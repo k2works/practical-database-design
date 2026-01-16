@@ -72,7 +72,7 @@ public class ProcessWebController {
             return "processes/new";
         }
 
-        Process process = processUseCase.createProcess(form.toEntity());
+        Process process = processUseCase.createProcess(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "工程「" + process.getProcessCode() + "」を登録しました");
         return "redirect:/processes";
@@ -130,7 +130,7 @@ public class ProcessWebController {
             return "processes/edit";
         }
 
-        Process process = processUseCase.updateProcess(processCode, form.toEntity());
+        Process process = processUseCase.updateProcess(processCode, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "工程「" + process.getProcessCode() + "」を更新しました");
         return "redirect:/processes";

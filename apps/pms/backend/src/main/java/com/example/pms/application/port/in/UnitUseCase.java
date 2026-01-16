@@ -1,5 +1,7 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateUnitCommand;
+import com.example.pms.application.port.in.command.UpdateUnitCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.unit.Unit;
 
@@ -31,10 +33,10 @@ public interface UnitUseCase {
     /**
      * 単位を登録する.
      *
-     * @param unit 単位
+     * @param command 登録コマンド
      * @return 登録した単位
      */
-    Unit createUnit(Unit unit);
+    Unit createUnit(CreateUnitCommand command);
 
     /**
      * 単位を取得する.
@@ -48,10 +50,10 @@ public interface UnitUseCase {
      * 単位を更新する.
      *
      * @param unitCode 単位コード
-     * @param unit 単位
+     * @param command 更新コマンド
      * @return 更新した単位
      */
-    Unit updateUnit(String unitCode, Unit unit);
+    Unit updateUnit(String unitCode, UpdateUnitCommand command);
 
     /**
      * 単位を削除する.

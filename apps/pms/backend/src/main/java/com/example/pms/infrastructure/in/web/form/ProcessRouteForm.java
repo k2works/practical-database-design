@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateProcessRouteCommand;
+import com.example.pms.application.port.in.command.UpdateProcessRouteCommand;
 import com.example.pms.domain.model.process.ProcessRoute;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,10 +37,40 @@ public class ProcessRouteForm {
     private BigDecimal setupTime;
 
     /**
+     * フォームから登録コマンドを生成.
+     *
+     * @return 登録コマンド
+     */
+    public CreateProcessRouteCommand toCreateCommand() {
+        return CreateProcessRouteCommand.builder()
+            .itemCode(this.itemCode)
+            .sequence(this.sequence)
+            .processCode(this.processCode)
+            .standardTime(this.standardTime)
+            .setupTime(this.setupTime)
+            .build();
+    }
+
+    /**
+     * フォームから更新コマンドを生成.
+     *
+     * @return 更新コマンド
+     */
+    public UpdateProcessRouteCommand toUpdateCommand() {
+        return UpdateProcessRouteCommand.builder()
+            .processCode(this.processCode)
+            .standardTime(this.standardTime)
+            .setupTime(this.setupTime)
+            .build();
+    }
+
+    /**
      * フォームからエンティティを生成.
      *
      * @return 工程表エンティティ
+     * @deprecated Use {@link #toCreateCommand()} or {@link #toUpdateCommand()} instead
      */
+    @Deprecated
     public ProcessRoute toEntity() {
         return ProcessRoute.builder()
             .itemCode(this.itemCode)

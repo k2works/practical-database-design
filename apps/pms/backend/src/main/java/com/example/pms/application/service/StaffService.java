@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.StaffUseCase;
+import com.example.pms.application.port.in.command.CreateStaffCommand;
+import com.example.pms.application.port.in.command.UpdateStaffCommand;
 import com.example.pms.application.port.out.StaffRepository;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.staff.Staff;
@@ -46,13 +48,31 @@ public class StaffService implements StaffUseCase {
     }
 
     @Override
-    public Staff createStaff(Staff staff) {
+    public Staff createStaff(CreateStaffCommand command) {
+        Staff staff = Staff.builder()
+            .staffCode(command.getStaffCode())
+            .effectiveFrom(command.getEffectiveFrom())
+            .effectiveTo(command.getEffectiveTo())
+            .staffName(command.getStaffName())
+            .departmentCode(command.getDepartmentCode())
+            .email(command.getEmail())
+            .phoneNumber(command.getPhoneNumber())
+            .build();
         staffRepository.save(staff);
         return staff;
     }
 
     @Override
-    public Staff updateStaff(String staffCode, LocalDate effectiveFrom, Staff staff) {
+    public Staff updateStaff(String staffCode, LocalDate effectiveFrom, UpdateStaffCommand command) {
+        Staff staff = Staff.builder()
+            .staffCode(staffCode)
+            .effectiveFrom(effectiveFrom)
+            .effectiveTo(command.getEffectiveTo())
+            .staffName(command.getStaffName())
+            .departmentCode(command.getDepartmentCode())
+            .email(command.getEmail())
+            .phoneNumber(command.getPhoneNumber())
+            .build();
         staffRepository.update(staff);
         return staff;
     }

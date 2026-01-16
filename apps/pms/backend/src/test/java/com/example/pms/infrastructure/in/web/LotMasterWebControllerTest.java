@@ -2,6 +2,7 @@ package com.example.pms.infrastructure.in.web;
 
 import com.example.pms.application.port.in.ItemUseCase;
 import com.example.pms.application.port.in.LotMasterUseCase;
+import com.example.pms.application.port.in.command.CreateLotMasterCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.quality.LotMaster;
 import com.example.pms.domain.model.quality.LotType;
@@ -132,7 +133,7 @@ class LotMasterWebControllerTest {
         void shouldCreateLotMaster() throws Exception {
             LotMaster created = createTestLotMaster("LOT-001", "ITEM-001");
             Mockito.when(lotMasterUseCase.createLotMaster(
-                    ArgumentMatchers.any(LotMaster.class)))
+                    ArgumentMatchers.any(CreateLotMasterCommand.class)))
                 .thenReturn(created);
 
             mockMvc.perform(MockMvcRequestBuilders.post("/lots")

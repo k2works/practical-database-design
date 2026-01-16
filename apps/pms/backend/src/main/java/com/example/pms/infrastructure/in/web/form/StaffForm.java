@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateStaffCommand;
+import com.example.pms.application.port.in.command.UpdateStaffCommand;
 import com.example.pms.domain.model.staff.Staff;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -42,10 +44,44 @@ public class StaffForm {
     private String phoneNumber;
 
     /**
+     * フォームを登録コマンドに変換する.
+     *
+     * @return 登録コマンド
+     */
+    public CreateStaffCommand toCreateCommand() {
+        return CreateStaffCommand.builder()
+            .staffCode(this.staffCode)
+            .staffName(this.staffName)
+            .effectiveFrom(this.effectiveFrom)
+            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
+            .departmentCode(this.departmentCode)
+            .email(this.email)
+            .phoneNumber(this.phoneNumber)
+            .build();
+    }
+
+    /**
+     * フォームを更新コマンドに変換する.
+     *
+     * @return 更新コマンド
+     */
+    public UpdateStaffCommand toUpdateCommand() {
+        return UpdateStaffCommand.builder()
+            .staffName(this.staffName)
+            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
+            .departmentCode(this.departmentCode)
+            .email(this.email)
+            .phoneNumber(this.phoneNumber)
+            .build();
+    }
+
+    /**
      * フォームからエンティティを生成.
      *
      * @return 担当者エンティティ
+     * @deprecated Command パターンを使用してください
      */
+    @Deprecated
     public Staff toEntity() {
         return Staff.builder()
             .staffCode(this.staffCode)

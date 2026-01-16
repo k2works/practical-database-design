@@ -85,7 +85,7 @@ public class LotMasterWebController {
             return "lots/new";
         }
 
-        lotMasterUseCase.createLotMaster(form.toEntity());
+        lotMasterUseCase.createLotMaster(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage", "ロットを登録しました。");
         return "redirect:/lots";
     }
@@ -139,7 +139,7 @@ public class LotMasterWebController {
             return "lots/edit";
         }
 
-        lotMasterUseCase.updateLotMaster(lotNumber, form.toEntity());
+        lotMasterUseCase.updateLotMaster(lotNumber, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage", "ロットを更新しました。");
         return "redirect:/lots";
     }

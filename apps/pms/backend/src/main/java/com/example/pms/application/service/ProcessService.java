@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.ProcessUseCase;
+import com.example.pms.application.port.in.command.CreateProcessCommand;
+import com.example.pms.application.port.in.command.UpdateProcessCommand;
 import com.example.pms.application.port.out.ProcessRepository;
 import com.example.pms.domain.exception.ProcessNotFoundException;
 import com.example.pms.domain.model.common.PageResult;
@@ -46,13 +48,25 @@ public class ProcessService implements ProcessUseCase {
     }
 
     @Override
-    public Process createProcess(Process process) {
+    public Process createProcess(CreateProcessCommand command) {
+        Process process = Process.builder()
+            .processCode(command.getProcessCode())
+            .processName(command.getProcessName())
+            .processType(command.getProcessType())
+            .locationCode(command.getLocationCode())
+            .build();
         processRepository.save(process);
         return process;
     }
 
     @Override
-    public Process updateProcess(String processCode, Process process) {
+    public Process updateProcess(String processCode, UpdateProcessCommand command) {
+        Process process = Process.builder()
+            .processCode(processCode)
+            .processName(command.getProcessName())
+            .processType(command.getProcessType())
+            .locationCode(command.getLocationCode())
+            .build();
         processRepository.update(process);
         return process;
     }

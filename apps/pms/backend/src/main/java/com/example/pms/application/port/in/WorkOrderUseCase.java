@@ -2,6 +2,7 @@ package com.example.pms.application.port.in;
 
 import com.example.pms.application.port.in.command.CreateWorkOrderCommand;
 import com.example.pms.application.port.in.command.RecordCompletionCommand;
+import com.example.pms.application.port.in.command.UpdateWorkOrderCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.process.WorkOrder;
 import com.example.pms.domain.model.process.WorkOrderStatus;
@@ -42,14 +43,6 @@ public interface WorkOrderUseCase {
     /**
      * 作業指示を登録する.
      *
-     * @param workOrder 作業指示
-     * @return 登録した作業指示
-     */
-    WorkOrder createWorkOrder(WorkOrder workOrder);
-
-    /**
-     * 作業指示を登録する（コマンド版）.
-     *
      * @param command 登録コマンド
      * @return 登録した作業指示
      */
@@ -59,10 +52,10 @@ public interface WorkOrderUseCase {
      * 作業指示を更新する.
      *
      * @param workOrderNumber 作業指示番号
-     * @param workOrder 作業指示
+     * @param command 更新コマンド
      * @return 更新した作業指示
      */
-    WorkOrder updateWorkOrder(String workOrderNumber, WorkOrder workOrder);
+    WorkOrder updateWorkOrder(String workOrderNumber, UpdateWorkOrderCommand command);
 
     /**
      * 作業指示を削除する.

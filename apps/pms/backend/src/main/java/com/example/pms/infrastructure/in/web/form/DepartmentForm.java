@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateDepartmentCommand;
+import com.example.pms.application.port.in.command.UpdateDepartmentCommand;
 import com.example.pms.domain.model.department.Department;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -36,10 +38,43 @@ public class DepartmentForm {
     private LocalDate validTo;
 
     /**
+     * フォームを登録コマンドに変換する.
+     *
+     * @return 登録コマンド
+     */
+    public CreateDepartmentCommand toCreateCommand() {
+        return CreateDepartmentCommand.builder()
+            .departmentCode(this.departmentCode)
+            .departmentName(this.departmentName)
+            .departmentPath(this.departmentPath != null ? this.departmentPath : "/" + this.departmentCode)
+            .lowestLevel(this.lowestLevel == null || this.lowestLevel)
+            .validFrom(this.validFrom)
+            .validTo(this.validTo != null ? this.validTo : LocalDate.of(9999, 12, 31))
+            .build();
+    }
+
+    /**
+     * フォームを更新コマンドに変換する.
+     *
+     * @return 更新コマンド
+     */
+    public UpdateDepartmentCommand toUpdateCommand() {
+        return UpdateDepartmentCommand.builder()
+            .departmentName(this.departmentName)
+            .departmentPath(this.departmentPath != null ? this.departmentPath : "/" + this.departmentCode)
+            .lowestLevel(this.lowestLevel == null || this.lowestLevel)
+            .validFrom(this.validFrom)
+            .validTo(this.validTo != null ? this.validTo : LocalDate.of(9999, 12, 31))
+            .build();
+    }
+
+    /**
      * フォームからエンティティを生成.
      *
      * @return 部門エンティティ
+     * @deprecated Command パターンを使用してください
      */
+    @Deprecated
     public Department toEntity() {
         return Department.builder()
             .departmentCode(this.departmentCode)

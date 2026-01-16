@@ -5,6 +5,7 @@ import com.example.pms.application.port.in.LocationUseCase;
 import com.example.pms.application.port.in.OrderUseCase;
 import com.example.pms.application.port.in.StaffUseCase;
 import com.example.pms.application.port.in.WorkOrderUseCase;
+import com.example.pms.application.port.in.command.CreateWorkOrderCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.process.WorkOrder;
 import com.example.pms.domain.model.process.WorkOrderStatus;
@@ -144,7 +145,7 @@ class WorkOrderWebControllerTest {
         @DisplayName("作業指示を登録できる")
         void shouldCreateWorkOrder() throws Exception {
             WorkOrder created = createTestWorkOrder("WO-001", "ORD-001");
-            Mockito.when(workOrderUseCase.createWorkOrder(ArgumentMatchers.any(WorkOrder.class))).thenReturn(created);
+            Mockito.when(workOrderUseCase.createWorkOrder(ArgumentMatchers.any(CreateWorkOrderCommand.class))).thenReturn(created);
 
             mockMvc.perform(MockMvcRequestBuilders.post("/work-orders")
                     .param("orderNumber", "ORD-001")

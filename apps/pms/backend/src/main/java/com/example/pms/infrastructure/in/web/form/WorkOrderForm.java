@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateWorkOrderCommand;
+import com.example.pms.application.port.in.command.UpdateWorkOrderCommand;
 import com.example.pms.domain.model.process.WorkOrder;
 import com.example.pms.domain.model.process.WorkOrderStatus;
 import jakarta.validation.constraints.NotBlank;
@@ -67,10 +69,55 @@ public class WorkOrderForm {
     private Integer version;
 
     /**
+     * フォームを登録コマンドに変換する.
+     *
+     * @return CreateWorkOrderCommand 登録コマンド
+     */
+    public CreateWorkOrderCommand toCreateCommand() {
+        return CreateWorkOrderCommand.builder()
+            .orderNumber(this.orderNumber)
+            .itemCode(this.itemCode)
+            .orderQuantity(this.orderQuantity)
+            .locationCode(this.locationCode)
+            .plannedStartDate(this.plannedStartDate)
+            .plannedEndDate(this.plannedEndDate)
+            .remarks(this.remarks)
+            .build();
+    }
+
+    /**
+     * フォームを更新コマンドに変換する.
+     *
+     * @return UpdateWorkOrderCommand 更新コマンド
+     */
+    public UpdateWorkOrderCommand toUpdateCommand() {
+        return UpdateWorkOrderCommand.builder()
+            .orderNumber(this.orderNumber)
+            .workOrderDate(this.workOrderDate)
+            .itemCode(this.itemCode)
+            .orderQuantity(this.orderQuantity)
+            .locationCode(this.locationCode)
+            .plannedStartDate(this.plannedStartDate)
+            .plannedEndDate(this.plannedEndDate)
+            .actualStartDate(this.actualStartDate)
+            .actualEndDate(this.actualEndDate)
+            .completedQuantity(this.completedQuantity)
+            .totalGoodQuantity(this.totalGoodQuantity)
+            .totalDefectQuantity(this.totalDefectQuantity)
+            .status(this.status)
+            .completedFlag(this.completedFlag)
+            .remarks(this.remarks)
+            .version(this.version)
+            .build();
+    }
+
+    /**
      * フォームをエンティティに変換する.
      *
      * @return WorkOrder エンティティ
+     * @deprecated Command パターンを使用してください
      */
+    @Deprecated
     public WorkOrder toEntity() {
         return WorkOrder.builder()
             .id(this.id)

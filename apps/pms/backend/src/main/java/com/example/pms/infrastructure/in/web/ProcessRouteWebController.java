@@ -80,7 +80,7 @@ public class ProcessRouteWebController {
             return "process-routes/new";
         }
 
-        ProcessRoute route = processRouteUseCase.createProcessRoute(form.toEntity());
+        ProcessRoute route = processRouteUseCase.createProcessRoute(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "工程表「" + route.getItemCode() + " - 工順" + route.getSequence() + "」を登録しました");
         return "redirect:/process-routes";
@@ -135,7 +135,7 @@ public class ProcessRouteWebController {
             return "process-routes/edit";
         }
 
-        ProcessRoute route = processRouteUseCase.updateProcessRoute(itemCode, sequence, form.toEntity());
+        ProcessRoute route = processRouteUseCase.updateProcessRoute(itemCode, sequence, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "工程表「" + route.getItemCode() + " - 工順" + route.getSequence() + "」を更新しました");
         return "redirect:/process-routes";

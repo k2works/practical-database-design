@@ -79,7 +79,7 @@ public class SupplierWebController {
             return "suppliers/new";
         }
 
-        Supplier supplier = supplierUseCase.createSupplier(form.toEntity());
+        Supplier supplier = supplierUseCase.createSupplier(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "取引先「" + supplier.getSupplierCode() + " - " + supplier.getSupplierName() + "」を登録しました");
         return "redirect:/suppliers";
@@ -139,7 +139,7 @@ public class SupplierWebController {
             return "suppliers/edit";
         }
 
-        Supplier supplier = supplierUseCase.updateSupplier(supplierCode, effectiveFrom, form.toEntity());
+        Supplier supplier = supplierUseCase.updateSupplier(supplierCode, effectiveFrom, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "取引先「" + supplier.getSupplierCode() + " - " + supplier.getSupplierName() + "」を更新しました");
         return "redirect:/suppliers";

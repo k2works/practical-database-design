@@ -1,5 +1,7 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateLotMasterCommand;
+import com.example.pms.application.port.in.command.UpdateLotMasterCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.quality.LotMaster;
 
@@ -31,19 +33,19 @@ public interface LotMasterUseCase {
     /**
      * ロットマスタを登録する.
      *
-     * @param lotMaster ロットマスタ
+     * @param command 登録コマンド
      * @return 登録されたロットマスタ
      */
-    LotMaster createLotMaster(LotMaster lotMaster);
+    LotMaster createLotMaster(CreateLotMasterCommand command);
 
     /**
      * ロットマスタを更新する.
      *
      * @param lotNumber ロット番号
-     * @param lotMaster 更新データ
+     * @param command 更新コマンド
      * @return 更新されたロットマスタ
      */
-    LotMaster updateLotMaster(String lotNumber, LotMaster lotMaster);
+    LotMaster updateLotMaster(String lotNumber, UpdateLotMasterCommand command);
 
     /**
      * ロットマスタを削除する.

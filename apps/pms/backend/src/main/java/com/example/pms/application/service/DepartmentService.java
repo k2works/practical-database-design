@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.DepartmentUseCase;
+import com.example.pms.application.port.in.command.CreateDepartmentCommand;
+import com.example.pms.application.port.in.command.UpdateDepartmentCommand;
 import com.example.pms.application.port.out.DepartmentRepository;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.department.Department;
@@ -39,7 +41,15 @@ public class DepartmentService implements DepartmentUseCase {
     }
 
     @Override
-    public Department createDepartment(Department department) {
+    public Department createDepartment(CreateDepartmentCommand command) {
+        Department department = Department.builder()
+            .departmentCode(command.getDepartmentCode())
+            .departmentName(command.getDepartmentName())
+            .departmentPath(command.getDepartmentPath())
+            .lowestLevel(command.getLowestLevel())
+            .validFrom(command.getValidFrom())
+            .validTo(command.getValidTo())
+            .build();
         departmentRepository.save(department);
         return department;
     }
@@ -51,7 +61,15 @@ public class DepartmentService implements DepartmentUseCase {
     }
 
     @Override
-    public Department updateDepartment(String departmentCode, Department department) {
+    public Department updateDepartment(String departmentCode, UpdateDepartmentCommand command) {
+        Department department = Department.builder()
+            .departmentCode(departmentCode)
+            .departmentName(command.getDepartmentName())
+            .departmentPath(command.getDepartmentPath())
+            .lowestLevel(command.getLowestLevel())
+            .validFrom(command.getValidFrom())
+            .validTo(command.getValidTo())
+            .build();
         departmentRepository.update(department);
         return department;
     }

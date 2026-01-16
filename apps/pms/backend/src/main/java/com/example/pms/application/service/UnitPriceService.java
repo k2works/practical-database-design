@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.UnitPriceUseCase;
+import com.example.pms.application.port.in.command.CreateUnitPriceCommand;
+import com.example.pms.application.port.in.command.UpdateUnitPriceCommand;
 import com.example.pms.application.port.out.UnitPriceRepository;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.unitprice.UnitPrice;
@@ -40,7 +42,15 @@ public class UnitPriceService implements UnitPriceUseCase {
     }
 
     @Override
-    public UnitPrice createUnitPrice(UnitPrice unitPrice) {
+    public UnitPrice createUnitPrice(CreateUnitPriceCommand command) {
+        UnitPrice unitPrice = UnitPrice.builder()
+            .itemCode(command.getItemCode())
+            .supplierCode(command.getSupplierCode())
+            .effectiveFrom(command.getEffectiveFrom())
+            .effectiveTo(command.getEffectiveTo())
+            .price(command.getPrice())
+            .currencyCode(command.getCurrencyCode())
+            .build();
         unitPriceRepository.save(unitPrice);
         return unitPrice;
     }
@@ -52,7 +62,15 @@ public class UnitPriceService implements UnitPriceUseCase {
     }
 
     @Override
-    public UnitPrice updateUnitPrice(String itemCode, String supplierCode, LocalDate effectiveFrom, UnitPrice unitPrice) {
+    public UnitPrice updateUnitPrice(String itemCode, String supplierCode, LocalDate effectiveFrom, UpdateUnitPriceCommand command) {
+        UnitPrice unitPrice = UnitPrice.builder()
+            .itemCode(itemCode)
+            .supplierCode(supplierCode)
+            .effectiveFrom(effectiveFrom)
+            .effectiveTo(command.getEffectiveTo())
+            .price(command.getPrice())
+            .currencyCode(command.getCurrencyCode())
+            .build();
         unitPriceRepository.update(unitPrice);
         return unitPrice;
     }

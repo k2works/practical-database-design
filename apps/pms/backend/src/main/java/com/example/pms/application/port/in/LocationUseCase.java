@@ -1,5 +1,7 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateLocationCommand;
+import com.example.pms.application.port.in.command.UpdateLocationCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.location.Location;
 
@@ -31,10 +33,10 @@ public interface LocationUseCase {
     /**
      * 場所を登録する.
      *
-     * @param location 場所
+     * @param command 登録コマンド
      * @return 登録した場所
      */
-    Location createLocation(Location location);
+    Location createLocation(CreateLocationCommand command);
 
     /**
      * 場所を取得する.
@@ -48,10 +50,10 @@ public interface LocationUseCase {
      * 場所を更新する.
      *
      * @param locationCode 場所コード
-     * @param location 場所
+     * @param command 更新コマンド
      * @return 更新した場所
      */
-    Location updateLocation(String locationCode, Location location);
+    Location updateLocation(String locationCode, UpdateLocationCommand command);
 
     /**
      * 場所を削除する.

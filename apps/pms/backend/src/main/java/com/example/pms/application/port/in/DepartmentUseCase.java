@@ -1,5 +1,7 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateDepartmentCommand;
+import com.example.pms.application.port.in.command.UpdateDepartmentCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.department.Department;
 
@@ -31,10 +33,10 @@ public interface DepartmentUseCase {
     /**
      * 部門を登録する.
      *
-     * @param department 部門
+     * @param command 登録コマンド
      * @return 登録した部門
      */
-    Department createDepartment(Department department);
+    Department createDepartment(CreateDepartmentCommand command);
 
     /**
      * 部門を取得する.
@@ -48,10 +50,10 @@ public interface DepartmentUseCase {
      * 部門を更新する.
      *
      * @param departmentCode 部門コード
-     * @param department 部門
+     * @param command 更新コマンド
      * @return 更新した部門
      */
-    Department updateDepartment(String departmentCode, Department department);
+    Department updateDepartment(String departmentCode, UpdateDepartmentCommand command);
 
     /**
      * 部門を削除する.

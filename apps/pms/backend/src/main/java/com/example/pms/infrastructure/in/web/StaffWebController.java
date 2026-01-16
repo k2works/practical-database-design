@@ -75,7 +75,7 @@ public class StaffWebController {
             return "staff/new";
         }
 
-        Staff staff = staffUseCase.createStaff(form.toEntity());
+        Staff staff = staffUseCase.createStaff(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "担当者「" + staff.getStaffCode() + "」を登録しました");
         return "redirect:/staff";
@@ -130,7 +130,7 @@ public class StaffWebController {
             return "staff/edit";
         }
 
-        Staff staff = staffUseCase.updateStaff(staffCode, effectiveFrom, form.toEntity());
+        Staff staff = staffUseCase.updateStaff(staffCode, effectiveFrom, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "担当者「" + staff.getStaffCode() + "」を更新しました");
         return "redirect:/staff";

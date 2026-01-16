@@ -3,6 +3,7 @@ package com.example.pms.application.service;
 import com.example.pms.application.port.in.WorkOrderUseCase;
 import com.example.pms.application.port.in.command.CreateWorkOrderCommand;
 import com.example.pms.application.port.in.command.RecordCompletionCommand;
+import com.example.pms.application.port.in.command.UpdateWorkOrderCommand;
 import com.example.pms.application.port.out.WorkOrderRepository;
 import com.example.pms.domain.exception.WorkOrderNotFoundException;
 import com.example.pms.domain.model.common.PageResult;
@@ -49,42 +50,6 @@ public class WorkOrderService implements WorkOrderUseCase {
     @Transactional(readOnly = true)
     public Optional<WorkOrder> getWorkOrder(String workOrderNumber) {
         return workOrderRepository.findByWorkOrderNumber(workOrderNumber);
-    }
-
-    @Override
-    public WorkOrder createWorkOrder(WorkOrder workOrder) {
-        String workOrderNumber = generateWorkOrderNumber();
-        workOrder.setWorkOrderNumber(workOrderNumber);
-        workOrder.setCreatedBy("system");
-        workOrder.setUpdatedBy("system");
-
-        // 空文字を null に変換（外部キー制約対応）
-        if (workOrder.getLocationCode() != null && workOrder.getLocationCode().isEmpty()) {
-            workOrder.setLocationCode(null);
-        }
-
-        if (workOrder.getCompletedQuantity() == null) {
-            workOrder.setCompletedQuantity(BigDecimal.ZERO);
-        }
-        if (workOrder.getTotalGoodQuantity() == null) {
-            workOrder.setTotalGoodQuantity(BigDecimal.ZERO);
-        }
-        if (workOrder.getTotalDefectQuantity() == null) {
-            workOrder.setTotalDefectQuantity(BigDecimal.ZERO);
-        }
-        if (workOrder.getStatus() == null) {
-            workOrder.setStatus(WorkOrderStatus.NOT_STARTED);
-        }
-        if (workOrder.getCompletedFlag() == null) {
-            workOrder.setCompletedFlag(false);
-        }
-        if (workOrder.getVersion() == null) {
-            workOrder.setVersion(1);
-        }
-
-        workOrderRepository.save(workOrder);
-        return workOrderRepository.findByWorkOrderNumber(workOrderNumber)
-            .orElseThrow(() -> new IllegalStateException("作業指示の登録に失敗しました"));
     }
 
     @Override
@@ -157,27 +122,27 @@ public class WorkOrderService implements WorkOrderUseCase {
     }
 
     @Override
-    public WorkOrder updateWorkOrder(String workOrderNumber, WorkOrder workOrder) {
+    public WorkOrder updateWorkOrder(String workOrderNumber, UpdateWorkOrderCommand command) {
         WorkOrder existing = workOrderRepository.findByWorkOrderNumber(workOrderNumber)
             .orElseThrow(() -> new WorkOrderNotFoundException(workOrderNumber));
 
-        existing.setOrderNumber(workOrder.getOrderNumber());
-        existing.setWorkOrderDate(workOrder.getWorkOrderDate());
-        existing.setItemCode(workOrder.getItemCode());
-        existing.setOrderQuantity(workOrder.getOrderQuantity());
+        existing.setOrderNumber(command.getOrderNumber());
+        existing.setWorkOrderDate(command.getWorkOrderDate());
+        existing.setItemCode(command.getItemCode());
+        existing.setOrderQuantity(command.getOrderQuantity());
         // 空文字を null に変換（外部キー制約対応）
-        String locationCode = workOrder.getLocationCode();
+        String locationCode = command.getLocationCode();
         existing.setLocationCode(locationCode != null && locationCode.isEmpty() ? null : locationCode);
-        existing.setPlannedStartDate(workOrder.getPlannedStartDate());
-        existing.setPlannedEndDate(workOrder.getPlannedEndDate());
-        existing.setActualStartDate(workOrder.getActualStartDate());
-        existing.setActualEndDate(workOrder.getActualEndDate());
-        existing.setCompletedQuantity(workOrder.getCompletedQuantity());
-        existing.setTotalGoodQuantity(workOrder.getTotalGoodQuantity());
-        existing.setTotalDefectQuantity(workOrder.getTotalDefectQuantity());
-        existing.setStatus(workOrder.getStatus());
-        existing.setCompletedFlag(workOrder.getCompletedFlag());
-        existing.setRemarks(workOrder.getRemarks());
+        existing.setPlannedStartDate(command.getPlannedStartDate());
+        existing.setPlannedEndDate(command.getPlannedEndDate());
+        existing.setActualStartDate(command.getActualStartDate());
+        existing.setActualEndDate(command.getActualEndDate());
+        existing.setCompletedQuantity(command.getCompletedQuantity());
+        existing.setTotalGoodQuantity(command.getTotalGoodQuantity());
+        existing.setTotalDefectQuantity(command.getTotalDefectQuantity());
+        existing.setStatus(command.getStatus());
+        existing.setCompletedFlag(command.getCompletedFlag());
+        existing.setRemarks(command.getRemarks());
         existing.setUpdatedBy("system");
 
         workOrderRepository.update(existing);

@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.LocationUseCase;
+import com.example.pms.application.port.in.command.CreateLocationCommand;
+import com.example.pms.application.port.in.command.UpdateLocationCommand;
 import com.example.pms.application.port.out.LocationRepository;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.location.Location;
@@ -39,7 +41,13 @@ public class LocationService implements LocationUseCase {
     }
 
     @Override
-    public Location createLocation(Location location) {
+    public Location createLocation(CreateLocationCommand command) {
+        Location location = Location.builder()
+            .locationCode(command.getLocationCode())
+            .locationName(command.getLocationName())
+            .locationType(command.getLocationType())
+            .parentLocationCode(command.getParentLocationCode())
+            .build();
         locationRepository.save(location);
         return location;
     }
@@ -51,7 +59,13 @@ public class LocationService implements LocationUseCase {
     }
 
     @Override
-    public Location updateLocation(String locationCode, Location location) {
+    public Location updateLocation(String locationCode, UpdateLocationCommand command) {
+        Location location = Location.builder()
+            .locationCode(locationCode)
+            .locationName(command.getLocationName())
+            .locationType(command.getLocationType())
+            .parentLocationCode(command.getParentLocationCode())
+            .build();
         locationRepository.update(location);
         return location;
     }

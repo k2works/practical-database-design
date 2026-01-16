@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateSupplierCommand;
+import com.example.pms.application.port.in.command.UpdateSupplierCommand;
 import com.example.pms.domain.model.supplier.Supplier;
 import com.example.pms.domain.model.supplier.SupplierType;
 import jakarta.validation.constraints.NotBlank;
@@ -53,10 +55,52 @@ public class SupplierForm {
     private String contactPerson;
 
     /**
+     * フォームを登録コマンドに変換する.
+     *
+     * @return 登録コマンド
+     */
+    public CreateSupplierCommand toCreateCommand() {
+        return CreateSupplierCommand.builder()
+            .supplierCode(this.supplierCode)
+            .effectiveFrom(this.effectiveFrom)
+            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
+            .supplierName(this.supplierName)
+            .supplierNameKana(this.supplierNameKana)
+            .supplierType(this.supplierType)
+            .postalCode(this.postalCode)
+            .address(this.address)
+            .phoneNumber(this.phoneNumber)
+            .faxNumber(this.faxNumber)
+            .contactPerson(this.contactPerson)
+            .build();
+    }
+
+    /**
+     * フォームを更新コマンドに変換する.
+     *
+     * @return 更新コマンド
+     */
+    public UpdateSupplierCommand toUpdateCommand() {
+        return UpdateSupplierCommand.builder()
+            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
+            .supplierName(this.supplierName)
+            .supplierNameKana(this.supplierNameKana)
+            .supplierType(this.supplierType)
+            .postalCode(this.postalCode)
+            .address(this.address)
+            .phoneNumber(this.phoneNumber)
+            .faxNumber(this.faxNumber)
+            .contactPerson(this.contactPerson)
+            .build();
+    }
+
+    /**
      * フォームからエンティティを生成.
      *
      * @return 取引先エンティティ
+     * @deprecated Command パターンを使用してください
      */
+    @Deprecated
     public Supplier toEntity() {
         return Supplier.builder()
             .supplierCode(this.supplierCode)

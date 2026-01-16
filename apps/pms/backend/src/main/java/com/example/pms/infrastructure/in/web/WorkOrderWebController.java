@@ -104,7 +104,7 @@ public class WorkOrderWebController {
             return "work-orders/new";
         }
 
-        workOrderUseCase.createWorkOrder(form.toEntity());
+        workOrderUseCase.createWorkOrder(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage", "作業指示を登録しました");
         return "redirect:/work-orders";
     }
@@ -166,7 +166,7 @@ public class WorkOrderWebController {
             return "work-orders/edit";
         }
 
-        workOrderUseCase.updateWorkOrder(workOrderNumber, form.toEntity());
+        workOrderUseCase.updateWorkOrder(workOrderNumber, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage", "作業指示を更新しました");
         return "redirect:/work-orders";
     }

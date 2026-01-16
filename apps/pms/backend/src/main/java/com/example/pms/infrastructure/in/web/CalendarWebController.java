@@ -79,7 +79,7 @@ public class CalendarWebController {
             return "calendars/new";
         }
 
-        WorkCalendar calendar = calendarUseCase.createCalendar(form.toEntity());
+        WorkCalendar calendar = calendarUseCase.createCalendar(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "カレンダー「" + calendar.getCalendarCode() + " - " + calendar.getDate() + "」を登録しました");
         return "redirect:/calendars";
@@ -133,7 +133,7 @@ public class CalendarWebController {
             return "calendars/edit";
         }
 
-        WorkCalendar calendar = calendarUseCase.updateCalendar(calendarCode, date, form.toEntity());
+        WorkCalendar calendar = calendarUseCase.updateCalendar(calendarCode, date, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "カレンダー「" + calendar.getCalendarCode() + " - " + calendar.getDate() + "」を更新しました");
         return "redirect:/calendars";

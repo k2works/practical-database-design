@@ -73,7 +73,7 @@ public class DepartmentWebController {
             return "departments/new";
         }
 
-        Department department = departmentUseCase.createDepartment(form.toEntity());
+        Department department = departmentUseCase.createDepartment(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "部門「" + department.getDepartmentCode() + " - " + department.getDepartmentName() + "」を登録しました");
         return "redirect:/departments";
@@ -117,7 +117,7 @@ public class DepartmentWebController {
             return "departments/edit";
         }
 
-        Department department = departmentUseCase.updateDepartment(departmentCode, form.toEntity());
+        Department department = departmentUseCase.updateDepartment(departmentCode, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "部門「" + department.getDepartmentCode() + " - " + department.getDepartmentName() + "」を更新しました");
         return "redirect:/departments";

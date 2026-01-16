@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.CalendarUseCase;
+import com.example.pms.application.port.in.command.CreateCalendarCommand;
+import com.example.pms.application.port.in.command.UpdateCalendarCommand;
 import com.example.pms.application.port.out.CalendarRepository;
 import com.example.pms.domain.model.calendar.WorkCalendar;
 import com.example.pms.domain.model.common.PageResult;
@@ -40,7 +42,14 @@ public class CalendarService implements CalendarUseCase {
     }
 
     @Override
-    public WorkCalendar createCalendar(WorkCalendar calendar) {
+    public WorkCalendar createCalendar(CreateCalendarCommand command) {
+        WorkCalendar calendar = WorkCalendar.builder()
+            .calendarCode(command.getCalendarCode())
+            .date(command.getDate())
+            .dateType(command.getDateType())
+            .workingHours(command.getWorkingHours())
+            .note(command.getNote())
+            .build();
         calendarRepository.save(calendar);
         return calendar;
     }
@@ -52,7 +61,14 @@ public class CalendarService implements CalendarUseCase {
     }
 
     @Override
-    public WorkCalendar updateCalendar(String calendarCode, LocalDate date, WorkCalendar calendar) {
+    public WorkCalendar updateCalendar(String calendarCode, LocalDate date, UpdateCalendarCommand command) {
+        WorkCalendar calendar = WorkCalendar.builder()
+            .calendarCode(calendarCode)
+            .date(date)
+            .dateType(command.getDateType())
+            .workingHours(command.getWorkingHours())
+            .note(command.getNote())
+            .build();
         calendarRepository.update(calendar);
         return calendar;
     }

@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.ProcessRouteUseCase;
+import com.example.pms.application.port.in.command.CreateProcessRouteCommand;
+import com.example.pms.application.port.in.command.UpdateProcessRouteCommand;
 import com.example.pms.application.port.out.ProcessRouteRepository;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.process.ProcessRoute;
@@ -39,7 +41,14 @@ public class ProcessRouteService implements ProcessRouteUseCase {
     }
 
     @Override
-    public ProcessRoute createProcessRoute(ProcessRoute processRoute) {
+    public ProcessRoute createProcessRoute(CreateProcessRouteCommand command) {
+        ProcessRoute processRoute = ProcessRoute.builder()
+            .itemCode(command.getItemCode())
+            .sequence(command.getSequence())
+            .processCode(command.getProcessCode())
+            .standardTime(command.getStandardTime())
+            .setupTime(command.getSetupTime())
+            .build();
         processRouteRepository.save(processRoute);
         return processRoute;
     }
@@ -51,7 +60,14 @@ public class ProcessRouteService implements ProcessRouteUseCase {
     }
 
     @Override
-    public ProcessRoute updateProcessRoute(String itemCode, Integer sequence, ProcessRoute processRoute) {
+    public ProcessRoute updateProcessRoute(String itemCode, Integer sequence, UpdateProcessRouteCommand command) {
+        ProcessRoute processRoute = ProcessRoute.builder()
+            .itemCode(itemCode)
+            .sequence(sequence)
+            .processCode(command.getProcessCode())
+            .standardTime(command.getStandardTime())
+            .setupTime(command.getSetupTime())
+            .build();
         processRouteRepository.update(processRoute);
         return processRoute;
     }

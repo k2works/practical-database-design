@@ -78,7 +78,7 @@ public class LocationWebController {
             return "locations/new";
         }
 
-        Location location = locationUseCase.createLocation(form.toEntity());
+        Location location = locationUseCase.createLocation(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "場所「" + location.getLocationCode() + " - " + location.getLocationName() + "」を登録しました");
         return "redirect:/locations";
@@ -126,7 +126,7 @@ public class LocationWebController {
             return "locations/edit";
         }
 
-        Location location = locationUseCase.updateLocation(locationCode, form.toEntity());
+        Location location = locationUseCase.updateLocation(locationCode, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "場所「" + location.getLocationCode() + " - " + location.getLocationName() + "」を更新しました");
         return "redirect:/locations";

@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateLocationCommand;
+import com.example.pms.application.port.in.command.UpdateLocationCommand;
 import com.example.pms.domain.model.location.Location;
 import com.example.pms.domain.model.location.LocationType;
 import jakarta.validation.constraints.NotBlank;
@@ -28,10 +30,39 @@ public class LocationForm {
     private String parentLocationCode;
 
     /**
+     * フォームを登録コマンドに変換する.
+     *
+     * @return 登録コマンド
+     */
+    public CreateLocationCommand toCreateCommand() {
+        return CreateLocationCommand.builder()
+            .locationCode(this.locationCode)
+            .locationName(this.locationName)
+            .locationType(this.locationType)
+            .parentLocationCode(this.parentLocationCode)
+            .build();
+    }
+
+    /**
+     * フォームを更新コマンドに変換する.
+     *
+     * @return 更新コマンド
+     */
+    public UpdateLocationCommand toUpdateCommand() {
+        return UpdateLocationCommand.builder()
+            .locationName(this.locationName)
+            .locationType(this.locationType)
+            .parentLocationCode(this.parentLocationCode)
+            .build();
+    }
+
+    /**
      * フォームからエンティティを生成.
      *
      * @return 場所エンティティ
+     * @deprecated Command パターンを使用してください
      */
+    @Deprecated
     public Location toEntity() {
         return Location.builder()
             .locationCode(this.locationCode)

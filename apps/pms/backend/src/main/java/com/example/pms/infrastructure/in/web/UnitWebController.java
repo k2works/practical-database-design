@@ -72,7 +72,7 @@ public class UnitWebController {
             return "units/new";
         }
 
-        Unit unit = unitUseCase.createUnit(form.toEntity());
+        Unit unit = unitUseCase.createUnit(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "単位「" + unit.getUnitCode() + " - " + unit.getUnitName() + "」を登録しました");
         return "redirect:/units";
@@ -115,7 +115,7 @@ public class UnitWebController {
             return "units/edit";
         }
 
-        Unit unit = unitUseCase.updateUnit(unitCode, form.toEntity());
+        Unit unit = unitUseCase.updateUnit(unitCode, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "単位「" + unit.getUnitCode() + " - " + unit.getUnitName() + "」を更新しました");
         return "redirect:/units";

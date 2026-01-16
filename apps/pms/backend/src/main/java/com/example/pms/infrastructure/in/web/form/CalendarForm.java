@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateCalendarCommand;
+import com.example.pms.application.port.in.command.UpdateCalendarCommand;
 import com.example.pms.domain.model.calendar.DateType;
 import com.example.pms.domain.model.calendar.WorkCalendar;
 import jakarta.validation.constraints.NotBlank;
@@ -34,10 +36,40 @@ public class CalendarForm {
     private String note;
 
     /**
+     * フォームから登録コマンドを生成.
+     *
+     * @return 登録コマンド
+     */
+    public CreateCalendarCommand toCreateCommand() {
+        return CreateCalendarCommand.builder()
+            .calendarCode(this.calendarCode)
+            .date(this.date)
+            .dateType(this.dateType)
+            .workingHours(this.workingHours)
+            .note(this.note)
+            .build();
+    }
+
+    /**
+     * フォームから更新コマンドを生成.
+     *
+     * @return 更新コマンド
+     */
+    public UpdateCalendarCommand toUpdateCommand() {
+        return UpdateCalendarCommand.builder()
+            .dateType(this.dateType)
+            .workingHours(this.workingHours)
+            .note(this.note)
+            .build();
+    }
+
+    /**
      * フォームからエンティティを生成.
      *
      * @return カレンダーエンティティ
+     * @deprecated Use {@link #toCreateCommand()} or {@link #toUpdateCommand()} instead
      */
+    @Deprecated
     public WorkCalendar toEntity() {
         return WorkCalendar.builder()
             .calendarCode(this.calendarCode)

@@ -1,9 +1,12 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateProcessRouteCommand;
+import com.example.pms.application.port.in.command.UpdateProcessRouteCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.process.ProcessRoute;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 工程表ユースケース（Input Port）.
@@ -31,10 +34,10 @@ public interface ProcessRouteUseCase {
     /**
      * 工程表を登録する.
      *
-     * @param processRoute 工程表
+     * @param command 登録コマンド
      * @return 登録した工程表
      */
-    ProcessRoute createProcessRoute(ProcessRoute processRoute);
+    ProcessRoute createProcessRoute(CreateProcessRouteCommand command);
 
     /**
      * 工程表を取得する.
@@ -43,17 +46,17 @@ public interface ProcessRouteUseCase {
      * @param sequence 工順
      * @return 工程表
      */
-    java.util.Optional<ProcessRoute> getProcessRoute(String itemCode, Integer sequence);
+    Optional<ProcessRoute> getProcessRoute(String itemCode, Integer sequence);
 
     /**
      * 工程表を更新する.
      *
      * @param itemCode 品目コード
      * @param sequence 工順
-     * @param processRoute 工程表
+     * @param command 更新コマンド
      * @return 更新した工程表
      */
-    ProcessRoute updateProcessRoute(String itemCode, Integer sequence, ProcessRoute processRoute);
+    ProcessRoute updateProcessRoute(String itemCode, Integer sequence, UpdateProcessRouteCommand command);
 
     /**
      * 工程表を削除する.

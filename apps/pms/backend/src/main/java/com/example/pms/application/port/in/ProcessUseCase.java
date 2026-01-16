@@ -1,5 +1,7 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateProcessCommand;
+import com.example.pms.application.port.in.command.UpdateProcessCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.process.Process;
 
@@ -38,19 +40,19 @@ public interface ProcessUseCase {
     /**
      * 工程を登録する.
      *
-     * @param process 工程
+     * @param command 登録コマンド
      * @return 登録した工程
      */
-    Process createProcess(Process process);
+    Process createProcess(CreateProcessCommand command);
 
     /**
      * 工程を更新する.
      *
      * @param processCode 工程コード
-     * @param process 工程
+     * @param command 更新コマンド
      * @return 更新した工程
      */
-    Process updateProcess(String processCode, Process process);
+    Process updateProcess(String processCode, UpdateProcessCommand command);
 
     /**
      * 工程を削除する.

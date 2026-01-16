@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.UnitUseCase;
+import com.example.pms.application.port.in.command.CreateUnitCommand;
+import com.example.pms.application.port.in.command.UpdateUnitCommand;
 import com.example.pms.application.port.out.UnitRepository;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.unit.Unit;
@@ -39,7 +41,12 @@ public class UnitService implements UnitUseCase {
     }
 
     @Override
-    public Unit createUnit(Unit unit) {
+    public Unit createUnit(CreateUnitCommand command) {
+        Unit unit = Unit.builder()
+            .unitCode(command.getUnitCode())
+            .unitSymbol(command.getUnitSymbol())
+            .unitName(command.getUnitName())
+            .build();
         unitRepository.save(unit);
         return unit;
     }
@@ -51,7 +58,12 @@ public class UnitService implements UnitUseCase {
     }
 
     @Override
-    public Unit updateUnit(String unitCode, Unit unit) {
+    public Unit updateUnit(String unitCode, UpdateUnitCommand command) {
+        Unit unit = Unit.builder()
+            .unitCode(unitCode)
+            .unitSymbol(command.getUnitSymbol())
+            .unitName(command.getUnitName())
+            .build();
         unitRepository.update(unit);
         return unit;
     }

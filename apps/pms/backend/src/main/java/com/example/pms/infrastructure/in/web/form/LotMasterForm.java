@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateLotMasterCommand;
+import com.example.pms.application.port.in.command.UpdateLotMasterCommand;
 import com.example.pms.domain.model.quality.LotMaster;
 import com.example.pms.domain.model.quality.LotType;
 import jakarta.validation.constraints.NotBlank;
@@ -42,10 +44,47 @@ public class LotMasterForm {
     private Integer version;
 
     /**
+     * フォームから登録コマンドを生成.
+     *
+     * @return 登録コマンド
+     */
+    public CreateLotMasterCommand toCreateCommand() {
+        return CreateLotMasterCommand.builder()
+                .lotNumber(lotNumber)
+                .itemCode(itemCode)
+                .lotType(lotType)
+                .manufactureDate(manufactureDate)
+                .expirationDate(expirationDate)
+                .quantity(quantity)
+                .warehouseCode(warehouseCode)
+                .remarks(remarks)
+                .build();
+    }
+
+    /**
+     * フォームから更新コマンドを生成.
+     *
+     * @return 更新コマンド
+     */
+    public UpdateLotMasterCommand toUpdateCommand() {
+        return UpdateLotMasterCommand.builder()
+                .itemCode(itemCode)
+                .lotType(lotType)
+                .manufactureDate(manufactureDate)
+                .expirationDate(expirationDate)
+                .quantity(quantity)
+                .warehouseCode(warehouseCode)
+                .remarks(remarks)
+                .build();
+    }
+
+    /**
      * フォームからエンティティに変換する.
      *
      * @return LotMaster
+     * @deprecated Use {@link #toCreateCommand()} or {@link #toUpdateCommand()} instead
      */
+    @Deprecated
     public LotMaster toEntity() {
         return LotMaster.builder()
                 .lotNumber(lotNumber)

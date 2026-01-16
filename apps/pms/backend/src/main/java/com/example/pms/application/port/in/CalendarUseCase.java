@@ -1,5 +1,7 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateCalendarCommand;
+import com.example.pms.application.port.in.command.UpdateCalendarCommand;
 import com.example.pms.domain.model.calendar.WorkCalendar;
 import com.example.pms.domain.model.common.PageResult;
 
@@ -30,10 +32,10 @@ public interface CalendarUseCase {
     /**
      * カレンダーを登録する.
      *
-     * @param calendar カレンダー
+     * @param command 登録コマンド
      * @return 登録したカレンダー
      */
-    WorkCalendar createCalendar(WorkCalendar calendar);
+    WorkCalendar createCalendar(CreateCalendarCommand command);
 
     /**
      * カレンダーを取得する.
@@ -49,10 +51,10 @@ public interface CalendarUseCase {
      *
      * @param calendarCode カレンダーコード
      * @param date 日付
-     * @param calendar カレンダー
+     * @param command 更新コマンド
      * @return 更新したカレンダー
      */
-    WorkCalendar updateCalendar(String calendarCode, java.time.LocalDate date, WorkCalendar calendar);
+    WorkCalendar updateCalendar(String calendarCode, java.time.LocalDate date, UpdateCalendarCommand command);
 
     /**
      * カレンダーを削除する.

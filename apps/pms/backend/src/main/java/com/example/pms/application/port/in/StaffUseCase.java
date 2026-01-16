@@ -1,5 +1,7 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateStaffCommand;
+import com.example.pms.application.port.in.command.UpdateStaffCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.staff.Staff;
 
@@ -41,20 +43,20 @@ public interface StaffUseCase {
     /**
      * 担当者を登録する.
      *
-     * @param staff 担当者
+     * @param command 登録コマンド
      * @return 登録した担当者
      */
-    Staff createStaff(Staff staff);
+    Staff createStaff(CreateStaffCommand command);
 
     /**
      * 担当者を更新する.
      *
      * @param staffCode 担当者コード
      * @param effectiveFrom 適用開始日
-     * @param staff 担当者
+     * @param command 更新コマンド
      * @return 更新した担当者
      */
-    Staff updateStaff(String staffCode, LocalDate effectiveFrom, Staff staff);
+    Staff updateStaff(String staffCode, LocalDate effectiveFrom, UpdateStaffCommand command);
 
     /**
      * 担当者を削除する.

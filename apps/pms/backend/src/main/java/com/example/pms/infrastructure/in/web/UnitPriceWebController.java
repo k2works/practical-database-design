@@ -89,7 +89,7 @@ public class UnitPriceWebController {
             return "prices/new";
         }
 
-        UnitPrice price = unitPriceUseCase.createUnitPrice(form.toEntity());
+        UnitPrice price = unitPriceUseCase.createUnitPrice(form.toCreateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "単価「" + price.getItemCode() + " - " + price.getSupplierCode() + "」を登録しました");
         return "redirect:/prices";
@@ -150,7 +150,7 @@ public class UnitPriceWebController {
             return "prices/edit";
         }
 
-        UnitPrice price = unitPriceUseCase.updateUnitPrice(itemCode, supplierCode, effectiveFrom, form.toEntity());
+        UnitPrice price = unitPriceUseCase.updateUnitPrice(itemCode, supplierCode, effectiveFrom, form.toUpdateCommand());
         redirectAttributes.addFlashAttribute("successMessage",
             "単価「" + price.getItemCode() + " - " + price.getSupplierCode() + "」を更新しました");
         return "redirect:/prices";

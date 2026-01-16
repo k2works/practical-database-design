@@ -1,9 +1,13 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateSupplierCommand;
+import com.example.pms.application.port.in.command.UpdateSupplierCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.supplier.Supplier;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 取引先ユースケースインターフェース（Input Port）.
@@ -30,10 +34,10 @@ public interface SupplierUseCase {
     /**
      * 取引先を登録する.
      *
-     * @param supplier 取引先
+     * @param command 登録コマンド
      * @return 登録した取引先
      */
-    Supplier createSupplier(Supplier supplier);
+    Supplier createSupplier(CreateSupplierCommand command);
 
     /**
      * 取引先を取得する.
@@ -42,17 +46,17 @@ public interface SupplierUseCase {
      * @param effectiveFrom 適用開始日
      * @return 取引先
      */
-    java.util.Optional<Supplier> getSupplier(String supplierCode, java.time.LocalDate effectiveFrom);
+    Optional<Supplier> getSupplier(String supplierCode, LocalDate effectiveFrom);
 
     /**
      * 取引先を更新する.
      *
      * @param supplierCode 取引先コード
      * @param effectiveFrom 適用開始日
-     * @param supplier 取引先
+     * @param command 更新コマンド
      * @return 更新した取引先
      */
-    Supplier updateSupplier(String supplierCode, java.time.LocalDate effectiveFrom, Supplier supplier);
+    Supplier updateSupplier(String supplierCode, LocalDate effectiveFrom, UpdateSupplierCommand command);
 
     /**
      * 取引先を削除する.
@@ -60,5 +64,5 @@ public interface SupplierUseCase {
      * @param supplierCode 取引先コード
      * @param effectiveFrom 適用開始日
      */
-    void deleteSupplier(String supplierCode, java.time.LocalDate effectiveFrom);
+    void deleteSupplier(String supplierCode, LocalDate effectiveFrom);
 }

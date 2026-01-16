@@ -1,5 +1,7 @@
 package com.example.pms.application.port.in;
 
+import com.example.pms.application.port.in.command.CreateUnitPriceCommand;
+import com.example.pms.application.port.in.command.UpdateUnitPriceCommand;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.unitprice.UnitPrice;
 
@@ -30,10 +32,10 @@ public interface UnitPriceUseCase {
     /**
      * 単価を登録する.
      *
-     * @param unitPrice 単価
+     * @param command 登録コマンド
      * @return 登録した単価
      */
-    UnitPrice createUnitPrice(UnitPrice unitPrice);
+    UnitPrice createUnitPrice(CreateUnitPriceCommand command);
 
     /**
      * 単価を取得する.
@@ -51,10 +53,10 @@ public interface UnitPriceUseCase {
      * @param itemCode 品目コード
      * @param supplierCode 取引先コード
      * @param effectiveFrom 適用開始日
-     * @param unitPrice 単価
+     * @param command 更新コマンド
      * @return 更新した単価
      */
-    UnitPrice updateUnitPrice(String itemCode, String supplierCode, java.time.LocalDate effectiveFrom, UnitPrice unitPrice);
+    UnitPrice updateUnitPrice(String itemCode, String supplierCode, java.time.LocalDate effectiveFrom, UpdateUnitPriceCommand command);
 
     /**
      * 単価を削除する.

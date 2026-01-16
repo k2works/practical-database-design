@@ -1,6 +1,8 @@
 package com.example.pms.application.service;
 
 import com.example.pms.application.port.in.LotMasterUseCase;
+import com.example.pms.application.port.in.command.CreateLotMasterCommand;
+import com.example.pms.application.port.in.command.UpdateLotMasterCommand;
 import com.example.pms.application.port.out.LotMasterRepository;
 import com.example.pms.domain.model.common.PageResult;
 import com.example.pms.domain.model.quality.LotMaster;
@@ -39,14 +41,34 @@ public class LotMasterService implements LotMasterUseCase {
     }
 
     @Override
-    public LotMaster createLotMaster(LotMaster lotMaster) {
+    public LotMaster createLotMaster(CreateLotMasterCommand command) {
+        LotMaster lotMaster = LotMaster.builder()
+            .lotNumber(command.getLotNumber())
+            .itemCode(command.getItemCode())
+            .lotType(command.getLotType())
+            .manufactureDate(command.getManufactureDate())
+            .expirationDate(command.getExpirationDate())
+            .quantity(command.getQuantity())
+            .warehouseCode(command.getWarehouseCode())
+            .remarks(command.getRemarks())
+            .build();
         lotMasterRepository.save(lotMaster);
         return lotMasterRepository.findByLotNumber(lotMaster.getLotNumber())
                 .orElse(lotMaster);
     }
 
     @Override
-    public LotMaster updateLotMaster(String lotNumber, LotMaster lotMaster) {
+    public LotMaster updateLotMaster(String lotNumber, UpdateLotMasterCommand command) {
+        LotMaster lotMaster = LotMaster.builder()
+            .lotNumber(lotNumber)
+            .itemCode(command.getItemCode())
+            .lotType(command.getLotType())
+            .manufactureDate(command.getManufactureDate())
+            .expirationDate(command.getExpirationDate())
+            .quantity(command.getQuantity())
+            .warehouseCode(command.getWarehouseCode())
+            .remarks(command.getRemarks())
+            .build();
         lotMasterRepository.update(lotMaster);
         return lotMasterRepository.findByLotNumber(lotNumber)
                 .orElse(lotMaster);

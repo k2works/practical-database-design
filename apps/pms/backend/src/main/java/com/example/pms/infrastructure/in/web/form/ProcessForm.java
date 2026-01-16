@@ -1,5 +1,7 @@
 package com.example.pms.infrastructure.in.web.form;
 
+import com.example.pms.application.port.in.command.CreateProcessCommand;
+import com.example.pms.application.port.in.command.UpdateProcessCommand;
 import com.example.pms.domain.model.process.Process;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -26,10 +28,39 @@ public class ProcessForm {
     private String locationCode;
 
     /**
+     * フォームを登録コマンドに変換する.
+     *
+     * @return 登録コマンド
+     */
+    public CreateProcessCommand toCreateCommand() {
+        return CreateProcessCommand.builder()
+            .processCode(this.processCode)
+            .processName(this.processName)
+            .processType(this.processType)
+            .locationCode(this.locationCode)
+            .build();
+    }
+
+    /**
+     * フォームを更新コマンドに変換する.
+     *
+     * @return 更新コマンド
+     */
+    public UpdateProcessCommand toUpdateCommand() {
+        return UpdateProcessCommand.builder()
+            .processName(this.processName)
+            .processType(this.processType)
+            .locationCode(this.locationCode)
+            .build();
+    }
+
+    /**
      * フォームからエンティティを生成.
      *
      * @return 工程エンティティ
+     * @deprecated Command パターンを使用してください
      */
+    @Deprecated
     public Process toEntity() {
         return Process.builder()
             .processCode(this.processCode)
