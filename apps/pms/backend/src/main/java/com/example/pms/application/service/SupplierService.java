@@ -44,17 +44,17 @@ public class SupplierService implements SupplierUseCase {
     @Override
     public Supplier createSupplier(CreateSupplierCommand command) {
         Supplier supplier = Supplier.builder()
-            .supplierCode(command.getSupplierCode())
-            .effectiveFrom(command.getEffectiveFrom())
-            .effectiveTo(command.getEffectiveTo())
-            .supplierName(command.getSupplierName())
-            .supplierNameKana(command.getSupplierNameKana())
-            .supplierType(command.getSupplierType())
-            .postalCode(command.getPostalCode())
-            .address(command.getAddress())
-            .phoneNumber(command.getPhoneNumber())
-            .faxNumber(command.getFaxNumber())
-            .contactPerson(command.getContactPerson())
+            .supplierCode(command.supplierCode())
+            .effectiveFrom(command.effectiveFrom())
+            .effectiveTo(command.effectiveTo())
+            .supplierName(command.supplierName())
+            .supplierNameKana(command.supplierNameKana())
+            .supplierType(command.supplierType())
+            .postalCode(command.postalCode())
+            .address(command.address())
+            .phoneNumber(command.phoneNumber())
+            .faxNumber(command.faxNumber())
+            .contactPerson(command.contactPerson())
             .build();
         supplierRepository.save(supplier);
         return supplier;
@@ -71,15 +71,15 @@ public class SupplierService implements SupplierUseCase {
         Supplier supplier = Supplier.builder()
             .supplierCode(supplierCode)
             .effectiveFrom(effectiveFrom)
-            .effectiveTo(command.getEffectiveTo())
-            .supplierName(command.getSupplierName())
-            .supplierNameKana(command.getSupplierNameKana())
-            .supplierType(command.getSupplierType())
-            .postalCode(command.getPostalCode())
-            .address(command.getAddress())
-            .phoneNumber(command.getPhoneNumber())
-            .faxNumber(command.getFaxNumber())
-            .contactPerson(command.getContactPerson())
+            .effectiveTo(command.effectiveTo())
+            .supplierName(command.supplierName())
+            .supplierNameKana(command.supplierNameKana())
+            .supplierType(command.supplierType())
+            .postalCode(command.postalCode())
+            .address(command.address())
+            .phoneNumber(command.phoneNumber())
+            .faxNumber(command.faxNumber())
+            .contactPerson(command.contactPerson())
             .build();
         supplierRepository.update(supplier);
         return supplier;

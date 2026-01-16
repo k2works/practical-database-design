@@ -42,13 +42,13 @@ public class ProcessRouteForm {
      * @return 登録コマンド
      */
     public CreateProcessRouteCommand toCreateCommand() {
-        return CreateProcessRouteCommand.builder()
-            .itemCode(this.itemCode)
-            .sequence(this.sequence)
-            .processCode(this.processCode)
-            .standardTime(this.standardTime)
-            .setupTime(this.setupTime)
-            .build();
+        return new CreateProcessRouteCommand(
+            this.itemCode,
+            this.sequence,
+            this.processCode,
+            this.standardTime,
+            this.setupTime
+        );
     }
 
     /**
@@ -57,11 +57,11 @@ public class ProcessRouteForm {
      * @return 更新コマンド
      */
     public UpdateProcessRouteCommand toUpdateCommand() {
-        return UpdateProcessRouteCommand.builder()
-            .processCode(this.processCode)
-            .standardTime(this.standardTime)
-            .setupTime(this.setupTime)
-            .build();
+        return new UpdateProcessRouteCommand(
+            this.processCode,
+            this.standardTime,
+            this.setupTime
+        );
     }
 
     /**

@@ -43,11 +43,11 @@ public class ProcessRouteService implements ProcessRouteUseCase {
     @Override
     public ProcessRoute createProcessRoute(CreateProcessRouteCommand command) {
         ProcessRoute processRoute = ProcessRoute.builder()
-            .itemCode(command.getItemCode())
-            .sequence(command.getSequence())
-            .processCode(command.getProcessCode())
-            .standardTime(command.getStandardTime())
-            .setupTime(command.getSetupTime())
+            .itemCode(command.itemCode())
+            .sequence(command.sequence())
+            .processCode(command.processCode())
+            .standardTime(command.standardTime())
+            .setupTime(command.setupTime())
             .build();
         processRouteRepository.save(processRoute);
         return processRoute;
@@ -64,9 +64,9 @@ public class ProcessRouteService implements ProcessRouteUseCase {
         ProcessRoute processRoute = ProcessRoute.builder()
             .itemCode(itemCode)
             .sequence(sequence)
-            .processCode(command.getProcessCode())
-            .standardTime(command.getStandardTime())
-            .setupTime(command.getSetupTime())
+            .processCode(command.processCode())
+            .standardTime(command.standardTime())
+            .setupTime(command.setupTime())
             .build();
         processRouteRepository.update(processRoute);
         return processRoute;

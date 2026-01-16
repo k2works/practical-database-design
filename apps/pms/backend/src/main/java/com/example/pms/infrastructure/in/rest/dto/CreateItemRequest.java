@@ -53,21 +53,21 @@ public class CreateItemRequest {
      * @return CreateItemCommand
      */
     public CreateItemCommand toCommand() {
-        return CreateItemCommand.builder()
-            .itemCode(itemCode)
-            .itemName(itemName)
-            .itemCategory(itemCategory)
-            .unitCode(unitCode)
-            .effectiveFrom(effectiveFrom)
-            .effectiveTo(effectiveTo)
-            .leadTime(leadTime)
-            .safetyLeadTime(safetyLeadTime)
-            .safetyStock(safetyStock)
-            .yieldRate(yieldRate)
-            .minLotSize(minLotSize)
-            .lotIncrement(lotIncrement)
-            .maxLotSize(maxLotSize)
-            .shelfLife(shelfLife)
-            .build();
+        return new CreateItemCommand(
+            itemCode,
+            itemName,
+            itemCategory,
+            unitCode,
+            effectiveFrom,
+            effectiveTo,
+            leadTime,
+            safetyLeadTime,
+            safetyStock,
+            yieldRate,
+            minLotSize,
+            lotIncrement,
+            maxLotSize,
+            shelfLife
+        );
     }
 }

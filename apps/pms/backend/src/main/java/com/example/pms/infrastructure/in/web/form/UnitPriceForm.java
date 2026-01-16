@@ -47,14 +47,14 @@ public class UnitPriceForm {
      * @return 登録コマンド
      */
     public CreateUnitPriceCommand toCreateCommand() {
-        return CreateUnitPriceCommand.builder()
-            .itemCode(this.itemCode)
-            .supplierCode(this.supplierCode)
-            .effectiveFrom(this.effectiveFrom)
-            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
-            .price(this.price)
-            .currencyCode(this.currencyCode != null ? this.currencyCode : "JPY")
-            .build();
+        return new CreateUnitPriceCommand(
+            this.itemCode,
+            this.supplierCode,
+            this.effectiveFrom,
+            this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31),
+            this.price,
+            this.currencyCode != null ? this.currencyCode : "JPY"
+        );
     }
 
     /**
@@ -63,11 +63,11 @@ public class UnitPriceForm {
      * @return 更新コマンド
      */
     public UpdateUnitPriceCommand toUpdateCommand() {
-        return UpdateUnitPriceCommand.builder()
-            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
-            .price(this.price)
-            .currencyCode(this.currencyCode != null ? this.currencyCode : "JPY")
-            .build();
+        return new UpdateUnitPriceCommand(
+            this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31),
+            this.price,
+            this.currencyCode != null ? this.currencyCode : "JPY"
+        );
     }
 
     /**

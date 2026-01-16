@@ -49,18 +49,18 @@ public class PurchaseOrderService implements PurchaseOrderUseCase {
 
         List<PurchaseOrderDetail> details = new java.util.ArrayList<>();
         int lineNumber = 1;
-        for (var d : command.getDetails()) {
+        for (var d : command.details()) {
             details.add(createDetail(orderNumber, lineNumber++, d));
         }
 
         PurchaseOrder order = PurchaseOrder.builder()
             .purchaseOrderNumber(orderNumber)
             .orderDate(LocalDate.now())
-            .supplierCode(command.getSupplierCode())
-            .ordererCode(command.getOrdererCode())
-            .departmentCode(command.getDepartmentCode())
+            .supplierCode(command.supplierCode())
+            .ordererCode(command.ordererCode())
+            .departmentCode(command.departmentCode())
             .status(PurchaseOrderStatus.CREATING)
-            .remarks(command.getRemarks())
+            .remarks(command.remarks())
             .details(details)
             .build();
 
@@ -72,17 +72,17 @@ public class PurchaseOrderService implements PurchaseOrderUseCase {
             String orderNumber,
             int lineNumber,
             CreatePurchaseOrderCommand.PurchaseOrderDetailCommand d) {
-        BigDecimal unitPrice = d.getOrderUnitPrice() != null ? d.getOrderUnitPrice() : BigDecimal.ZERO;
-        BigDecimal orderAmount = d.getOrderQuantity().multiply(unitPrice);
+        BigDecimal unitPrice = d.orderUnitPrice() != null ? d.orderUnitPrice() : BigDecimal.ZERO;
+        BigDecimal orderAmount = d.orderQuantity().multiply(unitPrice);
 
         return PurchaseOrderDetail.builder()
             .purchaseOrderNumber(orderNumber)
             .lineNumber(lineNumber)
-            .itemCode(d.getItemCode())
-            .deliveryLocationCode(d.getDeliveryLocationCode())
+            .itemCode(d.itemCode())
+            .deliveryLocationCode(d.deliveryLocationCode())
             .miscellaneousItemFlag(false)
-            .expectedReceivingDate(d.getExpectedReceivingDate())
-            .orderQuantity(d.getOrderQuantity())
+            .expectedReceivingDate(d.expectedReceivingDate())
+            .orderQuantity(d.orderQuantity())
             .orderUnitPrice(unitPrice)
             .orderAmount(orderAmount)
             .taxAmount(BigDecimal.ZERO)
@@ -90,7 +90,7 @@ public class PurchaseOrderService implements PurchaseOrderUseCase {
             .inspectedQuantity(BigDecimal.ZERO)
             .acceptedQuantity(BigDecimal.ZERO)
             .completedFlag(false)
-            .detailRemarks(d.getDetailRemarks())
+            .detailRemarks(d.detailRemarks())
             .build();
     }
 

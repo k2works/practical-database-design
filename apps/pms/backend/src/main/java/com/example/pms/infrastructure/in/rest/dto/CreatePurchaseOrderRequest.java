@@ -58,14 +58,14 @@ public class CreatePurchaseOrderRequest {
          * @return PurchaseOrderDetailCommand
          */
         public CreatePurchaseOrderCommand.PurchaseOrderDetailCommand toCommand() {
-            return CreatePurchaseOrderCommand.PurchaseOrderDetailCommand.builder()
-                .itemCode(itemCode)
-                .deliveryLocationCode(deliveryLocationCode)
-                .expectedReceivingDate(expectedReceivingDate)
-                .orderQuantity(orderQuantity)
-                .orderUnitPrice(orderUnitPrice)
-                .detailRemarks(detailRemarks)
-                .build();
+            return new CreatePurchaseOrderCommand.PurchaseOrderDetailCommand(
+                itemCode,
+                deliveryLocationCode,
+                expectedReceivingDate,
+                orderQuantity,
+                orderUnitPrice,
+                detailRemarks
+            );
         }
     }
 
@@ -75,14 +75,14 @@ public class CreatePurchaseOrderRequest {
      * @return CreatePurchaseOrderCommand
      */
     public CreatePurchaseOrderCommand toCommand() {
-        return CreatePurchaseOrderCommand.builder()
-            .supplierCode(supplierCode)
-            .ordererCode(ordererCode)
-            .departmentCode(departmentCode)
-            .remarks(remarks)
-            .details(details.stream()
+        return new CreatePurchaseOrderCommand(
+            supplierCode,
+            ordererCode,
+            departmentCode,
+            remarks,
+            details.stream()
                 .map(PurchaseOrderDetailRequest::toCommand)
-                .toList())
-            .build();
+                .toList()
+        );
     }
 }

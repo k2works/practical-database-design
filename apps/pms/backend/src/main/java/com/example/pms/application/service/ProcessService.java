@@ -50,10 +50,10 @@ public class ProcessService implements ProcessUseCase {
     @Override
     public Process createProcess(CreateProcessCommand command) {
         Process process = Process.builder()
-            .processCode(command.getProcessCode())
-            .processName(command.getProcessName())
-            .processType(command.getProcessType())
-            .locationCode(command.getLocationCode())
+            .processCode(command.processCode())
+            .processName(command.processName())
+            .processType(command.processType())
+            .locationCode(command.locationCode())
             .build();
         processRepository.save(process);
         return process;
@@ -63,9 +63,9 @@ public class ProcessService implements ProcessUseCase {
     public Process updateProcess(String processCode, UpdateProcessCommand command) {
         Process process = Process.builder()
             .processCode(processCode)
-            .processName(command.getProcessName())
-            .processType(command.getProcessType())
-            .locationCode(command.getLocationCode())
+            .processName(command.processName())
+            .processType(command.processType())
+            .locationCode(command.locationCode())
             .build();
         processRepository.update(process);
         return process;

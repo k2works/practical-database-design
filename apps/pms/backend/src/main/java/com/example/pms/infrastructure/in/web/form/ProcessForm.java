@@ -33,12 +33,12 @@ public class ProcessForm {
      * @return 登録コマンド
      */
     public CreateProcessCommand toCreateCommand() {
-        return CreateProcessCommand.builder()
-            .processCode(this.processCode)
-            .processName(this.processName)
-            .processType(this.processType)
-            .locationCode(this.locationCode)
-            .build();
+        return new CreateProcessCommand(
+            this.processCode,
+            this.processName,
+            this.processType,
+            this.locationCode
+        );
     }
 
     /**
@@ -47,11 +47,11 @@ public class ProcessForm {
      * @return 更新コマンド
      */
     public UpdateProcessCommand toUpdateCommand() {
-        return UpdateProcessCommand.builder()
-            .processName(this.processName)
-            .processType(this.processType)
-            .locationCode(this.locationCode)
-            .build();
+        return new UpdateProcessCommand(
+            this.processName,
+            this.processType,
+            this.locationCode
+        );
     }
 
     /**

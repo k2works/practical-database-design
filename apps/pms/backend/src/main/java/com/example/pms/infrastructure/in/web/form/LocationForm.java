@@ -35,12 +35,12 @@ public class LocationForm {
      * @return 登録コマンド
      */
     public CreateLocationCommand toCreateCommand() {
-        return CreateLocationCommand.builder()
-            .locationCode(this.locationCode)
-            .locationName(this.locationName)
-            .locationType(this.locationType)
-            .parentLocationCode(this.parentLocationCode)
-            .build();
+        return new CreateLocationCommand(
+            this.locationCode,
+            this.locationName,
+            this.locationType,
+            this.parentLocationCode
+        );
     }
 
     /**
@@ -49,11 +49,11 @@ public class LocationForm {
      * @return 更新コマンド
      */
     public UpdateLocationCommand toUpdateCommand() {
-        return UpdateLocationCommand.builder()
-            .locationName(this.locationName)
-            .locationType(this.locationType)
-            .parentLocationCode(this.parentLocationCode)
-            .build();
+        return new UpdateLocationCommand(
+            this.locationName,
+            this.locationType,
+            this.parentLocationCode
+        );
     }
 
     /**

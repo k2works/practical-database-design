@@ -44,11 +44,11 @@ public class CalendarService implements CalendarUseCase {
     @Override
     public WorkCalendar createCalendar(CreateCalendarCommand command) {
         WorkCalendar calendar = WorkCalendar.builder()
-            .calendarCode(command.getCalendarCode())
-            .date(command.getDate())
-            .dateType(command.getDateType())
-            .workingHours(command.getWorkingHours())
-            .note(command.getNote())
+            .calendarCode(command.calendarCode())
+            .date(command.date())
+            .dateType(command.dateType())
+            .workingHours(command.workingHours())
+            .note(command.note())
             .build();
         calendarRepository.save(calendar);
         return calendar;
@@ -65,9 +65,9 @@ public class CalendarService implements CalendarUseCase {
         WorkCalendar calendar = WorkCalendar.builder()
             .calendarCode(calendarCode)
             .date(date)
-            .dateType(command.getDateType())
-            .workingHours(command.getWorkingHours())
-            .note(command.getNote())
+            .dateType(command.dateType())
+            .workingHours(command.workingHours())
+            .note(command.note())
             .build();
         calendarRepository.update(calendar);
         return calendar;

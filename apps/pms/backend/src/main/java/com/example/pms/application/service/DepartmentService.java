@@ -43,12 +43,12 @@ public class DepartmentService implements DepartmentUseCase {
     @Override
     public Department createDepartment(CreateDepartmentCommand command) {
         Department department = Department.builder()
-            .departmentCode(command.getDepartmentCode())
-            .departmentName(command.getDepartmentName())
-            .departmentPath(command.getDepartmentPath())
-            .lowestLevel(command.getLowestLevel())
-            .validFrom(command.getValidFrom())
-            .validTo(command.getValidTo())
+            .departmentCode(command.departmentCode())
+            .departmentName(command.departmentName())
+            .departmentPath(command.departmentPath())
+            .lowestLevel(command.lowestLevel())
+            .validFrom(command.validFrom())
+            .validTo(command.validTo())
             .build();
         departmentRepository.save(department);
         return department;
@@ -64,11 +64,11 @@ public class DepartmentService implements DepartmentUseCase {
     public Department updateDepartment(String departmentCode, UpdateDepartmentCommand command) {
         Department department = Department.builder()
             .departmentCode(departmentCode)
-            .departmentName(command.getDepartmentName())
-            .departmentPath(command.getDepartmentPath())
-            .lowestLevel(command.getLowestLevel())
-            .validFrom(command.getValidFrom())
-            .validTo(command.getValidTo())
+            .departmentName(command.departmentName())
+            .departmentPath(command.departmentPath())
+            .lowestLevel(command.lowestLevel())
+            .validFrom(command.validFrom())
+            .validTo(command.validTo())
             .build();
         departmentRepository.update(department);
         return department;

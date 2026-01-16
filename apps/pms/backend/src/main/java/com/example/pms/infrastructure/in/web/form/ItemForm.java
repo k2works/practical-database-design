@@ -67,22 +67,22 @@ public class ItemForm {
      * @return 登録コマンド
      */
     public CreateItemCommand toCreateCommand() {
-        return CreateItemCommand.builder()
-            .itemCode(this.itemCode)
-            .itemName(this.itemName)
-            .itemCategory(this.itemCategory)
-            .unitCode(this.unitCode)
-            .effectiveFrom(this.effectiveFrom != null ? this.effectiveFrom : LocalDate.now())
-            .effectiveTo(this.effectiveTo)
-            .leadTime(this.leadTime)
-            .safetyLeadTime(this.safetyLeadTime)
-            .safetyStock(this.safetyStock)
-            .yieldRate(this.yieldRate)
-            .minLotSize(this.minLotSize)
-            .lotIncrement(this.lotIncrement)
-            .maxLotSize(this.maxLotSize)
-            .shelfLife(this.shelfLife)
-            .build();
+        return new CreateItemCommand(
+            this.itemCode,
+            this.itemName,
+            this.itemCategory,
+            this.unitCode,
+            this.effectiveFrom != null ? this.effectiveFrom : LocalDate.now(),
+            this.effectiveTo,
+            this.leadTime,
+            this.safetyLeadTime,
+            this.safetyStock,
+            this.yieldRate,
+            this.minLotSize,
+            this.lotIncrement,
+            this.maxLotSize,
+            this.shelfLife
+        );
     }
 
     /**
@@ -91,21 +91,21 @@ public class ItemForm {
      * @return 更新コマンド
      */
     public UpdateItemCommand toUpdateCommand() {
-        return UpdateItemCommand.builder()
-            .itemName(this.itemName)
-            .itemCategory(this.itemCategory)
-            .unitCode(this.unitCode)
-            .effectiveFrom(this.effectiveFrom)
-            .effectiveTo(this.effectiveTo)
-            .leadTime(this.leadTime)
-            .safetyLeadTime(this.safetyLeadTime)
-            .safetyStock(this.safetyStock)
-            .yieldRate(this.yieldRate)
-            .minLotSize(this.minLotSize)
-            .lotIncrement(this.lotIncrement)
-            .maxLotSize(this.maxLotSize)
-            .shelfLife(this.shelfLife)
-            .build();
+        return new UpdateItemCommand(
+            this.itemName,
+            this.itemCategory,
+            this.unitCode,
+            this.effectiveFrom,
+            this.effectiveTo,
+            this.leadTime,
+            this.safetyLeadTime,
+            this.safetyStock,
+            this.yieldRate,
+            this.minLotSize,
+            this.lotIncrement,
+            this.maxLotSize,
+            this.shelfLife
+        );
     }
 
     /**

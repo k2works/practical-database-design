@@ -58,19 +58,19 @@ public class WorkOrderService implements WorkOrderUseCase {
 
         WorkOrder workOrder = WorkOrder.builder()
             .workOrderNumber(workOrderNumber)
-            .orderNumber(command.getOrderNumber())
+            .orderNumber(command.orderNumber())
             .workOrderDate(LocalDate.now())
-            .itemCode(command.getItemCode())
-            .orderQuantity(command.getOrderQuantity())
-            .locationCode(command.getLocationCode())
-            .plannedStartDate(command.getPlannedStartDate())
-            .plannedEndDate(command.getPlannedEndDate())
+            .itemCode(command.itemCode())
+            .orderQuantity(command.orderQuantity())
+            .locationCode(command.locationCode())
+            .plannedStartDate(command.plannedStartDate())
+            .plannedEndDate(command.plannedEndDate())
             .completedQuantity(BigDecimal.ZERO)
             .totalGoodQuantity(BigDecimal.ZERO)
             .totalDefectQuantity(BigDecimal.ZERO)
             .status(WorkOrderStatus.NOT_STARTED)
             .completedFlag(false)
-            .remarks(command.getRemarks())
+            .remarks(command.remarks())
             .build();
 
         workOrderRepository.save(workOrder);
@@ -84,9 +84,9 @@ public class WorkOrderService implements WorkOrderUseCase {
 
         boolean updated = workOrderRepository.updateCompletionQuantities(
             workOrderNumber,
-            command.getCompletedQuantity(),
-            command.getGoodQuantity(),
-            command.getDefectQuantity(),
+            command.completedQuantity(),
+            command.goodQuantity(),
+            command.defectQuantity(),
             workOrder.getVersion());
 
         if (!updated) {
@@ -126,23 +126,23 @@ public class WorkOrderService implements WorkOrderUseCase {
         WorkOrder existing = workOrderRepository.findByWorkOrderNumber(workOrderNumber)
             .orElseThrow(() -> new WorkOrderNotFoundException(workOrderNumber));
 
-        existing.setOrderNumber(command.getOrderNumber());
-        existing.setWorkOrderDate(command.getWorkOrderDate());
-        existing.setItemCode(command.getItemCode());
-        existing.setOrderQuantity(command.getOrderQuantity());
+        existing.setOrderNumber(command.orderNumber());
+        existing.setWorkOrderDate(command.workOrderDate());
+        existing.setItemCode(command.itemCode());
+        existing.setOrderQuantity(command.orderQuantity());
         // 空文字を null に変換（外部キー制約対応）
-        String locationCode = command.getLocationCode();
+        String locationCode = command.locationCode();
         existing.setLocationCode(locationCode != null && locationCode.isEmpty() ? null : locationCode);
-        existing.setPlannedStartDate(command.getPlannedStartDate());
-        existing.setPlannedEndDate(command.getPlannedEndDate());
-        existing.setActualStartDate(command.getActualStartDate());
-        existing.setActualEndDate(command.getActualEndDate());
-        existing.setCompletedQuantity(command.getCompletedQuantity());
-        existing.setTotalGoodQuantity(command.getTotalGoodQuantity());
-        existing.setTotalDefectQuantity(command.getTotalDefectQuantity());
-        existing.setStatus(command.getStatus());
-        existing.setCompletedFlag(command.getCompletedFlag());
-        existing.setRemarks(command.getRemarks());
+        existing.setPlannedStartDate(command.plannedStartDate());
+        existing.setPlannedEndDate(command.plannedEndDate());
+        existing.setActualStartDate(command.actualStartDate());
+        existing.setActualEndDate(command.actualEndDate());
+        existing.setCompletedQuantity(command.completedQuantity());
+        existing.setTotalGoodQuantity(command.totalGoodQuantity());
+        existing.setTotalDefectQuantity(command.totalDefectQuantity());
+        existing.setStatus(command.status());
+        existing.setCompletedFlag(command.completedFlag());
+        existing.setRemarks(command.remarks());
         existing.setUpdatedBy("system");
 
         workOrderRepository.update(existing);

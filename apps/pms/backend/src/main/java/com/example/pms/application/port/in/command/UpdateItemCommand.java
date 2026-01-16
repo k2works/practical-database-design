@@ -1,8 +1,6 @@
 package com.example.pms.application.port.in.command;
 
 import com.example.pms.domain.model.item.ItemCategory;
-import lombok.Builder;
-import lombok.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,20 +8,19 @@ import java.time.LocalDate;
 /**
  * 品目更新コマンド.
  */
-@Value
-@Builder
-public class UpdateItemCommand {
-    String itemName;
-    ItemCategory itemCategory;
-    String unitCode;
-    LocalDate effectiveFrom;
-    LocalDate effectiveTo;
-    Integer leadTime;
-    Integer safetyLeadTime;
-    BigDecimal safetyStock;
-    BigDecimal yieldRate;
-    BigDecimal minLotSize;
-    BigDecimal lotIncrement;
-    BigDecimal maxLotSize;
-    Integer shelfLife;
+public record UpdateItemCommand(
+    String itemName,
+    ItemCategory itemCategory,
+    String unitCode,
+    LocalDate effectiveFrom,
+    LocalDate effectiveTo,
+    Integer leadTime,
+    Integer safetyLeadTime,
+    BigDecimal safetyStock,
+    BigDecimal yieldRate,
+    BigDecimal minLotSize,
+    BigDecimal lotIncrement,
+    BigDecimal maxLotSize,
+    Integer shelfLife
+) {
 }

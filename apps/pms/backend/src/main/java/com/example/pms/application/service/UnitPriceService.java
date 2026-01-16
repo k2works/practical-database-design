@@ -44,12 +44,12 @@ public class UnitPriceService implements UnitPriceUseCase {
     @Override
     public UnitPrice createUnitPrice(CreateUnitPriceCommand command) {
         UnitPrice unitPrice = UnitPrice.builder()
-            .itemCode(command.getItemCode())
-            .supplierCode(command.getSupplierCode())
-            .effectiveFrom(command.getEffectiveFrom())
-            .effectiveTo(command.getEffectiveTo())
-            .price(command.getPrice())
-            .currencyCode(command.getCurrencyCode())
+            .itemCode(command.itemCode())
+            .supplierCode(command.supplierCode())
+            .effectiveFrom(command.effectiveFrom())
+            .effectiveTo(command.effectiveTo())
+            .price(command.price())
+            .currencyCode(command.currencyCode())
             .build();
         unitPriceRepository.save(unitPrice);
         return unitPrice;
@@ -67,9 +67,9 @@ public class UnitPriceService implements UnitPriceUseCase {
             .itemCode(itemCode)
             .supplierCode(supplierCode)
             .effectiveFrom(effectiveFrom)
-            .effectiveTo(command.getEffectiveTo())
-            .price(command.getPrice())
-            .currencyCode(command.getCurrencyCode())
+            .effectiveTo(command.effectiveTo())
+            .price(command.price())
+            .currencyCode(command.currencyCode())
             .build();
         unitPriceRepository.update(unitPrice);
         return unitPrice;

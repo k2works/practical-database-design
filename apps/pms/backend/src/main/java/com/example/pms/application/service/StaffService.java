@@ -50,13 +50,13 @@ public class StaffService implements StaffUseCase {
     @Override
     public Staff createStaff(CreateStaffCommand command) {
         Staff staff = Staff.builder()
-            .staffCode(command.getStaffCode())
-            .effectiveFrom(command.getEffectiveFrom())
-            .effectiveTo(command.getEffectiveTo())
-            .staffName(command.getStaffName())
-            .departmentCode(command.getDepartmentCode())
-            .email(command.getEmail())
-            .phoneNumber(command.getPhoneNumber())
+            .staffCode(command.staffCode())
+            .effectiveFrom(command.effectiveFrom())
+            .effectiveTo(command.effectiveTo())
+            .staffName(command.staffName())
+            .departmentCode(command.departmentCode())
+            .email(command.email())
+            .phoneNumber(command.phoneNumber())
             .build();
         staffRepository.save(staff);
         return staff;
@@ -67,11 +67,11 @@ public class StaffService implements StaffUseCase {
         Staff staff = Staff.builder()
             .staffCode(staffCode)
             .effectiveFrom(effectiveFrom)
-            .effectiveTo(command.getEffectiveTo())
-            .staffName(command.getStaffName())
-            .departmentCode(command.getDepartmentCode())
-            .email(command.getEmail())
-            .phoneNumber(command.getPhoneNumber())
+            .effectiveTo(command.effectiveTo())
+            .staffName(command.staffName())
+            .departmentCode(command.departmentCode())
+            .email(command.email())
+            .phoneNumber(command.phoneNumber())
             .build();
         staffRepository.update(staff);
         return staff;

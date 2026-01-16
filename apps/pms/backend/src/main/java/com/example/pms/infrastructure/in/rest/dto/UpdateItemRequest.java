@@ -45,20 +45,20 @@ public class UpdateItemRequest {
      * @return UpdateItemCommand
      */
     public UpdateItemCommand toCommand() {
-        return UpdateItemCommand.builder()
-            .itemName(itemName)
-            .itemCategory(itemCategory)
-            .unitCode(unitCode)
-            .effectiveFrom(effectiveFrom)
-            .effectiveTo(effectiveTo)
-            .leadTime(leadTime)
-            .safetyLeadTime(safetyLeadTime)
-            .safetyStock(safetyStock)
-            .yieldRate(yieldRate)
-            .minLotSize(minLotSize)
-            .lotIncrement(lotIncrement)
-            .maxLotSize(maxLotSize)
-            .shelfLife(shelfLife)
-            .build();
+        return new UpdateItemCommand(
+            itemName,
+            itemCategory,
+            unitCode,
+            effectiveFrom,
+            effectiveTo,
+            leadTime,
+            safetyLeadTime,
+            safetyStock,
+            yieldRate,
+            minLotSize,
+            lotIncrement,
+            maxLotSize,
+            shelfLife
+        );
     }
 }

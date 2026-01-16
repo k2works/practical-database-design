@@ -30,10 +30,10 @@ public class RecordCompletionRequest {
      * @return RecordCompletionCommand
      */
     public RecordCompletionCommand toCommand() {
-        return RecordCompletionCommand.builder()
-            .completedQuantity(completedQuantity)
-            .goodQuantity(goodQuantity)
-            .defectQuantity(defectQuantity != null ? defectQuantity : BigDecimal.ZERO)
-            .build();
+        return new RecordCompletionCommand(
+            completedQuantity,
+            goodQuantity,
+            defectQuantity != null ? defectQuantity : BigDecimal.ZERO
+        );
     }
 }

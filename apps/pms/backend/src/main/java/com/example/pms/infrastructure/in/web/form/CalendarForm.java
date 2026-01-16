@@ -41,13 +41,13 @@ public class CalendarForm {
      * @return 登録コマンド
      */
     public CreateCalendarCommand toCreateCommand() {
-        return CreateCalendarCommand.builder()
-            .calendarCode(this.calendarCode)
-            .date(this.date)
-            .dateType(this.dateType)
-            .workingHours(this.workingHours)
-            .note(this.note)
-            .build();
+        return new CreateCalendarCommand(
+            this.calendarCode,
+            this.date,
+            this.dateType,
+            this.workingHours,
+            this.note
+        );
     }
 
     /**
@@ -56,11 +56,11 @@ public class CalendarForm {
      * @return 更新コマンド
      */
     public UpdateCalendarCommand toUpdateCommand() {
-        return UpdateCalendarCommand.builder()
-            .dateType(this.dateType)
-            .workingHours(this.workingHours)
-            .note(this.note)
-            .build();
+        return new UpdateCalendarCommand(
+            this.dateType,
+            this.workingHours,
+            this.note
+        );
     }
 
     /**

@@ -56,25 +56,25 @@ public class ItemService implements ItemUseCase {
 
     @Override
     public Item createItem(CreateItemCommand command) {
-        if (itemRepository.findByItemCode(command.getItemCode()).isPresent()) {
-            throw new DuplicateItemException(command.getItemCode());
+        if (itemRepository.findByItemCode(command.itemCode()).isPresent()) {
+            throw new DuplicateItemException(command.itemCode());
         }
 
         Item item = Item.builder()
-            .itemCode(command.getItemCode())
-            .itemName(command.getItemName())
-            .itemCategory(command.getItemCategory())
-            .unitCode(command.getUnitCode())
-            .effectiveFrom(command.getEffectiveFrom() != null ? command.getEffectiveFrom() : LocalDate.now())
-            .effectiveTo(command.getEffectiveTo())
-            .leadTime(command.getLeadTime())
-            .safetyLeadTime(command.getSafetyLeadTime())
-            .safetyStock(command.getSafetyStock())
-            .yieldRate(command.getYieldRate())
-            .minLotSize(command.getMinLotSize())
-            .lotIncrement(command.getLotIncrement())
-            .maxLotSize(command.getMaxLotSize())
-            .shelfLife(command.getShelfLife())
+            .itemCode(command.itemCode())
+            .itemName(command.itemName())
+            .itemCategory(command.itemCategory())
+            .unitCode(command.unitCode())
+            .effectiveFrom(command.effectiveFrom() != null ? command.effectiveFrom() : LocalDate.now())
+            .effectiveTo(command.effectiveTo())
+            .leadTime(command.leadTime())
+            .safetyLeadTime(command.safetyLeadTime())
+            .safetyStock(command.safetyStock())
+            .yieldRate(command.yieldRate())
+            .minLotSize(command.minLotSize())
+            .lotIncrement(command.lotIncrement())
+            .maxLotSize(command.maxLotSize())
+            .shelfLife(command.shelfLife())
             .build();
 
         itemRepository.save(item);
@@ -89,19 +89,19 @@ public class ItemService implements ItemUseCase {
         Item updated = Item.builder()
             .id(existing.getId())
             .itemCode(existing.getItemCode())
-            .itemName(command.getItemName() != null ? command.getItemName() : existing.getItemName())
-            .itemCategory(command.getItemCategory() != null ? command.getItemCategory() : existing.getItemCategory())
-            .unitCode(command.getUnitCode() != null ? command.getUnitCode() : existing.getUnitCode())
-            .effectiveFrom(command.getEffectiveFrom() != null ? command.getEffectiveFrom() : existing.getEffectiveFrom())
-            .effectiveTo(command.getEffectiveTo() != null ? command.getEffectiveTo() : existing.getEffectiveTo())
-            .leadTime(command.getLeadTime() != null ? command.getLeadTime() : existing.getLeadTime())
-            .safetyLeadTime(command.getSafetyLeadTime() != null ? command.getSafetyLeadTime() : existing.getSafetyLeadTime())
-            .safetyStock(command.getSafetyStock() != null ? command.getSafetyStock() : existing.getSafetyStock())
-            .yieldRate(command.getYieldRate() != null ? command.getYieldRate() : existing.getYieldRate())
-            .minLotSize(command.getMinLotSize() != null ? command.getMinLotSize() : existing.getMinLotSize())
-            .lotIncrement(command.getLotIncrement() != null ? command.getLotIncrement() : existing.getLotIncrement())
-            .maxLotSize(command.getMaxLotSize() != null ? command.getMaxLotSize() : existing.getMaxLotSize())
-            .shelfLife(command.getShelfLife() != null ? command.getShelfLife() : existing.getShelfLife())
+            .itemName(command.itemName() != null ? command.itemName() : existing.getItemName())
+            .itemCategory(command.itemCategory() != null ? command.itemCategory() : existing.getItemCategory())
+            .unitCode(command.unitCode() != null ? command.unitCode() : existing.getUnitCode())
+            .effectiveFrom(command.effectiveFrom() != null ? command.effectiveFrom() : existing.getEffectiveFrom())
+            .effectiveTo(command.effectiveTo() != null ? command.effectiveTo() : existing.getEffectiveTo())
+            .leadTime(command.leadTime() != null ? command.leadTime() : existing.getLeadTime())
+            .safetyLeadTime(command.safetyLeadTime() != null ? command.safetyLeadTime() : existing.getSafetyLeadTime())
+            .safetyStock(command.safetyStock() != null ? command.safetyStock() : existing.getSafetyStock())
+            .yieldRate(command.yieldRate() != null ? command.yieldRate() : existing.getYieldRate())
+            .minLotSize(command.minLotSize() != null ? command.minLotSize() : existing.getMinLotSize())
+            .lotIncrement(command.lotIncrement() != null ? command.lotIncrement() : existing.getLotIncrement())
+            .maxLotSize(command.maxLotSize() != null ? command.maxLotSize() : existing.getMaxLotSize())
+            .shelfLife(command.shelfLife() != null ? command.shelfLife() : existing.getShelfLife())
             .createdAt(existing.getCreatedAt())
             .build();
 

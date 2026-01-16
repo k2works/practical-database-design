@@ -43,14 +43,14 @@ public class DepartmentForm {
      * @return 登録コマンド
      */
     public CreateDepartmentCommand toCreateCommand() {
-        return CreateDepartmentCommand.builder()
-            .departmentCode(this.departmentCode)
-            .departmentName(this.departmentName)
-            .departmentPath(this.departmentPath != null ? this.departmentPath : "/" + this.departmentCode)
-            .lowestLevel(this.lowestLevel == null || this.lowestLevel)
-            .validFrom(this.validFrom)
-            .validTo(this.validTo != null ? this.validTo : LocalDate.of(9999, 12, 31))
-            .build();
+        return new CreateDepartmentCommand(
+            this.departmentCode,
+            this.departmentName,
+            this.departmentPath != null ? this.departmentPath : "/" + this.departmentCode,
+            this.lowestLevel == null || this.lowestLevel,
+            this.validFrom,
+            this.validTo != null ? this.validTo : LocalDate.of(9999, 12, 31)
+        );
     }
 
     /**
@@ -59,13 +59,13 @@ public class DepartmentForm {
      * @return 更新コマンド
      */
     public UpdateDepartmentCommand toUpdateCommand() {
-        return UpdateDepartmentCommand.builder()
-            .departmentName(this.departmentName)
-            .departmentPath(this.departmentPath != null ? this.departmentPath : "/" + this.departmentCode)
-            .lowestLevel(this.lowestLevel == null || this.lowestLevel)
-            .validFrom(this.validFrom)
-            .validTo(this.validTo != null ? this.validTo : LocalDate.of(9999, 12, 31))
-            .build();
+        return new UpdateDepartmentCommand(
+            this.departmentName,
+            this.departmentPath != null ? this.departmentPath : "/" + this.departmentCode,
+            this.lowestLevel == null || this.lowestLevel,
+            this.validFrom,
+            this.validTo != null ? this.validTo : LocalDate.of(9999, 12, 31)
+        );
     }
 
     /**

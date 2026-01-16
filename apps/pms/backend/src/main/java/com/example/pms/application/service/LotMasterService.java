@@ -43,14 +43,14 @@ public class LotMasterService implements LotMasterUseCase {
     @Override
     public LotMaster createLotMaster(CreateLotMasterCommand command) {
         LotMaster lotMaster = LotMaster.builder()
-            .lotNumber(command.getLotNumber())
-            .itemCode(command.getItemCode())
-            .lotType(command.getLotType())
-            .manufactureDate(command.getManufactureDate())
-            .expirationDate(command.getExpirationDate())
-            .quantity(command.getQuantity())
-            .warehouseCode(command.getWarehouseCode())
-            .remarks(command.getRemarks())
+            .lotNumber(command.lotNumber())
+            .itemCode(command.itemCode())
+            .lotType(command.lotType())
+            .manufactureDate(command.manufactureDate())
+            .expirationDate(command.expirationDate())
+            .quantity(command.quantity())
+            .warehouseCode(command.warehouseCode())
+            .remarks(command.remarks())
             .build();
         lotMasterRepository.save(lotMaster);
         return lotMasterRepository.findByLotNumber(lotMaster.getLotNumber())
@@ -61,13 +61,13 @@ public class LotMasterService implements LotMasterUseCase {
     public LotMaster updateLotMaster(String lotNumber, UpdateLotMasterCommand command) {
         LotMaster lotMaster = LotMaster.builder()
             .lotNumber(lotNumber)
-            .itemCode(command.getItemCode())
-            .lotType(command.getLotType())
-            .manufactureDate(command.getManufactureDate())
-            .expirationDate(command.getExpirationDate())
-            .quantity(command.getQuantity())
-            .warehouseCode(command.getWarehouseCode())
-            .remarks(command.getRemarks())
+            .itemCode(command.itemCode())
+            .lotType(command.lotType())
+            .manufactureDate(command.manufactureDate())
+            .expirationDate(command.expirationDate())
+            .quantity(command.quantity())
+            .warehouseCode(command.warehouseCode())
+            .remarks(command.remarks())
             .build();
         lotMasterRepository.update(lotMaster);
         return lotMasterRepository.findByLotNumber(lotNumber)

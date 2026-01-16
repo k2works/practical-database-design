@@ -38,14 +38,14 @@ public class CreateWorkOrderRequest {
      * @return CreateWorkOrderCommand
      */
     public CreateWorkOrderCommand toCommand() {
-        return CreateWorkOrderCommand.builder()
-            .orderNumber(orderNumber)
-            .itemCode(itemCode)
-            .orderQuantity(orderQuantity)
-            .locationCode(locationCode)
-            .plannedStartDate(plannedStartDate)
-            .plannedEndDate(plannedEndDate)
-            .remarks(remarks)
-            .build();
+        return new CreateWorkOrderCommand(
+            orderNumber,
+            itemCode,
+            orderQuantity,
+            locationCode,
+            plannedStartDate,
+            plannedEndDate,
+            remarks
+        );
     }
 }

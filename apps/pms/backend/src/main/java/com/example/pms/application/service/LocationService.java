@@ -43,10 +43,10 @@ public class LocationService implements LocationUseCase {
     @Override
     public Location createLocation(CreateLocationCommand command) {
         Location location = Location.builder()
-            .locationCode(command.getLocationCode())
-            .locationName(command.getLocationName())
-            .locationType(command.getLocationType())
-            .parentLocationCode(command.getParentLocationCode())
+            .locationCode(command.locationCode())
+            .locationName(command.locationName())
+            .locationType(command.locationType())
+            .parentLocationCode(command.parentLocationCode())
             .build();
         locationRepository.save(location);
         return location;
@@ -62,9 +62,9 @@ public class LocationService implements LocationUseCase {
     public Location updateLocation(String locationCode, UpdateLocationCommand command) {
         Location location = Location.builder()
             .locationCode(locationCode)
-            .locationName(command.getLocationName())
-            .locationType(command.getLocationType())
-            .parentLocationCode(command.getParentLocationCode())
+            .locationName(command.locationName())
+            .locationType(command.locationType())
+            .parentLocationCode(command.parentLocationCode())
             .build();
         locationRepository.update(location);
         return location;

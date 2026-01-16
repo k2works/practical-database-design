@@ -74,15 +74,15 @@ public class WorkOrderForm {
      * @return CreateWorkOrderCommand 登録コマンド
      */
     public CreateWorkOrderCommand toCreateCommand() {
-        return CreateWorkOrderCommand.builder()
-            .orderNumber(this.orderNumber)
-            .itemCode(this.itemCode)
-            .orderQuantity(this.orderQuantity)
-            .locationCode(this.locationCode)
-            .plannedStartDate(this.plannedStartDate)
-            .plannedEndDate(this.plannedEndDate)
-            .remarks(this.remarks)
-            .build();
+        return new CreateWorkOrderCommand(
+            this.orderNumber,
+            this.itemCode,
+            this.orderQuantity,
+            this.locationCode,
+            this.plannedStartDate,
+            this.plannedEndDate,
+            this.remarks
+        );
     }
 
     /**
@@ -91,24 +91,24 @@ public class WorkOrderForm {
      * @return UpdateWorkOrderCommand 更新コマンド
      */
     public UpdateWorkOrderCommand toUpdateCommand() {
-        return UpdateWorkOrderCommand.builder()
-            .orderNumber(this.orderNumber)
-            .workOrderDate(this.workOrderDate)
-            .itemCode(this.itemCode)
-            .orderQuantity(this.orderQuantity)
-            .locationCode(this.locationCode)
-            .plannedStartDate(this.plannedStartDate)
-            .plannedEndDate(this.plannedEndDate)
-            .actualStartDate(this.actualStartDate)
-            .actualEndDate(this.actualEndDate)
-            .completedQuantity(this.completedQuantity)
-            .totalGoodQuantity(this.totalGoodQuantity)
-            .totalDefectQuantity(this.totalDefectQuantity)
-            .status(this.status)
-            .completedFlag(this.completedFlag)
-            .remarks(this.remarks)
-            .version(this.version)
-            .build();
+        return new UpdateWorkOrderCommand(
+            this.orderNumber,
+            this.workOrderDate,
+            this.itemCode,
+            this.orderQuantity,
+            this.locationCode,
+            this.plannedStartDate,
+            this.plannedEndDate,
+            this.actualStartDate,
+            this.actualEndDate,
+            this.completedQuantity,
+            this.totalGoodQuantity,
+            this.totalDefectQuantity,
+            this.status,
+            this.completedFlag,
+            this.remarks,
+            this.version
+        );
     }
 
     /**

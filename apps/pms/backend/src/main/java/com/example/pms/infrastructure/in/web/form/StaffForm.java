@@ -49,15 +49,15 @@ public class StaffForm {
      * @return 登録コマンド
      */
     public CreateStaffCommand toCreateCommand() {
-        return CreateStaffCommand.builder()
-            .staffCode(this.staffCode)
-            .staffName(this.staffName)
-            .effectiveFrom(this.effectiveFrom)
-            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
-            .departmentCode(this.departmentCode)
-            .email(this.email)
-            .phoneNumber(this.phoneNumber)
-            .build();
+        return new CreateStaffCommand(
+            this.staffCode,
+            this.effectiveFrom,
+            this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31),
+            this.staffName,
+            this.departmentCode,
+            this.email,
+            this.phoneNumber
+        );
     }
 
     /**
@@ -66,13 +66,13 @@ public class StaffForm {
      * @return 更新コマンド
      */
     public UpdateStaffCommand toUpdateCommand() {
-        return UpdateStaffCommand.builder()
-            .staffName(this.staffName)
-            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
-            .departmentCode(this.departmentCode)
-            .email(this.email)
-            .phoneNumber(this.phoneNumber)
-            .build();
+        return new UpdateStaffCommand(
+            this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31),
+            this.staffName,
+            this.departmentCode,
+            this.email,
+            this.phoneNumber
+        );
     }
 
     /**

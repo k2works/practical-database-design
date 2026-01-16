@@ -31,11 +31,11 @@ public class UnitForm {
      * @return 登録コマンド
      */
     public CreateUnitCommand toCreateCommand() {
-        return CreateUnitCommand.builder()
-            .unitCode(this.unitCode)
-            .unitSymbol(this.unitSymbol)
-            .unitName(this.unitName)
-            .build();
+        return new CreateUnitCommand(
+            this.unitCode,
+            this.unitSymbol,
+            this.unitName
+        );
     }
 
     /**
@@ -44,10 +44,10 @@ public class UnitForm {
      * @return 更新コマンド
      */
     public UpdateUnitCommand toUpdateCommand() {
-        return UpdateUnitCommand.builder()
-            .unitSymbol(this.unitSymbol)
-            .unitName(this.unitName)
-            .build();
+        return new UpdateUnitCommand(
+            this.unitSymbol,
+            this.unitName
+        );
     }
 
     /**

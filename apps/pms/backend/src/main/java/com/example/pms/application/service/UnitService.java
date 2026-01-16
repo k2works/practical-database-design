@@ -43,9 +43,9 @@ public class UnitService implements UnitUseCase {
     @Override
     public Unit createUnit(CreateUnitCommand command) {
         Unit unit = Unit.builder()
-            .unitCode(command.getUnitCode())
-            .unitSymbol(command.getUnitSymbol())
-            .unitName(command.getUnitName())
+            .unitCode(command.unitCode())
+            .unitSymbol(command.unitSymbol())
+            .unitName(command.unitName())
             .build();
         unitRepository.save(unit);
         return unit;
@@ -61,8 +61,8 @@ public class UnitService implements UnitUseCase {
     public Unit updateUnit(String unitCode, UpdateUnitCommand command) {
         Unit unit = Unit.builder()
             .unitCode(unitCode)
-            .unitSymbol(command.getUnitSymbol())
-            .unitName(command.getUnitName())
+            .unitSymbol(command.unitSymbol())
+            .unitName(command.unitName())
             .build();
         unitRepository.update(unit);
         return unit;

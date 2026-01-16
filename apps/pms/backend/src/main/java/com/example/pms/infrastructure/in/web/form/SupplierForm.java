@@ -60,19 +60,19 @@ public class SupplierForm {
      * @return 登録コマンド
      */
     public CreateSupplierCommand toCreateCommand() {
-        return CreateSupplierCommand.builder()
-            .supplierCode(this.supplierCode)
-            .effectiveFrom(this.effectiveFrom)
-            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
-            .supplierName(this.supplierName)
-            .supplierNameKana(this.supplierNameKana)
-            .supplierType(this.supplierType)
-            .postalCode(this.postalCode)
-            .address(this.address)
-            .phoneNumber(this.phoneNumber)
-            .faxNumber(this.faxNumber)
-            .contactPerson(this.contactPerson)
-            .build();
+        return new CreateSupplierCommand(
+            this.supplierCode,
+            this.effectiveFrom,
+            this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31),
+            this.supplierName,
+            this.supplierNameKana,
+            this.supplierType,
+            this.postalCode,
+            this.address,
+            this.phoneNumber,
+            this.faxNumber,
+            this.contactPerson
+        );
     }
 
     /**
@@ -81,17 +81,17 @@ public class SupplierForm {
      * @return 更新コマンド
      */
     public UpdateSupplierCommand toUpdateCommand() {
-        return UpdateSupplierCommand.builder()
-            .effectiveTo(this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31))
-            .supplierName(this.supplierName)
-            .supplierNameKana(this.supplierNameKana)
-            .supplierType(this.supplierType)
-            .postalCode(this.postalCode)
-            .address(this.address)
-            .phoneNumber(this.phoneNumber)
-            .faxNumber(this.faxNumber)
-            .contactPerson(this.contactPerson)
-            .build();
+        return new UpdateSupplierCommand(
+            this.effectiveTo != null ? this.effectiveTo : LocalDate.of(9999, 12, 31),
+            this.supplierName,
+            this.supplierNameKana,
+            this.supplierType,
+            this.postalCode,
+            this.address,
+            this.phoneNumber,
+            this.faxNumber,
+            this.contactPerson
+        );
     }
 
     /**

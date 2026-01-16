@@ -49,16 +49,16 @@ public class LotMasterForm {
      * @return 登録コマンド
      */
     public CreateLotMasterCommand toCreateCommand() {
-        return CreateLotMasterCommand.builder()
-                .lotNumber(lotNumber)
-                .itemCode(itemCode)
-                .lotType(lotType)
-                .manufactureDate(manufactureDate)
-                .expirationDate(expirationDate)
-                .quantity(quantity)
-                .warehouseCode(warehouseCode)
-                .remarks(remarks)
-                .build();
+        return new CreateLotMasterCommand(
+                lotNumber,
+                itemCode,
+                lotType,
+                manufactureDate,
+                expirationDate,
+                quantity,
+                warehouseCode,
+                remarks
+        );
     }
 
     /**
@@ -67,15 +67,15 @@ public class LotMasterForm {
      * @return 更新コマンド
      */
     public UpdateLotMasterCommand toUpdateCommand() {
-        return UpdateLotMasterCommand.builder()
-                .itemCode(itemCode)
-                .lotType(lotType)
-                .manufactureDate(manufactureDate)
-                .expirationDate(expirationDate)
-                .quantity(quantity)
-                .warehouseCode(warehouseCode)
-                .remarks(remarks)
-                .build();
+        return new UpdateLotMasterCommand(
+                itemCode,
+                lotType,
+                manufactureDate,
+                expirationDate,
+                quantity,
+                warehouseCode,
+                remarks
+        );
     }
 
     /**

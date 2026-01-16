@@ -60,14 +60,14 @@ public class PurchaseOrderForm {
          * コマンドに変換する.
          */
         public CreatePurchaseOrderCommand.PurchaseOrderDetailCommand toDetailCommand() {
-            return CreatePurchaseOrderCommand.PurchaseOrderDetailCommand.builder()
-                .itemCode(itemCode)
-                .deliveryLocationCode(deliveryLocationCode)
-                .expectedReceivingDate(expectedReceivingDate)
-                .orderQuantity(orderQuantity)
-                .orderUnitPrice(orderUnitPrice)
-                .detailRemarks(detailRemarks)
-                .build();
+            return new CreatePurchaseOrderCommand.PurchaseOrderDetailCommand(
+                itemCode,
+                deliveryLocationCode,
+                expectedReceivingDate,
+                orderQuantity,
+                orderUnitPrice,
+                detailRemarks
+            );
         }
     }
 
@@ -75,14 +75,14 @@ public class PurchaseOrderForm {
      * コマンドに変換する.
      */
     public CreatePurchaseOrderCommand toCommand() {
-        return CreatePurchaseOrderCommand.builder()
-            .supplierCode(supplierCode)
-            .ordererCode(ordererCode)
-            .departmentCode(departmentCode)
-            .remarks(remarks)
-            .details(details.stream()
+        return new CreatePurchaseOrderCommand(
+            supplierCode,
+            ordererCode,
+            departmentCode,
+            remarks,
+            details.stream()
                 .map(PurchaseOrderDetailForm::toDetailCommand)
-                .toList())
-            .build();
+                .toList()
+        );
     }
 }
