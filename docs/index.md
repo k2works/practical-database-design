@@ -20,6 +20,7 @@
 - [研究 2：JavaFX デスクトップアプリケーションの実装](./article/study/study2-2.md) - JavaFX + MVVM パターンによるデスクトップアプリ
 - [研究 3：gRPC サービスの実装](./article/study/study2-3.md) - Protocol Buffers + gRPC によるマイクロサービス
 - [研究 4：GraphQL サービスの実装](./article/study/study2-4.md) - Spring for GraphQL によるフロントエンド向け API
+- [研究 5：Axon CQRS/ES の実装](./article/study/study2-5.md) - Axon Framework + MyBatis による CQRS/Event Sourcing
 
 ### 研究：財務会計システム実装編
 
@@ -27,6 +28,7 @@
 - [研究 2：JavaFX デスクトップアプリケーションの実装](./article/study/study3-2.md) - JavaFX + MVVM パターンによるデスクトップアプリ
 - [研究 3：gRPC サービスの実装](./article/study/study3-3.md) - Protocol Buffers + gRPC によるマイクロサービス
 - [研究 4：GraphQL サービスの実装](./article/study/study3-4.md) - Spring for GraphQL によるフロントエンド向け API
+- [研究 5：Axon CQRS/ES の実装](./article/study/study3-5.md) - Axon Framework + MyBatis による CQRS/Event Sourcing
 
 ### 研究：生産管理システム実装編
 
@@ -34,6 +36,7 @@
 - [研究 2：JavaFX デスクトップアプリケーションの実装](./article/study/study4-2.md) - JavaFX + MVVM パターンによるデスクトップアプリ
 - [研究 3：gRPC サービスの実装](./article/study/study4-3.md) - Protocol Buffers + gRPC によるマイクロサービス
 - [研究 4：GraphQL サービスの実装](./article/study/study4-4.md) - Spring for GraphQL によるフロントエンド向け API
+- [研究 5：Axon CQRS/ES の実装](./article/study/study4-5.md) - Axon Framework + MyBatis による CQRS/Event Sourcing
 
 ### 研究：財務会計システム ORM 実装編
 
@@ -45,6 +48,7 @@
 - [第 19 章：赤黒とログの設計【ORM 版】](./article/part3-orm/chapter19-orm.md)
 - [第 20 章：財務会計データ設計（D 社事例）【ORM 版】](./article/part3-orm/chapter20-orm.md)
 - [第 21 章：API サービスの実装【ORM 版】](./article/part3-orm/chapter21-orm.md)
+- [第 22 章：Axon CQRS/ES の実装【ORM 版】](./article/part3-orm/chapter22-orm.md)
 
 ### データベース
 
