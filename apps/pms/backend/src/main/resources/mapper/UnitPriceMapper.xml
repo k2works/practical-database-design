@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.UnitPriceMapper">
+
+    <resultMap id="UnitPriceResultMap" type="com.example.pms.domain.model.unitprice.UnitPrice">
+        <id property="itemCode" column="品目コード"/>
+        <id property="supplierCode" column="取引先コード"/>
+        <id property="effectiveFrom" column="適用開始日"/>
+        <result property="effectiveTo" column="適用停止日"/>
+        <result property="price" column="単価"/>
+        <result property="currencyCode" column="通貨コード"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.unitprice.UnitPrice">
+        INSERT INTO "単価マスタ" (
+            "品目コード", "取引先コード", "適用開始日", "適用停止日", "単価", "通貨コード",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{itemCode}, #{supplierCode}, #{effectiveFrom}, #{effectiveTo}, #{price}, #{currencyCode},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findByItemCodeAndSupplierCode" resultMap="UnitPriceResultMap">
+        SELECT * FROM "単価マスタ"
+        WHERE "品目コード" = #{itemCode}
+          AND "取引先コード" = #{supplierCode}
+        ORDER BY "適用開始日" DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByItemCodeAndSupplierCodeAndDate" resultMap="UnitPriceResultMap">
+        SELECT * FROM "単価マスタ"
+        WHERE "品目コード" = #{itemCode}
+          AND "取引先コード" = #{supplierCode}
+          AND "適用開始日" &lt;= #{baseDate}
+          AND ("適用停止日" IS NULL OR "適用停止日" > #{baseDate})
+        ORDER BY "適用開始日" DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByItemCode" resultMap="UnitPriceResultMap">
+        SELECT * FROM "単価マスタ"
+        WHERE "品目コード" = #{itemCode}
+        ORDER BY "取引先コード", "適用開始日" DESC
+    </select>
+
+    <select id="findAll" resultMap="UnitPriceResultMap">
+        SELECT * FROM "単価マスタ"
+        ORDER BY "品目コード", "取引先コード", "適用開始日" DESC
+    </select>
+
+    <update id="update" parameterType="com.example.pms.domain.model.unitprice.UnitPrice">
+        UPDATE "単価マスタ" SET
+            "単価" = #{price},
+            "通貨コード" = #{currencyCode},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "品目コード" = #{itemCode}
+          AND "取引先コード" = #{supplierCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </update>
+
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "単価マスタ" CASCADE
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "単価マスタ"
+    </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="UnitPriceResultMap">
+        SELECT * FROM "単価マスタ"
+        WHERE 1=1
+        <if test="itemCode != null and itemCode != ''">
+            AND "品目コード" LIKE '%' || #{itemCode} || '%'
+        </if>
+        ORDER BY "品目コード", "取引先コード", "適用開始日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "単価マスタ"
+        WHERE 1=1
+        <if test="itemCode != null and itemCode != ''">
+            AND "品目コード" LIKE '%' || #{itemCode} || '%'
+        </if>
+    </select>
+
+    <!-- 複合キーで検索 -->
+    <select id="findByKey" resultMap="UnitPriceResultMap">
+        SELECT * FROM "単価マスタ"
+        WHERE "品目コード" = #{itemCode}
+          AND "取引先コード" = #{supplierCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </select>
+
+    <!-- 単価削除 -->
+    <delete id="deleteByKey">
+        DELETE FROM "単価マスタ"
+        WHERE "品目コード" = #{itemCode}
+          AND "取引先コード" = #{supplierCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </delete>
+</mapper>

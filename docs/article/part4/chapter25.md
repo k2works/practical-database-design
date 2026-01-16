@@ -381,8 +381,8 @@ end note
 <summary>発注ステータス Enum</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/PurchaseOrderStatus.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/PurchaseOrderStatus.java
+package com.example.pms.domain.model.purchase;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -405,7 +405,7 @@ public enum PurchaseOrderStatus {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Unknown purchase order status: " + displayName);
+        throw new IllegalArgumentException("不正な発注ステータス: " + displayName);
     }
 }
 ```
@@ -416,8 +416,8 @@ public enum PurchaseOrderStatus {
 <summary>入荷受入区分 Enum</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/ReceivingType.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/ReceivingType.java
+package com.example.pms.domain.model.purchase;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -437,7 +437,7 @@ public enum ReceivingType {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown receiving type: " + displayName);
+        throw new IllegalArgumentException("不正な入荷受入区分: " + displayName);
     }
 }
 ```
@@ -448,13 +448,15 @@ public enum ReceivingType {
 <summary>単価マスタエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/UnitPrice.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/UnitPrice.java
+package com.example.pms.domain.model.purchase;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.master.Supplier;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.supplier.Supplier;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -462,6 +464,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UnitPrice {
     private Integer id;
     private String itemCode;
@@ -487,12 +491,14 @@ public class UnitPrice {
 <summary>発注データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/PurchaseOrder.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/PurchaseOrder.java
+package com.example.pms.domain.model.purchase;
 
-import com.example.production.domain.model.master.Supplier;
+import com.example.pms.domain.model.supplier.Supplier;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -500,6 +506,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PurchaseOrder {
     private Integer id;
     private String purchaseOrderNumber;
@@ -526,13 +534,15 @@ public class PurchaseOrder {
 <summary>発注明細データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/PurchaseOrderDetail.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/PurchaseOrderDetail.java
+package com.example.pms.domain.model.purchase;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.plan.Order;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.plan.Order;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -541,6 +551,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PurchaseOrderDetail {
     private Integer id;
     private String purchaseOrderNumber;
@@ -581,16 +593,20 @@ public class PurchaseOrderDetail {
 <summary>諸口品目情報エンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/MiscellaneousItem.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/MiscellaneousItem.java
+package com.example.pms.domain.model.purchase;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MiscellaneousItem {
     private Integer id;
     private String purchaseOrderNumber;
@@ -598,13 +614,10 @@ public class MiscellaneousItem {
     private String itemCode;
     private String itemName;
     private String specification;
-    private String drawingNumberMaker;
-    private String version;
+    private String manufacturerDrawingNumber;
+    private String revision;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    // リレーション
-    private PurchaseOrderDetail purchaseOrderDetail;
 }
 ```
 
@@ -618,10 +631,10 @@ PostgreSQL の日本語 ENUM 型と Java の英語 Enum を相互変換するた
 <summary>PurchaseOrderStatusTypeHandler</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/PurchaseOrderStatusTypeHandler.java
-package com.example.production.infrastructure.persistence;
+// src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/PurchaseOrderStatusTypeHandler.java
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.production.domain.model.purchase.PurchaseOrderStatus;
+import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -666,10 +679,10 @@ public class PurchaseOrderStatusTypeHandler extends BaseTypeHandler<PurchaseOrde
 <summary>ReceivingTypeTypeHandler</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/ReceivingTypeTypeHandler.java
-package com.example.production.infrastructure.persistence;
+// src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/ReceivingTypeTypeHandler.java
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.production.domain.model.purchase.ReceivingType;
+import com.example.pms.domain.model.purchase.ReceivingType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -716,13 +729,13 @@ public class ReceivingTypeTypeHandler extends BaseTypeHandler<ReceivingType> {
 <summary>UnitPriceMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/UnitPriceMapper.xml -->
+<!-- src/main/resources/mapper/UnitPriceMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.UnitPriceMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.UnitPriceMapper">
 
-    <resultMap id="UnitPriceResultMap" type="com.example.production.domain.model.purchase.UnitPrice">
+    <resultMap id="UnitPriceResultMap" type="com.example.pms.domain.model.purchase.UnitPrice">
         <id property="id" column="ID"/>
         <result property="itemCode" column="品目コード"/>
         <result property="supplierCode" column="取引先コード"/>
@@ -773,13 +786,13 @@ public class ReceivingTypeTypeHandler extends BaseTypeHandler<ReceivingType> {
 <summary>PurchaseOrderMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/PurchaseOrderMapper.xml -->
+<!-- src/main/resources/mapper/PurchaseOrderMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.PurchaseOrderMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderMapper">
 
-    <resultMap id="PurchaseOrderResultMap" type="com.example.production.domain.model.purchase.PurchaseOrder">
+    <resultMap id="PurchaseOrderResultMap" type="com.example.pms.domain.model.purchase.PurchaseOrder">
         <id property="id" column="ID"/>
         <result property="purchaseOrderNumber" column="発注番号"/>
         <result property="orderDate" column="発注日"/>
@@ -787,7 +800,7 @@ public class ReceivingTypeTypeHandler extends BaseTypeHandler<ReceivingType> {
         <result property="ordererCode" column="発注担当者コード"/>
         <result property="departmentCode" column="発注部門コード"/>
         <result property="status" column="ステータス"
-                typeHandler="com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler"/>
         <result property="remarks" column="備考"/>
         <result property="createdAt" column="作成日時"/>
         <result property="createdBy" column="作成者"/>
@@ -795,41 +808,93 @@ public class ReceivingTypeTypeHandler extends BaseTypeHandler<ReceivingType> {
         <result property="updatedBy" column="更新者"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.PurchaseOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "発注データ" (
-            "発注番号", "発注日", "取引先コード", "発注担当者コード",
-            "発注部門コード", "ステータス", "備考", "作成者"
+            "発注番号", "発注日", "取引先コード", "発注担当者コード", "発注部門コード",
+            "ステータス", "備考", "作成者", "更新者"
         ) VALUES (
             #{purchaseOrderNumber},
             #{orderDate},
             #{supplierCode},
             #{ordererCode},
             #{departmentCode},
-            #{status, typeHandler=com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
             #{remarks},
-            #{createdBy}
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.PurchaseOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "発注データ" (
+            "発注番号", "発注日", "取引先コード", "発注担当者コード", "発注部門コード",
+            "ステータス", "備考", "作成者", "更新者"
+        ) VALUES (
+            #{purchaseOrderNumber},
+            #{orderDate},
+            #{supplierCode},
+            #{ordererCode},
+            #{departmentCode},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" WHERE "ID" = #{id}
+    </select>
 
     <select id="findByPurchaseOrderNumber" resultMap="PurchaseOrderResultMap">
         SELECT * FROM "発注データ" WHERE "発注番号" = #{purchaseOrderNumber}
     </select>
 
-    <select id="findLatestPurchaseOrderNumber" resultType="string">
-        SELECT "発注番号" FROM "発注データ"
-        WHERE "発注番号" LIKE #{prefix}
-        ORDER BY "発注番号" DESC
-        LIMIT 1
+    <select id="findBySupplierCode" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" WHERE "取引先コード" = #{supplierCode} ORDER BY "発注日" DESC
     </select>
 
-    <update id="updateStatus">
+    <!-- PostgreSQL用 findByStatus -->
+    <select id="findByStatus" resultMap="PurchaseOrderResultMap" databaseId="postgresql">
+        SELECT * FROM "発注データ" WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス ORDER BY "発注日" DESC
+    </select>
+
+    <!-- H2用 findByStatus -->
+    <select id="findByStatus" resultMap="PurchaseOrderResultMap" databaseId="h2">
+        SELECT * FROM "発注データ" WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler} ORDER BY "発注日" DESC
+    </select>
+
+    <select id="findAll" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" ORDER BY "発注日" DESC
+    </select>
+
+    <!-- PostgreSQL用 updateStatus -->
+    <update id="updateStatus" databaseId="postgresql">
         UPDATE "発注データ"
-        SET "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler}::発注ステータス,
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
             "更新日時" = CURRENT_TIMESTAMP
-        WHERE "発注番号" = #{purchaseOrderNumber}
+        WHERE "ID" = #{id}
     </update>
 
-    <delete id="deleteAll">
+    <!-- H2用 updateStatus -->
+    <update id="updateStatus" databaseId="h2">
+        UPDATE "発注データ"
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "発注データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
         DELETE FROM "発注データ"
     </delete>
 </mapper>
@@ -841,13 +906,13 @@ public class ReceivingTypeTypeHandler extends BaseTypeHandler<ReceivingType> {
 <summary>PurchaseOrderDetailMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/PurchaseOrderDetailMapper.xml -->
+<!-- src/main/resources/mapper/PurchaseOrderDetailMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.PurchaseOrderDetailMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderDetailMapper">
 
-    <resultMap id="PurchaseOrderDetailResultMap" type="com.example.production.domain.model.purchase.PurchaseOrderDetail">
+    <resultMap id="PurchaseOrderDetailResultMap" type="com.example.pms.domain.model.purchase.PurchaseOrderDetail">
         <id property="id" column="ID"/>
         <result property="purchaseOrderNumber" column="発注番号"/>
         <result property="lineNumber" column="発注行番号"/>
@@ -931,10 +996,10 @@ public class ReceivingTypeTypeHandler extends BaseTypeHandler<ReceivingType> {
 <summary>UnitPriceMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/UnitPriceMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/UnitPriceMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.purchase.UnitPrice;
+import com.example.pms.domain.model.purchase.UnitPrice;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -956,21 +1021,25 @@ public interface UnitPriceMapper {
 <summary>PurchaseOrderMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/PurchaseOrderMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/PurchaseOrderMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.purchase.PurchaseOrder;
-import com.example.production.domain.model.purchase.PurchaseOrderStatus;
+import com.example.pms.domain.model.purchase.PurchaseOrder;
+import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
 public interface PurchaseOrderMapper {
     void insert(PurchaseOrder purchaseOrder);
+    PurchaseOrder findById(Integer id);
     PurchaseOrder findByPurchaseOrderNumber(String purchaseOrderNumber);
-    String findLatestPurchaseOrderNumber(String prefix);
-    void updateStatus(@Param("purchaseOrderNumber") String purchaseOrderNumber,
-                      @Param("status") PurchaseOrderStatus status);
+    List<PurchaseOrder> findBySupplierCode(String supplierCode);
+    List<PurchaseOrder> findByStatus(PurchaseOrderStatus status);
+    List<PurchaseOrder> findAll();
+    void updateStatus(@Param("id") Integer id, @Param("status") PurchaseOrderStatus status);
     void deleteAll();
 }
 ```
@@ -981,10 +1050,10 @@ public interface PurchaseOrderMapper {
 <summary>PurchaseOrderDetailMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/PurchaseOrderDetailMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/PurchaseOrderDetailMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.purchase.PurchaseOrderDetail;
+import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -1016,11 +1085,11 @@ public interface PurchaseOrderDetailMapper {
 <summary>PurchaseOrderService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/PurchaseOrderService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/PurchaseOrderService.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.purchase.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.purchase.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1175,8 +1244,8 @@ public class PurchaseOrderService {
 <summary>入力 DTO クラス</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/PurchaseOrderCreateInput.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/PurchaseOrderCreateInput.java
+package com.example.pms.application.service;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1199,8 +1268,8 @@ public class PurchaseOrderCreateInput {
 ```
 
 ```java
-// src/main/java/com/example/production/application/service/PurchaseOrderDetailInput.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/PurchaseOrderDetailInput.java
+package com.example.pms.application.service;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1227,14 +1296,14 @@ public class PurchaseOrderDetailInput {
 <summary>PurchaseOrderServiceTest</summary>
 
 ```java
-// src/test/java/com/example/production/application/service/PurchaseOrderServiceTest.java
-package com.example.production.application.service;
+// src/test/java/com/example/pms/application/service/PurchaseOrderServiceTest.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.item.ItemCategory;
-import com.example.production.domain.model.master.Supplier;
-import com.example.production.domain.model.purchase.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
+import com.example.pms.domain.model.master.Supplier;
+import com.example.pms.domain.model.purchase.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import org.junit.jupiter.api.*;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1707,12 +1776,14 @@ CREATE INDEX "idx_検収_発注番号" ON "検収データ"("発注番号", "発
 <summary>入荷受入データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/Receiving.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/Receiving.java
+package com.example.pms.domain.model.purchase;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1721,6 +1792,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Receiving {
     private Integer id;
     private String receivingNumber;
@@ -1751,12 +1824,14 @@ public class Receiving {
 <summary>受入検査データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/Inspection.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/Inspection.java
+package com.example.pms.domain.model.purchase;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1765,6 +1840,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Inspection {
     private Integer id;
     private String inspectionNumber;
@@ -1786,7 +1863,6 @@ public class Inspection {
     // リレーション
     private Receiving receiving;
     private Item item;
-    private List<InspectionResult> results;
     private List<Acceptance> acceptances;
 }
 ```
@@ -1797,13 +1873,15 @@ public class Inspection {
 <summary>検収データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/Acceptance.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/Acceptance.java
+package com.example.pms.domain.model.purchase;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.master.Supplier;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.supplier.Supplier;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1811,6 +1889,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Acceptance {
     private Integer id;
     private String acceptanceNumber;
@@ -1848,13 +1928,13 @@ public class Acceptance {
 <summary>ReceivingMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/ReceivingMapper.xml -->
+<!-- src/main/resources/mapper/ReceivingMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.ReceivingMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ReceivingMapper">
 
-    <resultMap id="ReceivingResultMap" type="com.example.production.domain.model.purchase.Receiving">
+    <resultMap id="ReceivingResultMap" type="com.example.pms.domain.model.purchase.Receiving">
         <id property="id" column="ID"/>
         <result property="receivingNumber" column="入荷番号"/>
         <result property="purchaseOrderNumber" column="発注番号"/>
@@ -1862,7 +1942,7 @@ public class Acceptance {
         <result property="receivingDate" column="入荷日"/>
         <result property="receiverCode" column="入荷担当者コード"/>
         <result property="receivingType" column="入荷受入区分"
-                typeHandler="com.example.production.infrastructure.persistence.ReceivingTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler"/>
         <result property="itemCode" column="品目コード"/>
         <result property="miscellaneousItemFlag" column="諸口品目区分"/>
         <result property="receivingQuantity" column="入荷数量"/>
@@ -1873,43 +1953,79 @@ public class Acceptance {
         <result property="updatedBy" column="更新者"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.Receiving"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "入荷受入データ" (
             "入荷番号", "発注番号", "発注行番号", "入荷日", "入荷担当者コード",
-            "入荷受入区分", "品目コード", "諸口品目区分", "入荷数量", "入荷備考", "作成者"
+            "入荷受入区分", "品目コード", "諸口品目区分", "入荷数量", "入荷備考", "作成者", "更新者"
         ) VALUES (
             #{receivingNumber},
             #{purchaseOrderNumber},
             #{lineNumber},
             #{receivingDate},
             #{receiverCode},
-            #{receivingType, typeHandler=com.example.production.infrastructure.persistence.ReceivingTypeTypeHandler}::入荷受入区分,
+            #{receivingType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler}::入荷受入区分,
             #{itemCode},
             #{miscellaneousItemFlag},
             #{receivingQuantity},
             #{remarks},
-            #{createdBy}
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.Receiving"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "入荷受入データ" (
+            "入荷番号", "発注番号", "発注行番号", "入荷日", "入荷担当者コード",
+            "入荷受入区分", "品目コード", "諸口品目区分", "入荷数量", "入荷備考", "作成者", "更新者"
+        ) VALUES (
+            #{receivingNumber},
+            #{purchaseOrderNumber},
+            #{lineNumber},
+            #{receivingDate},
+            #{receiverCode},
+            #{receivingType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler},
+            #{itemCode},
+            #{miscellaneousItemFlag},
+            #{receivingQuantity},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ" WHERE "ID" = #{id}
+    </select>
 
     <select id="findByReceivingNumber" resultMap="ReceivingResultMap">
         SELECT * FROM "入荷受入データ" WHERE "入荷番号" = #{receivingNumber}
     </select>
 
-    <select id="findLatestReceivingNumber" resultType="string">
-        SELECT "入荷番号" FROM "入荷受入データ"
-        WHERE "入荷番号" LIKE #{prefix}
-        ORDER BY "入荷番号" DESC
-        LIMIT 1
-    </select>
-
     <select id="findByPurchaseOrderNumber" resultMap="ReceivingResultMap">
-        SELECT * FROM "入荷受入データ"
-        WHERE "発注番号" = #{purchaseOrderNumber}
-        ORDER BY "入荷日", "入荷番号"
+        SELECT * FROM "入荷受入データ" WHERE "発注番号" = #{purchaseOrderNumber} ORDER BY "入荷日" DESC
     </select>
 
-    <delete id="deleteAll">
+    <select id="findByPurchaseOrderNumberAndLineNumber" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ"
+        WHERE "発注番号" = #{purchaseOrderNumber} AND "発注行番号" = #{lineNumber}
+        ORDER BY "入荷日" DESC
+    </select>
+
+    <select id="findAll" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ" ORDER BY "入荷日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "入荷受入データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
         DELETE FROM "入荷受入データ"
     </delete>
 </mapper>
@@ -1921,13 +2037,13 @@ public class Acceptance {
 <summary>InspectionMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/InspectionMapper.xml -->
+<!-- src/main/resources/mapper/InspectionMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.InspectionMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.InspectionMapper">
 
-    <resultMap id="InspectionResultMap" type="com.example.production.domain.model.purchase.Inspection">
+    <resultMap id="InspectionResultMap" type="com.example.pms.domain.model.purchase.Inspection">
         <id property="id" column="ID"/>
         <result property="inspectionNumber" column="受入検査番号"/>
         <result property="receivingNumber" column="入荷番号"/>
@@ -1946,11 +2062,12 @@ public class Acceptance {
         <result property="updatedBy" column="更新者"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.Inspection"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "受入検査データ" (
             "受入検査番号", "入荷番号", "発注番号", "発注行番号", "受入検査日",
             "受入検査担当者コード", "品目コード", "諸口品目区分", "良品数", "不良品数",
-            "受入検査備考", "作成者"
+            "受入検査備考", "作成者", "更新者"
         ) VALUES (
             #{inspectionNumber},
             #{receivingNumber},
@@ -1963,22 +2080,34 @@ public class Acceptance {
             #{goodQuantity},
             #{defectQuantity},
             #{remarks},
-            #{createdBy}
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
+
+    <select id="findById" resultMap="InspectionResultMap">
+        SELECT * FROM "受入検査データ" WHERE "ID" = #{id}
+    </select>
 
     <select id="findByInspectionNumber" resultMap="InspectionResultMap">
         SELECT * FROM "受入検査データ" WHERE "受入検査番号" = #{inspectionNumber}
     </select>
 
-    <select id="findLatestInspectionNumber" resultType="string">
-        SELECT "受入検査番号" FROM "受入検査データ"
-        WHERE "受入検査番号" LIKE #{prefix}
-        ORDER BY "受入検査番号" DESC
-        LIMIT 1
+    <select id="findByReceivingNumber" resultMap="InspectionResultMap">
+        SELECT * FROM "受入検査データ" WHERE "入荷番号" = #{receivingNumber} ORDER BY "受入検査日" DESC
     </select>
 
-    <delete id="deleteAll">
+    <select id="findAll" resultMap="InspectionResultMap">
+        SELECT * FROM "受入検査データ" ORDER BY "受入検査日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "受入検査データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
         DELETE FROM "受入検査データ"
     </delete>
 </mapper>
@@ -1990,13 +2119,13 @@ public class Acceptance {
 <summary>AcceptanceMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/AcceptanceMapper.xml -->
+<!-- src/main/resources/mapper/AcceptanceMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.AcceptanceMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.AcceptanceMapper">
 
-    <resultMap id="AcceptanceResultMap" type="com.example.production.domain.model.purchase.Acceptance">
+    <resultMap id="AcceptanceResultMap" type="com.example.pms.domain.model.purchase.Acceptance">
         <id property="id" column="ID"/>
         <result property="acceptanceNumber" column="検収番号"/>
         <result property="inspectionNumber" column="受入検査番号"/>
@@ -2018,11 +2147,12 @@ public class Acceptance {
         <result property="updatedBy" column="更新者"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.Acceptance"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "検収データ" (
             "検収番号", "受入検査番号", "発注番号", "発注行番号", "検収日",
             "検収担当者コード", "取引先コード", "品目コード", "諸口品目区分",
-            "検収数", "検収単価", "検収金額", "検収消費税額", "検収備考", "作成者"
+            "検収数", "検収単価", "検収金額", "検収消費税額", "検収備考", "作成者", "更新者"
         ) VALUES (
             #{acceptanceNumber},
             #{inspectionNumber},
@@ -2038,28 +2168,38 @@ public class Acceptance {
             #{amount},
             #{taxAmount},
             #{remarks},
-            #{createdBy}
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
+
+    <select id="findById" resultMap="AcceptanceResultMap">
+        SELECT * FROM "検収データ" WHERE "ID" = #{id}
+    </select>
 
     <select id="findByAcceptanceNumber" resultMap="AcceptanceResultMap">
         SELECT * FROM "検収データ" WHERE "検収番号" = #{acceptanceNumber}
     </select>
 
-    <select id="findLatestAcceptanceNumber" resultType="string">
-        SELECT "検収番号" FROM "検収データ"
-        WHERE "検収番号" LIKE #{prefix}
-        ORDER BY "検収番号" DESC
-        LIMIT 1
+    <select id="findByInspectionNumber" resultMap="AcceptanceResultMap">
+        SELECT * FROM "検収データ" WHERE "受入検査番号" = #{inspectionNumber} ORDER BY "検収日" DESC
     </select>
 
     <select id="findByPurchaseOrderNumber" resultMap="AcceptanceResultMap">
-        SELECT * FROM "検収データ"
-        WHERE "発注番号" = #{purchaseOrderNumber}
-        ORDER BY "検収日", "検収番号"
+        SELECT * FROM "検収データ" WHERE "発注番号" = #{purchaseOrderNumber} ORDER BY "検収日" DESC
     </select>
 
-    <delete id="deleteAll">
+    <select id="findAll" resultMap="AcceptanceResultMap">
+        SELECT * FROM "検収データ" ORDER BY "検収日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "検収データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
         DELETE FROM "検収データ"
     </delete>
 </mapper>
@@ -2073,10 +2213,10 @@ public class Acceptance {
 <summary>ReceivingMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/ReceivingMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/ReceivingMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.purchase.Receiving;
+import com.example.pms.domain.model.purchase.Receiving;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -2098,10 +2238,10 @@ public interface ReceivingMapper {
 <summary>InspectionMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/InspectionMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/InspectionMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.purchase.Inspection;
+import com.example.pms.domain.model.purchase.Inspection;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
@@ -2119,10 +2259,10 @@ public interface InspectionMapper {
 <summary>AcceptanceMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/AcceptanceMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/AcceptanceMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.purchase.Acceptance;
+import com.example.pms.domain.model.purchase.Acceptance;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -2147,10 +2287,10 @@ public interface AcceptanceMapper {
 <summary>ReceivingCommand</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/in/command/ReceivingCommand.java
-package com.example.production.application.port.in.command;
+// src/main/java/com/example/pms/application/port/in/command/ReceivingCommand.java
+package com.example.pms.application.port.in.command;
 
-import com.example.production.domain.model.purchase.ReceivingType;
+import com.example.pms.domain.model.purchase.ReceivingType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -2176,8 +2316,8 @@ public class ReceivingCommand {
 <summary>InspectionCommand</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/in/command/InspectionCommand.java
-package com.example.production.application.port.in.command;
+// src/main/java/com/example/pms/application/port/in/command/InspectionCommand.java
+package com.example.pms.application.port.in.command;
 
 import lombok.Builder;
 import lombok.Data;
@@ -2203,8 +2343,8 @@ public class InspectionCommand {
 <summary>AcceptanceCommand</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/in/command/AcceptanceCommand.java
-package com.example.production.application.port.in.command;
+// src/main/java/com/example/pms/application/port/in/command/AcceptanceCommand.java
+package com.example.pms.application.port.in.command;
 
 import lombok.Builder;
 import lombok.Data;
@@ -2231,11 +2371,11 @@ public class AcceptanceCommand {
 <summary>ReceivingService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/ReceivingService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/ReceivingService.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.purchase.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.purchase.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -2438,14 +2578,14 @@ public class ReceivingService {
 <summary>ReceivingServiceTest</summary>
 
 ```java
-// src/test/java/com/example/production/application/service/ReceivingServiceTest.java
-package com.example.production.application.service;
+// src/test/java/com/example/pms/application/service/ReceivingServiceTest.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.item.ItemCategory;
-import com.example.production.domain.model.master.Supplier;
-import com.example.production.domain.model.purchase.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
+import com.example.pms.domain.model.master.Supplier;
+import com.example.pms.domain.model.purchase.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import org.junit.jupiter.api.*;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -2731,10 +2871,10 @@ class ReceivingServiceTest {
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/PurchaseOrderMapper.xml -->
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.PurchaseOrderMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderMapper">
 
     <!-- 発注データ ResultMap（明細込み） -->
-    <resultMap id="purchaseOrderWithDetailsResultMap" type="com.example.production.domain.model.purchase.PurchaseOrder">
+    <resultMap id="purchaseOrderWithDetailsResultMap" type="com.example.pms.domain.model.purchase.PurchaseOrder">
         <id property="id" column="po_ID"/>
         <result property="purchaseOrderNumber" column="po_発注番号"/>
         <result property="orderDate" column="po_発注日"/>
@@ -2742,7 +2882,7 @@ class ReceivingServiceTest {
         <result property="purchaserCode" column="po_発注担当者コード"/>
         <result property="departmentCode" column="po_発注部門コード"/>
         <result property="status" column="po_ステータス"
-                typeHandler="com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler"/>
         <result property="remarks" column="po_備考"/>
         <result property="version" column="po_バージョン"/>
         <result property="createdAt" column="po_作成日時"/>
@@ -2750,18 +2890,18 @@ class ReceivingServiceTest {
         <result property="updatedAt" column="po_更新日時"/>
         <result property="updatedBy" column="po_更新者"/>
         <!-- 取引先マスタとの N:1 関連 -->
-        <association property="supplier" javaType="com.example.production.domain.model.master.Supplier">
+        <association property="supplier" javaType="com.example.pms.domain.model.master.Supplier">
             <id property="supplierCode" column="s_取引先コード"/>
             <result property="supplierName" column="s_取引先名"/>
             <result property="supplierType" column="s_取引先区分"/>
         </association>
         <!-- 発注明細との 1:N 関連 -->
-        <collection property="details" ofType="com.example.production.domain.model.purchase.PurchaseOrderDetail"
+        <collection property="details" ofType="com.example.pms.domain.model.purchase.PurchaseOrderDetail"
                     resultMap="purchaseOrderDetailNestedResultMap"/>
     </resultMap>
 
     <!-- 発注明細のネスト ResultMap -->
-    <resultMap id="purchaseOrderDetailNestedResultMap" type="com.example.production.domain.model.purchase.PurchaseOrderDetail">
+    <resultMap id="purchaseOrderDetailNestedResultMap" type="com.example.pms.domain.model.purchase.PurchaseOrderDetail">
         <id property="id" column="pod_ID"/>
         <result property="purchaseOrderNumber" column="pod_発注番号"/>
         <result property="lineNumber" column="pod_発注行番号"/>
@@ -2782,7 +2922,7 @@ class ReceivingServiceTest {
         <result property="lineRemarks" column="pod_明細備考"/>
         <result property="version" column="pod_バージョン"/>
         <!-- 品目マスタとの N:1 関連 -->
-        <association property="item" javaType="com.example.production.domain.model.item.Item">
+        <association property="item" javaType="com.example.pms.domain.model.item.Item">
             <id property="itemCode" column="i_品目コード"/>
             <result property="itemName" column="i_品名"/>
             <result property="itemCategory" column="i_品目区分"/>
@@ -2863,17 +3003,17 @@ class ReceivingServiceTest {
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/ReceivingMapper.xml -->
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.ReceivingMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ReceivingMapper">
 
     <!-- 入荷受入データ ResultMap（発注明細・検査・検収込み） -->
-    <resultMap id="receivingWithRelationsResultMap" type="com.example.production.domain.model.purchase.Receiving">
+    <resultMap id="receivingWithRelationsResultMap" type="com.example.pms.domain.model.purchase.Receiving">
         <id property="id" column="r_ID"/>
         <result property="receivingNumber" column="r_入荷受入番号"/>
         <result property="purchaseOrderNumber" column="r_発注番号"/>
         <result property="lineNumber" column="r_発注行番号"/>
         <result property="receivingDate" column="r_入荷日"/>
         <result property="receivingType" column="r_入荷受入区分"
-                typeHandler="com.example.production.infrastructure.persistence.ReceivingTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler"/>
         <result property="receivedQuantity" column="r_入荷数量"/>
         <result property="locationCode" column="r_入荷場所コード"/>
         <result property="remarks" column="r_備考"/>
@@ -2881,7 +3021,7 @@ class ReceivingServiceTest {
         <result property="createdAt" column="r_作成日時"/>
         <result property="updatedAt" column="r_更新日時"/>
         <!-- 発注明細との N:1 関連 -->
-        <association property="purchaseOrderDetail" javaType="com.example.production.domain.model.purchase.PurchaseOrderDetail">
+        <association property="purchaseOrderDetail" javaType="com.example.pms.domain.model.purchase.PurchaseOrderDetail">
             <id property="id" column="pod_ID"/>
             <result property="purchaseOrderNumber" column="pod_発注番号"/>
             <result property="lineNumber" column="pod_発注行番号"/>
@@ -2890,7 +3030,7 @@ class ReceivingServiceTest {
             <result property="unitPrice" column="pod_発注単価"/>
         </association>
         <!-- 検査データとの 1:1 関連 -->
-        <association property="inspection" javaType="com.example.production.domain.model.purchase.Inspection">
+        <association property="inspection" javaType="com.example.pms.domain.model.purchase.Inspection">
             <id property="id" column="ins_ID"/>
             <result property="inspectionNumber" column="ins_検査番号"/>
             <result property="inspectionDate" column="ins_検査日"/>
@@ -2899,7 +3039,7 @@ class ReceivingServiceTest {
             <result property="defectQuantity" column="ins_不良数量"/>
         </association>
         <!-- 検収データとの 1:1 関連 -->
-        <association property="acceptance" javaType="com.example.production.domain.model.purchase.Acceptance">
+        <association property="acceptance" javaType="com.example.pms.domain.model.purchase.Acceptance">
             <id property="id" column="acc_ID"/>
             <result property="acceptanceNumber" column="acc_検収番号"/>
             <result property="acceptanceDate" column="acc_検収日"/>
@@ -3011,10 +3151,10 @@ COMMENT ON COLUMN "検収データ"."バージョン" IS '楽観ロック用バ�
 <summary>PurchaseOrder.java（バージョンフィールド追加）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/PurchaseOrder.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/PurchaseOrder.java
+package com.example.pms.domain.model.purchase;
 
-import com.example.production.domain.model.master.Supplier;
+import com.example.pms.domain.model.master.Supplier;
 import lombok.Builder;
 import lombok.Data;
 
@@ -3056,8 +3196,8 @@ public class PurchaseOrder {
 <summary>Receiving.java（バージョンフィールド追加）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/purchase/Receiving.java
-package com.example.production.domain.model.purchase;
+// src/main/java/com/example/pms/domain/model/purchase/Receiving.java
+package com.example.pms.domain.model.purchase;
 
 import lombok.Builder;
 import lombok.Data;
@@ -3101,14 +3241,14 @@ public class Receiving {
 
 ```xml
 <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
-<update id="updateWithOptimisticLock" parameterType="com.example.production.domain.model.purchase.PurchaseOrder">
+<update id="updateWithOptimisticLock" parameterType="com.example.pms.domain.model.purchase.PurchaseOrder">
     UPDATE "発注データ"
     SET
         "発注日" = #{orderDate},
         "取引先コード" = #{supplierCode},
         "発注担当者コード" = #{purchaserCode},
         "発注部門コード" = #{departmentCode},
-        "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler}::発注ステータス,
+        "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
         "備考" = #{remarks},
         "更新日時" = CURRENT_TIMESTAMP,
         "更新者" = #{updatedBy},
@@ -3121,7 +3261,7 @@ public class Receiving {
 <update id="updateStatusWithOptimisticLock">
     UPDATE "発注データ"
     SET
-        "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PurchaseOrderStatusTypeHandler}::発注ステータス,
+        "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
     WHERE "ID" = #{id}
@@ -3180,14 +3320,14 @@ public class Receiving {
 <summary>PurchaseOrderRepositoryImpl.java（楽観ロック対応）</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/repository/PurchaseOrderRepositoryImpl.java
-package com.example.production.infrastructure.persistence.repository;
+// src/main/java/com/example/pms/infrastructure/persistence/repository/PurchaseOrderRepositoryImpl.java
+package com.example.pms.infrastructure.out.persistence.typehandler.repository;
 
-import com.example.production.application.port.out.PurchaseOrderRepository;
-import com.example.production.domain.exception.OptimisticLockException;
-import com.example.production.domain.model.purchase.PurchaseOrder;
-import com.example.production.domain.model.purchase.PurchaseOrderStatus;
-import com.example.production.infrastructure.persistence.mapper.PurchaseOrderMapper;
+import com.example.pms.application.port.out.PurchaseOrderRepository;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.purchase.PurchaseOrder;
+import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
+import com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -3248,14 +3388,14 @@ public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
 <summary>PurchaseOrderRepositoryOptimisticLockTest.java</summary>
 
 ```java
-// src/test/java/com/example/production/infrastructure/persistence/repository/PurchaseOrderRepositoryOptimisticLockTest.java
-package com.example.production.infrastructure.persistence.repository;
+// src/test/java/com/example/pms/infrastructure/persistence/repository/PurchaseOrderRepositoryOptimisticLockTest.java
+package com.example.pms.infrastructure.out.persistence.typehandler.repository;
 
-import com.example.production.application.port.out.PurchaseOrderRepository;
-import com.example.production.domain.exception.OptimisticLockException;
-import com.example.production.domain.model.purchase.PurchaseOrder;
-import com.example.production.domain.model.purchase.PurchaseOrderStatus;
-import com.example.production.testsetup.BaseIntegrationTest;
+import com.example.pms.application.port.out.PurchaseOrderRepository;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.purchase.PurchaseOrder;
+import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
+import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 

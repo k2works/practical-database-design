@@ -199,8 +199,8 @@ stop
 <summary>MaterialConsumption.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/MaterialConsumption.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/cost/MaterialConsumption.java
+package com.example.pms.domain.model.cost;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -215,7 +215,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MaterialConsumption {
-    private Long id;
+    private Integer id;
     private String workOrderNumber;
     private String materialCode;
     private LocalDate consumptionDate;
@@ -240,10 +240,10 @@ public class MaterialConsumption {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.MaterialConsumptionMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.MaterialConsumptionMapper">
 
     <resultMap id="MaterialConsumptionResultMap"
-               type="com.example.sms.domain.model.cost.MaterialConsumption">
+               type="com.example.pms.domain.model.cost.MaterialConsumption">
         <id property="id" column="ID"/>
         <result property="workOrderNumber" column="作業指示番号"/>
         <result property="materialCode" column="材料コード"/>
@@ -296,10 +296,10 @@ public class MaterialConsumption {
 #### Flyway マイグレーション：材料消費
 
 <details>
-<summary>V030_1__create_material_consumption_tables.sql</summary>
+<summary>V013__cost_management_tables.sql（材料消費部分）</summary>
 
 ```sql
--- V030_1__create_material_consumption_tables.sql
+-- V013__cost_management_tables.sql（材料消費部分）
 
 -- 材料消費データ
 CREATE TABLE "材料消費データ" (
@@ -371,8 +371,8 @@ stop
 <summary>WageRate.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/WageRate.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/cost/WageRate.java
+package com.example.pms.domain.model.cost;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -387,7 +387,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WageRate {
-    private Long id;
+    private Integer id;
     private String workerCategoryCode;
     private String workerCategoryName;
     private LocalDate effectiveStartDate;
@@ -407,8 +407,8 @@ public class WageRate {
 <summary>LaborHours.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/LaborHours.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/process/LaborHours.java
+package com.example.pms.domain.model.process;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -423,7 +423,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LaborHours {
-    private Long id;
+    private Integer id;
     private String workOrderNumber;
     private String processCode;
     private String workerCode;
@@ -450,10 +450,10 @@ public class LaborHours {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.LaborHoursMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.LaborHoursMapper">
 
     <resultMap id="WageRateResultMap"
-               type="com.example.sms.domain.model.cost.WageRate">
+               type="com.example.pms.domain.model.cost.WageRate">
         <id property="id" column="ID"/>
         <result property="workerCategoryCode" column="作業者区分コード"/>
         <result property="workerCategoryName" column="作業者区分名"/>
@@ -466,7 +466,7 @@ public class LaborHours {
     </resultMap>
 
     <resultMap id="LaborHoursResultMap"
-               type="com.example.sms.domain.model.cost.LaborHours">
+               type="com.example.pms.domain.model.process.LaborHours">
         <id property="id" column="ID"/>
         <result property="workOrderNumber" column="作業指示番号"/>
         <result property="processCode" column="工程コード"/>
@@ -535,10 +535,10 @@ public class LaborHours {
 #### Flyway マイグレーション：労務費
 
 <details>
-<summary>V030_2__create_labor_cost_tables.sql</summary>
+<summary>V013__cost_management_tables.sql（労務費部分）</summary>
 
 ```sql
--- V030_2__create_labor_cost_tables.sql
+-- V013__cost_management_tables.sql（労務費部分）
 
 -- 賃率マスタ
 CREATE TABLE "賃率マスタ" (
@@ -639,8 +639,8 @@ stop
 <summary>OverheadAllocation.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/OverheadAllocation.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/cost/OverheadAllocation.java
+package com.example.pms.domain.model.cost;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -654,7 +654,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OverheadAllocation {
-    private Long id;
+    private Integer id;
     private String workOrderNumber;
     private String accountingPeriod;
     private String allocationBasis;
@@ -673,8 +673,8 @@ public class OverheadAllocation {
 <summary>ManufacturingOverhead.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/ManufacturingOverhead.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/cost/ManufacturingOverhead.java
+package com.example.pms.domain.model.cost;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -688,7 +688,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ManufacturingOverhead {
-    private Long id;
+    private Integer id;
     private String accountingPeriod;
     private String costCategory;
     private String costCategoryName;
@@ -709,10 +709,10 @@ public class ManufacturingOverhead {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.OverheadMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.OverheadMapper">
 
     <resultMap id="ManufacturingOverheadResultMap"
-               type="com.example.sms.domain.model.cost.ManufacturingOverhead">
+               type="com.example.pms.domain.model.cost.ManufacturingOverhead">
         <id property="id" column="ID"/>
         <result property="accountingPeriod" column="会計期間"/>
         <result property="costCategory" column="費用区分"/>
@@ -723,7 +723,7 @@ public class ManufacturingOverhead {
     </resultMap>
 
     <resultMap id="OverheadAllocationResultMap"
-               type="com.example.sms.domain.model.cost.OverheadAllocation">
+               type="com.example.pms.domain.model.cost.OverheadAllocation">
         <id property="id" column="ID"/>
         <result property="workOrderNumber" column="作業指示番号"/>
         <result property="accountingPeriod" column="会計期間"/>
@@ -772,10 +772,10 @@ public class ManufacturingOverhead {
 #### Flyway マイグレーション：製造間接費
 
 <details>
-<summary>V030_3__create_overhead_tables.sql</summary>
+<summary>V013__cost_management_tables.sql（製造間接費部分）</summary>
 
 ```sql
--- V030_3__create_overhead_tables.sql
+-- V013__cost_management_tables.sql（製造間接費部分）
 
 -- 製造間接費マスタ
 CREATE TABLE "製造間接費マスタ" (
@@ -867,8 +867,8 @@ stop
 <summary>StandardCost.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/StandardCost.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/cost/StandardCost.java
+package com.example.pms.domain.model.cost;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -883,7 +883,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StandardCost {
-    private Long id;
+    private Integer id;
     private String itemCode;
     private LocalDate effectiveStartDate;
     private LocalDate effectiveEndDate;
@@ -904,8 +904,8 @@ public class StandardCost {
 <summary>ActualCost.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/ActualCost.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/cost/ActualCost.java
+package com.example.pms.domain.model.cost;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -919,7 +919,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ActualCost {
-    private Long id;
+    private Integer id;
     private String workOrderNumber;
     private String itemCode;
     private BigDecimal completedQuantity;
@@ -930,6 +930,18 @@ public class ActualCost {
     private BigDecimal unitCost;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    @Builder.Default
+    private List<MaterialConsumption> materialConsumptions = new ArrayList<>();
+    @Builder.Default
+    private List<LaborHours> laborHours = new ArrayList<>();
+    @Builder.Default
+    private List<OverheadAllocation> overheadAllocations = new ArrayList<>();
 }
 ```
 
@@ -941,8 +953,8 @@ public class ActualCost {
 <summary>CostVariance.java</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/CostVariance.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/cost/CostVariance.java
+package com.example.pms.domain.model.cost;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -956,7 +968,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CostVariance {
-    private Long id;
+    private Integer id;
     private String workOrderNumber;
     private String itemCode;
     private BigDecimal materialCostVariance;
@@ -978,10 +990,10 @@ public class CostVariance {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.CostMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.CostMapper">
 
     <resultMap id="StandardCostResultMap"
-               type="com.example.sms.domain.model.cost.StandardCost">
+               type="com.example.pms.domain.model.cost.StandardCost">
         <id property="id" column="ID"/>
         <result property="itemCode" column="品目コード"/>
         <result property="effectiveStartDate" column="適用開始日"/>
@@ -995,7 +1007,7 @@ public class CostVariance {
     </resultMap>
 
     <resultMap id="ActualCostResultMap"
-               type="com.example.sms.domain.model.cost.ActualCost">
+               type="com.example.pms.domain.model.cost.ActualCost">
         <id property="id" column="ID"/>
         <result property="workOrderNumber" column="作業指示番号"/>
         <result property="itemCode" column="品目コード"/>
@@ -1010,7 +1022,7 @@ public class CostVariance {
     </resultMap>
 
     <resultMap id="CostVarianceResultMap"
-               type="com.example.sms.domain.model.cost.CostVariance">
+               type="com.example.pms.domain.model.cost.CostVariance">
         <id property="id" column="ID"/>
         <result property="workOrderNumber" column="作業指示番号"/>
         <result property="itemCode" column="品目コード"/>
@@ -1094,10 +1106,10 @@ public class CostVariance {
 #### Flyway マイグレーション：原価管理
 
 <details>
-<summary>V030_4__create_cost_tables.sql</summary>
+<summary>V013__cost_management_tables.sql（原価管理部分）</summary>
 
 ```sql
--- V030_4__create_cost_tables.sql
+-- V013__cost_management_tables.sql（原価管理部分）
 
 -- 標準原価マスタ
 CREATE TABLE "標準原価マスタ" (
@@ -1183,10 +1195,10 @@ CREATE INDEX "IDX_原価差異_作業指示" ON "原価差異データ" ("作業
 
 ```java
 // src/main/java/com/example/sms/application/service/cost/CostCalculationService.java
-package com.example.sms.application.service.cost;
+package com.example.pms.application.service.cost;
 
-import com.example.sms.domain.model.cost.*;
-import com.example.sms.infrastructure.out.persistence.mapper.*;
+import com.example.pms.domain.model.cost.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1489,6 +1501,8 @@ actual_cost -- cost_variance : 差異分析
 
 #### 実際原価データのネスト ResultMap（材料消費・工数実績・配賦を含む）
 
+実装では、nested select 方式を採用しています。これにより、N+1 問題のリスクはありますが、シンプルで保守しやすい構成となっています。
+
 <details>
 <summary>ActualCostMapper.xml（リレーション設定）</summary>
 
@@ -1498,141 +1512,74 @@ actual_cost -- cost_variance : 差異分析
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/ActualCostMapper.xml -->
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ActualCostMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ActualCostMapper">
 
-    <!-- 実際原価データ with 材料消費・工数実績・配賦・品目 ResultMap -->
-    <resultMap id="actualCostFullResultMap" type="com.example.sms.domain.model.cost.ActualCost">
-        <id property="id" column="ac_id"/>
-        <result property="workOrderNumber" column="ac_作業指示番号"/>
-        <result property="itemCode" column="ac_品目コード"/>
-        <result property="completedQuantity" column="ac_完成数量"/>
-        <result property="actualMaterialCost" column="ac_実際材料費"/>
-        <result property="actualLaborCost" column="ac_実際労務費"/>
-        <result property="actualExpense" column="ac_実際経費"/>
-        <result property="actualManufacturingCost" column="ac_実際製造原価"/>
-        <result property="unitCost" column="ac_単位原価"/>
-        <result property="version" column="ac_バージョン"/>
-        <result property="createdAt" column="ac_作成日時"/>
-        <result property="updatedAt" column="ac_更新日時"/>
+    <!-- 基本 ResultMap -->
+    <resultMap id="actualCostResultMap" type="com.example.pms.domain.model.cost.ActualCost">
+        <id property="id" column="ID"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="completedQuantity" column="完成数量"/>
+        <result property="actualMaterialCost" column="実際材料費"/>
+        <result property="actualLaborCost" column="実際労務費"/>
+        <result property="actualExpense" column="実際経費"/>
+        <result property="actualManufacturingCost" column="実際製造原価"/>
+        <result property="unitCost" column="単位原価"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
 
-        <!-- 品目マスタとの N:1 関連 -->
-        <association property="item" javaType="com.example.sms.domain.model.item.Item">
-            <id property="itemCode" column="i_品目コード"/>
-            <result property="itemName" column="i_品目名"/>
-        </association>
+    <!-- リレーション付き ResultMap（nested select 方式） -->
+    <resultMap id="actualCostWithRelationsResultMap" type="com.example.pms.domain.model.cost.ActualCost">
+        <id property="id" column="ID"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="completedQuantity" column="完成数量"/>
+        <result property="actualMaterialCost" column="実際材料費"/>
+        <result property="actualLaborCost" column="実際労務費"/>
+        <result property="actualExpense" column="実際経費"/>
+        <result property="actualManufacturingCost" column="実際製造原価"/>
+        <result property="unitCost" column="単位原価"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
 
-        <!-- 作業指示との N:1 関連 -->
-        <association property="workOrder" javaType="com.example.sms.domain.model.process.WorkOrder">
-            <id property="workOrderNumber" column="wo_作業指示番号"/>
-            <result property="orderQuantity" column="wo_作業指示数"/>
-            <result property="completedQuantity" column="wo_完成済数"/>
-        </association>
-
-        <!-- 材料消費との 1:N 関連 -->
+        <!-- 材料消費との 1:N 関連（nested select） -->
         <collection property="materialConsumptions"
-                    ofType="com.example.sms.domain.model.cost.MaterialConsumption"
-                    resultMap="materialConsumptionNestedResultMap"/>
+                    column="作業指示番号"
+                    select="com.example.pms.infrastructure.out.persistence.mapper.MaterialConsumptionMapper.findByWorkOrderNumber"/>
 
-        <!-- 工数実績との 1:N 関連 -->
+        <!-- 工数実績との 1:N 関連（nested select） -->
         <collection property="laborHours"
-                    ofType="com.example.sms.domain.model.cost.LaborHours"
-                    resultMap="laborHoursNestedResultMap"/>
+                    column="作業指示番号"
+                    select="com.example.pms.infrastructure.out.persistence.mapper.LaborHoursMapper.findByWorkOrderNumber"/>
 
-        <!-- 製造間接費配賦との 1:N 関連 -->
+        <!-- 製造間接費配賦との 1:N 関連（nested select） -->
         <collection property="overheadAllocations"
-                    ofType="com.example.sms.domain.model.cost.OverheadAllocation"
-                    resultMap="overheadAllocationNestedResultMap"/>
+                    column="作業指示番号"
+                    select="com.example.pms.infrastructure.out.persistence.mapper.OverheadAllocationMapper.findByWorkOrderNumber"/>
     </resultMap>
 
-    <!-- 材料消費のネスト ResultMap -->
-    <resultMap id="materialConsumptionNestedResultMap" type="com.example.sms.domain.model.cost.MaterialConsumption">
-        <id property="id" column="mc_id"/>
-        <result property="workOrderNumber" column="mc_作業指示番号"/>
-        <result property="materialCode" column="mc_材料コード"/>
-        <result property="consumptionDate" column="mc_消費日"/>
-        <result property="consumptionQuantity" column="mc_消費数量"/>
-        <result property="unitPrice" column="mc_単価"/>
-        <result property="consumptionAmount" column="mc_消費金額"/>
-        <result property="isDirect" column="mc_直接材料フラグ"/>
-    </resultMap>
-
-    <!-- 工数実績のネスト ResultMap -->
-    <resultMap id="laborHoursNestedResultMap" type="com.example.sms.domain.model.cost.LaborHours">
-        <id property="id" column="lh_id"/>
-        <result property="workOrderNumber" column="lh_作業指示番号"/>
-        <result property="processCode" column="lh_工程コード"/>
-        <result property="workerCode" column="lh_作業者コード"/>
-        <result property="workDate" column="lh_作業日"/>
-        <result property="workHours" column="lh_作業時間"/>
-        <result property="hourlyRate" column="lh_時間単価"/>
-        <result property="laborCost" column="lh_労務費"/>
-        <result property="isDirect" column="lh_直接労務フラグ"/>
-    </resultMap>
-
-    <!-- 製造間接費配賦のネスト ResultMap -->
-    <resultMap id="overheadAllocationNestedResultMap" type="com.example.sms.domain.model.cost.OverheadAllocation">
-        <id property="id" column="oa_id"/>
-        <result property="workOrderNumber" column="oa_作業指示番号"/>
-        <result property="accountingPeriod" column="oa_会計期間"/>
-        <result property="allocationBasis" column="oa_配賦基準"/>
-        <result property="basisAmount" column="oa_基準金額"/>
-        <result property="allocationRate" column="oa_配賦率"/>
-        <result property="allocatedAmount" column="oa_配賦金額"/>
-    </resultMap>
-
-    <!-- JOIN による一括取得クエリ -->
-    <select id="findFullByWorkOrderNumber" resultMap="actualCostFullResultMap">
-        SELECT
-            ac."ID" AS ac_id,
-            ac."作業指示番号" AS ac_作業指示番号,
-            ac."品目コード" AS ac_品目コード,
-            ac."完成数量" AS ac_完成数量,
-            ac."実際材料費" AS ac_実際材料費,
-            ac."実際労務費" AS ac_実際労務費,
-            ac."実際経費" AS ac_実際経費,
-            ac."実際製造原価" AS ac_実際製造原価,
-            ac."単位原価" AS ac_単位原価,
-            ac."バージョン" AS ac_バージョン,
-            ac."作成日時" AS ac_作成日時,
-            ac."更新日時" AS ac_更新日時,
-            i."品目コード" AS i_品目コード,
-            i."品目名" AS i_品目名,
-            wo."作業指示番号" AS wo_作業指示番号,
-            wo."作業指示数" AS wo_作業指示数,
-            wo."完成済数" AS wo_完成済数,
-            mc."ID" AS mc_id,
-            mc."作業指示番号" AS mc_作業指示番号,
-            mc."材料コード" AS mc_材料コード,
-            mc."消費日" AS mc_消費日,
-            mc."消費数量" AS mc_消費数量,
-            mc."単価" AS mc_単価,
-            mc."消費金額" AS mc_消費金額,
-            mc."直接材料フラグ" AS mc_直接材料フラグ,
-            lh."ID" AS lh_id,
-            lh."作業指示番号" AS lh_作業指示番号,
-            lh."工程コード" AS lh_工程コード,
-            lh."作業者コード" AS lh_作業者コード,
-            lh."作業日" AS lh_作業日,
-            lh."作業時間" AS lh_作業時間,
-            lh."時間単価" AS lh_時間単価,
-            lh."労務費" AS lh_労務費,
-            lh."直接労務フラグ" AS lh_直接労務フラグ,
-            oa."ID" AS oa_id,
-            oa."作業指示番号" AS oa_作業指示番号,
-            oa."会計期間" AS oa_会計期間,
-            oa."配賦基準" AS oa_配賦基準,
-            oa."基準金額" AS oa_基準金額,
-            oa."配賦率" AS oa_配賦率,
-            oa."配賦金額" AS oa_配賦金額
-        FROM "実際原価データ" ac
-        LEFT JOIN "品目マスタ" i ON ac."品目コード" = i."品目コード"
-        LEFT JOIN "作業指示データ" wo ON ac."作業指示番号" = wo."作業指示番号"
-        LEFT JOIN "材料消費データ" mc ON ac."作業指示番号" = mc."作業指示番号"
-        LEFT JOIN "工数実績データ" lh ON ac."作業指示番号" = lh."作業指示番号"
-        LEFT JOIN "製造間接費配賦データ" oa ON ac."作業指示番号" = oa."作業指示番号"
-        WHERE ac."作業指示番号" = #{workOrderNumber}
-        ORDER BY mc."消費日", lh."作業日"
+    <!-- 基本検索 -->
+    <select id="findById" resultMap="actualCostResultMap">
+        SELECT * FROM "実際原価データ" WHERE "ID" = #{id}
     </select>
+
+    <select id="findByWorkOrderNumber" resultMap="actualCostResultMap">
+        SELECT * FROM "実際原価データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </select>
+
+    <!-- リレーション付き検索 -->
+    <select id="findByWorkOrderNumberWithRelations" resultMap="actualCostWithRelationsResultMap">
+        SELECT * FROM "実際原価データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </select>
+
+    <select id="findAll" resultMap="actualCostResultMap">
+        SELECT * FROM "実際原価データ" ORDER BY "作業指示番号"
+    </select>
+
+    <!-- INSERT/UPDATE/DELETE は省略（楽観ロック対応セクション参照） -->
 
 </mapper>
 ```
@@ -1650,10 +1597,10 @@ actual_cost -- cost_variance : 差異分析
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/CostComparisonMapper.xml -->
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.CostComparisonMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.CostComparisonMapper">
 
     <!-- 原価比較 ResultMap（標準原価・実際原価・差異を含む） -->
-    <resultMap id="costComparisonResultMap" type="com.example.sms.domain.model.cost.CostComparison">
+    <resultMap id="costComparisonResultMap" type="com.example.pms.domain.model.cost.CostComparison">
         <id property="workOrderNumber" column="作業指示番号"/>
         <result property="itemCode" column="品目コード"/>
         <result property="itemName" column="品目名"/>
@@ -1715,10 +1662,10 @@ actual_cost -- cost_variance : 差異分析
 
 | 設定項目 | 説明 |
 |---------|------|
-| `<collection>` | 1:N 関連のマッピング（実際原価→材料消費、実際原価→工数実績、実際原価→配賦） |
-| `<association>` | N:1 関連のマッピング（実際原価→品目、実際原価→作業指示） |
-| 原価明細の集約 | 材料消費・工数実績・配賦を実際原価に紐付けて一括取得 |
-| エイリアス（AS） | カラム名の重複を避けるプレフィックス（`ac_`, `mc_`, `lh_`, `oa_` など） |
+| `<collection>` + `select` | 1:N 関連の nested select 方式（実際原価→材料消費、実際原価→工数実績、実際原価→配賦） |
+| `column` 属性 | nested select に渡すパラメータ（作業指示番号を子クエリに渡す） |
+| 原価明細の集約 | 材料消費・工数実績・配賦を実際原価に紐付けて取得 |
+| シンプルな構成 | JOIN を使用しないため、クエリが単純で保守しやすい |
 
 ### 楽観ロックの実装
 
@@ -1727,10 +1674,11 @@ actual_cost -- cost_variance : 差異分析
 #### Flyway マイグレーション: バージョンカラム追加
 
 <details>
-<summary>V030_5__add_cost_version_columns.sql</summary>
+<summary>V013__cost_management_tables.sql（バージョンカラムは各テーブル作成時に含まれています）</summary>
 
 ```sql
--- src/main/resources/db/migration/V030_5__add_cost_version_columns.sql
+-- V013__cost_management_tables.sql（バージョンカラムは各テーブル作成時に含まれています）
+-- 注: 実装ではテーブル作成時にバージョンカラムを追加済み
 
 -- 実際原価データテーブルにバージョンカラムを追加
 ALTER TABLE "実際原価データ" ADD COLUMN "バージョン" INTEGER DEFAULT 1 NOT NULL;
@@ -1755,26 +1703,26 @@ COMMENT ON COLUMN "材料消費データ"."バージョン" IS '楽観ロック�
 <summary>ActualCost.java（バージョンフィールド追加）</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/cost/ActualCost.java
-package com.example.sms.domain.model.cost;
+// src/main/java/com/example/pms/domain/model/cost/ActualCost.java
+package com.example.pms.domain.model.cost;
 
-import com.example.sms.domain.model.item.Item;
-import com.example.sms.domain.model.process.WorkOrder;
+import com.example.pms.domain.model.process.LaborHours;
 import lombok.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 実際原価データエンティティ
+ * 実際原価データエンティティ.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ActualCost {
-    private Long id;
+    private Integer id;
     private String workOrderNumber;
     private String itemCode;
     private BigDecimal completedQuantity;
@@ -1791,8 +1739,6 @@ public class ActualCost {
     private Integer version = 1;
 
     // リレーション
-    private Item item;
-    private WorkOrder workOrder;
     @Builder.Default
     private List<MaterialConsumption> materialConsumptions = new ArrayList<>();
     @Builder.Default
@@ -1801,7 +1747,24 @@ public class ActualCost {
     private List<OverheadAllocation> overheadAllocations = new ArrayList<>();
 
     /**
-     * 原価再計算が必要かチェック
+     * 実際製造原価を計算.
+     */
+    public BigDecimal calculateActualManufacturingCost() {
+        return actualMaterialCost.add(actualLaborCost).add(actualExpense);
+    }
+
+    /**
+     * 単位原価を計算.
+     */
+    public BigDecimal calculateUnitCost() {
+        if (completedQuantity == null || completedQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return actualManufacturingCost.divide(completedQuantity, 4, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 原価再計算が必要かチェック.
      */
     public boolean needsRecalculation(BigDecimal newMaterialCost,
                                       BigDecimal newLaborCost,
@@ -1809,16 +1772,6 @@ public class ActualCost {
         return !actualMaterialCost.equals(newMaterialCost)
             || !actualLaborCost.equals(newLaborCost)
             || !actualExpense.equals(newExpense);
-    }
-
-    /**
-     * 単位原価を再計算
-     */
-    public BigDecimal recalculateUnitCost() {
-        if (completedQuantity.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        return actualManufacturingCost.divide(completedQuantity, 4, java.math.RoundingMode.HALF_UP);
     }
 }
 ```
@@ -1834,10 +1787,9 @@ public class ActualCost {
 
 ```xml
 <!-- 実際原価更新（楽観ロック対応） -->
-<update id="updateWithOptimisticLock">
+<update id="update">
     UPDATE "実際原価データ"
-    SET
-        "完成数量" = #{completedQuantity},
+    SET "完成数量" = #{completedQuantity},
         "実際材料費" = #{actualMaterialCost},
         "実際労務費" = #{actualLaborCost},
         "実際経費" = #{actualExpense},
@@ -1846,14 +1798,13 @@ public class ActualCost {
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
     WHERE "作業指示番号" = #{workOrderNumber}
-    AND "バージョン" = #{version}
+      AND "バージョン" = #{version}
 </update>
 
 <!-- 原価再計算による更新（楽観ロック + 完成数量チェック） -->
 <update id="recalculateWithOptimisticLock">
     UPDATE "実際原価データ"
-    SET
-        "実際材料費" = #{actualMaterialCost},
+    SET "実際材料費" = #{actualMaterialCost},
         "実際労務費" = #{actualLaborCost},
         "実際経費" = #{actualExpense},
         "実際製造原価" = #{actualMaterialCost} + #{actualLaborCost} + #{actualExpense},
@@ -1865,21 +1816,13 @@ public class ActualCost {
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
     WHERE "作業指示番号" = #{workOrderNumber}
-    AND "バージョン" = #{version}
+      AND "バージョン" = #{version}
 </update>
 
 <!-- バージョン取得 -->
 <select id="findVersionByWorkOrderNumber" resultType="java.lang.Integer">
     SELECT "バージョン" FROM "実際原価データ"
     WHERE "作業指示番号" = #{workOrderNumber}
-</select>
-
-<!-- 確定状態チェック -->
-<select id="isFinalized" resultType="java.lang.Boolean">
-    SELECT EXISTS(
-        SELECT 1 FROM "原価差異データ"
-        WHERE "作業指示番号" = #{workOrderNumber}
-    )
 </select>
 ```
 
@@ -1891,75 +1834,80 @@ public class ActualCost {
 <summary>ActualCostRepositoryImpl.java（楽観ロック対応）</summary>
 
 ```java
-// src/main/java/com/example/sms/infrastructure/out/persistence/repository/ActualCostRepositoryImpl.java
-package com.example.sms.infrastructure.out.persistence.repository;
+// src/main/java/com/example/pms/infrastructure/out/persistence/repository/ActualCostRepositoryImpl.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.sms.application.port.out.ActualCostRepository;
-import com.example.sms.domain.exception.OptimisticLockException;
-import com.example.sms.domain.model.cost.ActualCost;
-import com.example.sms.infrastructure.out.persistence.mapper.ActualCostMapper;
-import lombok.RequiredArgsConstructor;
+import com.example.pms.application.port.out.ActualCostRepository;
+import com.example.pms.domain.model.cost.ActualCost;
+import com.example.pms.infrastructure.out.persistence.mapper.ActualCostMapper;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
+/**
+ * 実際原価データリポジトリ実装.
+ */
 @Repository
-@RequiredArgsConstructor
 public class ActualCostRepositoryImpl implements ActualCostRepository {
 
     private final ActualCostMapper mapper;
 
-    @Override
-    @Transactional
-    public void update(ActualCost actualCost) {
-        int updatedCount = mapper.updateWithOptimisticLock(
-                actualCost.getWorkOrderNumber(),
-                actualCost.getVersion(),
-                actualCost.getCompletedQuantity(),
-                actualCost.getActualMaterialCost(),
-                actualCost.getActualLaborCost(),
-                actualCost.getActualExpense(),
-                actualCost.getActualManufacturingCost(),
-                actualCost.getUnitCost());
-
-        if (updatedCount == 0) {
-            handleOptimisticLockFailure(actualCost.getWorkOrderNumber(), actualCost.getVersion());
-        }
+    public ActualCostRepositoryImpl(ActualCostMapper mapper) {
+        this.mapper = mapper;
     }
 
     @Override
-    @Transactional
-    public void recalculate(String workOrderNumber, Integer version,
-                           BigDecimal materialCost, BigDecimal laborCost, BigDecimal expense) {
-        // 差異分析済みの場合は再計算不可
-        if (mapper.isFinalized(workOrderNumber)) {
-            throw new IllegalStateException(
-                    String.format("原価差異分析済みのため再計算できません: %s", workOrderNumber));
-        }
-
-        int updatedCount = mapper.recalculateWithOptimisticLock(
-                workOrderNumber, version, materialCost, laborCost, expense);
-
-        if (updatedCount == 0) {
-            handleOptimisticLockFailure(workOrderNumber, version);
-        }
-    }
-
-    private void handleOptimisticLockFailure(String workOrderNumber, Integer expectedVersion) {
-        Integer currentVersion = mapper.findVersionByWorkOrderNumber(workOrderNumber);
-        if (currentVersion == null) {
-            throw new IllegalArgumentException("実際原価データが見つかりません");
-        } else {
-            throw new OptimisticLockException("実際原価", workOrderNumber,
-                    expectedVersion, currentVersion);
-        }
+    public void save(ActualCost actualCost) {
+        mapper.insert(actualCost);
     }
 
     @Override
-    public Optional<ActualCost> findFullByWorkOrderNumber(String workOrderNumber) {
-        return Optional.ofNullable(mapper.findFullByWorkOrderNumber(workOrderNumber));
+    public int update(ActualCost actualCost) {
+        return mapper.update(actualCost);
+    }
+
+    @Override
+    public int recalculate(String workOrderNumber, Integer version,
+                           BigDecimal actualMaterialCost, BigDecimal actualLaborCost, BigDecimal actualExpense) {
+        return mapper.recalculateWithOptimisticLock(
+                workOrderNumber, version, actualMaterialCost, actualLaborCost, actualExpense);
+    }
+
+    @Override
+    public Optional<Integer> findVersionByWorkOrderNumber(String workOrderNumber) {
+        return Optional.ofNullable(mapper.findVersionByWorkOrderNumber(workOrderNumber));
+    }
+
+    @Override
+    public Optional<ActualCost> findById(Integer id) {
+        return Optional.ofNullable(mapper.findById(id));
+    }
+
+    @Override
+    public Optional<ActualCost> findByWorkOrderNumber(String workOrderNumber) {
+        return Optional.ofNullable(mapper.findByWorkOrderNumber(workOrderNumber));
+    }
+
+    @Override
+    public Optional<ActualCost> findByWorkOrderNumberWithRelations(String workOrderNumber) {
+        return Optional.ofNullable(mapper.findByWorkOrderNumberWithRelations(workOrderNumber));
+    }
+
+    @Override
+    public List<ActualCost> findAll() {
+        return mapper.findAll();
+    }
+
+    @Override
+    public void deleteByWorkOrderNumber(String workOrderNumber) {
+        mapper.deleteByWorkOrderNumber(workOrderNumber);
+    }
+
+    @Override
+    public void deleteAll() {
+        mapper.deleteAll();
     }
 }
 ```
@@ -1972,13 +1920,12 @@ public class ActualCostRepositoryImpl implements ActualCostRepository {
 <summary>ActualCostRepositoryOptimisticLockTest.java</summary>
 
 ```java
-// src/test/java/com/example/sms/infrastructure/out/persistence/repository/ActualCostRepositoryOptimisticLockTest.java
-package com.example.sms.infrastructure.out.persistence.repository;
+// src/test/java/com/example/pms/infrastructure/out/persistence/repository/ActualCostRepositoryImplTest.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.sms.application.port.out.ActualCostRepository;
-import com.example.sms.domain.exception.OptimisticLockException;
-import com.example.sms.domain.model.cost.ActualCost;
-import com.example.sms.testsetup.BaseIntegrationTest;
+import com.example.pms.application.port.out.ActualCostRepository;
+import com.example.pms.domain.model.cost.ActualCost;
+import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -2041,9 +1988,9 @@ class ActualCostRepositoryOptimisticLockTest extends BaseIntegrationTest {
             cost.setVersion(initialVersion); // 古いバージョンに戻す
             cost.setActualMaterialCost(new BigDecimal("16000"));
 
-            assertThatThrownBy(() -> actualCostRepository.update(cost))
-                    .isInstanceOf(OptimisticLockException.class)
-                    .hasMessageContaining("他のユーザーによって更新されています");
+            // 古いバージョンで更新すると 0 rows が返される
+            int result = actualCostRepository.update(cost);
+            assertThat(result).isEqualTo(0);
         }
     }
 
@@ -2074,20 +2021,27 @@ class ActualCostRepositoryOptimisticLockTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("差異分析済みの原価は再計算できない")
-        void cannotRecalculateFinalizedCost() {
-            // Arrange: 差異分析済みの原価データを作成
-            ActualCost cost = createFinalizedActualCost("WO-TEST-004");
+        @DisplayName("古いバージョンで再計算すると失敗する")
+        void recalculateFailsWithOldVersion() {
+            // Arrange
+            ActualCost cost = createTestActualCost("WO-TEST-004");
+            actualCostRepository.save(cost);
 
-            // Act & Assert
-            assertThatThrownBy(() -> actualCostRepository.recalculate(
-                    cost.getWorkOrderNumber(),
-                    cost.getVersion(),
-                    new BigDecimal("12000"),
-                    new BigDecimal("6000"),
-                    new BigDecimal("2000")))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("原価差異分析済みのため再計算できません");
+            // 先に更新してバージョンを上げる
+            ActualCost toUpdate = actualCostRepository.findByWorkOrderNumber("WO-TEST-004").get();
+            toUpdate.setActualMaterialCost(new BigDecimal("55000"));
+            actualCostRepository.update(toUpdate);
+
+            // Act: 古いバージョンで再計算
+            int result = actualCostRepository.recalculate(
+                    "WO-TEST-004",
+                    1, // 古いバージョン
+                    new BigDecimal("60000"),
+                    new BigDecimal("40000"),
+                    new BigDecimal("30000"));
+
+            // Assert
+            assertThat(result).isEqualTo(0);
         }
     }
 
@@ -2102,11 +2056,6 @@ class ActualCostRepositoryOptimisticLockTest extends BaseIntegrationTest {
                 .actualManufacturingCost(new BigDecimal("17000"))
                 .unitCost(new BigDecimal("170"))
                 .build();
-    }
-
-    private ActualCost createFinalizedActualCost(String workOrderNumber) {
-        // 差異分析済みの原価データを作成
-        return createTestActualCost(workOrderNumber);
     }
 }
 ```

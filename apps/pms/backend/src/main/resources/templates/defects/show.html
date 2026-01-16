@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>欠点詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>欠点詳細</h1>
+            <div>
+                <a th:href="@{/defects/{code}/edit(code=${defect.defectCode})}" class="btn btn-secondary">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/defects}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th style="width: 200px;">欠点コード</th>
+                            <td th:text="${defect.defectCode}"></td>
+                        </tr>
+                        <tr>
+                            <th>欠点名</th>
+                            <td th:text="${defect.defectName}"></td>
+                        </tr>
+                        <tr>
+                            <th>欠点分類</th>
+                            <td th:text="${defect.defectCategory}"></td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td th:text="${defect.createdAt != null ? #temporals.format(defect.createdAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></td>
+                        </tr>
+                        <tr>
+                            <th>更新日時</th>
+                            <td th:text="${defect.updatedAt != null ? #temporals.format(defect.updatedAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-end">
+                    <form th:action="@{/defects/{code}/delete(code=${defect.defectCode})}"
+                          method="post" class="d-inline"
+                          onsubmit="return confirm('この欠点を削除しますか？');">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> 削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

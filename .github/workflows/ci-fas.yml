@@ -43,6 +43,36 @@ jobs:
       - name: Run Quality Check and Test
         run: nix develop .#fas --command bash -c "cd apps/fas/backend && ./gradlew fullCheck"
 
+      - name: Show SpotBugs Report on Failure
+        if: failure()
+        run: |
+          echo "=== SpotBugs Report ==="
+          if [ -f apps/fas/backend/build/reports/spotbugs/main.xml ]; then
+            cat apps/fas/backend/build/reports/spotbugs/main.xml
+          else
+            echo "SpotBugs XML report not found"
+          fi
+
+      - name: Show Checkstyle Report on Failure
+        if: failure()
+        run: |
+          echo "=== Checkstyle Report ==="
+          if [ -f apps/fas/backend/build/reports/checkstyle/main.xml ]; then
+            cat apps/fas/backend/build/reports/checkstyle/main.xml
+          else
+            echo "Checkstyle XML report not found"
+          fi
+
+      - name: Show PMD Report on Failure
+        if: failure()
+        run: |
+          echo "=== PMD Report ==="
+          if [ -f apps/fas/backend/build/reports/pmd/main.xml ]; then
+            cat apps/fas/backend/build/reports/pmd/main.xml
+          else
+            echo "PMD XML report not found"
+          fi
+
       - name: Upload Test Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,3 +86,13 @@ jobs:
         with:
           name: fas-backend-jacoco-report
           path: apps/fas/backend/build/reports/jacoco/test/html
+
+      - name: Upload Static Analysis Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fas-backend-static-analysis
+          path: |
+            apps/fas/backend/build/reports/spotbugs/
+            apps/fas/backend/build/reports/checkstyle/
+            apps/fas/backend/build/reports/pmd/

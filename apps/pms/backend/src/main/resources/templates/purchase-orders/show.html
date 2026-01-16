@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>発注詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>発注詳細</h1>
+            <div>
+                <a th:href="@{/purchase-orders/{no}/pdf(no=${order.purchaseOrderNumber})}"
+                   class="btn btn-outline-danger me-2">
+                    <i class="bi bi-file-earmark-pdf"></i> 発注書 PDF
+                </a>
+                <form th:if="${order.status.name() == 'CREATING'}"
+                      th:action="@{/purchase-orders/{no}/confirm(no=${order.purchaseOrderNumber})}"
+                      method="post" class="d-inline">
+                    <button type="submit" class="btn btn-success"
+                            onclick="return confirm('この発注を確定しますか？');">
+                        <i class="bi bi-check-lg"></i> 確定
+                    </button>
+                </form>
+                <form th:if="${order.status.name() == 'CREATING' or order.status.name() == 'ORDERED'}"
+                      th:action="@{/purchase-orders/{no}/cancel(no=${order.purchaseOrderNumber})}"
+                      method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('この発注を取消しますか？');">
+                        <i class="bi bi-x-lg"></i> 取消
+                    </button>
+                </form>
+                <a th:href="@{/purchase-orders}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧へ戻る
+                </a>
+            </div>
+        </div>
+
+        <!-- 発注ヘッダ情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">発注情報</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-2">発注番号</dt>
+                    <dd class="col-sm-4" th:text="${order.purchaseOrderNumber}"></dd>
+                    <dt class="col-sm-2">ステータス</dt>
+                    <dd class="col-sm-4">
+                        <span class="badge"
+                              th:classappend="${order.status.name() == 'CREATING'} ? 'bg-secondary' :
+                                              (${order.status.name() == 'ORDERED'} ? 'bg-primary' :
+                                              (${order.status.name() == 'CANCELLED'} ? 'bg-danger' : 'bg-success'))"
+                              th:text="${order.status.displayName}"></span>
+                    </dd>
+                    <dt class="col-sm-2">発注日</dt>
+                    <dd class="col-sm-4" th:text="${order.orderDate}"></dd>
+                    <dt class="col-sm-2">仕入先</dt>
+                    <dd class="col-sm-4" th:text="${order.supplier?.supplierName ?: order.supplierCode}"></dd>
+                    <dt class="col-sm-2">備考</dt>
+                    <dd class="col-sm-10" th:text="${order.remarks ?: '-'}"></dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- 発注明細 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">発注明細</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${order.details == null or #lists.isEmpty(order.details)}" class="alert alert-info">
+                    明細がありません。
+                </div>
+                <table th:if="${order.details != null and not #lists.isEmpty(order.details)}"
+                       class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>行番号</th>
+                            <th>品目コード</th>
+                            <th>納入予定日</th>
+                            <th class="text-end">発注数量</th>
+                            <th class="text-end">発注単価</th>
+                            <th class="text-end">金額</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detail : ${order.details}">
+                            <td th:text="${detail.lineNumber}"></td>
+                            <td th:text="${detail.itemCode}"></td>
+                            <td th:text="${detail.expectedReceivingDate}"></td>
+                            <td class="text-end" th:text="${detail.orderQuantity}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(detail.orderUnitPrice, 1, 2)}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(detail.orderQuantity * detail.orderUnitPrice, 1, 2)}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

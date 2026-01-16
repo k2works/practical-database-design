@@ -11,30 +11,79 @@ title ヘキサゴナルアーキテクチャ
 
 package "Application Layer" {
   package "port/out" {
+    interface UnitRepository
     interface ItemRepository
     interface BomRepository
+    interface WorkCalendarRepository
+    interface LocationRepository
+    interface SupplierRepository
+    interface DepartmentRepository
+    interface StaffRepository
+    interface ProcessRepository
+    interface ProcessRouteRepository
+    interface UnitPriceRepository
+    interface DefectRepository
   }
 }
 
 package "Domain Layer" {
   package "model" {
+    class Unit
     class Item
     class ItemCategory
     class Bom
+    class BomExplosion
+    class WorkCalendar
+    class DateType
+    class Location
+    class LocationType
+    class Supplier
+    class SupplierType
+    class Department
+    class Staff
+    class Process
+    class ProcessRoute
+    class UnitPrice
+    class Defect
   }
 }
 
 package "Infrastructure Layer" {
-  package "persistence" {
+  package "out/persistence" {
     package "mapper" {
+      interface UnitMapper
       interface ItemMapper
       interface BomMapper
+      interface WorkCalendarMapper
+      interface LocationMapper
+      interface SupplierMapper
+      interface DepartmentMapper
+      interface StaffMapper
+      interface ProcessMapper
+      interface ProcessRouteMapper
+      interface UnitPriceMapper
+      interface DefectMapper
     }
     package "repository" {
+      class UnitRepositoryImpl
       class ItemRepositoryImpl
       class BomRepositoryImpl
+      class WorkCalendarRepositoryImpl
+      class LocationRepositoryImpl
+      class SupplierRepositoryImpl
+      class DepartmentRepositoryImpl
+      class StaffRepositoryImpl
+      class ProcessRepositoryImpl
+      class ProcessRouteRepositoryImpl
+      class UnitPriceRepositoryImpl
+      class DefectRepositoryImpl
     }
-    class ItemCategoryTypeHandler
+    package "typehandler" {
+      class ItemCategoryTypeHandler
+      class DateTypeTypeHandler
+      class LocationTypeTypeHandler
+      class SupplierTypeTypeHandler
+    }
   }
 }
 
@@ -48,23 +97,86 @@ ItemRepositoryImpl --> Item
 ### パッケージ構成
 
 ```
-src/main/java/com/example/production/
+src/main/java/com/example/pms/
 ├── application/                    # アプリケーション層
 │   └── port/
 │       └── out/                   # Output Port（リポジトリインターフェース）
-│           └── ItemRepository.java
+│           ├── UnitRepository.java
+│           ├── ItemRepository.java
+│           ├── BomRepository.java
+│           ├── WorkCalendarRepository.java
+│           ├── LocationRepository.java
+│           ├── SupplierRepository.java
+│           ├── DepartmentRepository.java
+│           ├── StaffRepository.java
+│           ├── ProcessRepository.java
+│           ├── ProcessRouteRepository.java
+│           ├── UnitPriceRepository.java
+│           └── DefectRepository.java
 ├── domain/                         # ドメイン層（純粋なビジネスロジック）
 │   └── model/                     # ドメインモデル
-│       └── item/
-│           ├── Item.java
-│           └── ItemCategory.java
+│       ├── unit/
+│       │   └── Unit.java
+│       ├── item/
+│       │   ├── Item.java
+│       │   └── ItemCategory.java
+│       ├── bom/
+│       │   ├── Bom.java
+│       │   └── BomExplosion.java
+│       ├── calendar/
+│       │   ├── WorkCalendar.java
+│       │   └── DateType.java
+│       ├── location/
+│       │   ├── Location.java
+│       │   └── LocationType.java
+│       ├── supplier/
+│       │   ├── Supplier.java
+│       │   └── SupplierType.java
+│       ├── department/
+│       │   └── Department.java
+│       ├── staff/
+│       │   └── Staff.java
+│       ├── process/
+│       │   ├── Process.java
+│       │   └── ProcessRoute.java
+│       ├── unitprice/
+│       │   └── UnitPrice.java
+│       └── defect/
+│           └── Defect.java
 ├── infrastructure/                 # インフラストラクチャ層
-│   └── persistence/
-│       ├── mapper/                # MyBatis Mapper
-│       │   └── ItemMapper.java
-│       ├── repository/            # Repository実装
-│       │   └── ItemRepositoryImpl.java
-│       └── ItemCategoryTypeHandler.java
+│   └── out/
+│       └── persistence/
+│           ├── mapper/            # MyBatis Mapper
+│           │   ├── UnitMapper.java
+│           │   ├── ItemMapper.java
+│           │   ├── BomMapper.java
+│           │   ├── WorkCalendarMapper.java
+│           │   ├── LocationMapper.java
+│           │   ├── SupplierMapper.java
+│           │   ├── DepartmentMapper.java
+│           │   ├── StaffMapper.java
+│           │   ├── ProcessMapper.java
+│           │   ├── ProcessRouteMapper.java
+│           │   ├── UnitPriceMapper.java
+│           │   └── DefectMapper.java
+│           ├── repository/        # Repository実装
+│           │   ├── UnitRepositoryImpl.java
+│           │   ├── ItemRepositoryImpl.java
+│           │   ├── BomRepositoryImpl.java
+│           │   ├── WorkCalendarRepositoryImpl.java
+│           │   ├── LocationRepositoryImpl.java
+│           │   ├── SupplierRepositoryImpl.java
+│           │   ├── DepartmentRepositoryImpl.java
+│           │   ├── StaffRepositoryImpl.java
+│           │   ├── ProcessRepositoryImpl.java
+│           │   ├── ProcessRouteRepositoryImpl.java
+│           │   ├── UnitPriceRepositoryImpl.java
+│           │   └── DefectRepositoryImpl.java
+│           └── typehandler/       # TypeHandler
+│               ├── ItemCategoryTypeHandler.java
+│               ├── DateTypeTypeHandler.java
+│               ├── LocationTypeTypeHandler.java
+│               └── SupplierTypeTypeHandler.java
 └── config/
     └── FlywayConfig.java
 ```
@@ -218,7 +330,7 @@ CREATE INDEX idx_品目マスタ_品目区分 ON "品目マスタ"("品目区分
 
 ```java
 // src/main/java/com/example/production/domain/model/item/Item.java
-package com.example.production.domain.model.item;
+package com.example.pms.domain.model.item;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -263,7 +375,7 @@ public class Item {
 
 ```java
 // src/main/java/com/example/production/domain/model/item/ItemCategory.java
-package com.example.production.domain.model.item;
+package com.example.pms.domain.model.item;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -301,9 +413,9 @@ public enum ItemCategory {
 
 ```java
 // src/main/java/com/example/production/application/port/out/ItemRepository.java
-package com.example.production.application.port.out;
+package com.example.pms.application.port.out;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -353,12 +465,12 @@ public interface ItemRepository {
 <summary>Repository 実装（インフラストラクチャ層）</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/repository/ItemRepositoryImpl.java
-package com.example.production.infrastructure.persistence.repository;
+// src/main/java/com/example/production/infrastructure/out/persistence/repository/ItemRepositoryImpl.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.production.application.port.out.ItemRepository;
-import com.example.production.domain.model.item.Item;
-import com.example.production.infrastructure.persistence.mapper.ItemMapper;
+import com.example.pms.application.port.out.ItemRepository;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.infrastructure.out.persistence.mapper.ItemMapper;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -419,10 +531,10 @@ PostgreSQL の日本語 ENUM 型と Java の Enum を相互変換するための
 <summary>ItemCategoryTypeHandler</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/ItemCategoryTypeHandler.java
-package com.example.production.infrastructure.persistence;
+// src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/ItemCategoryTypeHandler.java
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.production.domain.model.item.ItemCategory;
+import com.example.pms.domain.model.item.ItemCategory;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -468,10 +580,10 @@ public class ItemCategoryTypeHandler extends BaseTypeHandler<ItemCategory> {
 <summary>Mapper インターフェース</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/ItemMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/production/infrastructure/out/persistence/mapper/ItemMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -501,17 +613,17 @@ public interface ItemMapper {
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.ItemMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ItemMapper">
 
     <!-- 日本語カラム名と英語プロパティ名のマッピング -->
-    <resultMap id="ItemResultMap" type="com.example.production.domain.model.item.Item">
+    <resultMap id="ItemResultMap" type="com.example.pms.domain.model.item.Item">
         <id property="id" column="ID"/>
         <result property="itemCode" column="品目コード"/>
         <result property="effectiveFrom" column="適用開始日"/>
         <result property="effectiveTo" column="適用停止日"/>
         <result property="itemName" column="品名"/>
         <result property="itemCategory" column="品目区分"
-                typeHandler="com.example.production.infrastructure.persistence.ItemCategoryTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler"/>
         <result property="unitCode" column="単位コード"/>
         <result property="leadTime" column="リードタイム"/>
         <result property="safetyLeadTime" column="安全リードタイム"/>
@@ -525,7 +637,7 @@ public interface ItemMapper {
         <result property="updatedAt" column="更新日時"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.production.domain.model.item.Item"
+    <insert id="insert" parameterType="com.example.pms.domain.model.item.Item"
             useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "品目マスタ" (
             "品目コード",
@@ -549,7 +661,7 @@ public interface ItemMapper {
             #{effectiveFrom},
             #{effectiveTo},
             #{itemName},
-            #{itemCategory, typeHandler=com.example.production.infrastructure.persistence.ItemCategoryTypeHandler}::品目区分,
+            #{itemCategory, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler}::品目区分,
             #{unitCode},
             #{leadTime},
             #{safetyLeadTime},
@@ -585,10 +697,10 @@ public interface ItemMapper {
         ORDER BY "品目コード", "適用開始日" DESC
     </select>
 
-    <update id="update" parameterType="com.example.production.domain.model.item.Item">
+    <update id="update" parameterType="com.example.pms.domain.model.item.Item">
         UPDATE "品目マスタ" SET
             "品名" = #{itemName},
-            "品目区分" = #{itemCategory, typeHandler=com.example.production.infrastructure.persistence.ItemCategoryTypeHandler}::品目区分,
+            "品目区分" = #{itemCategory, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ItemCategoryTypeHandler}::品目区分,
             "単位コード" = #{unitCode},
             "リードタイム" = #{leadTime},
             "安全リードタイム" = #{safetyLeadTime},
@@ -711,7 +823,7 @@ CREATE INDEX idx_bom_子品目コード ON "部品構成表"("子品目コード
 
 ```java
 // src/main/java/com/example/production/domain/model/bom/Bom.java
-package com.example.production.domain.model.bom;
+package com.example.pms.domain.model.bom;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -745,7 +857,7 @@ public class Bom {
 
 ```java
 // src/main/java/com/example/production/domain/model/bom/BomExplosion.java
-package com.example.production.domain.model.bom;
+package com.example.pms.domain.model.bom;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -778,10 +890,10 @@ public class BomExplosion {
 
 ```java
 // src/main/java/com/example/production/application/port/out/BomRepository.java
-package com.example.production.application.port.out;
+package com.example.pms.application.port.out;
 
-import com.example.production.domain.model.bom.Bom;
-import com.example.production.domain.model.bom.BomExplosion;
+import com.example.pms.domain.model.bom.Bom;
+import com.example.pms.domain.model.bom.BomExplosion;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -812,13 +924,13 @@ public interface BomRepository {
 <summary>BomRepositoryImpl 実装（インフラストラクチャ層）</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/repository/BomRepositoryImpl.java
-package com.example.production.infrastructure.persistence.repository;
+// src/main/java/com/example/production/infrastructure/out/persistence/repository/BomRepositoryImpl.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.production.application.port.out.BomRepository;
-import com.example.production.domain.model.bom.Bom;
-import com.example.production.domain.model.bom.BomExplosion;
-import com.example.production.infrastructure.persistence.mapper.BomMapper;
+import com.example.pms.application.port.out.BomRepository;
+import com.example.pms.domain.model.bom.Bom;
+import com.example.pms.domain.model.bom.BomExplosion;
+import com.example.pms.infrastructure.out.persistence.mapper.BomMapper;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -876,11 +988,11 @@ BOM は再帰的な構造を持つため、PostgreSQL の再帰 CTE（Common Tab
 <summary>Mapper インターフェース</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/BomMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/production/infrastructure/out/persistence/mapper/BomMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.bom.Bom;
-import com.example.production.domain.model.bom.BomExplosion;
+import com.example.pms.domain.model.bom.Bom;
+import com.example.pms.domain.model.bom.BomExplosion;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -911,10 +1023,10 @@ public interface BomMapper {
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.BomMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.BomMapper">
 
     <!-- 日本語カラム名と英語プロパティ名のマッピング -->
-    <resultMap id="BomResultMap" type="com.example.production.domain.model.bom.Bom">
+    <resultMap id="BomResultMap" type="com.example.pms.domain.model.bom.Bom">
         <result property="parentItemCode" column="親品目コード"/>
         <result property="childItemCode" column="子品目コード"/>
         <result property="effectiveFrom" column="適用開始日"/>
@@ -927,7 +1039,7 @@ public interface BomMapper {
         <result property="updatedAt" column="更新日時"/>
     </resultMap>
 
-    <resultMap id="BomExplosionResultMap" type="com.example.production.domain.model.bom.BomExplosion">
+    <resultMap id="BomExplosionResultMap" type="com.example.pms.domain.model.bom.BomExplosion">
         <result property="parentItemCode" column="親品目コード"/>
         <result property="childItemCode" column="子品目コード"/>
         <result property="effectiveFrom" column="適用開始日"/>
@@ -940,7 +1052,7 @@ public interface BomMapper {
         <result property="totalQuantity" column="累計数量"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.example.production.domain.model.bom.Bom">
+    <insert id="insert" parameterType="com.example.pms.domain.model.bom.Bom">
         INSERT INTO "部品構成表" (
             "親品目コード",
             "子品目コード",
@@ -1105,7 +1217,7 @@ CREATE TABLE "カレンダマスタ" (
 
 ```java
 // src/main/java/com/example/production/domain/model/calendar/WorkCalendar.java
-package com.example.production.domain.model.calendar;
+package com.example.pms.domain.model.calendar;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -1129,7 +1241,7 @@ public class WorkCalendar {
 
 ```java
 // src/main/java/com/example/production/domain/model/calendar/DateType.java
-package com.example.production.domain.model.calendar;
+package com.example.pms.domain.model.calendar;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -1207,7 +1319,7 @@ CREATE INDEX idx_場所マスタ_場所区分 ON "場所マスタ"("場所区分
 
 ```java
 // src/main/java/com/example/production/domain/model/location/Location.java
-package com.example.production.domain.model.location;
+package com.example.pms.domain.model.location;
 
 import lombok.*;
 import java.time.LocalDateTime;
@@ -1228,7 +1340,7 @@ public class Location {
 
 ```java
 // src/main/java/com/example/production/domain/model/location/LocationType.java
-package com.example.production.domain.model.location;
+package com.example.pms.domain.model.location;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -1321,7 +1433,7 @@ CREATE INDEX idx_取引先マスタ_取引先区分 ON "取引先マスタ"("取
 
 ```java
 // src/main/java/com/example/production/domain/model/supplier/Supplier.java
-package com.example.production.domain.model.supplier;
+package com.example.pms.domain.model.supplier;
 
 import lombok.*;
 import java.time.LocalDate;
@@ -1350,7 +1462,7 @@ public class Supplier {
 
 ```java
 // src/main/java/com/example/production/domain/model/supplier/SupplierType.java
-package com.example.production.domain.model.supplier;
+package com.example.pms.domain.model.supplier;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -1378,17 +1490,396 @@ public enum SupplierType {
 
 </details>
 
-### その他の補助マスタ
+### 単位マスタ
 
-| マスタ名 | 説明 | 主キー |
-|---------|------|-------|
-| 倉庫マスタ | 倉庫の詳細情報 | 倉庫コード |
-| 部門マスタ | 部門・課の階層構造 | 部門コード |
-| 担当者マスタ | 担当者と部門の紐付け | 担当者コード × 適用開始日 |
-| 資源マスタ | 設備・作業者などの資源 | 資源コード |
-| 工程マスタ | 工程の定義 | 工程コード |
-| 工程表 | 品目ごとの製造工程 | 品目コード × 工順 |
-| 単価マスタ | 品目 × 取引先の単価 | 品目コード × 取引先コード × 適用開始日 |
+品目の数量単位を管理するマスタです。
+
+```plantuml
+@startuml
+
+title 単位マスタ ER図
+
+entity 単位マスタ {
+  単位コード <<PK>>
+  --
+  単位記号
+  単位名
+}
+
+@enduml
+```
+
+<details>
+<summary>エンティティ（Unit.java）</summary>
+
+```java
+// src/main/java/com/example/pms/domain/model/unit/Unit.java
+package com.example.pms.domain.model.unit;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Unit {
+    private String unitCode;
+    private String unitSymbol;
+    private String unitName;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+</details>
+
+### 部門マスタ
+
+部門・課の階層構造を管理するマスタです。
+
+```plantuml
+@startuml
+
+title 部門マスタ ER図
+
+entity 部門マスタ {
+  部門コード <<PK>>
+  --
+  部門名
+  部門パス
+  最下層区分
+  有効開始日
+  有効終了日
+}
+
+@enduml
+```
+
+<details>
+<summary>エンティティ（Department.java）</summary>
+
+```java
+// src/main/java/com/example/pms/domain/model/department/Department.java
+package com.example.pms.domain.model.department;
+
+import lombok.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Department {
+    private String departmentCode;
+    private String departmentName;
+    private String departmentPath;
+    private Boolean lowestLevel;
+    private LocalDate validFrom;
+    private LocalDate validTo;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+</details>
+
+### 担当者マスタ
+
+担当者と部門の紐付けを管理するマスタです。世代管理に対応しています。
+
+```plantuml
+@startuml
+
+title 担当者マスタ ER図
+
+entity 担当者マスタ {
+  担当者コード <<PK>>
+  適用開始日 <<PK>>
+  --
+  適用停止日
+  担当者名
+  部門コード <<FK>>
+  メールアドレス
+  電話番号
+}
+
+entity 部門マスタ {
+  部門コード <<PK>>
+  --
+  部門名
+  ...
+}
+
+部門マスタ ||--o{ 担当者マスタ
+
+@enduml
+```
+
+<details>
+<summary>エンティティ（Staff.java）</summary>
+
+```java
+// src/main/java/com/example/pms/domain/model/staff/Staff.java
+package com.example.pms.domain.model.staff;
+
+import lombok.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Staff {
+    private String staffCode;
+    private LocalDate effectiveFrom;
+    private LocalDate effectiveTo;
+    private String staffName;
+    private String departmentCode;
+    private String email;
+    private String phoneNumber;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+</details>
+
+### 工程マスタ
+
+製造工程の定義を管理するマスタです。
+
+```plantuml
+@startuml
+
+title 工程マスタ ER図
+
+entity 工程マスタ {
+  工程コード <<PK>>
+  --
+  工程名
+  工程区分
+  場所コード <<FK>>
+}
+
+entity 場所マスタ {
+  場所コード <<PK>>
+  --
+  場所名
+  ...
+}
+
+場所マスタ ||--o{ 工程マスタ
+
+@enduml
+```
+
+<details>
+<summary>エンティティ（Process.java）</summary>
+
+```java
+// src/main/java/com/example/pms/domain/model/process/Process.java
+package com.example.pms.domain.model.process;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Process {
+    private String processCode;
+    private String processName;
+    private String processType;
+    private String locationCode;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+</details>
+
+### 工程表
+
+品目ごとの製造工程順序を定義するマスタです。
+
+```plantuml
+@startuml
+
+title 工程表 ER図
+
+entity 工程表 {
+  品目コード <<PK>>
+  工順 <<PK>>
+  --
+  工程コード <<FK>>
+  標準作業時間
+  段取時間
+}
+
+entity 品目マスタ {
+  品目コード <<PK>>
+  --
+  品名
+  ...
+}
+
+entity 工程マスタ {
+  工程コード <<PK>>
+  --
+  工程名
+  ...
+}
+
+品目マスタ ||--o{ 工程表
+工程マスタ ||--o{ 工程表
+
+@enduml
+```
+
+<details>
+<summary>エンティティ（ProcessRoute.java）</summary>
+
+```java
+// src/main/java/com/example/pms/domain/model/process/ProcessRoute.java
+package com.example.pms.domain.model.process;
+
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProcessRoute {
+    private String itemCode;
+    private Integer sequence;
+    private String processCode;
+    private BigDecimal standardTime;
+    private BigDecimal setupTime;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+</details>
+
+### 単価マスタ
+
+品目と取引先の組み合わせによる単価情報を管理するマスタです。世代管理に対応しています。
+
+```plantuml
+@startuml
+
+title 単価マスタ ER図
+
+entity 単価マスタ {
+  品目コード <<PK>>
+  取引先コード <<PK>>
+  適用開始日 <<PK>>
+  --
+  適用停止日
+  単価
+  通貨コード
+}
+
+entity 品目マスタ {
+  品目コード <<PK>>
+  --
+  品名
+  ...
+}
+
+entity 取引先マスタ {
+  取引先コード <<PK>>
+  --
+  取引先名
+  ...
+}
+
+品目マスタ ||--o{ 単価マスタ
+取引先マスタ ||--o{ 単価マスタ
+
+@enduml
+```
+
+<details>
+<summary>エンティティ（UnitPrice.java）</summary>
+
+```java
+// src/main/java/com/example/pms/domain/model/unitprice/UnitPrice.java
+package com.example.pms.domain.model.unitprice;
+
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UnitPrice {
+    private String itemCode;
+    private String supplierCode;
+    private LocalDate effectiveFrom;
+    private LocalDate effectiveTo;
+    private BigDecimal price;
+    private String currencyCode;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+</details>
+
+### 欠点マスタ
+
+品質不良の種類を管理するマスタです。
+
+```plantuml
+@startuml
+
+title 欠点マスタ ER図
+
+entity 欠点マスタ {
+  欠点コード <<PK>>
+  --
+  欠点名
+  欠点区分
+}
+
+@enduml
+```
+
+<details>
+<summary>エンティティ（Defect.java）</summary>
+
+```java
+// src/main/java/com/example/pms/domain/model/defect/Defect.java
+package com.example.pms.domain.model.defect;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Defect {
+    private String defectCode;
+    private String defectName;
+    private String defectType;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+</details>
 
 ---
 
@@ -1398,12 +1889,18 @@ public enum SupplierType {
 
 | テーブル名（日本語） | 説明 |
 |-------------------|------|
-| `品目マスタ` | 製品・部品・材料などの品目情報 |
 | `単位マスタ` | 品目の単位（個、kg、m など） |
+| `品目マスタ` | 製品・部品・材料などの品目情報 |
 | `部品構成表` | BOM（親子関係） |
 | `カレンダマスタ` | 稼働日・休日の管理 |
 | `場所マスタ` | 倉庫・工程などの場所情報 |
 | `取引先マスタ` | 仕入先・外注先・得意先 |
+| `部門マスタ` | 部門・課の階層構造 |
+| `担当者マスタ` | 担当者と部門の紐付け |
+| `工程マスタ` | 工程の定義 |
+| `工程表` | 品目ごとの製造工程 |
+| `単価マスタ` | 品目 × 取引先の単価 |
+| `欠点マスタ` | 品質不良の種類 |
 
 ### アーキテクチャのポイント
 
@@ -1411,7 +1908,7 @@ public enum SupplierType {
 |---------|-----------|------|
 | **Domain** | `domain.model.*` | ビジネスロジック、エンティティ |
 | **Application** | `application.port.out` | Repository インターフェース（Output Port） |
-| **Infrastructure** | `infrastructure.persistence.*` | DB アクセス実装 |
+| **Infrastructure** | `infrastructure.out.persistence.*` | DB アクセス実装 |
 
 ### 命名規則のまとめ
 
@@ -1433,6 +1930,13 @@ public enum SupplierType {
 
 title マスタ情報 ER図
 
+entity 単位マスタ {
+  単位コード <<PK>>
+  --
+  単位記号
+  単位名
+}
+
 entity 品目マスタ {
   ID <<PK>>
   --
@@ -1443,20 +1947,8 @@ entity 品目マスタ {
   品目区分
   単位コード <<FK>>
   リードタイム
-  安全リードタイム
-  安全在庫数
   歩留率
-  最小ロット数
-  刻みロット数
-  最大ロット数
-  有効期間
-}
-
-entity 単位マスタ {
-  単位コード <<PK>>
-  --
-  単位記号
-  単位名
+  ...
 }
 
 entity 部品構成表 {
@@ -1464,11 +1956,19 @@ entity 部品構成表 {
   子品目コード <<PK>>
   適用開始日 <<PK>>
   --
-  適用停止日
   基準数量
   必要数量
   不良率
   工順
+}
+
+entity カレンダマスタ {
+  カレンダコード <<PK>>
+  日付 <<PK>>
+  --
+  日付区分
+  稼働時間
+  備考
 }
 
 entity 場所マスタ {
@@ -1483,25 +1983,72 @@ entity 取引先マスタ {
   取引先コード <<PK>>
   適用開始日 <<PK>>
   --
-  適用停止日
   取引先名
   取引先区分
   ...
 }
 
-entity カレンダマスタ {
-  カレンダコード <<PK>>
-  日付 <<PK>>
+entity 部門マスタ {
+  部門コード <<PK>>
   --
-  日付区分
-  稼働時間
-  備考
+  部門名
+  部門パス
+  最下層区分
 }
 
+entity 担当者マスタ {
+  担当者コード <<PK>>
+  適用開始日 <<PK>>
+  --
+  担当者名
+  部門コード <<FK>>
+  メールアドレス
+}
+
+entity 工程マスタ {
+  工程コード <<PK>>
+  --
+  工程名
+  工程区分
+  場所コード <<FK>>
+}
+
+entity 工程表 {
+  品目コード <<PK>>
+  工順 <<PK>>
+  --
+  工程コード <<FK>>
+  標準作業時間
+  段取時間
+}
+
+entity 単価マスタ {
+  品目コード <<PK>>
+  取引先コード <<PK>>
+  適用開始日 <<PK>>
+  --
+  単価
+  通貨コード
+}
+
+entity 欠点マスタ {
+  欠点コード <<PK>>
+  --
+  欠点名
+  欠点区分
+}
+
+' リレーション
 単位マスタ ||--o{ 品目マスタ
 品目マスタ ||--o{ 部品構成表 : 親品目
 品目マスタ ||--o{ 部品構成表 : 子品目
 場所マスタ ||--o| 場所マスタ : 親子関係
+場所マスタ ||--o{ 工程マスタ
+部門マスタ ||--o{ 担当者マスタ
+品目マスタ ||--o{ 工程表
+工程マスタ ||--o{ 工程表
+品目マスタ ||--o{ 単価マスタ
+取引先マスタ ||--o{ 単価マスタ
 
 @enduml
 ```

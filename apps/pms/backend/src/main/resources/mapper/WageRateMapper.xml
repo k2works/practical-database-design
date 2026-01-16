@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.WageRateMapper">
+
+    <resultMap id="wageRateResultMap" type="com.example.pms.domain.model.cost.WageRate">
+        <id property="id" column="ID"/>
+        <result property="workerCategoryCode" column="作業者区分コード"/>
+        <result property="workerCategoryName" column="作業者区分名"/>
+        <result property="effectiveStartDate" column="適用開始日"/>
+        <result property="effectiveEndDate" column="適用終了日"/>
+        <result property="hourlyRate" column="時間単価"/>
+        <result property="isDirect" column="直接労務フラグ"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <select id="findById" resultMap="wageRateResultMap">
+        SELECT * FROM "賃率マスタ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByWorkerCategoryCode" resultMap="wageRateResultMap">
+        SELECT * FROM "賃率マスタ"
+        WHERE "作業者区分コード" = #{workerCategoryCode}
+        ORDER BY "適用開始日" DESC
+    </select>
+
+    <select id="findValidByWorkerCategoryCode" resultMap="wageRateResultMap">
+        SELECT * FROM "賃率マスタ"
+        WHERE "作業者区分コード" = #{workerCategoryCode}
+          AND "適用開始日" &lt;= #{targetDate}
+          AND ("適用終了日" IS NULL OR "適用終了日" >= #{targetDate})
+        ORDER BY "適用開始日" DESC
+        LIMIT 1
+    </select>
+
+    <select id="findAll" resultMap="wageRateResultMap">
+        SELECT * FROM "賃率マスタ" ORDER BY "作業者区分コード", "適用開始日" DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "賃率マスタ" (
+            "作業者区分コード", "作業者区分名", "適用開始日", "適用終了日",
+            "時間単価", "直接労務フラグ"
+        ) VALUES (
+            #{workerCategoryCode}, #{workerCategoryName}, #{effectiveStartDate},
+            #{effectiveEndDate}, #{hourlyRate}, #{isDirect}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE "賃率マスタ"
+        SET "作業者区分名" = #{workerCategoryName},
+            "適用終了日" = #{effectiveEndDate},
+            "時間単価" = #{hourlyRate},
+            "直接労務フラグ" = #{isDirect},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+          AND "バージョン" = #{version}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "賃率マスタ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE FROM "賃率マスタ"
+    </delete>
+
+</mapper>

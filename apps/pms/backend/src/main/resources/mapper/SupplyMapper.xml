@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.SupplyMapper">
+
+    <resultMap id="SupplyResultMap" type="com.example.pms.domain.model.subcontract.Supply">
+        <id property="id" column="ID"/>
+        <result property="supplyNumber" column="支給番号"/>
+        <result property="purchaseOrderNumber" column="発注番号"/>
+        <result property="lineNumber" column="発注行番号"/>
+        <result property="supplierCode" column="取引先コード"/>
+        <result property="supplyDate" column="支給日"/>
+        <result property="supplierPersonCode" column="支給担当者コード"/>
+        <result property="supplyType" column="支給区分"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 明細を含むResultMap（nested select） -->
+    <resultMap id="SupplyWithDetailsResultMap" type="com.example.pms.domain.model.subcontract.Supply"
+               extends="SupplyResultMap">
+        <collection property="details" ofType="com.example.pms.domain.model.subcontract.SupplyDetail"
+                    column="支給番号" select="com.example.pms.infrastructure.out.persistence.mapper.SupplyDetailMapper.findBySupplyNumber"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.Supply"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "支給データ" (
+            "支給番号", "発注番号", "発注行番号", "取引先コード",
+            "支給日", "支給担当者コード", "支給区分", "備考", "作成者", "更新者", "バージョン"
+        ) VALUES (
+            #{supplyNumber},
+            #{purchaseOrderNumber},
+            #{lineNumber},
+            #{supplierCode},
+            #{supplyDate},
+            #{supplierPersonCode},
+            #{supplyType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler}::支給区分,
+            #{remarks},
+            #{createdBy},
+            #{updatedBy},
+            #{version}
+        )
+    </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.Supply"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "支給データ" (
+            "支給番号", "発注番号", "発注行番号", "取引先コード",
+            "支給日", "支給担当者コード", "支給区分", "備考", "作成者", "更新者", "バージョン"
+        ) VALUES (
+            #{supplyNumber},
+            #{purchaseOrderNumber},
+            #{lineNumber},
+            #{supplierCode},
+            #{supplyDate},
+            #{supplierPersonCode},
+            #{supplyType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy},
+            #{version}
+        )
+    </insert>
+
+    <select id="findById" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findBySupplyNumber" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" WHERE "支給番号" = #{supplyNumber}
+    </select>
+
+    <!-- 明細を含めて取得 -->
+    <select id="findBySupplyNumberWithDetails" resultMap="SupplyWithDetailsResultMap">
+        SELECT * FROM "支給データ" WHERE "支給番号" = #{supplyNumber}
+    </select>
+
+    <select id="findByPurchaseOrderNumber" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" WHERE "発注番号" = #{purchaseOrderNumber} ORDER BY "支給日" DESC
+    </select>
+
+    <select id="findByPurchaseOrderNumberAndLineNumber" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ"
+        WHERE "発注番号" = #{purchaseOrderNumber} AND "発注行番号" = #{lineNumber}
+        ORDER BY "支給日" DESC
+    </select>
+
+    <select id="findBySupplierCode" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" WHERE "取引先コード" = #{supplierCode} ORDER BY "支給日" DESC
+    </select>
+
+    <select id="findAll" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" ORDER BY "支給日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "支給データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "支給データ"
+    </delete>
+</mapper>

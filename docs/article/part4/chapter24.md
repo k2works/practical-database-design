@@ -308,7 +308,7 @@ package "application.service" {
   [MrpService]
 }
 
-package "infrastructure.persistence" {
+package "infrastructure.out.persistence" {
   package "mapper" {
     [MasterProductionScheduleMapper]
     [OrderMapper]
@@ -321,9 +321,11 @@ package "infrastructure.persistence" {
     [RequirementRepositoryImpl]
     [AllocationRepositoryImpl]
   }
-  [PlanStatusTypeHandler]
-  [OrderTypeTypeHandler]
-  [AllocationTypeTypeHandler]
+  package "typehandler" {
+    [PlanStatusTypeHandler]
+    [OrderTypeTypeHandler]
+    [AllocationTypeTypeHandler]
+  }
 }
 
 [MrpService] --> [MpsRepository]
@@ -350,8 +352,8 @@ package "infrastructure.persistence" {
 <summary>計画ステータス Enum（PlanStatus.java）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/PlanStatus.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/PlanStatus.java
+package com.example.pms.domain.model.plan;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -383,8 +385,8 @@ public enum PlanStatus {
 <summary>オーダ種別 Enum（OrderType.java）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/OrderType.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/OrderType.java
+package com.example.pms.domain.model.plan;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -414,8 +416,8 @@ public enum OrderType {
 <summary>引当区分 Enum（AllocationType.java）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/AllocationType.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/AllocationType.java
+package com.example.pms.domain.model.plan;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -446,12 +448,14 @@ public enum AllocationType {
 <summary>基準生産計画エンティティ（MasterProductionSchedule.java）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/MasterProductionSchedule.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/MasterProductionSchedule.java
+package com.example.pms.domain.model.plan;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -459,6 +463,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MasterProductionSchedule {
     private Integer id;
     private String mpsNumber;
@@ -485,12 +491,14 @@ public class MasterProductionSchedule {
 <summary>オーダ情報エンティティ（Order.java）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/Order.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/Order.java
+package com.example.pms.domain.model.plan;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -499,6 +507,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Order {
     private Integer id;
     private String orderNumber;
@@ -532,12 +542,14 @@ public class Order {
 <summary>所要情報エンティティ（Requirement.java）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/Requirement.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/Requirement.java
+package com.example.pms.domain.model.plan;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -546,6 +558,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Requirement {
     private Integer id;
     private String requirementNumber;
@@ -572,11 +586,13 @@ public class Requirement {
 <summary>引当情報エンティティ（Allocation.java）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/Allocation.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/Allocation.java
+package com.example.pms.domain.model.plan;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -584,6 +600,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Allocation {
     private Integer id;
     private Integer requirementId;
@@ -609,10 +627,10 @@ public class Allocation {
 <summary>PlanStatusTypeHandler</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/PlanStatusTypeHandler.java
-package com.example.production.infrastructure.persistence;
+// src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/PlanStatusTypeHandler.java
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.production.domain.model.plan.PlanStatus;
+import com.example.pms.domain.model.plan.PlanStatus;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -657,10 +675,10 @@ public class PlanStatusTypeHandler extends BaseTypeHandler<PlanStatus> {
 <summary>OrderTypeTypeHandler</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/OrderTypeTypeHandler.java
-package com.example.production.infrastructure.persistence;
+// src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/OrderTypeTypeHandler.java
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.production.domain.model.plan.OrderType;
+import com.example.pms.domain.model.plan.OrderType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -705,10 +723,10 @@ public class OrderTypeTypeHandler extends BaseTypeHandler<OrderType> {
 <summary>AllocationTypeTypeHandler</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/AllocationTypeTypeHandler.java
-package com.example.production.infrastructure.persistence;
+// src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/AllocationTypeTypeHandler.java
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.production.domain.model.plan.AllocationType;
+import com.example.pms.domain.model.plan.AllocationType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -758,10 +776,10 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.MasterProductionScheduleMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.MasterProductionScheduleMapper">
 
     <resultMap id="MasterProductionScheduleResultMap"
-               type="com.example.production.domain.model.plan.MasterProductionSchedule">
+               type="com.example.pms.domain.model.plan.MasterProductionSchedule">
         <id property="id" column="ID"/>
         <result property="mpsNumber" column="MPS番号"/>
         <result property="planDate" column="計画日"/>
@@ -769,7 +787,7 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
         <result property="planQuantity" column="計画数量"/>
         <result property="dueDate" column="納期"/>
         <result property="status" column="ステータス"
-                typeHandler="com.example.production.infrastructure.persistence.PlanStatusTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler"/>
         <result property="locationCode" column="場所コード"/>
         <result property="remarks" column="備考"/>
         <result property="createdAt" column="作成日時"/>
@@ -788,7 +806,7 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
             #{itemCode},
             #{planQuantity},
             #{dueDate},
-            #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス,
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
             #{locationCode},
             #{remarks},
             #{createdBy}
@@ -805,13 +823,13 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
 
     <select id="findByStatus" resultMap="MasterProductionScheduleResultMap">
         SELECT * FROM "基準生産計画"
-        WHERE "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス
+        WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス
         ORDER BY "納期"
     </select>
 
     <update id="updateStatus">
         UPDATE "基準生産計画"
-        SET "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス,
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
             "更新日時" = CURRENT_TIMESTAMP
         WHERE "ID" = #{id}
     </update>
@@ -831,13 +849,13 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.OrderMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.OrderMapper">
 
-    <resultMap id="OrderResultMap" type="com.example.production.domain.model.plan.Order">
+    <resultMap id="OrderResultMap" type="com.example.pms.domain.model.plan.Order">
         <id property="id" column="ID"/>
         <result property="orderNumber" column="オーダNO"/>
         <result property="orderType" column="オーダ種別"
-                typeHandler="com.example.production.infrastructure.persistence.OrderTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler"/>
         <result property="itemCode" column="品目コード"/>
         <result property="startDate" column="着手予定日"/>
         <result property="dueDate" column="納期"/>
@@ -845,7 +863,7 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
         <result property="planQuantity" column="計画数量"/>
         <result property="locationCode" column="場所コード"/>
         <result property="status" column="ステータス"
-                typeHandler="com.example.production.infrastructure.persistence.PlanStatusTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler"/>
         <result property="mpsId" column="MPS_ID"/>
         <result property="parentOrderId" column="親オーダID"/>
         <result property="createdAt" column="作成日時"/>
@@ -860,14 +878,14 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
             "有効期限", "計画数量", "場所コード", "ステータス", "MPS_ID", "親オーダID", "作成者"
         ) VALUES (
             #{orderNumber},
-            #{orderType, typeHandler=com.example.production.infrastructure.persistence.OrderTypeTypeHandler}::オーダ種別,
+            #{orderType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler}::オーダ種別,
             #{itemCode},
             #{startDate},
             #{dueDate},
             #{expirationDate},
             #{planQuantity},
             #{locationCode},
-            #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス,
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
             #{mpsId},
             #{parentOrderId},
             #{createdBy}
@@ -898,7 +916,7 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
 
     <update id="updateStatus">
         UPDATE "オーダ情報"
-        SET "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス,
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
             "更新日時" = CURRENT_TIMESTAMP
         WHERE "ID" = #{id}
     </update>
@@ -918,9 +936,9 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.RequirementMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.RequirementMapper">
 
-    <resultMap id="RequirementResultMap" type="com.example.production.domain.model.plan.Requirement">
+    <resultMap id="RequirementResultMap" type="com.example.pms.domain.model.plan.Requirement">
         <id property="id" column="ID"/>
         <result property="requirementNumber" column="所要NO"/>
         <result property="orderId" column="オーダID"/>
@@ -981,13 +999,13 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.AllocationMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.AllocationMapper">
 
-    <resultMap id="AllocationResultMap" type="com.example.production.domain.model.plan.Allocation">
+    <resultMap id="AllocationResultMap" type="com.example.pms.domain.model.plan.Allocation">
         <id property="id" column="ID"/>
         <result property="requirementId" column="所要ID"/>
         <result property="allocationType" column="引当区分"
-                typeHandler="com.example.production.infrastructure.persistence.AllocationTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.AllocationTypeTypeHandler"/>
         <result property="orderId" column="オーダID"/>
         <result property="allocationDate" column="引当日"/>
         <result property="allocatedQuantity" column="引当数量"/>
@@ -1001,7 +1019,7 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
             "所要ID", "引当区分", "オーダID", "引当日", "引当数量", "場所コード"
         ) VALUES (
             #{requirementId},
-            #{allocationType, typeHandler=com.example.production.infrastructure.persistence.AllocationTypeTypeHandler}::引当区分,
+            #{allocationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.AllocationTypeTypeHandler}::引当区分,
             #{orderId},
             #{allocationDate},
             #{allocatedQuantity},
@@ -1027,11 +1045,11 @@ public class AllocationTypeTypeHandler extends BaseTypeHandler<AllocationType> {
 <summary>MpsRepository インターフェース</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/out/MpsRepository.java
-package com.example.production.application.port.out;
+// src/main/java/com/example/pms/application/port/out/MpsRepository.java
+package com.example.pms.application.port.out;
 
-import com.example.production.domain.model.plan.MasterProductionSchedule;
-import com.example.production.domain.model.plan.PlanStatus;
+import com.example.pms.domain.model.plan.MasterProductionSchedule;
+import com.example.pms.domain.model.plan.PlanStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -1055,13 +1073,13 @@ public interface MpsRepository {
 <summary>MpsRepositoryImpl 実装</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/repository/MpsRepositoryImpl.java
-package com.example.production.infrastructure.persistence.repository;
+// src/main/java/com/example/pms/infrastructure/out/persistence/repository/MpsRepositoryImpl.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.production.application.port.out.MpsRepository;
-import com.example.production.domain.model.plan.MasterProductionSchedule;
-import com.example.production.domain.model.plan.PlanStatus;
-import com.example.production.infrastructure.persistence.mapper.MasterProductionScheduleMapper;
+import com.example.pms.application.port.out.MpsRepository;
+import com.example.pms.domain.model.plan.MasterProductionSchedule;
+import com.example.pms.domain.model.plan.PlanStatus;
+import com.example.pms.infrastructure.out.persistence.mapper.MasterProductionScheduleMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -1226,14 +1244,14 @@ MRP では以下の計算を行います：
 <summary>MrpService.java</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/MrpService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/MrpService.java
+package com.example.pms.application.service;
 
-import com.example.production.application.port.out.*;
-import com.example.production.domain.model.bom.Bom;
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.item.ItemCategory;
-import com.example.production.domain.model.plan.*;
+import com.example.pms.application.port.out.*;
+import com.example.pms.domain.model.bom.Bom;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
+import com.example.pms.domain.model.plan.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1617,14 +1635,14 @@ BOM }o--|| 品目マスタ : 子品目
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/OrderMapper.xml -->
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.OrderMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.OrderMapper">
 
     <!-- オーダ情報 ResultMap（親オーダ・MPS・子オーダ込み） -->
-    <resultMap id="orderWithRelationsResultMap" type="com.example.production.domain.model.plan.Order">
+    <resultMap id="orderWithRelationsResultMap" type="com.example.pms.domain.model.plan.Order">
         <id property="id" column="o_ID"/>
         <result property="orderNumber" column="o_オーダNO"/>
         <result property="orderType" column="o_オーダ種別"
-                typeHandler="com.example.production.infrastructure.persistence.OrderTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler"/>
         <result property="itemCode" column="o_品目コード"/>
         <result property="startDate" column="o_着手予定日"/>
         <result property="dueDate" column="o_納期"/>
@@ -1632,7 +1650,7 @@ BOM }o--|| 品目マスタ : 子品目
         <result property="planQuantity" column="o_計画数量"/>
         <result property="locationCode" column="o_場所コード"/>
         <result property="status" column="o_ステータス"
-                typeHandler="com.example.production.infrastructure.persistence.PlanStatusTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler"/>
         <result property="mpsId" column="o_MPS_ID"/>
         <result property="parentOrderId" column="o_親オーダID"/>
         <result property="version" column="o_バージョン"/>
@@ -1641,7 +1659,7 @@ BOM }o--|| 品目マスタ : 子品目
         <result property="updatedAt" column="o_更新日時"/>
         <result property="updatedBy" column="o_更新者"/>
         <!-- MPS との N:1 関連 -->
-        <association property="mps" javaType="com.example.production.domain.model.plan.MasterProductionSchedule">
+        <association property="mps" javaType="com.example.pms.domain.model.plan.MasterProductionSchedule">
             <id property="id" column="m_ID"/>
             <result property="mpsNumber" column="m_MPS番号"/>
             <result property="planDate" column="m_計画日"/>
@@ -1649,41 +1667,41 @@ BOM }o--|| 品目マスタ : 子品目
             <result property="planQuantity" column="m_計画数量"/>
             <result property="dueDate" column="m_納期"/>
             <result property="status" column="m_ステータス"
-                    typeHandler="com.example.production.infrastructure.persistence.PlanStatusTypeHandler"/>
+                    typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler"/>
         </association>
         <!-- 親オーダとの自己参照 N:1 関連 -->
-        <association property="parentOrder" javaType="com.example.production.domain.model.plan.Order">
+        <association property="parentOrder" javaType="com.example.pms.domain.model.plan.Order">
             <id property="id" column="p_ID"/>
             <result property="orderNumber" column="p_オーダNO"/>
             <result property="orderType" column="p_オーダ種別"
-                    typeHandler="com.example.production.infrastructure.persistence.OrderTypeTypeHandler"/>
+                    typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler"/>
             <result property="itemCode" column="p_品目コード"/>
             <result property="planQuantity" column="p_計画数量"/>
         </association>
         <!-- 子オーダとの 1:N 関連 -->
-        <collection property="childOrders" ofType="com.example.production.domain.model.plan.Order"
+        <collection property="childOrders" ofType="com.example.pms.domain.model.plan.Order"
                     resultMap="childOrderResultMap"/>
         <!-- 所要情報との 1:N 関連 -->
-        <collection property="requirements" ofType="com.example.production.domain.model.plan.Requirement"
+        <collection property="requirements" ofType="com.example.pms.domain.model.plan.Requirement"
                     resultMap="requirementNestedResultMap"/>
     </resultMap>
 
     <!-- 子オーダの ResultMap -->
-    <resultMap id="childOrderResultMap" type="com.example.production.domain.model.plan.Order">
+    <resultMap id="childOrderResultMap" type="com.example.pms.domain.model.plan.Order">
         <id property="id" column="c_ID"/>
         <result property="orderNumber" column="c_オーダNO"/>
         <result property="orderType" column="c_オーダ種別"
-                typeHandler="com.example.production.infrastructure.persistence.OrderTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler"/>
         <result property="itemCode" column="c_品目コード"/>
         <result property="startDate" column="c_着手予定日"/>
         <result property="dueDate" column="c_納期"/>
         <result property="planQuantity" column="c_計画数量"/>
         <result property="status" column="c_ステータス"
-                typeHandler="com.example.production.infrastructure.persistence.PlanStatusTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler"/>
     </resultMap>
 
     <!-- 所要情報のネスト ResultMap -->
-    <resultMap id="requirementNestedResultMap" type="com.example.production.domain.model.plan.Requirement">
+    <resultMap id="requirementNestedResultMap" type="com.example.pms.domain.model.plan.Requirement">
         <id property="id" column="r_ID"/>
         <result property="requirementNumber" column="r_所要NO"/>
         <result property="orderId" column="r_オーダID"/>
@@ -1695,16 +1713,16 @@ BOM }o--|| 品目マスタ : 子品目
         <result property="locationCode" column="r_場所コード"/>
         <result property="version" column="r_バージョン"/>
         <!-- 引当情報との 1:N 関連 -->
-        <collection property="allocations" ofType="com.example.production.domain.model.plan.Allocation"
+        <collection property="allocations" ofType="com.example.pms.domain.model.plan.Allocation"
                     resultMap="allocationNestedResultMap"/>
     </resultMap>
 
     <!-- 引当情報のネスト ResultMap -->
-    <resultMap id="allocationNestedResultMap" type="com.example.production.domain.model.plan.Allocation">
+    <resultMap id="allocationNestedResultMap" type="com.example.pms.domain.model.plan.Allocation">
         <id property="id" column="a_ID"/>
         <result property="requirementId" column="a_所要ID"/>
         <result property="allocationType" column="a_引当区分"
-                typeHandler="com.example.production.infrastructure.persistence.AllocationTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.AllocationTypeTypeHandler"/>
         <result property="orderId" column="a_オーダID"/>
         <result property="allocationDate" column="a_引当日"/>
         <result property="allocatedQuantity" column="a_引当数量"/>
@@ -1838,12 +1856,14 @@ COMMENT ON COLUMN "引当情報"."バージョン" IS '楽観ロック用バー�
 <summary>Order.java（バージョンフィールド追加）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/Order.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/Order.java
+package com.example.pms.domain.model.plan;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1852,6 +1872,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Order {
     private Integer id;
     private String orderNumber;
@@ -1889,12 +1911,14 @@ public class Order {
 <summary>Requirement.java（バージョンフィールド追加）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/plan/Requirement.java
-package com.example.production.domain.model.plan;
+// src/main/java/com/example/pms/domain/model/plan/Requirement.java
+package com.example.pms.domain.model.plan;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1903,6 +1927,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Requirement {
     private Integer id;
     private String requirementNumber;
@@ -1936,17 +1962,17 @@ public class Requirement {
 
 ```xml
 <!-- 楽観ロック対応の更新（バージョンチェック付き） -->
-<update id="updateWithOptimisticLock" parameterType="com.example.production.domain.model.plan.Order">
+<update id="updateWithOptimisticLock" parameterType="com.example.pms.domain.model.plan.Order">
     UPDATE "オーダ情報"
     SET
-        "オーダ種別" = #{orderType, typeHandler=com.example.production.infrastructure.persistence.OrderTypeTypeHandler}::オーダ種別,
+        "オーダ種別" = #{orderType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.OrderTypeTypeHandler}::オーダ種別,
         "品目コード" = #{itemCode},
         "着手予定日" = #{startDate},
         "納期" = #{dueDate},
         "有効期限" = #{expirationDate},
         "計画数量" = #{planQuantity},
         "場所コード" = #{locationCode},
-        "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス,
+        "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
         "MPS_ID" = #{mpsId},
         "親オーダID" = #{parentOrderId},
         "更新日時" = CURRENT_TIMESTAMP,
@@ -1960,7 +1986,7 @@ public class Requirement {
 <update id="updateStatusWithOptimisticLock">
     UPDATE "オーダ情報"
     SET
-        "ステータス" = #{status, typeHandler=com.example.production.infrastructure.persistence.PlanStatusTypeHandler}::計画ステータス,
+        "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
     WHERE "ID" = #{id}
@@ -2005,14 +2031,14 @@ public class Requirement {
 <summary>OrderRepositoryImpl.java（楽観ロック対応）</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/repository/OrderRepositoryImpl.java
-package com.example.production.infrastructure.persistence.repository;
+// src/main/java/com/example/pms/infrastructure/out/persistence/repository/OrderRepositoryImpl.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.production.application.port.out.OrderRepository;
-import com.example.production.domain.exception.OptimisticLockException;
-import com.example.production.domain.model.plan.Order;
-import com.example.production.domain.model.plan.PlanStatus;
-import com.example.production.infrastructure.persistence.mapper.OrderMapper;
+import com.example.pms.application.port.out.OrderRepository;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.plan.Order;
+import com.example.pms.domain.model.plan.PlanStatus;
+import com.example.pms.infrastructure.out.persistence.mapper.OrderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -2075,15 +2101,15 @@ public class OrderRepositoryImpl implements OrderRepository {
 <summary>OrderRepositoryOptimisticLockTest.java</summary>
 
 ```java
-// src/test/java/com/example/production/infrastructure/persistence/repository/OrderRepositoryOptimisticLockTest.java
-package com.example.production.infrastructure.persistence.repository;
+// src/test/java/com/example/pms/infrastructure/out/persistence/repository/OrderRepositoryOptimisticLockTest.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.production.application.port.out.OrderRepository;
-import com.example.production.domain.exception.OptimisticLockException;
-import com.example.production.domain.model.plan.Order;
-import com.example.production.domain.model.plan.OrderType;
-import com.example.production.domain.model.plan.PlanStatus;
-import com.example.production.testsetup.BaseIntegrationTest;
+import com.example.pms.application.port.out.OrderRepository;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.plan.Order;
+import com.example.pms.domain.model.plan.OrderType;
+import com.example.pms.domain.model.plan.PlanStatus;
+import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>払出詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>払出詳細</h1>
+            <a th:href="@{/issues}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">払出番号</dt>
+                    <dd class="col-sm-9" th:text="${issue.issueNumber}"></dd>
+
+                    <dt class="col-sm-3">作業指示番号</dt>
+                    <dd class="col-sm-9" th:text="${issue.workOrderNumber}"></dd>
+
+                    <dt class="col-sm-3">工順</dt>
+                    <dd class="col-sm-9" th:text="${issue.routingSequence ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">場所コード</dt>
+                    <dd class="col-sm-9" th:text="${issue.locationCode}"></dd>
+
+                    <dt class="col-sm-3">払出日</dt>
+                    <dd class="col-sm-9" th:text="${issue.issueDate}"></dd>
+
+                    <dt class="col-sm-3">払出担当者コード</dt>
+                    <dd class="col-sm-9" th:text="${issue.issuerCode ?: '-'}"></dd>
+                </dl>
+
+                <hr>
+                <h5>その他</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">作成日時</dt>
+                    <dd class="col-sm-9" th:text="${issue.createdAt != null ? #temporals.format(issue.createdAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></dd>
+
+                    <dt class="col-sm-3">更新日時</dt>
+                    <dd class="col-sm-9" th:text="${issue.updatedAt != null ? #temporals.format(issue.updatedAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- 払出明細 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">払出明細</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${issue.details == null or #lists.isEmpty(issue.details)}" class="alert alert-info">
+                    明細データがありません。
+                </div>
+                <table th:if="${issue.details != null and not #lists.isEmpty(issue.details)}" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>行番号</th>
+                            <th>品目コード</th>
+                            <th class="text-end">払出数量</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detail : ${issue.details}">
+                            <td th:text="${detail.lineNumber}"></td>
+                            <td th:text="${detail.itemCode}"></td>
+                            <td class="text-end" th:text="${detail.issueQuantity != null ? #numbers.formatDecimal(detail.issueQuantity, 1, 'COMMA', 2, 'POINT') : '-'}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

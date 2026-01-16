@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderMapper">
+
+    <resultMap id="PurchaseOrderResultMap" type="com.example.pms.domain.model.purchase.PurchaseOrder">
+        <id property="id" column="ID"/>
+        <result property="purchaseOrderNumber" column="発注番号"/>
+        <result property="orderDate" column="発注日"/>
+        <result property="supplierCode" column="取引先コード"/>
+        <result property="ordererCode" column="発注担当者コード"/>
+        <result property="departmentCode" column="発注部門コード"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 明細を含むResultMap（nested select） -->
+    <resultMap id="PurchaseOrderWithDetailsResultMap" type="com.example.pms.domain.model.purchase.PurchaseOrder"
+               extends="PurchaseOrderResultMap">
+        <collection property="details" ofType="com.example.pms.domain.model.purchase.PurchaseOrderDetail"
+                    column="発注番号" select="com.example.pms.infrastructure.out.persistence.mapper.PurchaseOrderDetailMapper.findByPurchaseOrderNumber"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.PurchaseOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "発注データ" (
+            "発注番号", "発注日", "取引先コード", "発注担当者コード", "発注部門コード",
+            "ステータス", "備考", "作成者", "更新者"
+        ) VALUES (
+            #{purchaseOrderNumber},
+            #{orderDate},
+            #{supplierCode},
+            #{ordererCode},
+            #{departmentCode},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.PurchaseOrder"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "発注データ" (
+            "発注番号", "発注日", "取引先コード", "発注担当者コード", "発注部門コード",
+            "ステータス", "備考", "作成者", "更新者"
+        ) VALUES (
+            #{purchaseOrderNumber},
+            #{orderDate},
+            #{supplierCode},
+            #{ordererCode},
+            #{departmentCode},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByPurchaseOrderNumber" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" WHERE "発注番号" = #{purchaseOrderNumber}
+    </select>
+
+    <!-- 明細を含めて取得 -->
+    <select id="findByPurchaseOrderNumberWithDetails" resultMap="PurchaseOrderWithDetailsResultMap">
+        SELECT * FROM "発注データ" WHERE "発注番号" = #{purchaseOrderNumber}
+    </select>
+
+    <select id="findBySupplierCode" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" WHERE "取引先コード" = #{supplierCode} ORDER BY "発注日" DESC
+    </select>
+
+    <!-- PostgreSQL用 findByStatus -->
+    <select id="findByStatus" resultMap="PurchaseOrderResultMap" databaseId="postgresql">
+        SELECT * FROM "発注データ" WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス ORDER BY "発注日" DESC
+    </select>
+
+    <!-- H2用 findByStatus -->
+    <select id="findByStatus" resultMap="PurchaseOrderResultMap" databaseId="h2">
+        SELECT * FROM "発注データ" WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler} ORDER BY "発注日" DESC
+    </select>
+
+    <select id="findAll" resultMap="PurchaseOrderResultMap">
+        SELECT * FROM "発注データ" ORDER BY "発注日" DESC
+    </select>
+
+    <!-- PostgreSQL用 updateStatus -->
+    <update id="updateStatus" databaseId="postgresql">
+        UPDATE "発注データ"
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス,
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- H2用 updateStatus -->
+    <update id="updateStatus" databaseId="h2">
+        UPDATE "発注データ"
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "発注データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "発注データ"
+    </delete>
+
+    <!-- PostgreSQL用 ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="PurchaseOrderResultMap" databaseId="postgresql">
+        SELECT * FROM "発注データ"
+        WHERE 1=1
+        <if test="status != null">
+            AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス
+        </if>
+        ORDER BY "発注日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- H2用 ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="PurchaseOrderResultMap" databaseId="h2">
+        SELECT * FROM "発注データ"
+        WHERE 1=1
+        <if test="status != null">
+            AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}
+        </if>
+        ORDER BY "発注日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- PostgreSQL用 件数取得 -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "発注データ"
+        WHERE 1=1
+        <if test="status != null">
+            AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}::発注ステータス
+        </if>
+    </select>
+
+    <!-- H2用 件数取得 -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "発注データ"
+        WHERE 1=1
+        <if test="status != null">
+            AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PurchaseOrderStatusTypeHandler}
+        </if>
+    </select>
+</mapper>

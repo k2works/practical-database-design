@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>検査実績編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>検査実績編集</h1>
+            <a th:href="@{/inspection-results}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/inspection-results/{id}(id=${form.id})}" th:object="${form}" method="post">
+                    <input type="hidden" th:field="*{id}">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="completionResultNumber" class="form-label">完成実績番号 <span class="text-danger">*</span></label>
+                            <select id="completionResultNumber" th:field="*{completionResultNumber}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('completionResultNumber')} ? 'is-invalid'">
+                                <option value="">-- 完成実績を選択 --</option>
+                                <option th:each="completionResult : ${completionResults}"
+                                        th:value="${completionResult.completionResultNumber}"
+                                        th:text="${completionResult.completionResultNumber + ' (' + completionResult.itemCode + ')'}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('completionResultNumber')}" class="invalid-feedback"
+                                 th:errors="*{completionResultNumber}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="defectCode" class="form-label">欠点コード <span class="text-danger">*</span></label>
+                            <select id="defectCode" th:field="*{defectCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('defectCode')} ? 'is-invalid'">
+                                <option value="">-- 欠点を選択 --</option>
+                                <option th:each="defect : ${defects}"
+                                        th:value="${defect.defectCode}"
+                                        th:text="${defect.defectCode + ' - ' + defect.defectName}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('defectCode')}" class="invalid-feedback"
+                                 th:errors="*{defectCode}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label">数量</label>
+                            <input type="number" id="quantity" th:field="*{quantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('quantity')} ? 'is-invalid'"
+                                   step="0.01" min="0" placeholder="例: 10">
+                            <div th:if="${#fields.hasErrors('quantity')}" class="invalid-feedback"
+                                 th:errors="*{quantity}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a th:href="@{/inspection-results}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

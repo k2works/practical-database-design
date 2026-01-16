@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.LocationMapper">
+
+    <!-- 日本語カラム名と英語プロパティ名のマッピング -->
+    <resultMap id="LocationResultMap" type="com.example.pms.domain.model.location.Location">
+        <id property="locationCode" column="場所コード"/>
+        <result property="locationName" column="場所名"/>
+        <result property="locationType" column="場所区分"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.LocationTypeTypeHandler"/>
+        <result property="parentLocationCode" column="親場所コード"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.location.Location" databaseId="postgresql">
+        INSERT INTO "場所マスタ" (
+            "場所コード",
+            "場所名",
+            "場所区分",
+            "親場所コード",
+            "作成日時",
+            "更新日時"
+        ) VALUES (
+            #{locationCode},
+            #{locationName},
+            #{locationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.LocationTypeTypeHandler}::場所区分,
+            #{parentLocationCode},
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.location.Location" databaseId="h2">
+        INSERT INTO "場所マスタ" (
+            "場所コード",
+            "場所名",
+            "場所区分",
+            "親場所コード",
+            "作成日時",
+            "更新日時"
+        ) VALUES (
+            #{locationCode},
+            #{locationName},
+            #{locationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.LocationTypeTypeHandler},
+            #{parentLocationCode},
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findByLocationCode" resultMap="LocationResultMap">
+        SELECT * FROM "場所マスタ"
+        WHERE "場所コード" = #{locationCode}
+    </select>
+
+    <!-- PostgreSQL用 検索 -->
+    <select id="findByLocationType" resultMap="LocationResultMap" databaseId="postgresql">
+        SELECT * FROM "場所マスタ"
+        WHERE "場所区分" = #{locationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.LocationTypeTypeHandler}::場所区分
+        ORDER BY "場所コード"
+    </select>
+
+    <!-- H2用 検索 -->
+    <select id="findByLocationType" resultMap="LocationResultMap" databaseId="h2">
+        SELECT * FROM "場所マスタ"
+        WHERE "場所区分" = #{locationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.LocationTypeTypeHandler}
+        ORDER BY "場所コード"
+    </select>
+
+    <select id="findAll" resultMap="LocationResultMap">
+        SELECT * FROM "場所マスタ"
+        ORDER BY "場所コード"
+    </select>
+
+    <!-- PostgreSQL用 UPDATE -->
+    <update id="update" parameterType="com.example.pms.domain.model.location.Location" databaseId="postgresql">
+        UPDATE "場所マスタ" SET
+            "場所名" = #{locationName},
+            "場所区分" = #{locationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.LocationTypeTypeHandler}::場所区分,
+            "親場所コード" = #{parentLocationCode},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "場所コード" = #{locationCode}
+    </update>
+
+    <!-- H2用 UPDATE -->
+    <update id="update" parameterType="com.example.pms.domain.model.location.Location" databaseId="h2">
+        UPDATE "場所マスタ" SET
+            "場所名" = #{locationName},
+            "場所区分" = #{locationType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.LocationTypeTypeHandler},
+            "親場所コード" = #{parentLocationCode},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "場所コード" = #{locationCode}
+    </update>
+
+    <delete id="deleteByLocationCode">
+        DELETE FROM "場所マスタ"
+        WHERE "場所コード" = #{locationCode}
+    </delete>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "場所マスタ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "場所マスタ"
+    </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="LocationResultMap">
+        SELECT * FROM "場所マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("場所コード" LIKE '%' || #{keyword} || '%'
+                 OR "場所名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "場所コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "場所マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("場所コード" LIKE '%' || #{keyword} || '%'
+                 OR "場所名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ShipmentInspectionResultMapper">
+
+    <resultMap id="ShipmentInspectionResultResultMap" type="com.example.pms.domain.model.quality.ShipmentInspectionResult">
+        <id property="id" column="ID"/>
+        <result property="inspectionNumber" column="出荷検査番号"/>
+        <result property="defectCode" column="欠点コード"/>
+        <result property="quantity" column="数量"/>
+        <result property="remarks" column="備考"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "出荷検査結果データ" (
+            "出荷検査番号", "欠点コード", "数量", "備考"
+        ) VALUES (
+            #{inspectionNumber}, #{defectCode}, #{quantity}, #{remarks}
+        )
+    </insert>
+
+    <select id="findByInspectionNumber" resultMap="ShipmentInspectionResultResultMap">
+        SELECT * FROM "出荷検査結果データ"
+        WHERE "出荷検査番号" = #{inspectionNumber}
+        ORDER BY "欠点コード"
+    </select>
+
+    <select id="findById" resultMap="ShipmentInspectionResultResultMap">
+        SELECT * FROM "出荷検査結果データ"
+        WHERE "ID" = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE "出荷検査結果データ" SET
+            "数量" = #{quantity},
+            "備考" = #{remarks}
+        WHERE "ID" = #{id}
+    </update>
+
+    <delete id="deleteByInspectionNumber">
+        DELETE FROM "出荷検査結果データ"
+        WHERE "出荷検査番号" = #{inspectionNumber}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM "出荷検査結果データ"
+        WHERE "ID" = #{id}
+    </delete>
+</mapper>

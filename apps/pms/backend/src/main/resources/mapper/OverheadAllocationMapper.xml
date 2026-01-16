@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.OverheadAllocationMapper">
+
+    <resultMap id="overheadAllocationResultMap" type="com.example.pms.domain.model.cost.OverheadAllocation">
+        <id property="id" column="ID"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="accountingPeriod" column="会計期間"/>
+        <result property="allocationBasis" column="配賦基準"/>
+        <result property="basisAmount" column="基準金額"/>
+        <result property="allocationRate" column="配賦率"/>
+        <result property="allocatedAmount" column="配賦金額"/>
+        <result property="createdAt" column="作成日時"/>
+    </resultMap>
+
+    <select id="findById" resultMap="overheadAllocationResultMap">
+        SELECT * FROM "製造間接費配賦データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByWorkOrderNumber" resultMap="overheadAllocationResultMap">
+        SELECT * FROM "製造間接費配賦データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+        ORDER BY "会計期間" ASC
+    </select>
+
+    <select id="findByWorkOrderNumberAndPeriod" resultMap="overheadAllocationResultMap">
+        SELECT * FROM "製造間接費配賦データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+          AND "会計期間" = #{accountingPeriod}
+    </select>
+
+    <select id="findAll" resultMap="overheadAllocationResultMap">
+        SELECT * FROM "製造間接費配賦データ" ORDER BY "会計期間", "作業指示番号"
+    </select>
+
+    <select id="sumByWorkOrderNumber" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM("配賦金額"), 0)
+        FROM "製造間接費配賦データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "製造間接費配賦データ" (
+            "作業指示番号", "会計期間", "配賦基準",
+            "基準金額", "配賦率", "配賦金額"
+        ) VALUES (
+            #{workOrderNumber}, #{accountingPeriod}, #{allocationBasis},
+            #{basisAmount}, #{allocationRate}, #{allocatedAmount}
+        )
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM "製造間接費配賦データ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteByWorkOrderNumber">
+        DELETE FROM "製造間接費配賦データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE FROM "製造間接費配賦データ"
+    </delete>
+
+</mapper>

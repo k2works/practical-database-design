@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.UnitMapper">
+
+    <!-- 日本語カラム名と英語プロパティ名のマッピング -->
+    <resultMap id="UnitResultMap" type="com.example.pms.domain.model.unit.Unit">
+        <id property="unitCode" column="単位コード"/>
+        <result property="unitSymbol" column="単位記号"/>
+        <result property="unitName" column="単位名"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.unit.Unit">
+        INSERT INTO "単位マスタ" (
+            "単位コード",
+            "単位記号",
+            "単位名",
+            "作成日時",
+            "更新日時"
+        ) VALUES (
+            #{unitCode},
+            #{unitSymbol},
+            #{unitName},
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findByUnitCode" resultMap="UnitResultMap">
+        SELECT * FROM "単位マスタ"
+        WHERE "単位コード" = #{unitCode}
+    </select>
+
+    <select id="findAll" resultMap="UnitResultMap">
+        SELECT * FROM "単位マスタ"
+        ORDER BY "単位コード"
+    </select>
+
+    <select id="findWithPagination" resultMap="UnitResultMap">
+        SELECT * FROM "単位マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("単位コード" LIKE '%' || #{keyword} || '%'
+                 OR "単位記号" LIKE '%' || #{keyword} || '%'
+                 OR "単位名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "単位コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "単位マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("単位コード" LIKE '%' || #{keyword} || '%'
+                 OR "単位記号" LIKE '%' || #{keyword} || '%'
+                 OR "単位名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
+
+    <update id="update" parameterType="com.example.pms.domain.model.unit.Unit">
+        UPDATE "単位マスタ" SET
+            "単位記号" = #{unitSymbol},
+            "単位名" = #{unitName},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "単位コード" = #{unitCode}
+    </update>
+
+    <delete id="deleteByUnitCode">
+        DELETE FROM "単位マスタ"
+        WHERE "単位コード" = #{unitCode}
+    </delete>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "単位マスタ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "単位マスタ"
+    </delete>
+</mapper>

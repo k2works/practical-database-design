@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.CostVarianceMapper">
+
+    <resultMap id="costVarianceResultMap" type="com.example.pms.domain.model.cost.CostVariance">
+        <id property="id" column="ID"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="materialCostVariance" column="材料費差異"/>
+        <result property="laborCostVariance" column="労務費差異"/>
+        <result property="expenseVariance" column="経費差異"/>
+        <result property="totalVariance" column="総差異"/>
+        <result property="createdAt" column="作成日時"/>
+    </resultMap>
+
+    <select id="findWithPagination" resultMap="costVarianceResultMap">
+        SELECT * FROM "原価差異データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "作業指示番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "原価差異データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" resultMap="costVarianceResultMap">
+        SELECT * FROM "原価差異データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByWorkOrderNumber" resultMap="costVarianceResultMap">
+        SELECT * FROM "原価差異データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </select>
+
+    <select id="findByItemCode" resultMap="costVarianceResultMap">
+        SELECT * FROM "原価差異データ"
+        WHERE "品目コード" = #{itemCode}
+        ORDER BY "作成日時" DESC
+    </select>
+
+    <select id="findAll" resultMap="costVarianceResultMap">
+        SELECT * FROM "原価差異データ" ORDER BY "作業指示番号"
+    </select>
+
+    <select id="existsByWorkOrderNumber" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM "原価差異データ"
+            WHERE "作業指示番号" = #{workOrderNumber}
+        )
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "原価差異データ" (
+            "作業指示番号", "品目コード",
+            "材料費差異", "労務費差異", "経費差異", "総差異"
+        ) VALUES (
+            #{workOrderNumber}, #{itemCode},
+            #{materialCostVariance}, #{laborCostVariance},
+            #{expenseVariance}, #{totalVariance}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE "原価差異データ"
+        SET "品目コード" = #{itemCode},
+            "材料費差異" = #{materialCostVariance},
+            "労務費差異" = #{laborCostVariance},
+            "経費差異" = #{expenseVariance},
+            "総差異" = #{totalVariance}
+        WHERE "作業指示番号" = #{workOrderNumber}
+    </update>
+
+    <delete id="deleteByWorkOrderNumber">
+        DELETE FROM "原価差異データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE FROM "原価差異データ"
+    </delete>
+
+</mapper>

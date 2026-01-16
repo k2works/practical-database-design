@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>完成実績詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>完成実績詳細</h1>
+            <div>
+                <a th:href="@{/completion-results/{no}/edit(no=${completionResult.completionResultNumber})}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/completion-results}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">完成実績番号</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.completionResultNumber}"></dd>
+
+                    <dt class="col-sm-3">作業指示番号</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.workOrderNumber}"></dd>
+
+                    <dt class="col-sm-3">品目コード</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.itemCode}"></dd>
+
+                    <dt class="col-sm-3">完成日</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.completionDate}"></dd>
+                </dl>
+
+                <hr>
+                <h5>数量情報</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">完成数量</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.completedQuantity != null ? #numbers.formatDecimal(completionResult.completedQuantity, 1, 'COMMA', 2, 'POINT') : '-'}"></dd>
+
+                    <dt class="col-sm-3">良品数</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.goodQuantity != null ? #numbers.formatDecimal(completionResult.goodQuantity, 1, 'COMMA', 2, 'POINT') : '-'}"></dd>
+
+                    <dt class="col-sm-3">不良品数</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.defectQuantity != null ? #numbers.formatDecimal(completionResult.defectQuantity, 1, 'COMMA', 2, 'POINT') : '-'}"></dd>
+                </dl>
+
+                <hr>
+                <h5>その他</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">備考</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.remarks ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">バージョン</dt>
+                    <dd class="col-sm-9" th:text="${completionResult.version}"></dd>
+                </dl>
+
+                <hr>
+                <div class="d-flex justify-content-end">
+                    <form th:action="@{/completion-results/{no}/delete(no=${completionResult.completionResultNumber})}"
+                          method="post" class="d-inline"
+                          onsubmit="return confirm('この完成実績を削除しますか？');">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> 削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

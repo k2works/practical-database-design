@@ -261,8 +261,8 @@ CREATE INDEX "idx_支給明細_品目コード" ON "支給明細データ"("品�
 <summary>支給区分 Enum</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/subcontract/SupplyType.java
-package com.example.production.domain.model.subcontract;
+// src/main/java/com/example/pms/domain/model/subcontract/SupplyType.java
+package com.example.pms.domain.model.subcontract;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -281,7 +281,7 @@ public enum SupplyType {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown supply type: " + displayName);
+        throw new IllegalArgumentException("不正な支給区分: " + displayName);
     }
 }
 ```
@@ -292,13 +292,15 @@ public enum SupplyType {
 <summary>支給データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/subcontract/Supply.java
-package com.example.production.domain.model.subcontract;
+// src/main/java/com/example/pms/domain/model/subcontract/Supply.java
+package com.example.pms.domain.model.subcontract;
 
-import com.example.production.domain.model.master.Supplier;
-import com.example.production.domain.model.purchase.PurchaseOrderDetail;
+import com.example.pms.domain.model.supplier.Supplier;
+import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -306,6 +308,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Supply {
     private Integer id;
     private String supplyNumber;
@@ -334,18 +338,22 @@ public class Supply {
 <summary>支給明細データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/subcontract/SupplyDetail.java
-package com.example.production.domain.model.subcontract;
+// src/main/java/com/example/pms/domain/model/subcontract/SupplyDetail.java
+package com.example.pms.domain.model.subcontract;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SupplyDetail {
     private Integer id;
     private String supplyNumber;
@@ -372,10 +380,10 @@ public class SupplyDetail {
 <summary>SupplyTypeTypeHandler</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/SupplyTypeTypeHandler.java
-package com.example.production.infrastructure.persistence;
+// src/main/java/com/example/pms/infrastructure/persistence/SupplyTypeTypeHandler.java
+package com.example.pms.infrastructure.persistence;
 
-import com.example.production.domain.model.subcontract.SupplyType;
+import com.example.pms.domain.model.subcontract.SupplyType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -422,13 +430,13 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
 <summary>SupplyMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/SupplyMapper.xml -->
+<!-- src/main/resources/mapper/SupplyMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.SupplyMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.SupplyMapper">
 
-    <resultMap id="SupplyResultMap" type="com.example.production.domain.model.subcontract.Supply">
+    <resultMap id="SupplyResultMap" type="com.example.pms.domain.model.subcontract.Supply">
         <id property="id" column="ID"/>
         <result property="supplyNumber" column="支給番号"/>
         <result property="purchaseOrderNumber" column="発注番号"/>
@@ -437,7 +445,7 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
         <result property="supplyDate" column="支給日"/>
         <result property="supplierPersonCode" column="支給担当者コード"/>
         <result property="supplyType" column="支給区分"
-                typeHandler="com.example.production.infrastructure.persistence.SupplyTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler"/>
         <result property="remarks" column="備考"/>
         <result property="createdAt" column="作成日時"/>
         <result property="createdBy" column="作成者"/>
@@ -445,10 +453,12 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
         <result property="updatedBy" column="更新者"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.Supply"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "支給データ" (
             "支給番号", "発注番号", "発注行番号", "取引先コード",
-            "支給日", "支給担当者コード", "支給区分", "備考", "作成者"
+            "支給日", "支給担当者コード", "支給区分", "備考", "作成者", "更新者"
         ) VALUES (
             #{supplyNumber},
             #{purchaseOrderNumber},
@@ -456,29 +466,66 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
             #{supplierCode},
             #{supplyDate},
             #{supplierPersonCode},
-            #{supplyType, typeHandler=com.example.production.infrastructure.persistence.SupplyTypeTypeHandler}::支給区分,
+            #{supplyType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler}::支給区分,
             #{remarks},
-            #{createdBy}
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.Supply"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "支給データ" (
+            "支給番号", "発注番号", "発注行番号", "取引先コード",
+            "支給日", "支給担当者コード", "支給区分", "備考", "作成者", "更新者"
+        ) VALUES (
+            #{supplyNumber},
+            #{purchaseOrderNumber},
+            #{lineNumber},
+            #{supplierCode},
+            #{supplyDate},
+            #{supplierPersonCode},
+            #{supplyType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" WHERE "ID" = #{id}
+    </select>
 
     <select id="findBySupplyNumber" resultMap="SupplyResultMap">
         SELECT * FROM "支給データ" WHERE "支給番号" = #{supplyNumber}
     </select>
 
-    <select id="findByPurchaseOrderDetail" resultMap="SupplyResultMap">
+    <select id="findByPurchaseOrderNumber" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" WHERE "発注番号" = #{purchaseOrderNumber} ORDER BY "支給日" DESC
+    </select>
+
+    <select id="findByPurchaseOrderNumberAndLineNumber" resultMap="SupplyResultMap">
         SELECT * FROM "支給データ"
         WHERE "発注番号" = #{purchaseOrderNumber} AND "発注行番号" = #{lineNumber}
+        ORDER BY "支給日" DESC
     </select>
 
-    <select id="findLatestSupplyNumber" resultType="string">
-        SELECT "支給番号" FROM "支給データ"
-        WHERE "支給番号" LIKE #{prefix}
-        ORDER BY "支給番号" DESC
-        LIMIT 1
+    <select id="findBySupplierCode" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" WHERE "取引先コード" = #{supplierCode} ORDER BY "支給日" DESC
     </select>
 
-    <delete id="deleteAll">
+    <select id="findAll" resultMap="SupplyResultMap">
+        SELECT * FROM "支給データ" ORDER BY "支給日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "支給データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
         DELETE FROM "支給データ"
     </delete>
 </mapper>
@@ -490,13 +537,13 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
 <summary>SupplyDetailMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/SupplyDetailMapper.xml -->
+<!-- src/main/resources/mapper/SupplyDetailMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.SupplyDetailMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.SupplyDetailMapper">
 
-    <resultMap id="SupplyDetailResultMap" type="com.example.production.domain.model.subcontract.SupplyDetail">
+    <resultMap id="SupplyDetailResultMap" type="com.example.pms.domain.model.subcontract.SupplyDetail">
         <id property="id" column="ID"/>
         <result property="supplyNumber" column="支給番号"/>
         <result property="lineNumber" column="支給行番号"/>
@@ -509,9 +556,10 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
         <result property="updatedAt" column="更新日時"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.SupplyDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "支給明細データ" (
-            "支給番号", "支給行番号", "品目コード", "支給数", "支給単価", "支給金額", "備考"
+            "支給番号", "支給行番号", "品目コード", "支給数", "支給単価", "支給金額", "備考", "作成者", "更新者"
         ) VALUES (
             #{supplyNumber},
             #{lineNumber},
@@ -519,9 +567,20 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
             #{quantity},
             #{unitPrice},
             #{amount},
-            #{remarks}
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
+
+    <select id="findById" resultMap="SupplyDetailResultMap">
+        SELECT * FROM "支給明細データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findBySupplyNumberAndLineNumber" resultMap="SupplyDetailResultMap">
+        SELECT * FROM "支給明細データ"
+        WHERE "支給番号" = #{supplyNumber} AND "支給行番号" = #{lineNumber}
+    </select>
 
     <select id="findBySupplyNumber" resultMap="SupplyDetailResultMap">
         SELECT * FROM "支給明細データ"
@@ -529,7 +588,17 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
         ORDER BY "支給行番号"
     </select>
 
-    <delete id="deleteAll">
+    <select id="findAll" resultMap="SupplyDetailResultMap">
+        SELECT * FROM "支給明細データ" ORDER BY "支給番号", "支給行番号"
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "支給明細データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
         DELETE FROM "支給明細データ"
     </delete>
 </mapper>
@@ -543,10 +612,10 @@ public class SupplyTypeTypeHandler extends BaseTypeHandler<SupplyType> {
 <summary>SupplyMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/SupplyMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/SupplyMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.subcontract.Supply;
+import com.example.pms.domain.model.subcontract.Supply;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -567,10 +636,10 @@ public interface SupplyMapper {
 <summary>SupplyDetailMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/SupplyDetailMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/SupplyDetailMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.subcontract.SupplyDetail;
+import com.example.pms.domain.model.subcontract.SupplyDetail;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -591,13 +660,13 @@ public interface SupplyDetailMapper {
 <summary>SupplyService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/SupplyService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/SupplyService.java
+package com.example.pms.application.service;
 
-import com.example.production.application.port.in.command.SupplyCreateCommand;
-import com.example.production.application.port.in.command.SupplyDetailCommand;
-import com.example.production.domain.model.subcontract.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.application.port.in.command.SupplyCreateCommand;
+import com.example.pms.application.port.in.command.SupplyDetailCommand;
+import com.example.pms.domain.model.subcontract.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -697,10 +766,10 @@ public class SupplyService {
 <summary>SupplyCreateCommand</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/in/command/SupplyCreateCommand.java
-package com.example.production.application.port.in.command;
+// src/main/java/com/example/pms/application/port/in/command/SupplyCreateCommand.java
+package com.example.pms.application.port.in.command;
 
-import com.example.production.domain.model.subcontract.SupplyType;
+import com.example.pms.domain.model.subcontract.SupplyType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -727,8 +796,8 @@ public class SupplyCreateCommand {
 <summary>SupplyDetailCommand</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/in/command/SupplyDetailCommand.java
-package com.example.production.application.port.in.command;
+// src/main/java/com/example/pms/application/port/in/command/SupplyDetailCommand.java
+package com.example.pms.application.port.in.command;
 
 import lombok.Builder;
 import lombok.Data;
@@ -753,15 +822,15 @@ public class SupplyDetailCommand {
 <summary>SupplyServiceTest</summary>
 
 ```java
-// src/test/java/com/example/production/application/service/SupplyServiceTest.java
-package com.example.production.application.service;
+// src/test/java/com/example/pms/application/service/SupplyServiceTest.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.item.ItemCategory;
-import com.example.production.domain.model.master.Supplier;
-import com.example.production.domain.model.purchase.*;
-import com.example.production.domain.model.subcontract.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
+import com.example.pms.domain.model.supplier.Supplier;
+import com.example.pms.domain.model.purchase.*;
+import com.example.pms.domain.model.subcontract.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import org.junit.jupiter.api.*;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1068,13 +1137,15 @@ CREATE INDEX "idx_消費明細_品目コード" ON "消費明細データ"("品�
 <summary>消費データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/subcontract/Consumption.java
-package com.example.production.domain.model.subcontract;
+// src/main/java/com/example/pms/domain/model/subcontract/Consumption.java
+package com.example.pms.domain.model.subcontract;
 
-import com.example.production.domain.model.master.Supplier;
-import com.example.production.domain.model.purchase.Receiving;
+import com.example.pms.domain.model.supplier.Supplier;
+import com.example.pms.domain.model.purchase.Receiving;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -1082,6 +1153,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Consumption {
     private Integer id;
     private String consumptionNumber;
@@ -1107,18 +1180,22 @@ public class Consumption {
 <summary>消費明細データエンティティ</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/subcontract/ConsumptionDetail.java
-package com.example.production.domain.model.subcontract;
+// src/main/java/com/example/pms/domain/model/subcontract/ConsumptionDetail.java
+package com.example.pms.domain.model.subcontract;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ConsumptionDetail {
     private Integer id;
     private String consumptionNumber;
@@ -1143,13 +1220,13 @@ public class ConsumptionDetail {
 <summary>ConsumptionMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/ConsumptionMapper.xml -->
+<!-- src/main/resources/mapper/ConsumptionMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.ConsumptionMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ConsumptionMapper">
 
-    <resultMap id="ConsumptionResultMap" type="com.example.production.domain.model.subcontract.Consumption">
+    <resultMap id="ConsumptionResultMap" type="com.example.pms.domain.model.subcontract.Consumption">
         <id property="id" column="ID"/>
         <result property="consumptionNumber" column="消費番号"/>
         <result property="receivingNumber" column="入荷番号"/>
@@ -1162,35 +1239,48 @@ public class ConsumptionDetail {
         <result property="updatedBy" column="更新者"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.Consumption"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "消費データ" (
-            "消費番号", "入荷番号", "消費日", "取引先コード", "備考", "作成者"
+            "消費番号", "入荷番号", "消費日", "取引先コード", "備考", "作成者", "更新者"
         ) VALUES (
             #{consumptionNumber},
             #{receivingNumber},
             #{consumptionDate},
             #{supplierCode},
             #{remarks},
-            #{createdBy}
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
+
+    <select id="findById" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" WHERE "ID" = #{id}
+    </select>
 
     <select id="findByConsumptionNumber" resultMap="ConsumptionResultMap">
         SELECT * FROM "消費データ" WHERE "消費番号" = #{consumptionNumber}
     </select>
 
     <select id="findByReceivingNumber" resultMap="ConsumptionResultMap">
-        SELECT * FROM "消費データ" WHERE "入荷番号" = #{receivingNumber}
+        SELECT * FROM "消費データ" WHERE "入荷番号" = #{receivingNumber} ORDER BY "消費日" DESC
     </select>
 
-    <select id="findLatestConsumptionNumber" resultType="string">
-        SELECT "消費番号" FROM "消費データ"
-        WHERE "消費番号" LIKE #{prefix}
-        ORDER BY "消費番号" DESC
-        LIMIT 1
+    <select id="findBySupplierCode" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" WHERE "取引先コード" = #{supplierCode} ORDER BY "消費日" DESC
     </select>
 
-    <delete id="deleteAll">
+    <select id="findAll" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" ORDER BY "消費日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "消費データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
         DELETE FROM "消費データ"
     </delete>
 </mapper>
@@ -1202,13 +1292,13 @@ public class ConsumptionDetail {
 <summary>ConsumptionDetailMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/ConsumptionDetailMapper.xml -->
+<!-- src/main/resources/mapper/ConsumptionDetailMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.ConsumptionDetailMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ConsumptionDetailMapper">
 
-    <resultMap id="ConsumptionDetailResultMap" type="com.example.production.domain.model.subcontract.ConsumptionDetail">
+    <resultMap id="ConsumptionDetailResultMap" type="com.example.pms.domain.model.subcontract.ConsumptionDetail">
         <id property="id" column="ID"/>
         <result property="consumptionNumber" column="消費番号"/>
         <result property="lineNumber" column="消費行番号"/>
@@ -1219,17 +1309,29 @@ public class ConsumptionDetail {
         <result property="updatedAt" column="更新日時"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.ConsumptionDetail"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "消費明細データ" (
-            "消費番号", "消費行番号", "品目コード", "消費数量", "備考"
+            "消費番号", "消費行番号", "品目コード", "消費数量", "備考", "作成者", "更新者"
         ) VALUES (
             #{consumptionNumber},
             #{lineNumber},
             #{itemCode},
             #{quantity},
-            #{remarks}
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
+
+    <select id="findById" resultMap="ConsumptionDetailResultMap">
+        SELECT * FROM "消費明細データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByConsumptionNumberAndLineNumber" resultMap="ConsumptionDetailResultMap">
+        SELECT * FROM "消費明細データ"
+        WHERE "消費番号" = #{consumptionNumber} AND "消費行番号" = #{lineNumber}
+    </select>
 
     <select id="findByConsumptionNumber" resultMap="ConsumptionDetailResultMap">
         SELECT * FROM "消費明細データ"
@@ -1237,17 +1339,17 @@ public class ConsumptionDetail {
         ORDER BY "消費行番号"
     </select>
 
-    <select id="sumByPurchaseOrderAndItem" resultType="java.math.BigDecimal">
-        SELECT COALESCE(SUM(cd."消費数量"), 0)
-        FROM "消費明細データ" cd
-        JOIN "消費データ" c ON cd."消費番号" = c."消費番号"
-        JOIN "入荷受入データ" r ON c."入荷番号" = r."入荷番号"
-        WHERE r."発注番号" = #{purchaseOrderNumber}
-          AND r."発注行番号" = #{lineNumber}
-          AND cd."品目コード" = #{itemCode}
+    <select id="findAll" resultMap="ConsumptionDetailResultMap">
+        SELECT * FROM "消費明細データ" ORDER BY "消費番号", "消費行番号"
     </select>
 
-    <delete id="deleteAll">
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "消費明細データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
         DELETE FROM "消費明細データ"
     </delete>
 </mapper>
@@ -1261,10 +1363,10 @@ public class ConsumptionDetail {
 <summary>ConsumptionMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/ConsumptionMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/ConsumptionMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.subcontract.Consumption;
+import com.example.pms.domain.model.subcontract.Consumption;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
@@ -1283,10 +1385,10 @@ public interface ConsumptionMapper {
 <summary>ConsumptionDetailMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/ConsumptionDetailMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/ConsumptionDetailMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.subcontract.ConsumptionDetail;
+import com.example.pms.domain.model.subcontract.ConsumptionDetail;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -1312,14 +1414,14 @@ public interface ConsumptionDetailMapper {
 <summary>ConsumptionService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/ConsumptionService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/ConsumptionService.java
+package com.example.pms.application.service;
 
-import com.example.production.application.port.in.command.ConsumptionCreateCommand;
-import com.example.production.application.port.in.command.ConsumptionDetailCommand;
-import com.example.production.domain.model.purchase.Receiving;
-import com.example.production.domain.model.subcontract.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.application.port.in.command.ConsumptionCreateCommand;
+import com.example.pms.application.port.in.command.ConsumptionDetailCommand;
+import com.example.pms.domain.model.purchase.Receiving;
+import com.example.pms.domain.model.subcontract.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1463,8 +1565,8 @@ public class ConsumptionService {
 <summary>ConsumptionCreateCommand</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/in/command/ConsumptionCreateCommand.java
-package com.example.production.application.port.in.command;
+// src/main/java/com/example/pms/application/port/in/command/ConsumptionCreateCommand.java
+package com.example.pms.application.port.in.command;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1489,8 +1591,8 @@ public class ConsumptionCreateCommand {
 <summary>ConsumptionDetailCommand</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/in/command/ConsumptionDetailCommand.java
-package com.example.production.application.port.in.command;
+// src/main/java/com/example/pms/application/port/in/command/ConsumptionDetailCommand.java
+package com.example.pms.application.port.in.command;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1514,10 +1616,10 @@ public class ConsumptionDetailCommand {
 <summary>ConsumptionServiceTest</summary>
 
 ```java
-// src/test/java/com/example/production/application/service/ConsumptionServiceTest.java
-package com.example.production.application.service;
+// src/test/java/com/example/pms/application/service/ConsumptionServiceTest.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.subcontract.*;
+import com.example.pms.domain.model.subcontract.*;
 import org.junit.jupiter.api.*;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1703,14 +1805,14 @@ stop
 <summary>SubcontractingWorkflowService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/SubcontractingWorkflowService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/SubcontractingWorkflowService.java
+package com.example.pms.application.service;
 
-import com.example.production.application.port.in.command.SubcontractOrderCommand;
-import com.example.production.application.port.out.SubcontractStatus;
-import com.example.production.domain.model.purchase.*;
-import com.example.production.domain.model.subcontract.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.application.port.in.command.SubcontractOrderCommand;
+import com.example.pms.application.port.out.SubcontractStatus;
+import com.example.pms.domain.model.purchase.*;
+import com.example.pms.domain.model.subcontract.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1852,8 +1954,8 @@ public class SubcontractingWorkflowService {
 <summary>SubcontractOrderCommand</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/in/command/SubcontractOrderCommand.java
-package com.example.production.application.port.in.command;
+// src/main/java/com/example/pms/application/port/in/command/SubcontractOrderCommand.java
+package com.example.pms.application.port.in.command;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1878,10 +1980,10 @@ public class SubcontractOrderCommand {
 <summary>SubcontractStatus</summary>
 
 ```java
-// src/main/java/com/example/production/application/port/out/SubcontractStatus.java
-package com.example.production.application.port.out;
+// src/main/java/com/example/pms/application/port/out/SubcontractStatus.java
+package com.example.pms.application.port.out;
 
-import com.example.production.domain.model.purchase.PurchaseOrderStatus;
+import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -1972,10 +2074,10 @@ stop
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/SupplyMapper.xml -->
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.SupplyMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.SupplyMapper">
 
     <!-- 支給データ ResultMap（明細・発注明細込み） -->
-    <resultMap id="supplyWithRelationsResultMap" type="com.example.production.domain.model.subcontract.Supply">
+    <resultMap id="supplyWithRelationsResultMap" type="com.example.pms.domain.model.subcontract.Supply">
         <id property="id" column="s_ID"/>
         <result property="supplyNumber" column="s_支給番号"/>
         <result property="purchaseOrderNumber" column="s_発注番号"/>
@@ -1984,7 +2086,7 @@ stop
         <result property="supplyDate" column="s_支給日"/>
         <result property="supplierPersonCode" column="s_支給担当者コード"/>
         <result property="supplyType" column="s_支給区分"
-                typeHandler="com.example.production.infrastructure.persistence.SupplyTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler"/>
         <result property="remarks" column="s_備考"/>
         <result property="version" column="s_バージョン"/>
         <result property="createdAt" column="s_作成日時"/>
@@ -1992,7 +2094,7 @@ stop
         <result property="updatedAt" column="s_更新日時"/>
         <result property="updatedBy" column="s_更新者"/>
         <!-- 発注明細との N:1 関連 -->
-        <association property="purchaseOrderDetail" javaType="com.example.production.domain.model.purchase.PurchaseOrderDetail">
+        <association property="purchaseOrderDetail" javaType="com.example.pms.domain.model.purchase.PurchaseOrderDetail">
             <id property="id" column="pod_ID"/>
             <result property="purchaseOrderNumber" column="pod_発注番号"/>
             <result property="lineNumber" column="pod_発注行番号"/>
@@ -2001,17 +2103,17 @@ stop
             <result property="unitPrice" column="pod_発注単価"/>
         </association>
         <!-- 取引先との N:1 関連 -->
-        <association property="supplier" javaType="com.example.production.domain.model.master.Supplier">
+        <association property="supplier" javaType="com.example.pms.domain.model.supplier.Supplier">
             <id property="supplierCode" column="sup_取引先コード"/>
             <result property="supplierName" column="sup_取引先名"/>
         </association>
         <!-- 支給明細との 1:N 関連 -->
-        <collection property="details" ofType="com.example.production.domain.model.subcontract.SupplyDetail"
+        <collection property="details" ofType="com.example.pms.domain.model.subcontract.SupplyDetail"
                     resultMap="supplyDetailNestedResultMap"/>
     </resultMap>
 
     <!-- 支給明細のネスト ResultMap -->
-    <resultMap id="supplyDetailNestedResultMap" type="com.example.production.domain.model.subcontract.SupplyDetail">
+    <resultMap id="supplyDetailNestedResultMap" type="com.example.pms.domain.model.subcontract.SupplyDetail">
         <id property="id" column="sd_ID"/>
         <result property="supplyNumber" column="sd_支給番号"/>
         <result property="lineNumber" column="sd_支給行番号"/>
@@ -2024,7 +2126,7 @@ stop
         <result property="remarks" column="sd_備考"/>
         <result property="version" column="sd_バージョン"/>
         <!-- 品目マスタとの N:1 関連 -->
-        <association property="item" javaType="com.example.production.domain.model.item.Item">
+        <association property="item" javaType="com.example.pms.domain.model.item.Item">
             <id property="itemCode" column="i_品目コード"/>
             <result property="itemName" column="i_品名"/>
             <result property="unit" column="i_単位"/>
@@ -2104,10 +2206,10 @@ stop
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/ConsumptionMapper.xml -->
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.ConsumptionMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ConsumptionMapper">
 
     <!-- 消費データ ResultMap（明細・支給データ込み） -->
-    <resultMap id="consumptionWithRelationsResultMap" type="com.example.production.domain.model.subcontract.Consumption">
+    <resultMap id="consumptionWithRelationsResultMap" type="com.example.pms.domain.model.subcontract.Consumption">
         <id property="id" column="c_ID"/>
         <result property="consumptionNumber" column="c_消費番号"/>
         <result property="supplyNumber" column="c_支給番号"/>
@@ -2118,28 +2220,28 @@ stop
         <result property="createdAt" column="c_作成日時"/>
         <result property="updatedAt" column="c_更新日時"/>
         <!-- 支給データとの N:1 関連 -->
-        <association property="supply" javaType="com.example.production.domain.model.subcontract.Supply">
+        <association property="supply" javaType="com.example.pms.domain.model.subcontract.Supply">
             <id property="id" column="s_ID"/>
             <result property="supplyNumber" column="s_支給番号"/>
             <result property="supplierCode" column="s_取引先コード"/>
             <result property="supplyDate" column="s_支給日"/>
             <result property="supplyType" column="s_支給区分"
-                    typeHandler="com.example.production.infrastructure.persistence.SupplyTypeTypeHandler"/>
+                    typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.SupplyTypeTypeHandler"/>
         </association>
         <!-- 入荷データとの N:1 関連 -->
-        <association property="receiving" javaType="com.example.production.domain.model.purchase.Receiving">
+        <association property="receiving" javaType="com.example.pms.domain.model.purchase.Receiving">
             <id property="id" column="r_ID"/>
             <result property="receivingNumber" column="r_入荷受入番号"/>
             <result property="receivingDate" column="r_入荷日"/>
             <result property="receivedQuantity" column="r_入荷数量"/>
         </association>
         <!-- 消費明細との 1:N 関連 -->
-        <collection property="details" ofType="com.example.production.domain.model.subcontract.ConsumptionDetail"
+        <collection property="details" ofType="com.example.pms.domain.model.subcontract.ConsumptionDetail"
                     resultMap="consumptionDetailNestedResultMap"/>
     </resultMap>
 
     <!-- 消費明細のネスト ResultMap -->
-    <resultMap id="consumptionDetailNestedResultMap" type="com.example.production.domain.model.subcontract.ConsumptionDetail">
+    <resultMap id="consumptionDetailNestedResultMap" type="com.example.pms.domain.model.subcontract.ConsumptionDetail">
         <id property="id" column="cd_ID"/>
         <result property="consumptionNumber" column="cd_消費番号"/>
         <result property="lineNumber" column="cd_消費行番号"/>
@@ -2150,7 +2252,7 @@ stop
         <result property="remarks" column="cd_備考"/>
         <result property="version" column="cd_バージョン"/>
         <!-- 支給明細との N:1 関連 -->
-        <association property="supplyDetail" javaType="com.example.production.domain.model.subcontract.SupplyDetail">
+        <association property="supplyDetail" javaType="com.example.pms.domain.model.subcontract.SupplyDetail">
             <id property="id" column="sd_ID"/>
             <result property="supplyNumber" column="sd_支給番号"/>
             <result property="lineNumber" column="sd_支給行番号"/>
@@ -2269,11 +2371,11 @@ COMMENT ON COLUMN "消費明細データ"."バージョン" IS '楽観ロック�
 <summary>Supply.java（バージョンフィールド追加）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/subcontract/Supply.java
-package com.example.production.domain.model.subcontract;
+// src/main/java/com/example/pms/domain/model/subcontract/Supply.java
+package com.example.pms.domain.model.subcontract;
 
-import com.example.production.domain.model.master.Supplier;
-import com.example.production.domain.model.purchase.PurchaseOrderDetail;
+import com.example.pms.domain.model.supplier.Supplier;
+import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
 import lombok.Builder;
 import lombok.Data;
 
@@ -2317,18 +2419,22 @@ public class Supply {
 <summary>SupplyDetail.java（バージョン・残数量追加）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/subcontract/SupplyDetail.java
-package com.example.production.domain.model.subcontract;
+// src/main/java/com/example/pms/domain/model/subcontract/SupplyDetail.java
+package com.example.pms.domain.model.subcontract;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SupplyDetail {
     private Integer id;
     private String supplyNumber;
@@ -2412,7 +2518,7 @@ public class SupplyDetail {
 
 ```xml
 <!-- 楽観ロック対応の更新 -->
-<update id="updateWithOptimisticLock" parameterType="com.example.production.domain.model.subcontract.Consumption">
+<update id="updateWithOptimisticLock" parameterType="com.example.pms.domain.model.subcontract.Consumption">
     UPDATE "消費データ"
     SET
         "消費日" = #{consumptionDate},
@@ -2437,14 +2543,14 @@ public class SupplyDetail {
 <summary>SupplyDetailRepositoryImpl.java（楽観ロック対応）</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/repository/SupplyDetailRepositoryImpl.java
-package com.example.production.infrastructure.persistence.repository;
+// src/main/java/com/example/pms/infrastructure/persistence/repository/SupplyDetailRepositoryImpl.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.production.application.port.out.SupplyDetailRepository;
-import com.example.production.domain.exception.InsufficientQuantityException;
-import com.example.production.domain.exception.OptimisticLockException;
-import com.example.production.domain.model.subcontract.SupplyDetail;
-import com.example.production.infrastructure.persistence.mapper.SupplyDetailMapper;
+import com.example.pms.application.port.out.SupplyDetailRepository;
+import com.example.pms.domain.exception.InsufficientQuantityException;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.subcontract.SupplyDetail;
+import com.example.pms.infrastructure.out.persistence.mapper.SupplyDetailMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -2498,17 +2604,17 @@ public class SupplyDetailRepositoryImpl implements SupplyDetailRepository {
 <summary>SupplyDetailRepositoryOptimisticLockTest.java</summary>
 
 ```java
-// src/test/java/com/example/production/infrastructure/persistence/repository/SupplyDetailRepositoryOptimisticLockTest.java
-package com.example.production.infrastructure.persistence.repository;
+// src/test/java/com/example/pms/infrastructure/persistence/repository/SupplyDetailRepositoryOptimisticLockTest.java
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.production.application.port.out.SupplyDetailRepository;
-import com.example.production.application.port.out.SupplyRepository;
-import com.example.production.domain.exception.InsufficientQuantityException;
-import com.example.production.domain.exception.OptimisticLockException;
-import com.example.production.domain.model.subcontract.Supply;
-import com.example.production.domain.model.subcontract.SupplyDetail;
-import com.example.production.domain.model.subcontract.SupplyType;
-import com.example.production.testsetup.BaseIntegrationTest;
+import com.example.pms.application.port.out.SupplyDetailRepository;
+import com.example.pms.application.port.out.SupplyRepository;
+import com.example.pms.domain.exception.InsufficientQuantityException;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.subcontract.Supply;
+import com.example.pms.domain.model.subcontract.SupplyDetail;
+import com.example.pms.domain.model.subcontract.SupplyType;
+import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.StaffMapper">
+
+    <resultMap id="StaffResultMap" type="com.example.pms.domain.model.staff.Staff">
+        <id property="staffCode" column="担当者コード"/>
+        <id property="effectiveFrom" column="適用開始日"/>
+        <result property="effectiveTo" column="適用停止日"/>
+        <result property="staffName" column="担当者名"/>
+        <result property="departmentCode" column="部門コード"/>
+        <result property="email" column="メールアドレス"/>
+        <result property="phoneNumber" column="電話番号"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.staff.Staff">
+        INSERT INTO "担当者マスタ" (
+            "担当者コード", "適用開始日", "適用停止日", "担当者名", "部門コード",
+            "メールアドレス", "電話番号", "作成日時", "更新日時"
+        ) VALUES (
+            #{staffCode}, #{effectiveFrom}, #{effectiveTo}, #{staffName}, #{departmentCode},
+            #{email}, #{phoneNumber}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findByStaffCode" resultMap="StaffResultMap">
+        SELECT * FROM "担当者マスタ"
+        WHERE "担当者コード" = #{staffCode}
+        ORDER BY "適用開始日" DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByStaffCodeAndDate" resultMap="StaffResultMap">
+        SELECT * FROM "担当者マスタ"
+        WHERE "担当者コード" = #{staffCode}
+          AND "適用開始日" &lt;= #{baseDate}
+          AND ("適用停止日" IS NULL OR "適用停止日" > #{baseDate})
+        ORDER BY "適用開始日" DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByDepartmentCode" resultMap="StaffResultMap">
+        SELECT * FROM "担当者マスタ"
+        WHERE "部門コード" = #{departmentCode}
+        ORDER BY "担当者コード", "適用開始日" DESC
+    </select>
+
+    <select id="findAll" resultMap="StaffResultMap">
+        SELECT * FROM "担当者マスタ"
+        ORDER BY "担当者コード", "適用開始日" DESC
+    </select>
+
+    <update id="update" parameterType="com.example.pms.domain.model.staff.Staff">
+        UPDATE "担当者マスタ" SET
+            "担当者名" = #{staffName},
+            "部門コード" = #{departmentCode},
+            "メールアドレス" = #{email},
+            "電話番号" = #{phoneNumber},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "担当者コード" = #{staffCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </update>
+
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "担当者マスタ" CASCADE
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "担当者マスタ"
+    </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="StaffResultMap">
+        SELECT * FROM "担当者マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("担当者コード" LIKE '%' || #{keyword} || '%'
+                OR "担当者名" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "担当者コード", "適用開始日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "担当者マスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("担当者コード" LIKE '%' || #{keyword} || '%'
+                OR "担当者名" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
+
+    <select id="findByStaffCodeAndEffectiveFrom" resultMap="StaffResultMap">
+        SELECT * FROM "担当者マスタ"
+        WHERE "担当者コード" = #{staffCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </select>
+
+    <delete id="deleteByStaffCodeAndEffectiveFrom">
+        DELETE FROM "担当者マスタ"
+        WHERE "担当者コード" = #{staffCode}
+          AND "適用開始日" = #{effectiveFrom}
+    </delete>
+</mapper>

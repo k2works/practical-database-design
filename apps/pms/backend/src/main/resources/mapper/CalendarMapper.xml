@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.CalendarMapper">
+
+    <!-- 日本語カラム名と英語プロパティ名のマッピング -->
+    <resultMap id="CalendarResultMap" type="com.example.pms.domain.model.calendar.WorkCalendar">
+        <id property="calendarCode" column="カレンダコード"/>
+        <id property="date" column="日付"/>
+        <result property="dateType" column="日付区分"/>
+        <result property="workingHours" column="稼働時間"/>
+        <result property="note" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.calendar.WorkCalendar">
+        INSERT INTO "カレンダマスタ" (
+            "カレンダコード",
+            "日付",
+            "日付区分",
+            "稼働時間",
+            "備考",
+            "作成日時",
+            "更新日時"
+        ) VALUES (
+            #{calendarCode},
+            #{date},
+            #{dateType},
+            #{workingHours},
+            #{note},
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findByCalendarCodeAndDate" resultMap="CalendarResultMap">
+        SELECT * FROM "カレンダマスタ"
+        WHERE "カレンダコード" = #{calendarCode}
+          AND "日付" = #{date}
+    </select>
+
+    <select id="findAll" resultMap="CalendarResultMap">
+        SELECT * FROM "カレンダマスタ"
+        ORDER BY "カレンダコード", "日付"
+    </select>
+
+    <select id="findWithPagination" resultMap="CalendarResultMap">
+        SELECT * FROM "カレンダマスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("カレンダコード" LIKE '%' || #{keyword} || '%'
+                 OR "備考" LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY "カレンダコード", "日付"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "カレンダマスタ"
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND ("カレンダコード" LIKE '%' || #{keyword} || '%'
+                 OR "備考" LIKE '%' || #{keyword} || '%')
+        </if>
+    </select>
+
+    <update id="update" parameterType="com.example.pms.domain.model.calendar.WorkCalendar">
+        UPDATE "カレンダマスタ" SET
+            "日付区分" = #{dateType},
+            "稼働時間" = #{workingHours},
+            "備考" = #{note},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "カレンダコード" = #{calendarCode}
+          AND "日付" = #{date}
+    </update>
+
+    <delete id="deleteByCalendarCodeAndDate">
+        DELETE FROM "カレンダマスタ"
+        WHERE "カレンダコード" = #{calendarCode}
+          AND "日付" = #{date}
+    </delete>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "カレンダマスタ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "カレンダマスタ"
+    </delete>
+</mapper>

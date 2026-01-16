@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>基準生産計画詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>基準生産計画詳細</h1>
+            <div>
+                <a th:if="${mps.status.name() == 'DRAFT'}"
+                   th:href="@{/mps/{no}/edit(no=${mps.mpsNumber})}"
+                   class="btn btn-outline-primary me-2">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/mps}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <!-- 基準生産計画情報 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">基準生産計画情報</h5>
+                <span class="badge"
+                      th:classappend="${mps.status.name() == 'DRAFT'} ? 'bg-secondary' :
+                                      (${mps.status.name() == 'CONFIRMED'} ? 'bg-primary' :
+                                      (${mps.status.name() == 'CANCELLED'} ? 'bg-danger' : 'bg-success'))"
+                      th:text="${mps.status.displayName}"></span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">MPS番号</dt>
+                            <dd class="col-sm-8" th:text="${mps.mpsNumber}"></dd>
+
+                            <dt class="col-sm-4">計画日</dt>
+                            <dd class="col-sm-8" th:text="${mps.planDate}"></dd>
+
+                            <dt class="col-sm-4">品目コード</dt>
+                            <dd class="col-sm-8" th:text="${mps.itemCode}"></dd>
+
+                            <dt class="col-sm-4">計画数量</dt>
+                            <dd class="col-sm-8" th:text="${#numbers.formatDecimal(mps.planQuantity, 1, 'COMMA', 2, 'POINT')}"></dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">納期</dt>
+                            <dd class="col-sm-8" th:text="${mps.dueDate}"></dd>
+
+                            <dt class="col-sm-4">場所コード</dt>
+                            <dd class="col-sm-8" th:text="${mps.locationCode ?: '-'}"></dd>
+
+                            <dt class="col-sm-4">備考</dt>
+                            <dd class="col-sm-8" th:text="${mps.remarks ?: '-'}"></dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- アクションボタン -->
+                <div class="mt-4 d-flex justify-content-end">
+                    <form th:if="${mps.status.name() == 'DRAFT'}"
+                          th:action="@{/mps/{no}/confirm(no=${mps.mpsNumber})}" method="post" class="me-2">
+                        <button type="submit" class="btn btn-success"
+                                onclick="return confirm('基準生産計画を確定しますか？')">
+                            <i class="bi bi-check-circle"></i> 確定
+                        </button>
+                    </form>
+                    <form th:if="${mps.status.name() != 'CANCELLED'}"
+                          th:action="@{/mps/{no}/cancel(no=${mps.mpsNumber})}" method="post">
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('基準生産計画を取消しますか？')">
+                            <i class="bi bi-x-circle"></i> 取消
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 関連オーダ情報 -->
+        <div class="card" th:if="${mps.orders != null and not #lists.isEmpty(mps.orders)}">
+            <div class="card-header">
+                <h5 class="mb-0">関連オーダ</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>オーダNO</th>
+                            <th>オーダ種別</th>
+                            <th>品目コード</th>
+                            <th class="text-end">計画数量</th>
+                            <th>納期</th>
+                            <th>ステータス</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${mps.orders}">
+                            <td>
+                                <a th:href="@{/orders/{no}(no=${order.orderNumber})}"
+                                   th:text="${order.orderNumber}"></a>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${order.orderType.name() == 'MANUFACTURING'} ? 'bg-info' : 'bg-warning'"
+                                      th:text="${order.orderType.displayName}"></span>
+                            </td>
+                            <td th:text="${order.itemCode}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(order.planQuantity, 1, 'COMMA', 2, 'POINT')}"></td>
+                            <td th:text="${order.dueDate}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${order.status.name() == 'DRAFT'} ? 'bg-secondary' :
+                                                      (${order.status.name() == 'CONFIRMED'} ? 'bg-primary' :
+                                                      (${order.status.name() == 'CANCELLED'} ? 'bg-danger' : 'bg-success'))"
+                                      th:text="${order.status.displayName}"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

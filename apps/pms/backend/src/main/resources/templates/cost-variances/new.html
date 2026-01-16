@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>原価差異登録</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>原価差異登録</h1>
+            <a th:href="@{/cost-variances}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/cost-variances}" th:object="${form}" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="workOrderNumber" class="form-label">作業指示番号 <span class="text-danger">*</span></label>
+                            <select id="workOrderNumber" th:field="*{workOrderNumber}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('workOrderNumber')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="wo : ${workOrders}"
+                                        th:value="${wo.workOrderNumber}"
+                                        th:text="${wo.workOrderNumber}"></option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('workOrderNumber')}" class="invalid-feedback"
+                                 th:errors="*{workOrderNumber}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="itemCode" class="form-label">品目コード <span class="text-danger">*</span></label>
+                            <select id="itemCode" th:field="*{itemCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('itemCode')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="item : ${items}"
+                                        th:value="${item.itemCode}"
+                                        th:text="${item.itemCode + ' - ' + item.itemName}"></option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('itemCode')}" class="invalid-feedback"
+                                 th:errors="*{itemCode}"></div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle"></i>
+                        差異はプラス（+）が不利差異、マイナス（-）が有利差異を示します。
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="materialCostVariance" class="form-label">材料費差異 <span class="text-danger">*</span></label>
+                            <input type="number" id="materialCostVariance" th:field="*{materialCostVariance}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('materialCostVariance')} ? 'is-invalid'"
+                                   step="1">
+                            <div th:if="${#fields.hasErrors('materialCostVariance')}" class="invalid-feedback"
+                                 th:errors="*{materialCostVariance}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="laborCostVariance" class="form-label">労務費差異 <span class="text-danger">*</span></label>
+                            <input type="number" id="laborCostVariance" th:field="*{laborCostVariance}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('laborCostVariance')} ? 'is-invalid'"
+                                   step="1">
+                            <div th:if="${#fields.hasErrors('laborCostVariance')}" class="invalid-feedback"
+                                 th:errors="*{laborCostVariance}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="expenseVariance" class="form-label">経費差異 <span class="text-danger">*</span></label>
+                            <input type="number" id="expenseVariance" th:field="*{expenseVariance}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('expenseVariance')} ? 'is-invalid'"
+                                   step="1">
+                            <div th:if="${#fields.hasErrors('expenseVariance')}" class="invalid-feedback"
+                                 th:errors="*{expenseVariance}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a th:href="@{/cost-variances}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 登録
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

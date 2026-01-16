@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>工程詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>工程詳細</h1>
+            <a th:href="@{/processes}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th class="table-light" style="width: 200px;">工程コード</th>
+                            <td th:text="${process.processCode}"></td>
+                        </tr>
+                        <tr>
+                            <th class="table-light">工程名</th>
+                            <td th:text="${process.processName}"></td>
+                        </tr>
+                        <tr>
+                            <th class="table-light">工程区分</th>
+                            <td th:text="${process.processType}"></td>
+                        </tr>
+                        <tr>
+                            <th class="table-light">場所コード</th>
+                            <td th:text="${process.locationCode}"></td>
+                        </tr>
+                        <tr>
+                            <th class="table-light">作成日時</th>
+                            <td th:text="${process.createdAt}"></td>
+                        </tr>
+                        <tr>
+                            <th class="table-light">更新日時</th>
+                            <td th:text="${process.updatedAt}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

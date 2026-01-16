@@ -4,8 +4,17 @@
 
 本プロジェクトは、基幹業務システム（販売管理・財務会計・生産管理）のデータベース設計を体系的に解説する技術書プロジェクトです。
 
+### アプリケーション
+
 - [販売管理システムデモ](https://deploy-demo-sms-b33828d678a9.herokuapp.com/){:target="_blank"}
 - [財務会計システムデモ](https://deploy-demo-fas-6d8f7fd49278.herokuapp.com/){:target="_blank"}
+- [生産管理システムデモ](https://deploy-demo-pms-40869571939f.herokuapp.com/){:target="_blank"}
+
+### データモデル
+
+- [SchemaSpy ER 図（SMS）](./assets/schemaspy-output/sms/index.html){:target="_blank"} - 販売管理システムのデータベース ER 図。テーブル構造やリレーションを可視化。
+- [SchemaSpy ER 図（FAS）](./assets/schemaspy-output/fas/index.html){:target="_blank"} - 財務会計システムのデータベース ER 図。テーブル構造やリレーションを可視化。
+- [SchemaSpy ER 図（PMS）](./assets/schemaspy-output/pms/index.html){:target="_blank"} - 生産管理システムのデータベース ER 図。テーブル構造やリレーションを可視化。
 
 ### 記事
 
@@ -19,6 +28,7 @@
 - [研究 2：JavaFX デスクトップアプリケーションの実装](./article/study/study2-2.md) - JavaFX + MVVM パターンによるデスクトップアプリ
 - [研究 3：gRPC サービスの実装](./article/study/study2-3.md) - Protocol Buffers + gRPC によるマイクロサービス
 - [研究 4：GraphQL サービスの実装](./article/study/study2-4.md) - Spring for GraphQL によるフロントエンド向け API
+- [研究 5：Axon CQRS/ES の実装](./article/study/study2-5.md) - Axon Framework + MyBatis による CQRS/Event Sourcing
 
 ### 研究：財務会計システム実装編
 
@@ -26,6 +36,7 @@
 - [研究 2：JavaFX デスクトップアプリケーションの実装](./article/study/study3-2.md) - JavaFX + MVVM パターンによるデスクトップアプリ
 - [研究 3：gRPC サービスの実装](./article/study/study3-3.md) - Protocol Buffers + gRPC によるマイクロサービス
 - [研究 4：GraphQL サービスの実装](./article/study/study3-4.md) - Spring for GraphQL によるフロントエンド向け API
+- [研究 5：Axon CQRS/ES の実装](./article/study/study3-5.md) - Axon Framework + MyBatis による CQRS/Event Sourcing
 
 ### 研究：生産管理システム実装編
 
@@ -33,6 +44,7 @@
 - [研究 2：JavaFX デスクトップアプリケーションの実装](./article/study/study4-2.md) - JavaFX + MVVM パターンによるデスクトップアプリ
 - [研究 3：gRPC サービスの実装](./article/study/study4-3.md) - Protocol Buffers + gRPC によるマイクロサービス
 - [研究 4：GraphQL サービスの実装](./article/study/study4-4.md) - Spring for GraphQL によるフロントエンド向け API
+- [研究 5：Axon CQRS/ES の実装](./article/study/study4-5.md) - Axon Framework + MyBatis による CQRS/Event Sourcing
 
 ### 研究：財務会計システム ORM 実装編
 
@@ -44,8 +56,5 @@
 - [第 19 章：赤黒とログの設計【ORM 版】](./article/part3-orm/chapter19-orm.md)
 - [第 20 章：財務会計データ設計（D 社事例）【ORM 版】](./article/part3-orm/chapter20-orm.md)
 - [第 21 章：API サービスの実装【ORM 版】](./article/part3-orm/chapter21-orm.md)
+- [第 22 章：Axon CQRS/ES の実装【ORM 版】](./article/part3-orm/chapter22-orm.md)
 
-### データベース
-
-- [SchemaSpy ER 図（SMS）](./assets/schemaspy-output/sms/index.html){:target="_blank"} - 販売管理システムのデータベース ER 図。テーブル構造やリレーションを可視化。
-- [SchemaSpy ER 図（FAS）](./assets/schemaspy-output/fas/index.html){:target="_blank"} - 財務会計システムのデータベース ER 図。テーブル構造やリレーションを可視化。

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.CompletionResultMapper">
+
+    <resultMap id="CompletionResultResultMap" type="com.example.pms.domain.model.process.CompletionResult">
+        <id property="id" column="ID"/>
+        <result property="completionResultNumber" column="完成実績番号"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="completionDate" column="完成日"/>
+        <result property="completedQuantity" column="完成数量"/>
+        <result property="goodQuantity" column="良品数"/>
+        <result property="defectQuantity" column="不良品数"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 検査結果を含むResultMap（nested select） -->
+    <resultMap id="CompletionResultWithInspectionsResultMap" type="com.example.pms.domain.model.process.CompletionResult"
+               extends="CompletionResultResultMap">
+        <collection property="inspectionResults" ofType="com.example.pms.domain.model.process.InspectionResult"
+                    column="完成実績番号" select="com.example.pms.infrastructure.out.persistence.mapper.InspectionResultMapper.findByCompletionResultNumber"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.process.CompletionResult"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "完成実績データ" (
+            "完成実績番号", "作業指示番号", "品目コード", "完成日",
+            "完成数量", "良品数", "不良品数", "備考", "作成者", "更新者", "バージョン"
+        ) VALUES (
+            #{completionResultNumber},
+            #{workOrderNumber},
+            #{itemCode},
+            #{completionDate},
+            #{completedQuantity},
+            #{goodQuantity},
+            #{defectQuantity},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy},
+            #{version}
+        )
+    </insert>
+
+    <select id="findById" resultMap="CompletionResultResultMap">
+        SELECT * FROM "完成実績データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByCompletionResultNumber" resultMap="CompletionResultResultMap">
+        SELECT * FROM "完成実績データ" WHERE "完成実績番号" = #{completionResultNumber}
+    </select>
+
+    <!-- 検査結果を含めて取得 -->
+    <select id="findByCompletionResultNumberWithInspections" resultMap="CompletionResultWithInspectionsResultMap">
+        SELECT * FROM "完成実績データ" WHERE "完成実績番号" = #{completionResultNumber}
+    </select>
+
+    <select id="findByWorkOrderNumber" resultMap="CompletionResultResultMap">
+        SELECT * FROM "完成実績データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+        ORDER BY "完成日" DESC
+    </select>
+
+    <select id="findAll" resultMap="CompletionResultResultMap">
+        SELECT * FROM "完成実績データ" ORDER BY "完成日" DESC
+    </select>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="CompletionResultResultMap">
+        SELECT * FROM "完成実績データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (
+                    "完成実績番号" LIKE '%' || #{keyword} || '%'
+                    OR "作業指示番号" LIKE '%' || #{keyword} || '%'
+                    OR "品目コード" LIKE '%' || #{keyword} || '%'
+                )
+            </if>
+        </where>
+        ORDER BY "完成日" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "完成実績データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (
+                    "完成実績番号" LIKE '%' || #{keyword} || '%'
+                    OR "作業指示番号" LIKE '%' || #{keyword} || '%'
+                    OR "品目コード" LIKE '%' || #{keyword} || '%'
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 更新（PostgreSQL用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.process.CompletionResult" databaseId="postgresql">
+        UPDATE "完成実績データ" SET
+            "作業指示番号" = #{workOrderNumber},
+            "品目コード" = #{itemCode},
+            "完成日" = #{completionDate},
+            "完成数量" = #{completedQuantity},
+            "良品数" = #{goodQuantity},
+            "不良品数" = #{defectQuantity},
+            "備考" = #{remarks},
+            "更新者" = #{updatedBy},
+            "更新日時" = NOW(),
+            "バージョン" = "バージョン" + 1
+        WHERE "完成実績番号" = #{completionResultNumber}
+    </update>
+
+    <!-- 更新（H2用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.process.CompletionResult" databaseId="h2">
+        UPDATE "完成実績データ" SET
+            "作業指示番号" = #{workOrderNumber},
+            "品目コード" = #{itemCode},
+            "完成日" = #{completionDate},
+            "完成数量" = #{completedQuantity},
+            "良品数" = #{goodQuantity},
+            "不良品数" = #{defectQuantity},
+            "備考" = #{remarks},
+            "更新者" = #{updatedBy},
+            "更新日時" = CURRENT_TIMESTAMP(),
+            "バージョン" = "バージョン" + 1
+        WHERE "完成実績番号" = #{completionResultNumber}
+    </update>
+
+    <!-- 完成実績番号で削除 -->
+    <delete id="deleteByCompletionResultNumber">
+        DELETE FROM "完成実績データ" WHERE "完成実績番号" = #{completionResultNumber}
+    </delete>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "完成実績データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "完成実績データ"
+    </delete>
+</mapper>

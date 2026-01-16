@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.DefectMapper">
+
+    <resultMap id="DefectResultMap" type="com.example.pms.domain.model.defect.Defect">
+        <id property="defectCode" column="欠点コード"/>
+        <result property="defectName" column="欠点名"/>
+        <result property="defectCategory" column="欠点分類"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.defect.Defect">
+        INSERT INTO "欠点マスタ" (
+            "欠点コード", "欠点名", "欠点分類", "作成日時", "更新日時"
+        ) VALUES (
+            #{defectCode}, #{defectName}, #{defectCategory}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findByDefectCode" resultMap="DefectResultMap">
+        SELECT * FROM "欠点マスタ"
+        WHERE "欠点コード" = #{defectCode}
+    </select>
+
+    <select id="findAll" resultMap="DefectResultMap">
+        SELECT * FROM "欠点マスタ"
+        ORDER BY "欠点コード"
+    </select>
+
+    <select id="findWithPagination" resultMap="DefectResultMap">
+        SELECT * FROM "欠点マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("欠点コード" LIKE '%' || #{keyword} || '%'
+                OR "欠点名" LIKE '%' || #{keyword} || '%'
+                OR "欠点分類" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "欠点コード"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "欠点マスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("欠点コード" LIKE '%' || #{keyword} || '%'
+                OR "欠点名" LIKE '%' || #{keyword} || '%'
+                OR "欠点分類" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <update id="update" parameterType="com.example.pms.domain.model.defect.Defect">
+        UPDATE "欠点マスタ" SET
+            "欠点名" = #{defectName},
+            "欠点分類" = #{defectCategory},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "欠点コード" = #{defectCode}
+    </update>
+
+    <delete id="deleteByDefectCode">
+        DELETE FROM "欠点マスタ"
+        WHERE "欠点コード" = #{defectCode}
+    </delete>
+
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "欠点マスタ" CASCADE
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "欠点マスタ"
+    </delete>
+</mapper>

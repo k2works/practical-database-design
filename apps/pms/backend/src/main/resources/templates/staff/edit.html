@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>担当者編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>担当者編集</h1>
+            <a th:href="@{/staff}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/staff/{staffCode}/{effectiveFrom}(staffCode=${staffCode},effectiveFrom=${#temporals.format(effectiveFrom, 'yyyy-MM-dd')})}" th:object="${form}" method="post">
+                    <div class="mb-3">
+                        <label for="staffCode" class="form-label">担当者コード</label>
+                        <input type="text" id="staffCode" th:field="*{staffCode}"
+                               class="form-control" readonly>
+                        <div class="form-text">担当者コードは変更できません</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="staffName" class="form-label">担当者名 <span class="text-danger">*</span></label>
+                        <input type="text" id="staffName" th:field="*{staffName}"
+                               class="form-control" th:classappend="${#fields.hasErrors('staffName')} ? 'is-invalid'"
+                               placeholder="例: 山田太郎">
+                        <div th:if="${#fields.hasErrors('staffName')}" class="invalid-feedback"
+                             th:errors="*{staffName}"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="effectiveFrom" class="form-label">適用開始日</label>
+                            <input type="date" id="effectiveFrom" name="effectiveFrom"
+                                   th:value="${form.effectiveFrom != null ? #temporals.format(form.effectiveFrom, 'yyyy-MM-dd') : ''}"
+                                   class="form-control" readonly>
+                            <div class="form-text">適用開始日は変更できません</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="effectiveTo" class="form-label">適用停止日</label>
+                            <input type="date" id="effectiveTo" name="effectiveTo"
+                                   th:value="${form.effectiveTo != null ? #temporals.format(form.effectiveTo, 'yyyy-MM-dd') : ''}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('effectiveTo')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('effectiveTo')}" class="invalid-feedback"
+                                 th:errors="*{effectiveTo}"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="departmentCode" class="form-label">部門コード</label>
+                        <input type="text" id="departmentCode" th:field="*{departmentCode}"
+                               class="form-control" th:classappend="${#fields.hasErrors('departmentCode')} ? 'is-invalid'"
+                               placeholder="例: DEPT-001">
+                        <div th:if="${#fields.hasErrors('departmentCode')}" class="invalid-feedback"
+                             th:errors="*{departmentCode}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">メールアドレス</label>
+                        <input type="email" id="email" th:field="*{email}"
+                               class="form-control" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                               placeholder="例: yamada@example.com">
+                        <div th:if="${#fields.hasErrors('email')}" class="invalid-feedback"
+                             th:errors="*{email}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phoneNumber" class="form-label">電話番号</label>
+                        <input type="text" id="phoneNumber" th:field="*{phoneNumber}"
+                               class="form-control" th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid'"
+                               placeholder="例: 03-1234-5678">
+                        <div th:if="${#fields.hasErrors('phoneNumber')}" class="invalid-feedback"
+                             th:errors="*{phoneNumber}"></div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                        <a th:href="@{/staff}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>出荷検査実績詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>出荷検査実績詳細</h1>
+            <div>
+                <a th:href="@{/shipment-inspections/{num}/edit(num=${inspection.inspectionNumber})}" class="btn btn-secondary">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/shipment-inspections}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th style="width: 200px;">検査番号</th>
+                            <td th:text="${inspection.inspectionNumber}"></td>
+                        </tr>
+                        <tr>
+                            <th>出荷番号</th>
+                            <td th:text="${inspection.shipmentNumber}"></td>
+                        </tr>
+                        <tr>
+                            <th>品目コード</th>
+                            <td th:text="${inspection.itemCode}"></td>
+                        </tr>
+                        <tr>
+                            <th>検査日</th>
+                            <td th:text="${#temporals.format(inspection.inspectionDate, 'yyyy/MM/dd')}"></td>
+                        </tr>
+                        <tr>
+                            <th>検査担当者コード</th>
+                            <td th:text="${inspection.inspectorCode}"></td>
+                        </tr>
+                        <tr>
+                            <th>検査数量</th>
+                            <td th:text="${inspection.inspectionQuantity}"></td>
+                        </tr>
+                        <tr>
+                            <th>合格数</th>
+                            <td th:text="${inspection.passedQuantity}"></td>
+                        </tr>
+                        <tr>
+                            <th>不合格数</th>
+                            <td th:text="${inspection.failedQuantity}"></td>
+                        </tr>
+                        <tr>
+                            <th>不合格率</th>
+                            <td th:text="${#numbers.formatDecimal(inspection.failureRate, 1, 2) + '%'}"></td>
+                        </tr>
+                        <tr>
+                            <th>判定</th>
+                            <td>
+                                <span th:if="${inspection.judgment.name() == 'PASSED'}" class="badge bg-success">合格</span>
+                                <span th:if="${inspection.judgment.name() == 'FAILED'}" class="badge bg-danger">不合格</span>
+                                <span th:if="${inspection.judgment.name() == 'HOLD'}" class="badge bg-warning">保留</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>備考</th>
+                            <td th:text="${inspection.remarks}"></td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td th:text="${inspection.createdAt != null ? #temporals.format(inspection.createdAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></td>
+                        </tr>
+                        <tr>
+                            <th>更新日時</th>
+                            <td th:text="${inspection.updatedAt != null ? #temporals.format(inspection.updatedAt, 'yyyy/MM/dd HH:mm:ss') : '-'}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-end">
+                    <form th:action="@{/shipment-inspections/{num}/delete(num=${inspection.inspectionNumber})}"
+                          method="post" class="d-inline"
+                          onsubmit="return confirm('この出荷検査実績を削除しますか？');">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> 削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

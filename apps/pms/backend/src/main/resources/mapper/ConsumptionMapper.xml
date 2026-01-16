@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ConsumptionMapper">
+
+    <resultMap id="ConsumptionResultMap" type="com.example.pms.domain.model.subcontract.Consumption">
+        <id property="id" column="ID"/>
+        <result property="consumptionNumber" column="消費番号"/>
+        <result property="receivingNumber" column="入荷番号"/>
+        <result property="consumptionDate" column="消費日"/>
+        <result property="supplierCode" column="取引先コード"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 明細を含むResultMap（nested select） -->
+    <resultMap id="ConsumptionWithDetailsResultMap" type="com.example.pms.domain.model.subcontract.Consumption"
+               extends="ConsumptionResultMap">
+        <collection property="details" ofType="com.example.pms.domain.model.subcontract.ConsumptionDetail"
+                    column="消費番号" select="com.example.pms.infrastructure.out.persistence.mapper.ConsumptionDetailMapper.findByConsumptionNumber"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.subcontract.Consumption"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "消費データ" (
+            "消費番号", "入荷番号", "消費日", "取引先コード", "備考", "作成者", "更新者", "バージョン"
+        ) VALUES (
+            #{consumptionNumber},
+            #{receivingNumber},
+            #{consumptionDate},
+            #{supplierCode},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy},
+            #{version}
+        )
+    </insert>
+
+    <select id="findById" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByConsumptionNumber" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" WHERE "消費番号" = #{consumptionNumber}
+    </select>
+
+    <!-- 明細を含めて取得 -->
+    <select id="findByConsumptionNumberWithDetails" resultMap="ConsumptionWithDetailsResultMap">
+        SELECT * FROM "消費データ" WHERE "消費番号" = #{consumptionNumber}
+    </select>
+
+    <select id="findByReceivingNumber" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" WHERE "入荷番号" = #{receivingNumber} ORDER BY "消費日" DESC
+    </select>
+
+    <select id="findBySupplierCode" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" WHERE "取引先コード" = #{supplierCode} ORDER BY "消費日" DESC
+    </select>
+
+    <select id="findAll" resultMap="ConsumptionResultMap">
+        SELECT * FROM "消費データ" ORDER BY "消費日" DESC
+    </select>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "消費データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "消費データ"
+    </delete>
+</mapper>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>単価一覧</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>単価一覧</h1>
+            <a th:href="@{/prices/new}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> 新規登録
+            </a>
+        </div>
+
+        <!-- 検索フォーム -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/prices}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="itemCode" class="form-label">品目コード</label>
+                        <input type="text" id="itemCode" name="itemCode" class="form-control"
+                               th:value="${itemCode}" placeholder="品目コードで絞り込み">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-secondary me-2">
+                            <i class="bi bi-search"></i> 検索
+                        </button>
+                        <a th:href="@{/prices}" class="btn btn-outline-secondary">クリア</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 単価一覧テーブル -->
+        <div class="card">
+            <div class="card-body">
+                <!-- 件数表示 -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">
+                        全 <span th:text="${totalElements}">0</span> 件
+                        <span th:if="${totalPages > 0}">
+                            （<span th:text="${currentPage + 1}">1</span> / <span th:text="${totalPages}">1</span> ページ）
+                        </span>
+                    </span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(prices)}" class="alert alert-info">
+                    単価が登録されていません。
+                </div>
+                <table th:if="${not #lists.isEmpty(prices)}" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>品目コード</th>
+                            <th>取引先コード</th>
+                            <th>適用開始日</th>
+                            <th>適用停止日</th>
+                            <th class="text-end">単価</th>
+                            <th>通貨</th>
+                            <th style="width: 150px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="price : ${prices}">
+                            <td th:text="${price.itemCode}"></td>
+                            <td th:text="${price.supplierCode}"></td>
+                            <td th:text="${#temporals.format(price.effectiveFrom, 'yyyy-MM-dd')}"></td>
+                            <td th:text="${price.effectiveTo != null ? #temporals.format(price.effectiveTo, 'yyyy-MM-dd') : '-'}"></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(price.price, 1, 'COMMA', 0, 'POINT')}"></td>
+                            <td th:text="${price.currencyCode}"></td>
+                            <td>
+                                <a th:href="@{/prices/{itemCode}/{supplierCode}/{effectiveFrom}/edit(itemCode=${price.itemCode},supplierCode=${price.supplierCode},effectiveFrom=${#temporals.format(price.effectiveFrom, 'yyyy-MM-dd')})}"
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{/prices/{itemCode}/{supplierCode}/{effectiveFrom}/delete(itemCode=${price.itemCode},supplierCode=${price.supplierCode},effectiveFrom=${#temporals.format(price.effectiveFrom, 'yyyy-MM-dd')})}"
+                                      method="post" style="display: inline;"
+                                      onsubmit="return confirm('削除してもよろしいですか？');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ページネーション -->
+                <nav th:if="${totalPages > 1}" aria-label="単価一覧ページネーション">
+                    <ul class="pagination justify-content-center mb-0">
+                        <!-- 前へ -->
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/prices(page=${currentPage - 1},size=${size},itemCode=${itemCode})}">
+                                前へ
+                            </a>
+                        </li>
+
+                        <!-- ページ番号 -->
+                        <th:block th:with="startPage=${currentPage > 2 ? currentPage - 2 : 0},
+                                          endPage=${startPage + 4 < totalPages ? startPage + 4 : totalPages - 1}">
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                                th:classappend="${pageNum == currentPage} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/prices(page=${pageNum},size=${size},itemCode=${itemCode})}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+                            <li th:if="${endPage < totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        </th:block>
+
+                        <!-- 次へ -->
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/prices(page=${currentPage + 1},size=${size},itemCode=${itemCode})}">
+                                次へ
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

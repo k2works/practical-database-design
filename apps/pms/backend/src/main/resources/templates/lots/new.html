@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>ロットマスタ登録</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>ロットマスタ登録</h1>
+            <a th:href="@{/lots}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/lots}" th:object="${form}" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="lotNumber" class="form-label">ロット番号 <span class="text-danger">*</span></label>
+                            <input type="text" id="lotNumber" th:field="*{lotNumber}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('lotNumber')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('lotNumber')}" class="invalid-feedback"
+                                 th:errors="*{lotNumber}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="itemCode" class="form-label">品目コード <span class="text-danger">*</span></label>
+                            <select id="itemCode" th:field="*{itemCode}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('itemCode')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="item : ${items}"
+                                        th:value="${item.itemCode}"
+                                        th:text="${item.itemCode + ' - ' + item.itemName}"></option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('itemCode')}" class="invalid-feedback"
+                                 th:errors="*{itemCode}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="lotType" class="form-label">ロット種別 <span class="text-danger">*</span></label>
+                            <select id="lotType" th:field="*{lotType}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('lotType')} ? 'is-invalid'">
+                                <option value="">選択してください</option>
+                                <option th:each="type : ${lotTypes}"
+                                        th:value="${type.name()}"
+                                        th:text="${type.displayName}"></option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('lotType')}" class="invalid-feedback"
+                                 th:errors="*{lotType}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label">数量 <span class="text-danger">*</span></label>
+                            <input type="number" id="quantity" th:field="*{quantity}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('quantity')} ? 'is-invalid'"
+                                   step="0.01">
+                            <div th:if="${#fields.hasErrors('quantity')}" class="invalid-feedback"
+                                 th:errors="*{quantity}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="manufactureDate" class="form-label">製造日 <span class="text-danger">*</span></label>
+                            <input type="date" id="manufactureDate" th:field="*{manufactureDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('manufactureDate')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('manufactureDate')}" class="invalid-feedback"
+                                 th:errors="*{manufactureDate}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="expirationDate" class="form-label">有効期限</label>
+                            <input type="date" id="expirationDate" th:field="*{expirationDate}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('expirationDate')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('expirationDate')}" class="invalid-feedback"
+                                 th:errors="*{expirationDate}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="warehouseCode" class="form-label">倉庫コード</label>
+                            <input type="text" id="warehouseCode" th:field="*{warehouseCode}"
+                                   class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">備考</label>
+                        <textarea id="remarks" th:field="*{remarks}" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a th:href="@{/lots}" class="btn btn-outline-secondary me-2">キャンセル</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 登録
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

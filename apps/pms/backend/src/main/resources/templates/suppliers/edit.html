@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>取引先編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>取引先編集</h1>
+            <a th:href="@{/suppliers}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧へ戻る
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/suppliers/{supplierCode}/{effectiveFrom}(supplierCode=${supplierCode},effectiveFrom=${#temporals.format(effectiveFrom, 'yyyy-MM-dd')})}" th:object="${form}" method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="supplierCode" class="form-label">取引先コード</label>
+                            <input type="text" id="supplierCode" th:field="*{supplierCode}"
+                                   class="form-control" readonly>
+                            <div class="form-text">取引先コードは変更できません</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="supplierType" class="form-label">取引先区分 <span class="text-danger">*</span></label>
+                            <select id="supplierType" th:field="*{supplierType}"
+                                    class="form-select" th:classappend="${#fields.hasErrors('supplierType')} ? 'is-invalid'">
+                                <option value="">-- 選択してください --</option>
+                                <option th:each="type : ${supplierTypes}"
+                                        th:value="${type}"
+                                        th:text="${type.displayName}">
+                                </option>
+                            </select>
+                            <div th:if="${#fields.hasErrors('supplierType')}" class="invalid-feedback"
+                                 th:errors="*{supplierType}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="supplierName" class="form-label">取引先名 <span class="text-danger">*</span></label>
+                            <input type="text" id="supplierName" th:field="*{supplierName}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('supplierName')} ? 'is-invalid'"
+                                   placeholder="例: 株式会社サンプル">
+                            <div th:if="${#fields.hasErrors('supplierName')}" class="invalid-feedback"
+                                 th:errors="*{supplierName}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="supplierNameKana" class="form-label">取引先カナ</label>
+                            <input type="text" id="supplierNameKana" th:field="*{supplierNameKana}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('supplierNameKana')} ? 'is-invalid'"
+                                   placeholder="例: カブシキガイシャサンプル">
+                            <div th:if="${#fields.hasErrors('supplierNameKana')}" class="invalid-feedback"
+                                 th:errors="*{supplierNameKana}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="effectiveFrom" class="form-label">適用開始日</label>
+                            <input type="date" id="effectiveFrom" name="effectiveFrom"
+                                   th:value="${form.effectiveFrom != null ? #temporals.format(form.effectiveFrom, 'yyyy-MM-dd') : ''}"
+                                   class="form-control" readonly>
+                            <div class="form-text">適用開始日は変更できません</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="effectiveTo" class="form-label">適用停止日</label>
+                            <input type="date" id="effectiveTo" name="effectiveTo"
+                                   th:value="${form.effectiveTo != null ? #temporals.format(form.effectiveTo, 'yyyy-MM-dd') : ''}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('effectiveTo')} ? 'is-invalid'">
+                            <div th:if="${#fields.hasErrors('effectiveTo')}" class="invalid-feedback"
+                                 th:errors="*{effectiveTo}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="postalCode" class="form-label">郵便番号</label>
+                            <input type="text" id="postalCode" th:field="*{postalCode}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('postalCode')} ? 'is-invalid'"
+                                   placeholder="例: 100-0001">
+                            <div th:if="${#fields.hasErrors('postalCode')}" class="invalid-feedback"
+                                 th:errors="*{postalCode}"></div>
+                        </div>
+
+                        <div class="col-md-9 mb-3">
+                            <label for="address" class="form-label">住所</label>
+                            <input type="text" id="address" th:field="*{address}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('address')} ? 'is-invalid'"
+                                   placeholder="例: 東京都千代田区...">
+                            <div th:if="${#fields.hasErrors('address')}" class="invalid-feedback"
+                                 th:errors="*{address}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="phoneNumber" class="form-label">電話番号</label>
+                            <input type="text" id="phoneNumber" th:field="*{phoneNumber}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid'"
+                                   placeholder="例: 03-1234-5678">
+                            <div th:if="${#fields.hasErrors('phoneNumber')}" class="invalid-feedback"
+                                 th:errors="*{phoneNumber}"></div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="faxNumber" class="form-label">FAX番号</label>
+                            <input type="text" id="faxNumber" th:field="*{faxNumber}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('faxNumber')} ? 'is-invalid'"
+                                   placeholder="例: 03-1234-5679">
+                            <div th:if="${#fields.hasErrors('faxNumber')}" class="invalid-feedback"
+                                 th:errors="*{faxNumber}"></div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="contactPerson" class="form-label">担当者名</label>
+                            <input type="text" id="contactPerson" th:field="*{contactPerson}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('contactPerson')} ? 'is-invalid'"
+                                   placeholder="例: 山田太郎">
+                            <div th:if="${#fields.hasErrors('contactPerson')}" class="invalid-feedback"
+                                 th:errors="*{contactPerson}"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 更新
+                        </button>
+                        <a th:href="@{/suppliers}" class="btn btn-outline-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

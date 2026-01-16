@@ -94,41 +94,43 @@ app --> domain : 依存
 ### プロジェクト構造
 
 ```
-production-management/
+apps/pms/backend/
 ├── src/
 │   ├── main/
 │   │   ├── java/
-│   │   │   └── com/example/production/
-│   │   │       ├── ProductionManagementApplication.java
+│   │   │   └── com/example/pms/
+│   │   │       ├── Application.java
 │   │   │       ├── domain/
 │   │   │       │   ├── model/           # エンティティ・値オブジェクト
 │   │   │       │   │   ├── item/
 │   │   │       │   │   ├── bom/
 │   │   │       │   │   ├── inventory/
-│   │   │       │   │   └── workorder/
+│   │   │       │   │   ├── purchase/
+│   │   │       │   │   └── process/
 │   │   │       │   ├── service/         # ドメインサービス
 │   │   │       │   └── exception/       # ドメイン例外
 │   │   │       ├── application/
 │   │   │       │   ├── port/
 │   │   │       │   │   ├── in/          # Input Port（ユースケース）
+│   │   │       │   │   │   └── command/ # コマンドオブジェクト
 │   │   │       │   │   └── out/         # Output Port（リポジトリ）
 │   │   │       │   └── service/         # アプリケーションサービス
 │   │   │       └── infrastructure/
-│   │   │           ├── rest/
-│   │   │           │   ├── controller/  # REST Controller
-│   │   │           │   ├── dto/         # Request/Response DTO
-│   │   │           │   └── exception/   # 例外ハンドラ
-│   │   │           └── persistence/
-│   │   │               └── mybatis/     # MyBatis Repository
+│   │   │           ├── in/
+│   │   │           │   ├── rest/        # REST Controller
+│   │   │           │   │   └── dto/     # Request/Response DTO
+│   │   │           │   └── web/
+│   │   │           │       └── exception/ # 例外ハンドラ
+│   │   │           └── out/
+│   │   │               └── persistence/
+│   │   │                   └── repository/ # Repository 実装
 │   │   └── resources/
 │   │       ├── mapper/                  # MyBatis マッパー XML
 │   │       └── application.yml
 │   └── test/
 │       └── java/
-│           └── com/example/production/
-│               └── infrastructure/
-│                   └── rest/
-│                       └── controller/  # コントローラテスト
+│           └── com/example/pms/
+│               └── integration/         # 統合テスト
 └── build.gradle.kts
 ```
 
@@ -189,19 +191,22 @@ tasks.withType<Test> {
 ### アプリケーション設定
 
 <details>
-<summary>ProductionManagementApplication.java</summary>
+<summary>Application.java</summary>
 
 ```java
-package com.example.production;
+package com.example.pms;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/**
+ * 生産管理システム（Production Management System）のメインクラス.
+ */
 @SpringBootApplication
-public class ProductionManagementApplication {
+public class Application {
 
     public static void main(String[] args) {
-        SpringApplication.run(ProductionManagementApplication.class, args);
+        SpringApplication.run(Application.class, args);
     }
 }
 ```
@@ -212,14 +217,17 @@ public class ProductionManagementApplication {
 <summary>OpenApiConfig.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.config;
+package com.example.pms.infrastructure.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * OpenAPI 設定.
+ */
 @Configuration
 public class OpenApiConfig {
 
@@ -243,18 +251,27 @@ public class OpenApiConfig {
 <summary>RootController.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.infrastructure.in.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+/**
+ * API ルート Controller.
+ */
 @RestController
+@RequestMapping("/api")
+@Tag(name = "root", description = "API ルート")
 public class RootController {
 
-    @GetMapping("/")
+    @GetMapping
+    @Operation(summary = "API 情報の取得")
     public ResponseEntity<Map<String, String>> root() {
         return ResponseEntity.ok(Map.of(
             "service", "Production Management API",
@@ -264,6 +281,7 @@ public class RootController {
     }
 
     @GetMapping("/health")
+    @Operation(summary = "ヘルスチェック")
     public ResponseEntity<Map<String, String>> health() {
         return ResponseEntity.ok(Map.of("status", "UP"));
     }
@@ -284,29 +302,31 @@ public class RootController {
 <summary>ItemRepository.java</summary>
 
 ```java
-package com.example.production.application.port.out;
+package com.example.pms.application.port.out;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * 品目リポジトリ（Output Port）
+ * ドメイン層がデータアクセスに依存しないためのインターフェース
  */
 public interface ItemRepository {
 
-    List<Item> findAll();
-
-    Optional<Item> findByCode(String itemCode);
-
     void save(Item item);
+
+    Optional<Item> findByItemCode(String itemCode);
+
+    Optional<Item> findByItemCodeAndDate(String itemCode, LocalDate baseDate);
+
+    List<Item> findAll();
 
     void update(Item item);
 
-    void deleteByCode(String itemCode);
-
-    boolean existsByCode(String itemCode);
+    void deleteAll();
 }
 ```
 
@@ -318,17 +338,16 @@ public interface ItemRepository {
 <summary>ItemUseCase.java</summary>
 
 ```java
-package com.example.production.application.port.in;
+package com.example.pms.application.port.in;
 
-import com.example.production.domain.model.item.Item;
-import lombok.Builder;
-import lombok.Value;
+import com.example.pms.application.port.in.command.CreateItemCommand;
+import com.example.pms.application.port.in.command.UpdateItemCommand;
+import com.example.pms.domain.model.item.Item;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * 品目ユースケース（Input Port）
+ * 品目ユースケース（Input Port）.
  */
 public interface ItemUseCase {
 
@@ -342,27 +361,43 @@ public interface ItemUseCase {
 
     void deleteItem(String itemCode);
 }
+```
 
+</details>
+
+<details>
+<summary>CreateItemCommand.java</summary>
+
+```java
+package com.example.pms.application.port.in.command;
+
+import com.example.pms.domain.model.item.ItemCategory;
+import lombok.Builder;
+import lombok.Value;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+/**
+ * 品目登録コマンド.
+ */
 @Value
 @Builder
-class CreateItemCommand {
+public class CreateItemCommand {
     String itemCode;
     String itemName;
-    String itemType;
-    String unit;
-    BigDecimal standardCost;
-    Integer safetyStock;
+    ItemCategory itemCategory;
+    String unitCode;
+    LocalDate effectiveFrom;
+    LocalDate effectiveTo;
     Integer leadTime;
-}
-
-@Value
-@Builder
-class UpdateItemCommand {
-    String itemName;
-    String unit;
-    BigDecimal standardCost;
-    Integer safetyStock;
-    Integer leadTime;
+    Integer safetyLeadTime;
+    BigDecimal safetyStock;
+    BigDecimal yieldRate;
+    BigDecimal minLotSize;
+    BigDecimal lotIncrement;
+    BigDecimal maxLotSize;
+    Integer shelfLife;
 }
 ```
 
@@ -374,18 +409,24 @@ class UpdateItemCommand {
 <summary>ItemService.java</summary>
 
 ```java
-package com.example.production.application.service;
+package com.example.pms.application.service;
 
-import com.example.production.application.port.in.*;
-import com.example.production.application.port.out.ItemRepository;
-import com.example.production.domain.exception.DuplicateItemException;
-import com.example.production.domain.exception.ItemNotFoundException;
-import com.example.production.domain.model.item.Item;
+import com.example.pms.application.port.in.ItemUseCase;
+import com.example.pms.application.port.in.command.CreateItemCommand;
+import com.example.pms.application.port.in.command.UpdateItemCommand;
+import com.example.pms.application.port.out.ItemRepository;
+import com.example.pms.domain.exception.DuplicateItemException;
+import com.example.pms.domain.exception.ItemNotFoundException;
+import com.example.pms.domain.model.item.Item;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 品目サービス（Application Service）.
+ */
 @Service
 @Transactional
 public class ItemService implements ItemUseCase {
@@ -405,24 +446,32 @@ public class ItemService implements ItemUseCase {
     @Override
     @Transactional(readOnly = true)
     public Item getItem(String itemCode) {
-        return itemRepository.findByCode(itemCode)
+        return itemRepository.findByItemCode(itemCode)
             .orElseThrow(() -> new ItemNotFoundException(itemCode));
     }
 
     @Override
     public Item createItem(CreateItemCommand command) {
-        if (itemRepository.existsByCode(command.getItemCode())) {
+        if (itemRepository.findByItemCode(command.getItemCode()).isPresent()) {
             throw new DuplicateItemException(command.getItemCode());
         }
 
         Item item = Item.builder()
             .itemCode(command.getItemCode())
             .itemName(command.getItemName())
-            .itemType(command.getItemType())
-            .unit(command.getUnit())
-            .standardCost(command.getStandardCost())
-            .safetyStock(command.getSafetyStock())
+            .itemCategory(command.getItemCategory())
+            .unitCode(command.getUnitCode())
+            .effectiveFrom(command.getEffectiveFrom() != null
+                ? command.getEffectiveFrom() : LocalDate.now())
+            .effectiveTo(command.getEffectiveTo())
             .leadTime(command.getLeadTime())
+            .safetyLeadTime(command.getSafetyLeadTime())
+            .safetyStock(command.getSafetyStock())
+            .yieldRate(command.getYieldRate())
+            .minLotSize(command.getMinLotSize())
+            .lotIncrement(command.getLotIncrement())
+            .maxLotSize(command.getMaxLotSize())
+            .shelfLife(command.getShelfLife())
             .build();
 
         itemRepository.save(item);
@@ -431,15 +480,20 @@ public class ItemService implements ItemUseCase {
 
     @Override
     public Item updateItem(String itemCode, UpdateItemCommand command) {
-        Item existing = itemRepository.findByCode(itemCode)
+        Item existing = itemRepository.findByItemCode(itemCode)
             .orElseThrow(() -> new ItemNotFoundException(itemCode));
 
-        Item updated = existing.toBuilder()
-            .itemName(command.getItemName())
-            .unit(command.getUnit())
-            .standardCost(command.getStandardCost())
-            .safetyStock(command.getSafetyStock())
-            .leadTime(command.getLeadTime())
+        Item updated = Item.builder()
+            .id(existing.getId())
+            .itemCode(existing.getItemCode())
+            .itemName(command.getItemName() != null
+                ? command.getItemName() : existing.getItemName())
+            .itemCategory(command.getItemCategory() != null
+                ? command.getItemCategory() : existing.getItemCategory())
+            .unitCode(command.getUnitCode() != null
+                ? command.getUnitCode() : existing.getUnitCode())
+            .effectiveFrom(existing.getEffectiveFrom())
+            .createdAt(existing.getCreatedAt())
             .build();
 
         itemRepository.update(updated);
@@ -448,10 +502,9 @@ public class ItemService implements ItemUseCase {
 
     @Override
     public void deleteItem(String itemCode) {
-        if (!itemRepository.existsByCode(itemCode)) {
-            throw new ItemNotFoundException(itemCode);
-        }
-        itemRepository.deleteByCode(itemCode);
+        itemRepository.findByItemCode(itemCode)
+            .orElseThrow(() -> new ItemNotFoundException(itemCode));
+        throw new UnsupportedOperationException("品目の削除は現在サポートされていません");
     }
 }
 ```
@@ -464,11 +517,11 @@ public class ItemService implements ItemUseCase {
 <summary>ItemControllerTest.java（テスト駆動開発）</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.infrastructure.in.rest;
 
-import com.example.production.application.port.in.CreateItemCommand;
-import com.example.production.application.port.in.ItemUseCase;
-import com.example.production.domain.model.item.Item;
+import com.example.pms.application.port.in.ItemUseCase;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -478,7 +531,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -505,10 +558,9 @@ class ItemControllerTest {
         sampleItem = Item.builder()
             .itemCode("ITEM001")
             .itemName("テスト品目")
-            .itemType("製品")
-            .unit("個")
-            .standardCost(BigDecimal.valueOf(1000))
-            .safetyStock(100)
+            .itemCategory(ItemCategory.PRODUCT)
+            .unitCode("個")
+            .effectiveFrom(LocalDate.now())
             .leadTime(5)
             .build();
     }
@@ -531,10 +583,8 @@ class ItemControllerTest {
             {
                 "itemCode": "ITEM001",
                 "itemName": "テスト品目",
-                "itemType": "製品",
-                "unit": "個",
-                "standardCost": 1000,
-                "safetyStock": 100,
+                "itemCategory": "PRODUCT",
+                "unitCode": "個",
                 "leadTime": 5
             }
             """;
@@ -560,11 +610,13 @@ class ItemControllerTest {
 <summary>ItemController.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.infrastructure.in.rest;
 
-import com.example.production.application.port.in.*;
-import com.example.production.domain.model.item.Item;
-import com.example.production.infrastructure.rest.dto.*;
+import com.example.pms.application.port.in.ItemUseCase;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.infrastructure.in.rest.dto.CreateItemRequest;
+import com.example.pms.infrastructure.in.rest.dto.ItemResponse;
+import com.example.pms.infrastructure.in.rest.dto.UpdateItemRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -574,6 +626,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 品目マスタ API Controller.
+ */
 @RestController
 @RequestMapping("/api/items")
 @Tag(name = "items", description = "品目マスタ API")
@@ -605,17 +660,7 @@ public class ItemController {
     @Operation(summary = "品目の登録")
     public ResponseEntity<ItemResponse> createItem(
             @Valid @RequestBody CreateItemRequest request) {
-        CreateItemCommand command = CreateItemCommand.builder()
-            .itemCode(request.getItemCode())
-            .itemName(request.getItemName())
-            .itemType(request.getItemType())
-            .unit(request.getUnit())
-            .standardCost(request.getStandardCost())
-            .safetyStock(request.getSafetyStock())
-            .leadTime(request.getLeadTime())
-            .build();
-
-        Item item = itemUseCase.createItem(command);
+        Item item = itemUseCase.createItem(request.toCommand());
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ItemResponse.from(item));
     }
@@ -625,15 +670,7 @@ public class ItemController {
     public ResponseEntity<ItemResponse> updateItem(
             @PathVariable String itemCode,
             @Valid @RequestBody UpdateItemRequest request) {
-        UpdateItemCommand command = UpdateItemCommand.builder()
-            .itemName(request.getItemName())
-            .unit(request.getUnit())
-            .standardCost(request.getStandardCost())
-            .safetyStock(request.getSafetyStock())
-            .leadTime(request.getLeadTime())
-            .build();
-
-        Item item = itemUseCase.updateItem(itemCode, command);
+        Item item = itemUseCase.updateItem(itemCode, request.toCommand());
         return ResponseEntity.ok(ItemResponse.from(item));
     }
 
@@ -654,15 +691,20 @@ public class ItemController {
 <summary>CreateItemRequest.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.dto;
+package com.example.pms.infrastructure.in.rest.dto;
 
+import com.example.pms.application.port.in.command.CreateItemCommand;
+import com.example.pms.domain.model.item.ItemCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
+/**
+ * 品目登録リクエスト DTO.
+ */
 @Data
 public class CreateItemRequest {
 
@@ -672,19 +714,41 @@ public class CreateItemRequest {
     @NotBlank(message = "品目名は必須です")
     private String itemName;
 
-    @NotBlank(message = "品目種別は必須です")
-    private String itemType;
+    @NotNull(message = "品目区分は必須です")
+    private ItemCategory itemCategory;
 
-    @NotBlank(message = "単位は必須です")
-    private String unit;
+    @NotBlank(message = "単位コードは必須です")
+    private String unitCode;
 
-    @NotNull(message = "標準原価は必須です")
-    @Positive(message = "標準原価は正の値である必要があります")
-    private BigDecimal standardCost;
-
-    private Integer safetyStock;
-
+    private LocalDate effectiveFrom;
+    private LocalDate effectiveTo;
     private Integer leadTime;
+    private Integer safetyLeadTime;
+    private BigDecimal safetyStock;
+    private BigDecimal yieldRate;
+    private BigDecimal minLotSize;
+    private BigDecimal lotIncrement;
+    private BigDecimal maxLotSize;
+    private Integer shelfLife;
+
+    public CreateItemCommand toCommand() {
+        return CreateItemCommand.builder()
+            .itemCode(itemCode)
+            .itemName(itemName)
+            .itemCategory(itemCategory)
+            .unitCode(unitCode)
+            .effectiveFrom(effectiveFrom)
+            .effectiveTo(effectiveTo)
+            .leadTime(leadTime)
+            .safetyLeadTime(safetyLeadTime)
+            .safetyStock(safetyStock)
+            .yieldRate(yieldRate)
+            .minLotSize(minLotSize)
+            .lotIncrement(lotIncrement)
+            .maxLotSize(maxLotSize)
+            .shelfLife(shelfLife)
+            .build();
+    }
 }
 ```
 
@@ -694,29 +758,52 @@ public class CreateItemRequest {
 <summary>UpdateItemRequest.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.dto;
+package com.example.pms.infrastructure.in.rest.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import com.example.pms.application.port.in.command.UpdateItemCommand;
+import com.example.pms.domain.model.item.ItemCategory;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
+/**
+ * 品目更新リクエスト DTO.
+ */
 @Data
 public class UpdateItemRequest {
 
-    @NotBlank(message = "品目名は必須です")
     private String itemName;
-
-    @NotBlank(message = "単位は必須です")
-    private String unit;
-
-    @Positive(message = "標準原価は正の値である必要があります")
-    private BigDecimal standardCost;
-
-    private Integer safetyStock;
-
+    private ItemCategory itemCategory;
+    private String unitCode;
+    private LocalDate effectiveFrom;
+    private LocalDate effectiveTo;
     private Integer leadTime;
+    private Integer safetyLeadTime;
+    private BigDecimal safetyStock;
+    private BigDecimal yieldRate;
+    private BigDecimal minLotSize;
+    private BigDecimal lotIncrement;
+    private BigDecimal maxLotSize;
+    private Integer shelfLife;
+
+    public UpdateItemCommand toCommand() {
+        return UpdateItemCommand.builder()
+            .itemName(itemName)
+            .itemCategory(itemCategory)
+            .unitCode(unitCode)
+            .effectiveFrom(effectiveFrom)
+            .effectiveTo(effectiveTo)
+            .leadTime(leadTime)
+            .safetyLeadTime(safetyLeadTime)
+            .safetyStock(safetyStock)
+            .yieldRate(yieldRate)
+            .minLotSize(minLotSize)
+            .lotIncrement(lotIncrement)
+            .maxLotSize(maxLotSize)
+            .shelfLife(shelfLife)
+            .build();
+    }
 }
 ```
 
@@ -726,35 +813,65 @@ public class UpdateItemRequest {
 <summary>ItemResponse.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.dto;
+package com.example.pms.infrastructure.in.rest.dto;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-@Value
+/**
+ * 品目レスポンス DTO.
+ * Note: Jackson シリアライゼーションのため @Data + @NoArgsConstructor + @AllArgsConstructor を使用
+ */
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ItemResponse {
-
-    String itemCode;
-    String itemName;
-    String itemType;
-    String unit;
-    BigDecimal standardCost;
-    Integer safetyStock;
-    Integer leadTime;
+    private Integer id;
+    private String itemCode;
+    private String itemName;
+    private ItemCategory itemCategory;
+    private String unitCode;
+    private LocalDate effectiveFrom;
+    private LocalDate effectiveTo;
+    private Integer leadTime;
+    private Integer safetyLeadTime;
+    private BigDecimal safetyStock;
+    private BigDecimal yieldRate;
+    private BigDecimal minLotSize;
+    private BigDecimal lotIncrement;
+    private BigDecimal maxLotSize;
+    private Integer shelfLife;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static ItemResponse from(Item item) {
         return ItemResponse.builder()
+            .id(item.getId())
             .itemCode(item.getItemCode())
             .itemName(item.getItemName())
-            .itemType(item.getItemType())
-            .unit(item.getUnit())
-            .standardCost(item.getStandardCost())
-            .safetyStock(item.getSafetyStock())
+            .itemCategory(item.getItemCategory())
+            .unitCode(item.getUnitCode())
+            .effectiveFrom(item.getEffectiveFrom())
+            .effectiveTo(item.getEffectiveTo())
             .leadTime(item.getLeadTime())
+            .safetyLeadTime(item.getSafetyLeadTime())
+            .safetyStock(item.getSafetyStock())
+            .yieldRate(item.getYieldRate())
+            .minLotSize(item.getMinLotSize())
+            .lotIncrement(item.getLotIncrement())
+            .maxLotSize(item.getMaxLotSize())
+            .shelfLife(item.getShelfLife())
+            .createdAt(item.getCreatedAt())
+            .updatedAt(item.getUpdatedAt())
             .build();
     }
 }
@@ -768,61 +885,89 @@ public class ItemResponse {
 <summary>MyBatisItemRepository.java</summary>
 
 ```java
-package com.example.production.infrastructure.persistence.mybatis;
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.production.application.port.out.ItemRepository;
-import com.example.production.domain.model.item.Item;
+import com.example.pms.application.port.out.ItemRepository;
+import com.example.pms.domain.model.item.Item;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 品目リポジトリの MyBatis 実装（Output Adapter）.
+ */
 @Repository
 @Mapper
 public interface MyBatisItemRepository extends ItemRepository {
 
     @Override
-    @Select("SELECT * FROM 品目マスタ")
-    @Results(id = "itemMap", value = {
-        @Result(property = "itemCode", column = "品目コード"),
-        @Result(property = "itemName", column = "品目名"),
-        @Result(property = "itemType", column = "品目種別"),
-        @Result(property = "unit", column = "単位"),
-        @Result(property = "standardCost", column = "標準原価"),
-        @Result(property = "safetyStock", column = "安全在庫"),
-        @Result(property = "leadTime", column = "リードタイム")
-    })
-    List<Item> findAll();
-
-    @Override
-    @Select("SELECT * FROM 品目マスタ WHERE 品目コード = #{itemCode}")
-    @ResultMap("itemMap")
-    Optional<Item> findByCode(String itemCode);
-
-    @Override
     @Insert("""
-        INSERT INTO 品目マスタ (品目コード, 品目名, 品目種別, 単位, 標準原価, 安全在庫, リードタイム)
-        VALUES (#{itemCode}, #{itemName}, #{itemType}, #{unit}, #{standardCost}, #{safetyStock}, #{leadTime})
+        INSERT INTO "品目マスタ" ("品目コード", "適用開始日", "品名", "品目区分", "単位コード",
+            "リードタイム", "安全リードタイム", "安全在庫数", "歩留まり率",
+            "最小ロットサイズ", "ロット増分", "最大ロットサイズ", "賞味期限日数")
+        VALUES (#{itemCode}, #{effectiveFrom}, #{itemName}, #{itemCategory}::品目区分, #{unitCode},
+            #{leadTime}, #{safetyLeadTime}, #{safetyStock}, #{yieldRate},
+            #{minLotSize}, #{lotIncrement}, #{maxLotSize}, #{shelfLife})
         """)
     void save(Item item);
 
     @Override
+    @Select("""
+        SELECT * FROM "品目マスタ"
+        WHERE "品目コード" = #{itemCode}
+        ORDER BY "適用開始日" DESC LIMIT 1
+        """)
+    @ResultMap("itemMap")
+    Optional<Item> findByItemCode(String itemCode);
+
+    @Override
+    @Select("""
+        SELECT * FROM "品目マスタ"
+        WHERE "品目コード" = #{itemCode}
+          AND "適用開始日" <= #{baseDate}
+        ORDER BY "適用開始日" DESC LIMIT 1
+        """)
+    @ResultMap("itemMap")
+    Optional<Item> findByItemCodeAndDate(String itemCode, LocalDate baseDate);
+
+    @Override
+    @Select("SELECT * FROM \"品目マスタ\"")
+    @Results(id = "itemMap", value = {
+        @Result(property = "id", column = "品目ID"),
+        @Result(property = "itemCode", column = "品目コード"),
+        @Result(property = "itemName", column = "品名"),
+        @Result(property = "itemCategory", column = "品目区分"),
+        @Result(property = "unitCode", column = "単位コード"),
+        @Result(property = "effectiveFrom", column = "適用開始日"),
+        @Result(property = "effectiveTo", column = "適用終了日"),
+        @Result(property = "leadTime", column = "リードタイム"),
+        @Result(property = "safetyLeadTime", column = "安全リードタイム"),
+        @Result(property = "safetyStock", column = "安全在庫数"),
+        @Result(property = "yieldRate", column = "歩留まり率"),
+        @Result(property = "minLotSize", column = "最小ロットサイズ"),
+        @Result(property = "lotIncrement", column = "ロット増分"),
+        @Result(property = "maxLotSize", column = "最大ロットサイズ"),
+        @Result(property = "shelfLife", column = "賞味期限日数"),
+        @Result(property = "createdAt", column = "作成日時"),
+        @Result(property = "updatedAt", column = "更新日時")
+    })
+    List<Item> findAll();
+
+    @Override
     @Update("""
-        UPDATE 品目マスタ
-        SET 品目名 = #{itemName}, 単位 = #{unit}, 標準原価 = #{standardCost},
-            安全在庫 = #{safetyStock}, リードタイム = #{leadTime}
-        WHERE 品目コード = #{itemCode}
+        UPDATE "品目マスタ"
+        SET "品名" = #{itemName}, "品目区分" = #{itemCategory}::品目区分,
+            "単位コード" = #{unitCode}
+        WHERE "品目ID" = #{id}
         """)
     void update(Item item);
 
     @Override
-    @Delete("DELETE FROM 品目マスタ WHERE 品目コード = #{itemCode}")
-    void deleteByCode(String itemCode);
-
-    @Override
-    @Select("SELECT COUNT(*) > 0 FROM 品目マスタ WHERE 品目コード = #{itemCode}")
-    boolean existsByCode(String itemCode);
+    @Delete("DELETE FROM \"品目マスタ\"")
+    void deleteAll();
 }
 ```
 
@@ -836,10 +981,10 @@ public interface MyBatisItemRepository extends ItemRepository {
 <summary>BomService.java</summary>
 
 ```java
-package com.example.production.application.service;
+package com.example.pms.application.service;
 
-import com.example.production.application.port.out.BomRepository;
-import com.example.production.domain.model.bom.Bom;
+import com.example.pms.application.port.out.BomRepository;
+import com.example.pms.domain.model.bom.Bom;
 import lombok.Builder;
 import lombok.Value;
 import org.springframework.stereotype.Service;
@@ -849,6 +994,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * BOM サービス（Application Service）.
+ */
 @Service
 @Transactional(readOnly = true)
 public class BomService {
@@ -956,11 +1104,11 @@ class WhereUsedResult {
 <summary>BomController.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.infrastructure.in.rest;
 
-import com.example.production.application.service.BomNode;
-import com.example.production.application.service.BomService;
-import com.example.production.application.service.WhereUsedResult;
+import com.example.pms.application.service.BomNode;
+import com.example.pms.application.service.BomService;
+import com.example.pms.application.service.WhereUsedResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -969,6 +1117,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * BOM API Controller.
+ */
 @RestController
 @RequestMapping("/api/bom")
 @Tag(name = "bom", description = "BOM API")
@@ -1014,16 +1165,16 @@ public class BomController {
 <summary>PurchaseOrderUseCase.java</summary>
 
 ```java
-package com.example.production.application.port.in;
+package com.example.pms.application.port.in;
 
-import com.example.production.domain.model.order.PurchaseOrder;
-import lombok.Builder;
-import lombok.Value;
+import com.example.pms.application.port.in.command.CreatePurchaseOrderCommand;
+import com.example.pms.domain.model.purchase.PurchaseOrder;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 発注ユースケース（Input Port）.
+ */
 public interface PurchaseOrderUseCase {
 
     List<PurchaseOrder> getAllOrders();
@@ -1036,23 +1187,6 @@ public interface PurchaseOrderUseCase {
 
     void cancelOrder(String orderNumber);
 }
-
-@Value
-@Builder
-class CreatePurchaseOrderCommand {
-
-    String supplierCode;
-    List<PurchaseOrderDetailCommand> details;
-
-    @Value
-    @Builder
-    public static class PurchaseOrderDetailCommand {
-        String itemCode;
-        BigDecimal orderQuantity;
-        BigDecimal unitPrice;
-        LocalDate deliveryDate;
-    }
-}
 ```
 
 </details>
@@ -1063,11 +1197,12 @@ class CreatePurchaseOrderCommand {
 <summary>PurchaseOrderController.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.infrastructure.in.rest;
 
-import com.example.production.application.port.in.*;
-import com.example.production.domain.model.order.PurchaseOrder;
-import com.example.production.infrastructure.rest.dto.*;
+import com.example.pms.application.port.in.PurchaseOrderUseCase;
+import com.example.pms.domain.model.purchase.PurchaseOrder;
+import com.example.pms.infrastructure.in.rest.dto.CreatePurchaseOrderRequest;
+import com.example.pms.infrastructure.in.rest.dto.PurchaseOrderResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -1077,6 +1212,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 発注 API Controller.
+ */
 @RestController
 @RequestMapping("/api/purchase-orders")
 @Tag(name = "purchase-orders", description = "発注 API")
@@ -1109,20 +1247,7 @@ public class PurchaseOrderController {
     @Operation(summary = "発注の登録")
     public ResponseEntity<PurchaseOrderResponse> createOrder(
             @Valid @RequestBody CreatePurchaseOrderRequest request) {
-
-        CreatePurchaseOrderCommand command = CreatePurchaseOrderCommand.builder()
-            .supplierCode(request.getSupplierCode())
-            .details(request.getDetails().stream()
-                .map(d -> CreatePurchaseOrderCommand.PurchaseOrderDetailCommand.builder()
-                    .itemCode(d.getItemCode())
-                    .orderQuantity(d.getOrderQuantity())
-                    .unitPrice(d.getUnitPrice())
-                    .deliveryDate(d.getDeliveryDate())
-                    .build())
-                .toList())
-            .build();
-
-        PurchaseOrder order = useCase.createOrder(command);
+        PurchaseOrder order = useCase.createOrder(request.toCommand());
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(PurchaseOrderResponse.from(order));
     }
@@ -1154,15 +1279,18 @@ public class PurchaseOrderController {
 <summary>InventoryUseCase.java</summary>
 
 ```java
-package com.example.production.application.port.in;
+package com.example.pms.application.port.in;
 
-import com.example.production.domain.model.inventory.Stock;
+import com.example.pms.domain.model.inventory.Stock;
 import lombok.Builder;
 import lombok.Value;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * 在庫ユースケース（Input Port）.
+ */
 public interface InventoryUseCase {
 
     /**
@@ -1212,11 +1340,13 @@ class InventorySummary {
 <summary>InventoryController.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.infrastructure.in.rest;
 
-import com.example.production.application.port.in.*;
-import com.example.production.domain.model.inventory.Stock;
-import com.example.production.infrastructure.rest.dto.StockResponse;
+import com.example.pms.application.port.in.InventoryQuery;
+import com.example.pms.application.port.in.InventorySummary;
+import com.example.pms.application.port.in.InventoryUseCase;
+import com.example.pms.domain.model.inventory.Stock;
+import com.example.pms.infrastructure.in.rest.dto.StockResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -1225,6 +1355,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 在庫 API Controller.
+ */
 @RestController
 @RequestMapping("/api/inventory")
 @Tag(name = "inventory", description = "在庫 API")
@@ -1282,11 +1415,12 @@ public class InventoryController {
 <summary>WorkOrderController.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.infrastructure.in.rest;
 
-import com.example.production.application.port.in.*;
-import com.example.production.domain.model.workorder.WorkOrder;
-import com.example.production.infrastructure.rest.dto.*;
+import com.example.pms.application.port.in.WorkOrderUseCase;
+import com.example.pms.domain.model.process.WorkOrder;
+import com.example.pms.infrastructure.in.rest.dto.CreateWorkOrderRequest;
+import com.example.pms.infrastructure.in.rest.dto.WorkOrderResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -1296,6 +1430,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 作業指示 API Controller.
+ */
 @RestController
 @RequestMapping("/api/work-orders")
 @Tag(name = "work-orders", description = "作業指示 API")
@@ -1332,25 +1469,6 @@ public class WorkOrderController {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(WorkOrderResponse.from(workOrder));
     }
-
-    @PostMapping("/{workOrderNumber}/completion")
-    @Operation(summary = "完成実績の登録")
-    public ResponseEntity<CompletionRecordResponse> recordCompletion(
-            @PathVariable String workOrderNumber,
-            @Valid @RequestBody RecordCompletionRequest request) {
-        var result = useCase.recordCompletion(workOrderNumber, request.toCommand());
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(CompletionRecordResponse.from(result));
-    }
-
-    @PatchMapping("/{workOrderNumber}/progress")
-    @Operation(summary = "作業進捗の更新")
-    public ResponseEntity<WorkOrderResponse> updateProgress(
-            @PathVariable String workOrderNumber,
-            @Valid @RequestBody UpdateProgressRequest request) {
-        WorkOrder workOrder = useCase.updateProgress(workOrderNumber, request.getStatus());
-        return ResponseEntity.ok(WorkOrderResponse.from(workOrder));
-    }
 }
 ```
 
@@ -1361,120 +1479,57 @@ public class WorkOrderController {
 #### MRP サービス
 
 <details>
-<summary>MrpService.java</summary>
+<summary>MrpUseCase.java</summary>
 
 ```java
-package com.example.production.application.service;
+package com.example.pms.application.port.in;
 
-import com.example.production.application.port.out.*;
 import lombok.Builder;
 import lombok.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Service
-@Transactional
-public class MrpService {
-
-    private final OrderRepository orderRepository;
-    private final BomRepository bomRepository;
-    private final StockRepository stockRepository;
-
-    public MrpService(
-            OrderRepository orderRepository,
-            BomRepository bomRepository,
-            StockRepository stockRepository) {
-        this.orderRepository = orderRepository;
-        this.bomRepository = bomRepository;
-        this.stockRepository = stockRepository;
-    }
+/**
+ * MRP ユースケース（Input Port）.
+ */
+public interface MrpUseCase {
 
     /**
      * MRP（所要量展開）を実行
      */
-    public MrpResult execute(LocalDate startDate, LocalDate endDate) {
-        // 1. 基準生産計画（MPS）から需要を取得
-        var demands = getDemands(startDate, endDate);
+    MrpResult execute(LocalDate startDate, LocalDate endDate);
 
-        // 2. BOM 展開で所要量を計算
-        var requirements = explodeRequirements(demands);
-
-        // 3. 在庫と照合して正味所要量を計算
-        var netRequirements = calculateNetRequirements(requirements);
-
-        // 4. ロットサイズを考慮して計画オーダを生成
-        var plannedOrders = generatePlannedOrders(netRequirements);
-
-        // 5. 在庫不足品目を抽出
-        var shortageItems = getShortageItems(netRequirements);
-
-        return MrpResult.builder()
-            .executionTime(LocalDateTime.now())
-            .periodStart(startDate)
-            .periodEnd(endDate)
-            .plannedOrders(plannedOrders)
-            .shortageItems(shortageItems)
-            .build();
+    @Value
+    @Builder
+    class MrpResult {
+        LocalDateTime executionTime;
+        LocalDate periodStart;
+        LocalDate periodEnd;
+        List<PlannedOrder> plannedOrders;
+        List<ShortageItem> shortageItems;
     }
 
-    private List<?> getDemands(LocalDate startDate, LocalDate endDate) {
-        // 実装省略
-        return List.of();
+    @Value
+    @Builder
+    class PlannedOrder {
+        String itemCode;
+        String itemName;
+        String orderType; // MANUFACTURING or PURCHASE
+        BigDecimal quantity;
+        LocalDate dueDate;
     }
 
-    private List<?> explodeRequirements(List<?> demands) {
-        // 実装省略
-        return List.of();
+    @Value
+    @Builder
+    class ShortageItem {
+        String itemCode;
+        String itemName;
+        BigDecimal shortageQuantity;
+        LocalDate recommendedOrderDate;
     }
-
-    private List<?> calculateNetRequirements(List<?> requirements) {
-        // 実装省略
-        return List.of();
-    }
-
-    private List<PlannedOrder> generatePlannedOrders(List<?> netRequirements) {
-        // 実装省略
-        return List.of();
-    }
-
-    private List<ShortageItem> getShortageItems(List<?> netRequirements) {
-        // 実装省略
-        return List.of();
-    }
-}
-
-@Value
-@Builder
-class MrpResult {
-    LocalDateTime executionTime;
-    LocalDate periodStart;
-    LocalDate periodEnd;
-    List<PlannedOrder> plannedOrders;
-    List<ShortageItem> shortageItems;
-}
-
-@Value
-@Builder
-class PlannedOrder {
-    String itemCode;
-    String itemName;
-    String orderType; // MANUFACTURING or PURCHASE
-    BigDecimal quantity;
-    LocalDate dueDate;
-}
-
-@Value
-@Builder
-class ShortageItem {
-    String itemCode;
-    String itemName;
-    BigDecimal shortageQuantity;
-    LocalDate recommendedOrderDate;
 }
 ```
 
@@ -1486,26 +1541,29 @@ class ShortageItem {
 <summary>MrpController.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.infrastructure.in.rest;
 
-import com.example.production.application.service.MrpResult;
-import com.example.production.application.service.MrpService;
-import com.example.production.infrastructure.rest.dto.ExecuteMrpRequest;
+import com.example.pms.application.port.in.MrpUseCase;
+import com.example.pms.infrastructure.in.rest.dto.ExecuteMrpRequest;
+import com.example.pms.infrastructure.in.rest.dto.MrpResultResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * MRP API Controller.
+ */
 @RestController
 @RequestMapping("/api/mrp")
 @Tag(name = "mrp", description = "MRP API")
 public class MrpController {
 
-    private final MrpService mrpService;
+    private final MrpUseCase mrpUseCase;
 
-    public MrpController(MrpService mrpService) {
-        this.mrpService = mrpService;
+    public MrpController(MrpUseCase mrpUseCase) {
+        this.mrpUseCase = mrpUseCase;
     }
 
     @PostMapping("/execute")
@@ -1513,25 +1571,13 @@ public class MrpController {
         summary = "MRP の実行",
         description = "指定期間の所要量展開を実行し、計画オーダを生成します"
     )
-    public ResponseEntity<MrpResult> execute(
+    public ResponseEntity<MrpResultResponse> execute(
             @Valid @RequestBody ExecuteMrpRequest request) {
-        MrpResult result = mrpService.execute(
+        var result = mrpUseCase.execute(
             request.getStartDate(),
             request.getEndDate()
         );
-        return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/results")
-    @Operation(summary = "MRP 実行結果の照会")
-    public ResponseEntity<String> getResults() {
-        return ResponseEntity.ok("未実装");
-    }
-
-    @GetMapping("/planned-orders")
-    @Operation(summary = "計画オーダ一覧の取得")
-    public ResponseEntity<String> getPlannedOrders() {
-        return ResponseEntity.ok("未実装");
+        return ResponseEntity.ok(MrpResultResponse.from(result));
     }
 }
 ```
@@ -1548,10 +1594,10 @@ public class MrpController {
 <summary>DomainException.java</summary>
 
 ```java
-package com.example.production.domain.exception;
+package com.example.pms.domain.exception;
 
 /**
- * ドメイン例外の基底クラス
+ * ドメイン例外の基底クラス.
  */
 public abstract class DomainException extends RuntimeException {
 
@@ -1571,10 +1617,10 @@ public abstract class DomainException extends RuntimeException {
 <summary>ItemNotFoundException.java</summary>
 
 ```java
-package com.example.production.domain.exception;
+package com.example.pms.domain.exception;
 
 /**
- * 品目が見つからない例外
+ * 品目が見つからない例外.
  */
 public class ItemNotFoundException extends DomainException {
 
@@ -1590,10 +1636,10 @@ public class ItemNotFoundException extends DomainException {
 <summary>DuplicateItemException.java</summary>
 
 ```java
-package com.example.production.domain.exception;
+package com.example.pms.domain.exception;
 
 /**
- * 品目コード重複例外
+ * 品目コード重複例外.
  */
 public class DuplicateItemException extends DomainException {
 
@@ -1609,12 +1655,12 @@ public class DuplicateItemException extends DomainException {
 <summary>InsufficientInventoryException.java</summary>
 
 ```java
-package com.example.production.domain.exception;
+package com.example.pms.domain.exception;
 
 import java.math.BigDecimal;
 
 /**
- * 在庫不足例外
+ * 在庫不足例外.
  */
 public class InsufficientInventoryException extends DomainException {
 
@@ -1633,9 +1679,11 @@ public class InsufficientInventoryException extends DomainException {
 <summary>GlobalExceptionHandler.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.exception;
+package com.example.pms.infrastructure.in.web.exception;
 
-import com.example.production.domain.exception.*;
+import com.example.pms.domain.exception.DomainException;
+import com.example.pms.domain.exception.DuplicateItemException;
+import com.example.pms.domain.exception.ItemNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -1647,7 +1695,7 @@ import java.time.Instant;
 import java.util.stream.Collectors;
 
 /**
- * グローバル例外ハンドラ
+ * グローバル例外ハンドラ.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -1672,16 +1720,6 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(InsufficientInventoryException.class)
-    public ProblemDetail handleInsufficientInventoryException(InsufficientInventoryException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-            HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
-        problem.setTitle("在庫不足");
-        problem.setType(URI.create("https://api.example.com/errors/insufficient-inventory"));
-        problem.setProperty("timestamp", Instant.now());
-        return problem;
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
         String errors = ex.getBindingResult().getFieldErrors().stream()
@@ -1692,6 +1730,16 @@ public class GlobalExceptionHandler {
             HttpStatus.BAD_REQUEST, errors);
         problem.setTitle("入力値が不正です");
         problem.setType(URI.create("https://api.example.com/errors/validation-error"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(DomainException.class)
+    public ProblemDetail handleDomainException(DomainException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("ドメインエラー");
+        problem.setType(URI.create("https://api.example.com/errors/domain-error"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
@@ -1778,126 +1826,190 @@ http://localhost:8080/swagger-ui.html
 
 ## 32.7 API インテグレーションテスト
 
-### Testcontainers を使用したテスト
+### RestClient を使用した API インテグレーションテスト
+
+本プロジェクトでは、MockMvc の代わりに RestClient を使用した実際の HTTP リクエストベースのテストを採用しています。
 
 <details>
-<summary>ItemControllerIntegrationTest.java</summary>
+<summary>IntegrationTestBase.java</summary>
 
 ```java
-package com.example.production.infrastructure.rest.controller;
+package com.example.pms.integration;
 
-import org.junit.jupiter.api.Test;
+import com.example.pms.TestcontainersConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.client.RestClient;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+/**
+ * API インテグレーションテストの基底クラス.
+ * TestContainers を使用して PostgreSQL コンテナを起動し、
+ * 実際の HTTP リクエストでテストを実行する。
+ */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(TestcontainersConfiguration.class)
+@ActiveProfiles("test")
+public abstract class IntegrationTestBase {
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Testcontainers
-class ItemControllerIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-        .withDatabaseName("production_test")
-        .withUsername("test")
-        .withPassword("test")
-        .withInitScript("init.sql");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+    @LocalServerPort
+    protected int port;
 
     @Autowired
-    private MockMvc mockMvc;
+    protected JdbcTemplate jdbcTemplate;
 
-    @Test
-    void 品目を登録して取得できる() throws Exception {
-        // 登録
-        var request = """
-            {
-                "itemCode": "ITEM001",
-                "itemName": "テスト品目",
-                "itemType": "製品",
-                "unit": "個",
-                "standardCost": 1000,
-                "safetyStock": 100,
-                "leadTime": 5
-            }
-            """;
+    private RestClient restClient;
 
-        mockMvc.perform(post("/api/items")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(request))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.itemCode").value("ITEM001"));
-
-        // 取得
-        mockMvc.perform(get("/api/items/ITEM001"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.itemCode").value("ITEM001"))
-            .andExpect(jsonPath("$.itemName").value("テスト品目"));
+    /**
+     * REST クライアントを取得.
+     */
+    protected RestClient getRestClient() {
+        if (restClient == null) {
+            restClient = RestClient.builder()
+                .baseUrl("http://localhost:" + port)
+                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE)
+                .build();
+        }
+        return restClient;
     }
 
-    @Test
-    void 存在しない品目を取得すると404() throws Exception {
-        mockMvc.perform(get("/api/items/NOTFOUND"))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.title").value("品目が見つかりません"));
+    protected void cleanupItemData() {
+        jdbcTemplate.execute("DELETE FROM \"品目マスタ\" WHERE \"品目コード\" LIKE 'TEST%'");
+    }
+}
+```
+
+</details>
+
+<details>
+<summary>ItemApiIntegrationTest.java</summary>
+
+```java
+package com.example.pms.integration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.example.pms.domain.model.item.ItemCategory;
+import com.example.pms.infrastructure.in.rest.dto.CreateItemRequest;
+import com.example.pms.infrastructure.in.rest.dto.ItemResponse;
+import com.example.pms.infrastructure.in.rest.dto.UpdateItemRequest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.HttpClientErrorException;
+
+@DisplayName("品目 API 統合テスト")
+class ItemApiIntegrationTest extends IntegrationTestBase {
+
+    private static final String API_PATH = "/api/items";
+
+    @BeforeEach
+    void setUp() {
+        createUnit("個", "個", "個");
+        cleanupItemData();
     }
 
-    @Test
-    void バリデーションエラーで400() throws Exception {
-        var request = """
-            {
-                "itemCode": "",
-                "itemName": "テスト品目"
-            }
-            """;
-
-        mockMvc.perform(post("/api/items")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(request))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.title").value("入力値が不正です"));
+    @AfterEach
+    void tearDown() {
+        cleanupItemData();
     }
 
-    @Test
-    void 重複登録で409() throws Exception {
-        var request = """
-            {
-                "itemCode": "ITEM002",
-                "itemName": "テスト品目2",
-                "itemType": "製品",
-                "unit": "個",
-                "standardCost": 1000
-            }
-            """;
+    @Nested
+    @DisplayName("品目登録・取得フロー")
+    class ItemCrudFlow {
 
-        // 1回目は成功
-        mockMvc.perform(post("/api/items")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(request))
-            .andExpect(status().isCreated());
+        @Test
+        @DisplayName("品目を登録して取得できる")
+        void shouldCreateAndRetrieveItem() {
+            CreateItemRequest createRequest = new CreateItemRequest();
+            createRequest.setItemCode("TEST001");
+            createRequest.setItemName("テスト品目");
+            createRequest.setItemCategory(ItemCategory.PRODUCT);
+            createRequest.setUnitCode("個");
 
-        // 2回目は重複エラー
-        mockMvc.perform(post("/api/items")
+            // 品目を登録
+            ItemResponse createResponse = getRestClient()
+                .post()
+                .uri(API_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(request))
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.title").value("品目コード重複"));
+                .body(createRequest)
+                .retrieve()
+                .body(ItemResponse.class);
+
+            assertThat(createResponse).isNotNull();
+            assertThat(createResponse.getItemCode()).isEqualTo("TEST001");
+
+            // 登録した品目を取得
+            ItemResponse getResponse = getRestClient()
+                .get()
+                .uri(API_PATH + "/TEST001")
+                .retrieve()
+                .body(ItemResponse.class);
+
+            assertThat(getResponse).isNotNull();
+            assertThat(getResponse.getItemCode()).isEqualTo("TEST001");
+            assertThat(getResponse.getItemName()).isEqualTo("テスト品目");
+        }
+
+        @Test
+        @DisplayName("存在しない品目を取得すると404エラー")
+        void shouldReturn404WhenItemNotFound() {
+            assertThatThrownBy(() ->
+                getRestClient()
+                    .get()
+                    .uri(API_PATH + "/NOT-EXIST")
+                    .retrieve()
+                    .body(ItemResponse.class)
+            ).isInstanceOf(HttpClientErrorException.class)
+                .satisfies(ex -> {
+                    HttpClientErrorException httpEx = (HttpClientErrorException) ex;
+                    assertThat(httpEx.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+                });
+        }
+
+        @Test
+        @DisplayName("重複した品目コードで登録すると409エラー")
+        void shouldReturn409WhenDuplicateItemCode() {
+            CreateItemRequest createRequest = new CreateItemRequest();
+            createRequest.setItemCode("TEST002");
+            createRequest.setItemName("テスト品目2");
+            createRequest.setItemCategory(ItemCategory.PRODUCT);
+            createRequest.setUnitCode("個");
+
+            // 1回目は成功
+            getRestClient()
+                .post()
+                .uri(API_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createRequest)
+                .retrieve()
+                .body(ItemResponse.class);
+
+            // 2回目は409
+            assertThatThrownBy(() ->
+                getRestClient()
+                    .post()
+                    .uri(API_PATH)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(createRequest)
+                    .retrieve()
+                    .body(ItemResponse.class)
+            ).isInstanceOf(HttpClientErrorException.class)
+                .satisfies(ex -> {
+                    HttpClientErrorException httpEx = (HttpClientErrorException) ex;
+                    assertThat(httpEx.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                });
+        }
     }
 }
 ```

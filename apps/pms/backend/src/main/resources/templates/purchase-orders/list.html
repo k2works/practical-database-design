@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>発注一覧</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>発注一覧</h1>
+            <div>
+                <div class="btn-group me-2">
+                    <a th:href="@{/purchase-orders/export/excel(status=${selectedStatus})}"
+                       class="btn btn-outline-success">
+                        <i class="bi bi-file-earmark-excel"></i> Excel
+                    </a>
+                    <a th:href="@{/purchase-orders/export/pdf(status=${selectedStatus})}"
+                       class="btn btn-outline-danger">
+                        <i class="bi bi-file-earmark-pdf"></i> PDF
+                    </a>
+                </div>
+                <a th:href="@{/purchase-orders/new}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> 新規発注
+                </a>
+            </div>
+        </div>
+
+        <!-- 検索フォーム -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/purchase-orders}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="status" class="form-label">ステータス</label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="">すべて</option>
+                            <option th:each="s : ${statuses}"
+                                    th:value="${s}"
+                                    th:text="${s.displayName}"
+                                    th:selected="${s == selectedStatus}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-secondary me-2">
+                            <i class="bi bi-search"></i> 検索
+                        </button>
+                        <a th:href="@{/purchase-orders}" class="btn btn-outline-secondary">クリア</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 発注一覧テーブル -->
+        <div class="card">
+            <div class="card-body">
+                <!-- 件数表示 -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">
+                        全 <span th:text="${totalElements}">0</span> 件
+                        <span th:if="${totalPages > 0}">
+                            （<span th:text="${currentPage + 1}">1</span> / <span th:text="${totalPages}">1</span> ページ）
+                        </span>
+                    </span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(orders)}" class="alert alert-info">
+                    発注が登録されていません。
+                </div>
+                <table th:if="${not #lists.isEmpty(orders)}" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>発注番号</th>
+                            <th>発注日</th>
+                            <th>仕入先</th>
+                            <th>ステータス</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${orders}">
+                            <td>
+                                <a th:href="@{/purchase-orders/{no}(no=${order.purchaseOrderNumber})}"
+                                   th:text="${order.purchaseOrderNumber}"></a>
+                            </td>
+                            <td th:text="${order.orderDate}"></td>
+                            <td th:text="${order.supplier?.supplierName ?: order.supplierCode}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${order.status.name() == 'CREATING'} ? 'bg-secondary' :
+                                                      (${order.status.name() == 'ORDERED'} ? 'bg-primary' :
+                                                      (${order.status.name() == 'CANCELLED'} ? 'bg-danger' : 'bg-success'))"
+                                      th:text="${order.status.displayName}"></span>
+                            </td>
+                            <td>
+                                <a th:href="@{/purchase-orders/{no}(no=${order.purchaseOrderNumber})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ページネーション -->
+                <nav th:if="${totalPages > 1}" aria-label="発注一覧ページネーション">
+                    <ul class="pagination justify-content-center mb-0">
+                        <!-- 前へ -->
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/purchase-orders(page=${currentPage - 1},size=${size},status=${selectedStatus})}">
+                                前へ
+                            </a>
+                        </li>
+
+                        <!-- ページ番号 -->
+                        <th:block th:with="startPage=${currentPage > 2 ? currentPage - 2 : 0},
+                                          endPage=${startPage + 4 < totalPages ? startPage + 4 : totalPages - 1}">
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                                th:classappend="${pageNum == currentPage} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/purchase-orders(page=${pageNum},size=${size},status=${selectedStatus})}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+                            <li th:if="${endPage < totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        </th:block>
+
+                        <!-- 次へ -->
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/purchase-orders(page=${currentPage + 1},size=${size},status=${selectedStatus})}">
+                                次へ
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

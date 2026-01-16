@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ManufacturingOverheadMapper">
+
+    <resultMap id="manufacturingOverheadResultMap" type="com.example.pms.domain.model.cost.ManufacturingOverhead">
+        <id property="id" column="ID"/>
+        <result property="accountingPeriod" column="会計期間"/>
+        <result property="costCategory" column="費用区分"/>
+        <result property="costCategoryName" column="費用区分名"/>
+        <result property="amount" column="金額"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <select id="findById" resultMap="manufacturingOverheadResultMap">
+        SELECT * FROM "製造間接費マスタ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByAccountingPeriod" resultMap="manufacturingOverheadResultMap">
+        SELECT * FROM "製造間接費マスタ"
+        WHERE "会計期間" = #{accountingPeriod}
+        ORDER BY "費用区分"
+    </select>
+
+    <select id="findByAccountingPeriodAndCostCategory" resultMap="manufacturingOverheadResultMap">
+        SELECT * FROM "製造間接費マスタ"
+        WHERE "会計期間" = #{accountingPeriod} AND "費用区分" = #{costCategory}
+    </select>
+
+    <select id="findAll" resultMap="manufacturingOverheadResultMap">
+        SELECT * FROM "製造間接費マスタ" ORDER BY "会計期間" DESC, "費用区分"
+    </select>
+
+    <select id="sumByAccountingPeriod" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM("金額"), 0)
+        FROM "製造間接費マスタ"
+        WHERE "会計期間" = #{accountingPeriod}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "製造間接費マスタ" (
+            "会計期間", "費用区分", "費用区分名", "金額"
+        ) VALUES (
+            #{accountingPeriod}, #{costCategory}, #{costCategoryName}, #{amount}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE "製造間接費マスタ"
+        SET "費用区分名" = #{costCategoryName},
+            "金額" = #{amount},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+          AND "バージョン" = #{version}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM "製造間接費マスタ" WHERE "ID" = #{id}
+    </delete>
+
+    <delete id="deleteByAccountingPeriod">
+        DELETE FROM "製造間接費マスタ" WHERE "会計期間" = #{accountingPeriod}
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE FROM "製造間接費マスタ"
+    </delete>
+
+</mapper>

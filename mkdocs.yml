@@ -66,9 +66,11 @@ nav:
       - アウトライン: article/outline.md
       - 執筆ワークフロー: article/workflow.md
       - 運用ガイド: article/ops.md
+      - プロジェクトセットアップ手順書: article/project-setup-instruction.md
       - デプロイ:
           - SMS デモデプロイ: article/deploy-sms.md
           - FAS デモデプロイ: article/deploy-fas.md
+          - PMS デモデプロイ: article/deploy-pms.md
       - 第1部 基幹業務システムの全体像:
           - 第1章 基幹業務システムとは: article/part1/chapter01.md
           - 第2章 基幹業務システムの業務領域: article/part1/chapter02.md
@@ -118,16 +120,19 @@ nav:
           - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study2-2.md
           - 研究3 gRPCサービスの実装: article/study/study2-3.md
           - 研究4 GraphQLサービスの実装: article/study/study2-4.md
+          - 研究5 AxonCQRS/ESの実装: article/study/study2-5.md
       - 研究 財務会計システム実装編:
           - 研究1 モノリスサービスの実装: article/study/study3-1.md
           - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study3-2.md
           - 研究3 gRPCサービスの実装: article/study/study3-3.md
           - 研究4 GraphQLサービスの実装: article/study/study3-4.md
+          - 研究5 AxonCQRS/ESの実装: article/study/study3-5.md
       - 研究 生産管理システム実装編:
           - 研究1 モノリスサービスの実装: article/study/study4-1.md
           - 研究2 JavaFXデスクトップアプリケーションの実装: article/study/study4-2.md
           - 研究3 gRPCサービスの実装: article/study/study4-3.md
           - 研究4 GraphQLサービスの実装: article/study/study4-4.md
+          - 研究5 AxonCQRS/ESの実装: article/study/study4-5.md
       - 研究 財務会計システムORM実装編:
           - 第14章 財務会計システムの全体像【ORM版】: article/part3-orm/chapter14-orm.md
           - 第15章 勘定科目の設計【ORM版】: article/part3-orm/chapter15-orm.md
@@ -137,9 +142,12 @@ nav:
           - 第19章 赤黒とログの設計【ORM版】: article/part3-orm/chapter19-orm.md
           - 第20章 財務会計データ設計（D社事例）【ORM版】: article/part3-orm/chapter20-orm.md
           - 第21章 APIサービスの実装【ORM版】: article/part3-orm/chapter21-orm.md
+          - 第22章 Axon CQRS/ESの実装【ORM版】: article/part3-orm/chapter22-orm.md
       - 付録:
           - A 全体ER図: article/appendix/er-diagrams.md
           - B テーブル定義一覧: article/appendix/table-definitions.md
           - C 用語集: article/appendix/glossary.md
       - データベース:
           - SchemaSpy ER図（SMS）: assets/schemaspy-output/sms/index.html
+          - SchemaSpy ER図（FAS）: assets/schemaspy-output/fas/index.html
+          - SchemaSpy ER図（PMS）: assets/schemaspy-output/pms/index.html

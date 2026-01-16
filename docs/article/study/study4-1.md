@@ -1859,126 +1859,68 @@ end note
 ### 37.2 ページネーション用のドメインオブジェクト
 
 <details>
-<summary>PageInfo.java（ページ情報）</summary>
+<summary>PageResult.java（ページ結果）</summary>
 
 ```java
-package com.example.production.domain.model.common;
-
-import lombok.Builder;
-import lombok.Value;
+package com.example.pms.domain.model.common;
 
 import java.util.List;
 
 /**
- * ページ情報を保持するクラス
+ * ページネーション結果を保持するクラス.
+ *
+ * @param <T> コンテンツの型
  */
-@Value
-@Builder
-public class PageInfo<T> {
+public class PageResult<T> {
 
-    List<T> content;           // 現在のページのデータ
-    int currentPage;           // 現在のページ番号（0始まり）
-    int pageSize;              // 1ページあたりの件数
-    long totalElements;        // 総件数
-    int totalPages;            // 総ページ数
+    private final List<T> content;
+    private final int page;
+    private final int size;
+    private final long totalElements;
+    private final int totalPages;
 
-    /**
-     * 最初のページかどうか
-     */
-    public boolean isFirst() {
-        return currentPage == 0;
+    public PageResult(List<T> content, int page, int size, long totalElements) {
+        this.content = content;
+        this.page = page;
+        this.size = size;
+        this.totalElements = totalElements;
+        this.totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 0;
     }
 
-    /**
-     * 最後のページかどうか
-     */
-    public boolean isLast() {
-        return currentPage >= totalPages - 1;
+    public List<T> getContent() {
+        return content;
     }
 
-    /**
-     * 前のページがあるかどうか
-     */
-    public boolean hasPrevious() {
-        return currentPage > 0;
+    public int getPage() {
+        return page;
     }
 
-    /**
-     * 次のページがあるかどうか
-     */
+    public int getSize() {
+        return size;
+    }
+
+    public long getTotalElements() {
+        return totalElements;
+    }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
     public boolean hasNext() {
-        return currentPage < totalPages - 1;
+        return page < totalPages - 1;
     }
 
-    /**
-     * 表示用のページ番号リストを取得（前後2ページずつ）
-     */
-    public List<Integer> getPageNumbers() {
-        int start = Math.max(0, currentPage - 2);
-        int end = Math.min(totalPages - 1, currentPage + 2);
-
-        return java.util.stream.IntStream.rangeClosed(start, end)
-            .boxed()
-            .toList();
+    public boolean hasPrevious() {
+        return page > 0;
     }
 
-    /**
-     * 開始レコード番号（表示用、1始まり）
-     */
-    public long getStartRecord() {
-        return (long) currentPage * pageSize + 1;
+    public boolean isFirst() {
+        return page == 0;
     }
 
-    /**
-     * 終了レコード番号（表示用）
-     */
-    public long getEndRecord() {
-        return Math.min((long) (currentPage + 1) * pageSize, totalElements);
-    }
-}
-```
-
-</details>
-
-<details>
-<summary>PageRequest.java（ページリクエスト）</summary>
-
-```java
-package com.example.production.domain.model.common;
-
-import lombok.Builder;
-import lombok.Value;
-
-/**
- * ページリクエストを保持するクラス
- */
-@Value
-@Builder
-public class PageRequest {
-
-    int page;       // ページ番号（0始まり）
-    int size;       // 1ページあたりの件数
-    String sortBy;  // ソートカラム
-    String sortDir; // ソート方向（asc/desc）
-
-    public static PageRequest of(int page, int size) {
-        return PageRequest.builder()
-            .page(Math.max(0, page))
-            .size(Math.min(100, Math.max(1, size)))  // 1〜100の範囲
-            .build();
-    }
-
-    public static PageRequest of(int page, int size, String sortBy, String sortDir) {
-        return PageRequest.builder()
-            .page(Math.max(0, page))
-            .size(Math.min(100, Math.max(1, size)))
-            .sortBy(sortBy)
-            .sortDir("desc".equalsIgnoreCase(sortDir) ? "desc" : "asc")
-            .build();
-    }
-
-    public int getOffset() {
-        return page * size;
+    public boolean isLast() {
+        return page >= totalPages - 1;
     }
 }
 ```
@@ -1993,11 +1935,10 @@ public class PageRequest {
 <summary>ItemRepository.java（ページネーション対応）</summary>
 
 ```java
-package com.example.production.application.port.out;
+package com.example.pms.application.port.out;
 
-import com.example.production.domain.model.common.PageInfo;
-import com.example.production.domain.model.common.PageRequest;
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
 
 import java.util.List;
 import java.util.Optional;
@@ -2005,134 +1946,133 @@ import java.util.Optional;
 public interface ItemRepository {
 
     /**
-     * ページネーション付きで品目一覧を取得
+     * ページネーション付きで品目を取得
      */
-    PageInfo<Item> findAll(PageRequest pageRequest);
+    List<Item> findWithPagination(ItemCategory category, String keyword, int limit, int offset);
 
     /**
-     * キーワード検索（ページネーション付き）
+     * 条件に一致する品目の件数を取得
      */
-    PageInfo<Item> searchByKeyword(String keyword, PageRequest pageRequest);
+    long count(ItemCategory category, String keyword);
 
-    /**
-     * 品目区分で検索（ページネーション付き）
-     */
-    PageInfo<Item> findByCategory(String category, PageRequest pageRequest);
+    List<Item> findAll();
 
-    Optional<Item> findByCode(String itemCode);
+    List<Item> findByCategory(ItemCategory category);
+
+    List<Item> searchByKeyword(String keyword);
+
+    Optional<Item> findByItemCode(String itemCode);
 
     void save(Item item);
 
     void update(Item item);
 
-    void deleteByCode(String itemCode);
-
-    boolean existsByCode(String itemCode);
+    void deleteByItemCode(String itemCode);
 }
 ```
 
 </details>
 
 <details>
-<summary>MyBatisItemRepository.java（MyBatis 実装）</summary>
+<summary>ItemMapper.xml（MyBatis XML マッピング - PostgreSQL/H2 対応）</summary>
+
+```xml
+<!-- ページネーション対応クエリ -->
+<select id="findWithPagination" resultMap="itemResultMap" databaseId="postgresql">
+    SELECT
+        id, 品目コード, 品目名, 品目区分, 単位コード,
+        適用開始日, 適用終了日, リードタイム, 安全リードタイム,
+        安全在庫, 歩留率, 最小ロットサイズ, ロット増分,
+        最大ロットサイズ, 賞味期限日数, 作成日時, 更新日時
+    FROM 品目マスタ
+    WHERE 1=1
+    <if test="category != null">
+        AND 品目区分 = #{category}::品目区分
+    </if>
+    <if test="keyword != null and keyword != ''">
+        AND (品目コード LIKE '%' || #{keyword} || '%'
+             OR 品目名 LIKE '%' || #{keyword} || '%')
+    </if>
+    ORDER BY 品目コード
+    LIMIT #{limit} OFFSET #{offset}
+</select>
+
+<select id="findWithPagination" resultMap="itemResultMap" databaseId="h2">
+    SELECT
+        id, 品目コード, 品目名, 品目区分, 単位コード,
+        適用開始日, 適用終了日, リードタイム, 安全リードタイム,
+        安全在庫, 歩留率, 最小ロットサイズ, ロット増分,
+        最大ロットサイズ, 賞味期限日数, 作成日時, 更新日時
+    FROM 品目マスタ
+    WHERE 1=1
+    <if test="category != null">
+        AND 品目区分 = #{category}
+    </if>
+    <if test="keyword != null and keyword != ''">
+        AND (品目コード LIKE '%' || #{keyword} || '%'
+             OR 品目名 LIKE '%' || #{keyword} || '%')
+    </if>
+    ORDER BY 品目コード
+    LIMIT #{limit} OFFSET #{offset}
+</select>
+
+<select id="count" resultType="long">
+    SELECT COUNT(*)
+    FROM 品目マスタ
+    WHERE 1=1
+    <if test="category != null">
+        <choose>
+            <when test="_databaseId == 'postgresql'">
+                AND 品目区分 = #{category}::品目区分
+            </when>
+            <otherwise>
+                AND 品目区分 = #{category}
+            </otherwise>
+        </choose>
+    </if>
+    <if test="keyword != null and keyword != ''">
+        AND (品目コード LIKE '%' || #{keyword} || '%'
+             OR 品目名 LIKE '%' || #{keyword} || '%')
+    </if>
+</select>
+```
+
+</details>
+
+<details>
+<summary>ItemRepositoryImpl.java（Repository 実装）</summary>
 
 ```java
-package com.example.production.infrastructure.persistence.mybatis;
+package com.example.pms.infrastructure.out.persistence;
 
-import com.example.production.application.port.out.ItemRepository;
-import com.example.production.domain.model.common.PageInfo;
-import com.example.production.domain.model.common.PageRequest;
-import com.example.production.domain.model.item.Item;
-import org.apache.ibatis.annotations.*;
+import com.example.pms.application.port.out.ItemRepository;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-@Mapper
-public interface MyBatisItemRepository extends ItemRepository {
+public class ItemRepositoryImpl implements ItemRepository {
 
-    @Override
-    default PageInfo<Item> findAll(PageRequest pageRequest) {
-        List<Item> items = selectAll(pageRequest.getOffset(), pageRequest.getSize(),
-            pageRequest.getSortBy(), pageRequest.getSortDir());
-        long total = countAll();
+    private final ItemMapper itemMapper;
 
-        return PageInfo.<Item>builder()
-            .content(items)
-            .currentPage(pageRequest.getPage())
-            .pageSize(pageRequest.getSize())
-            .totalElements(total)
-            .totalPages((int) Math.ceil((double) total / pageRequest.getSize()))
-            .build();
+    public ItemRepositoryImpl(ItemMapper itemMapper) {
+        this.itemMapper = itemMapper;
     }
 
-    @Select("""
-        SELECT * FROM 品目マスタ
-        ORDER BY
-            CASE WHEN #{sortDir} = 'asc' THEN
-                CASE #{sortBy}
-                    WHEN 'itemCode' THEN 品目コード
-                    WHEN 'itemName' THEN 品目名
-                    ELSE 品目コード
-                END
-            END ASC,
-            CASE WHEN #{sortDir} = 'desc' THEN
-                CASE #{sortBy}
-                    WHEN 'itemCode' THEN 品目コード
-                    WHEN 'itemName' THEN 品目名
-                    ELSE 品目コード
-                END
-            END DESC
-        LIMIT #{size} OFFSET #{offset}
-        """)
-    @Results(id = "itemMap", value = {
-        @Result(property = "itemCode", column = "品目コード"),
-        @Result(property = "itemName", column = "品目名"),
-        @Result(property = "category", column = "品目区分"),
-        @Result(property = "leadTime", column = "リードタイム"),
-        @Result(property = "safetyStock", column = "安全在庫")
-    })
-    List<Item> selectAll(@Param("offset") int offset,
-                         @Param("size") int size,
-                         @Param("sortBy") String sortBy,
-                         @Param("sortDir") String sortDir);
-
-    @Select("SELECT COUNT(*) FROM 品目マスタ")
-    long countAll();
-
     @Override
-    default PageInfo<Item> searchByKeyword(String keyword, PageRequest pageRequest) {
-        String pattern = "%" + keyword + "%";
-        List<Item> items = selectByKeyword(pattern, pageRequest.getOffset(), pageRequest.getSize());
-        long total = countByKeyword(pattern);
-
-        return PageInfo.<Item>builder()
-            .content(items)
-            .currentPage(pageRequest.getPage())
-            .pageSize(pageRequest.getSize())
-            .totalElements(total)
-            .totalPages((int) Math.ceil((double) total / pageRequest.getSize()))
-            .build();
+    public List<Item> findWithPagination(ItemCategory category, String keyword, int limit, int offset) {
+        return itemMapper.findWithPagination(category, keyword, limit, offset);
     }
 
-    @Select("""
-        SELECT * FROM 品目マスタ
-        WHERE 品目コード LIKE #{pattern} OR 品目名 LIKE #{pattern}
-        ORDER BY 品目コード
-        LIMIT #{size} OFFSET #{offset}
-        """)
-    @ResultMap("itemMap")
-    List<Item> selectByKeyword(@Param("pattern") String pattern,
-                               @Param("offset") int offset,
-                               @Param("size") int size);
+    @Override
+    public long count(ItemCategory category, String keyword) {
+        return itemMapper.count(category, keyword);
+    }
 
-    @Select("""
-        SELECT COUNT(*) FROM 品目マスタ
-        WHERE 品目コード LIKE #{pattern} OR 品目名 LIKE #{pattern}
-        """)
-    long countByKeyword(@Param("pattern") String pattern);
+    // ... その他のメソッド
 }
 ```
 
@@ -2143,68 +2083,81 @@ public interface MyBatisItemRepository extends ItemRepository {
 ### 37.4 Controller 層の実装
 
 <details>
-<summary>ItemController.java（ページネーション対応）</summary>
+<summary>ItemWebController.java（ページネーション対応）</summary>
 
 ```java
-package com.example.production.infrastructure.web.controller;
+package com.example.pms.infrastructure.in.web;
 
-import com.example.production.application.port.in.ItemUseCase;
-import com.example.production.domain.model.common.PageInfo;
-import com.example.production.domain.model.common.PageRequest;
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.item.ItemCategory;
+import com.example.pms.application.port.in.ItemUseCase;
+import com.example.pms.domain.model.common.PageResult;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * 品目マスタ Controller（ページネーション対応）
+ * 品目マスタ画面 Controller（モノリス版）.
  */
 @Controller
 @RequestMapping("/items")
-public class ItemController {
+public class ItemWebController {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final ItemUseCase itemUseCase;
 
-    public ItemController(ItemUseCase itemUseCase) {
+    public ItemWebController(ItemUseCase itemUseCase) {
         this.itemUseCase = itemUseCase;
     }
 
     /**
-     * 品目一覧画面（ページネーション対応）
+     * 品目一覧画面.
      */
     @GetMapping
     public String list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "itemCode") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) ItemCategory category,
             @RequestParam(required = false) String keyword,
             Model model) {
 
-        PageRequest pageRequest = PageRequest.of(page, size, sortBy, sortDir);
-
-        PageInfo<Item> pageInfo;
-        if (keyword != null && !keyword.isBlank()) {
-            pageInfo = itemUseCase.searchItems(keyword, pageRequest);
-        } else if (category != null) {
-            pageInfo = itemUseCase.getItemsByCategory(category, pageRequest);
-        } else {
-            pageInfo = itemUseCase.getAllItems(pageRequest);
+        // ページサイズの上限を設定
+        int pageSize = Math.min(size, MAX_PAGE_SIZE);
+        if (pageSize <= 0) {
+            pageSize = DEFAULT_PAGE_SIZE;
         }
 
-        model.addAttribute("pageInfo", pageInfo);
+        PageResult<Item> pageResult = itemUseCase.getItems(page, pageSize, category, keyword);
+
+        model.addAttribute("items", pageResult.getContent());
+        model.addAttribute("page", pageResult);
+        model.addAttribute("currentSize", pageSize);
         model.addAttribute("categories", ItemCategory.values());
         model.addAttribute("selectedCategory", category);
         model.addAttribute("keyword", keyword);
-        model.addAttribute("sortBy", sortBy);
-        model.addAttribute("sortDir", sortDir);
 
         return "items/list";
     }
+}
+```
+
+</details>
+
+<details>
+<summary>ItemService.java（ページネーション対応 UseCase 実装）</summary>
+
+```java
+@Override
+@Transactional(readOnly = true)
+public PageResult<Item> getItems(int page, int size, ItemCategory category, String keyword) {
+    int offset = page * size;
+    List<Item> items = itemRepository.findWithPagination(category, keyword, size, offset);
+    long totalElements = itemRepository.count(category, keyword);
+    return new PageResult<>(items, page, size, totalElements);
 }
 ```
 
@@ -2221,167 +2174,159 @@ public class ItemController {
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default}">
+      layout:decorate="~{layout/default}"
+      lang="ja">
 <head>
-    <title>品目マスタ</title>
+    <title>品目一覧</title>
 </head>
 <body>
-<div layout:fragment="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>品目マスタ</h1>
-        <a th:href="@{/items/new}" class="btn btn-primary">新規登録</a>
-    </div>
-
-    <!-- 検索フォーム -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form th:action="@{/items}" method="get" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">キーワード検索</label>
-                    <input type="text" class="form-control" name="keyword"
-                           th:value="${keyword}" placeholder="品目コードまたは品名">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">品目区分</label>
-                    <select class="form-select" name="category">
-                        <option value="">すべて</option>
-                        <option th:each="cat : ${categories}"
-                                th:value="${cat}"
-                                th:text="${cat.displayName}"
-                                th:selected="${cat == selectedCategory}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">表示件数</label>
-                    <select class="form-select" name="size">
-                        <option th:each="s : ${T(java.util.Arrays).asList(10, 20, 50, 100)}"
-                                th:value="${s}"
-                                th:text="${s + '件'}"
-                                th:selected="${s == pageInfo.pageSize}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-secondary">検索</button>
-                </div>
-            </form>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>品目一覧</h1>
+            <a th:href="@{/items/new}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> 新規登録
+            </a>
         </div>
-    </div>
 
-    <!-- 件数表示 -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="text-muted">
-            全 <span th:text="${pageInfo.totalElements}">0</span> 件中
-            <span th:text="${pageInfo.startRecord}">1</span> -
-            <span th:text="${pageInfo.endRecord}">20</span> 件を表示
+        <!-- 検索フォーム -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/items}" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="category" class="form-label">品目区分</label>
+                        <select id="category" name="category" class="form-select">
+                            <option value="">すべて</option>
+                            <option th:each="cat : ${categories}"
+                                    th:value="${cat}"
+                                    th:text="${cat.displayName}"
+                                    th:selected="${cat == selectedCategory}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="keyword" class="form-label">キーワード</label>
+                        <input type="text" id="keyword" name="keyword" class="form-control"
+                               th:value="${keyword}" placeholder="品目コードまたは品名">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="size" class="form-label">表示件数</label>
+                        <select id="size" name="size" class="form-select">
+                            <option value="10" th:selected="${currentSize == 10}">10件</option>
+                            <option value="20" th:selected="${currentSize == 20}">20件</option>
+                            <option value="50" th:selected="${currentSize == 50}">50件</option>
+                            <option value="100" th:selected="${currentSize == 100}">100件</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-secondary me-2">
+                            <i class="bi bi-search"></i> 検索
+                        </button>
+                        <a th:href="@{/items}" class="btn btn-outline-secondary">クリア</a>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div>
-            <!-- ソート選択 -->
-            <div class="btn-group">
-                <a th:href="@{/items(page=0, size=${pageInfo.pageSize}, sortBy='itemCode', sortDir=${sortBy == 'itemCode' && sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, category=${selectedCategory})}"
-                   class="btn btn-sm"
-                   th:classappend="${sortBy == 'itemCode'} ? 'btn-primary' : 'btn-outline-primary'">
-                    品目コード
-                    <span th:if="${sortBy == 'itemCode'}"
-                          th:text="${sortDir == 'asc'} ? '↑' : '↓'"></span>
-                </a>
-                <a th:href="@{/items(page=0, size=${pageInfo.pageSize}, sortBy='itemName', sortDir=${sortBy == 'itemName' && sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, category=${selectedCategory})}"
-                   class="btn btn-sm"
-                   th:classappend="${sortBy == 'itemName'} ? 'btn-primary' : 'btn-outline-primary'">
-                    品名
-                    <span th:if="${sortBy == 'itemName'}"
-                          th:text="${sortDir == 'asc'} ? '↑' : '↓'"></span>
-                </a>
+
+        <!-- 品目一覧テーブル -->
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(items)}" class="alert alert-info">
+                    品目が登録されていません。
+                </div>
+                <table th:if="${not #lists.isEmpty(items)}" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>品目コード</th>
+                            <th>品名</th>
+                            <th>品目区分</th>
+                            <th>単位</th>
+                            <th>リードタイム</th>
+                            <th>安全在庫</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${items}">
+                            <td>
+                                <a th:href="@{/items/{code}(code=${item.itemCode})}"
+                                   th:text="${item.itemCode}"></a>
+                            </td>
+                            <td th:text="${item.itemName}"></td>
+                            <td th:text="${item.itemCategory?.displayName}"></td>
+                            <td th:text="${item.unitCode}"></td>
+                            <td th:text="${item.leadTime}"></td>
+                            <td th:text="${item.safetyStock}"></td>
+                            <td>
+                                <a th:href="@{/items/{code}/edit(code=${item.itemCode})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{/items/{code}/delete(code=${item.itemCode})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('この品目を削除してもよろしいですか？');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ページネーション -->
+                <div class="mt-3" th:if="${page != null}">
+                    <div class="text-muted text-center mb-2">
+                        <span th:if="${page.totalElements > 0}">
+                            <span th:text="${page.page * page.size + 1}">1</span> -
+                            <span th:text="${page.page * page.size + #lists.size(items)}">10</span> 件
+                            （全 <span th:text="${page.totalElements}">0</span> 件）
+                        </span>
+                        <span th:if="${page.totalElements == 0}">0 件</span>
+                    </div>
+
+                    <nav th:if="${page.totalPages > 1}" aria-label="ページナビゲーション">
+                        <ul class="pagination justify-content-center mb-0">
+                            <!-- 最初のページへ -->
+                            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{/items(page=0, size=${currentSize}, category=${selectedCategory}, keyword=${keyword})}">&laquo;</a>
+                            </li>
+                            <!-- 前のページへ -->
+                            <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+                                <a class="page-link" th:href="@{/items(page=${page.page - 1}, size=${currentSize}, category=${selectedCategory}, keyword=${keyword})}">&lsaquo;</a>
+                            </li>
+
+                            <!-- ページ番号 -->
+                            <th:block th:with="startPage=${page.page > 2 ? page.page - 2 : 0},
+                                               endPage=${page.page + 2 < page.totalPages - 1 ? page.page + 2 : page.totalPages - 1}">
+                                <li class="page-item" th:if="${startPage > 0}">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                                    class="page-item"
+                                    th:classappend="${i == page.page} ? 'active'">
+                                    <a class="page-link"
+                                       th:href="@{/items(page=${i}, size=${currentSize}, category=${selectedCategory}, keyword=${keyword})}"
+                                       th:text="${i + 1}">1</a>
+                                </li>
+                                <li class="page-item" th:if="${endPage < page.totalPages - 1}">
+                                    <span class="page-link">...</span>
+                                </li>
+                            </th:block>
+
+                            <!-- 次のページへ -->
+                            <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+                                <a class="page-link" th:href="@{/items(page=${page.page + 1}, size=${currentSize}, category=${selectedCategory}, keyword=${keyword})}">&rsaquo;</a>
+                            </li>
+                            <!-- 最後のページへ -->
+                            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/items(page=${page.totalPages - 1}, size=${currentSize}, category=${selectedCategory}, keyword=${keyword})}">&raquo;</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- 品目一覧テーブル -->
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-striped table-hover" th:if="${not #lists.isEmpty(pageInfo.content)}">
-                <thead>
-                    <tr>
-                        <th>品目コード</th>
-                        <th>品名</th>
-                        <th>品目区分</th>
-                        <th>リードタイム</th>
-                        <th>安全在庫</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="item : ${pageInfo.content}">
-                        <td>
-                            <a th:href="@{/items/{code}(code=${item.itemCode})}"
-                               th:text="${item.itemCode}"></a>
-                        </td>
-                        <td th:text="${item.itemName}"></td>
-                        <td>
-                            <span class="badge"
-                                  th:classappend="${item.category.name() == 'PRODUCT'} ? 'bg-primary' : 'bg-secondary'"
-                                  th:text="${item.category.displayName}"></span>
-                        </td>
-                        <td th:text="${item.leadTime != null} ? ${item.leadTime + ' 日'} : '-'"></td>
-                        <td th:text="${item.safetyStock != null} ? ${item.safetyStock} : '-'"></td>
-                        <td>
-                            <a th:href="@{/items/{code}/edit(code=${item.itemCode})}"
-                               class="btn btn-sm btn-outline-primary">編集</a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div th:if="${#lists.isEmpty(pageInfo.content)}" class="alert alert-info">
-                該当する品目がありません。
-            </div>
-        </div>
-    </div>
-
-    <!-- ページネーション -->
-    <nav th:if="${pageInfo.totalPages > 1}" class="mt-4">
-        <ul class="pagination justify-content-center">
-            <!-- 最初へ -->
-            <li class="page-item" th:classappend="${pageInfo.first} ? 'disabled'">
-                <a class="page-link"
-                   th:href="@{/items(page=0, size=${pageInfo.pageSize}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, category=${selectedCategory})}"
-                   th:if="${!pageInfo.first}">«</a>
-                <span class="page-link" th:if="${pageInfo.first}">«</span>
-            </li>
-
-            <!-- 前へ -->
-            <li class="page-item" th:classappend="${pageInfo.first} ? 'disabled'">
-                <a class="page-link"
-                   th:href="@{/items(page=${pageInfo.currentPage - 1}, size=${pageInfo.pageSize}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, category=${selectedCategory})}"
-                   th:if="${pageInfo.hasPrevious()}">‹</a>
-                <span class="page-link" th:if="${!pageInfo.hasPrevious()}">‹</span>
-            </li>
-
-            <!-- ページ番号 -->
-            <li th:each="pageNum : ${pageInfo.pageNumbers}"
-                class="page-item"
-                th:classappend="${pageNum == pageInfo.currentPage} ? 'active'">
-                <a class="page-link"
-                   th:href="@{/items(page=${pageNum}, size=${pageInfo.pageSize}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, category=${selectedCategory})}"
-                   th:text="${pageNum + 1}"></a>
-            </li>
-
-            <!-- 次へ -->
-            <li class="page-item" th:classappend="${pageInfo.last} ? 'disabled'">
-                <a class="page-link"
-                   th:href="@{/items(page=${pageInfo.currentPage + 1}, size=${pageInfo.pageSize}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, category=${selectedCategory})}"
-                   th:if="${pageInfo.hasNext()}">›</a>
-                <span class="page-link" th:if="${!pageInfo.hasNext()}">›</span>
-            </li>
-
-            <!-- 最後へ -->
-            <li class="page-item" th:classappend="${pageInfo.last} ? 'disabled'">
-                <a class="page-link"
-                   th:href="@{/items(page=${pageInfo.totalPages - 1}, size=${pageInfo.pageSize}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, category=${selectedCategory})}"
-                   th:if="${!pageInfo.last}">»</a>
-                <span class="page-link" th:if="${pageInfo.last}">»</span>
-            </li>
-        </ul>
-    </nav>
-</div>
 </body>
 </html>
 ```
@@ -2402,55 +2347,64 @@ public class ItemController {
 <html xmlns:th="http://www.thymeleaf.org">
 
 <!-- ページネーションコンポーネント -->
-<nav th:fragment="pagination(pageInfo, baseUrl, params)" th:if="${pageInfo.totalPages > 1}" class="mt-4">
+<nav th:fragment="pagination(page, currentSize, baseUrl, params)" th:if="${page.totalPages > 1}" class="mt-4">
     <ul class="pagination justify-content-center">
         <!-- 最初へ -->
-        <li class="page-item" th:classappend="${pageInfo.first} ? 'disabled'">
+        <li class="page-item" th:classappend="${page.first} ? 'disabled'">
             <a class="page-link"
-               th:href="${baseUrl + '?page=0&size=' + pageInfo.pageSize + (params != null ? '&' + params : '')}"
-               th:if="${!pageInfo.first}">«</a>
-            <span class="page-link" th:if="${pageInfo.first}">«</span>
+               th:href="${baseUrl + '?page=0&size=' + currentSize + (params != null ? '&' + params : '')}"
+               th:if="${!page.first}">&laquo;</a>
+            <span class="page-link" th:if="${page.first}">&laquo;</span>
         </li>
 
         <!-- 前へ -->
-        <li class="page-item" th:classappend="${!pageInfo.hasPrevious()} ? 'disabled'">
+        <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
             <a class="page-link"
-               th:href="${baseUrl + '?page=' + (pageInfo.currentPage - 1) + '&size=' + pageInfo.pageSize + (params != null ? '&' + params : '')}"
-               th:if="${pageInfo.hasPrevious()}">‹</a>
-            <span class="page-link" th:if="${!pageInfo.hasPrevious()}">‹</span>
+               th:href="${baseUrl + '?page=' + (page.page - 1) + '&size=' + currentSize + (params != null ? '&' + params : '')}"
+               th:if="${page.hasPrevious()}">&lsaquo;</a>
+            <span class="page-link" th:if="${!page.hasPrevious()}">&lsaquo;</span>
         </li>
 
-        <!-- ページ番号 -->
-        <li th:each="pageNum : ${pageInfo.pageNumbers}"
-            class="page-item"
-            th:classappend="${pageNum == pageInfo.currentPage} ? 'active'">
-            <a class="page-link"
-               th:href="${baseUrl + '?page=' + pageNum + '&size=' + pageInfo.pageSize + (params != null ? '&' + params : '')}"
-               th:text="${pageNum + 1}"></a>
-        </li>
+        <!-- ページ番号（前後2ページ表示） -->
+        <th:block th:with="startPage=${page.page > 2 ? page.page - 2 : 0},
+                           endPage=${page.page + 2 < page.totalPages - 1 ? page.page + 2 : page.totalPages - 1}">
+            <li class="page-item" th:if="${startPage > 0}">
+                <span class="page-link">...</span>
+            </li>
+            <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                class="page-item"
+                th:classappend="${i == page.page} ? 'active'">
+                <a class="page-link"
+                   th:href="${baseUrl + '?page=' + i + '&size=' + currentSize + (params != null ? '&' + params : '')}"
+                   th:text="${i + 1}"></a>
+            </li>
+            <li class="page-item" th:if="${endPage < page.totalPages - 1}">
+                <span class="page-link">...</span>
+            </li>
+        </th:block>
 
         <!-- 次へ -->
-        <li class="page-item" th:classappend="${!pageInfo.hasNext()} ? 'disabled'">
+        <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
             <a class="page-link"
-               th:href="${baseUrl + '?page=' + (pageInfo.currentPage + 1) + '&size=' + pageInfo.pageSize + (params != null ? '&' + params : '')}"
-               th:if="${pageInfo.hasNext()}">›</a>
-            <span class="page-link" th:if="${!pageInfo.hasNext()}">›</span>
+               th:href="${baseUrl + '?page=' + (page.page + 1) + '&size=' + currentSize + (params != null ? '&' + params : '')}"
+               th:if="${page.hasNext()}">&rsaquo;</a>
+            <span class="page-link" th:if="${!page.hasNext()}">&rsaquo;</span>
         </li>
 
         <!-- 最後へ -->
-        <li class="page-item" th:classappend="${pageInfo.last} ? 'disabled'">
+        <li class="page-item" th:classappend="${page.last} ? 'disabled'">
             <a class="page-link"
-               th:href="${baseUrl + '?page=' + (pageInfo.totalPages - 1) + '&size=' + pageInfo.pageSize + (params != null ? '&' + params : '')}"
-               th:if="${!pageInfo.last}">»</a>
-            <span class="page-link" th:if="${pageInfo.last}">»</span>
+               th:href="${baseUrl + '?page=' + (page.totalPages - 1) + '&size=' + currentSize + (params != null ? '&' + params : '')}"
+               th:if="${!page.last}">&raquo;</a>
+            <span class="page-link" th:if="${page.last}">&raquo;</span>
         </li>
     </ul>
 
     <!-- ページ情報 -->
     <div class="text-center text-muted small">
-        <span th:text="${pageInfo.currentPage + 1}"></span> /
-        <span th:text="${pageInfo.totalPages}"></span> ページ
-        （全 <span th:text="${pageInfo.totalElements}"></span> 件）
+        <span th:text="${page.page + 1}"></span> /
+        <span th:text="${page.totalPages}"></span> ページ
+        （全 <span th:text="${page.totalElements}"></span> 件）
     </div>
 </nav>
 
@@ -2465,14 +2419,16 @@ public class ItemController {
 ```html
 <!-- 品目一覧での使用例 -->
 <th:block th:replace="~{fragments/pagination :: pagination(
-    ${pageInfo},
+    ${page},
+    ${currentSize},
     '/items',
-    'sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir} + '&keyword=' + ${keyword}
+    'category=' + ${selectedCategory} + '&keyword=' + ${keyword}
 )}"></th:block>
 
 <!-- 発注一覧での使用例 -->
 <th:block th:replace="~{fragments/pagination :: pagination(
-    ${pageInfo},
+    ${page},
+    ${currentSize},
     '/purchase-orders',
     'status=' + ${status}
 )}"></th:block>
@@ -2504,9 +2460,9 @@ public class ItemController {
     <!-- 件数表示 -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="text-muted">
-            全 <span th:text="${pageInfo.totalElements}">0</span> 件中
-            <span th:text="${pageInfo.startRecord}">1</span> -
-            <span th:text="${pageInfo.endRecord}">20</span> 件を表示
+            全 <span th:text="${page.totalElements}">0</span> 件中
+            <span th:text="${page.page * page.size + 1}">1</span> -
+            <span th:text="${page.page * page.size + #lists.size(items)}">20</span> 件を表示
         </div>
     </div>
 
@@ -2516,20 +2472,23 @@ public class ItemController {
     </table>
 
     <!-- ページネーション（htmx対応） -->
-    <nav th:if="${pageInfo.totalPages > 1}" class="mt-4">
+    <nav th:if="${page.totalPages > 1}" class="mt-4">
         <ul class="pagination justify-content-center">
-            <li th:each="pageNum : ${pageInfo.pageNumbers}"
-                class="page-item"
-                th:classappend="${pageNum == pageInfo.currentPage} ? 'active'">
-                <a class="page-link"
-                   th:href="@{/items(page=${pageNum}, size=${pageInfo.pageSize})}"
-                   hx-get="/items/table"
-                   th:attr="hx-get=@{/items/table(page=${pageNum}, size=${pageInfo.pageSize})}"
-                   hx-target="#items-container"
-                   hx-swap="innerHTML"
-                   hx-push-url="true"
-                   th:text="${pageNum + 1}"></a>
-            </li>
+            <th:block th:with="startPage=${page.page > 2 ? page.page - 2 : 0},
+                               endPage=${page.page + 2 < page.totalPages - 1 ? page.page + 2 : page.totalPages - 1}">
+                <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                    class="page-item"
+                    th:classappend="${i == page.page} ? 'active'">
+                    <a class="page-link"
+                       th:href="@{/items(page=${i}, size=${currentSize})}"
+                       hx-get="/items/table"
+                       th:attr="hx-get=@{/items/table(page=${i}, size=${currentSize})}"
+                       hx-target="#items-container"
+                       hx-swap="innerHTML"
+                       hx-push-url="true"
+                       th:text="${i + 1}"></a>
+                </li>
+            </th:block>
         </ul>
     </nav>
 </div>
@@ -2545,7 +2504,7 @@ public class ItemController {
 ```java
 @Controller
 @RequestMapping("/items")
-public class ItemController {
+public class ItemWebController {
 
     /**
      * テーブル部分のみを返す（htmx用）
@@ -2554,11 +2513,16 @@ public class ItemController {
     public String table(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) ItemCategory category,
+            @RequestParam(required = false) String keyword,
             Model model) {
 
-        PageRequest pageRequest = PageRequest.of(page, size);
-        PageInfo<Item> pageInfo = itemUseCase.getAllItems(pageRequest);
-        model.addAttribute("pageInfo", pageInfo);
+        int pageSize = Math.min(size, MAX_PAGE_SIZE);
+        PageResult<Item> pageResult = itemUseCase.getItems(page, pageSize, category, keyword);
+
+        model.addAttribute("items", pageResult.getContent());
+        model.addAttribute("page", pageResult);
+        model.addAttribute("currentSize", pageSize);
 
         // フラグメントのみを返す
         return "items/fragments :: itemsTable";

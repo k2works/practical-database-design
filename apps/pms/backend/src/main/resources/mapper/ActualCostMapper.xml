@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ActualCostMapper">
+
+    <resultMap id="actualCostResultMap" type="com.example.pms.domain.model.cost.ActualCost">
+        <id property="id" column="ID"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="completedQuantity" column="完成数量"/>
+        <result property="actualMaterialCost" column="実際材料費"/>
+        <result property="actualLaborCost" column="実際労務費"/>
+        <result property="actualExpense" column="実際経費"/>
+        <result property="actualManufacturingCost" column="実際製造原価"/>
+        <result property="unitCost" column="単位原価"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- リレーション付き ResultMap -->
+    <resultMap id="actualCostWithRelationsResultMap" type="com.example.pms.domain.model.cost.ActualCost">
+        <id property="id" column="ID"/>
+        <result property="workOrderNumber" column="作業指示番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="completedQuantity" column="完成数量"/>
+        <result property="actualMaterialCost" column="実際材料費"/>
+        <result property="actualLaborCost" column="実際労務費"/>
+        <result property="actualExpense" column="実際経費"/>
+        <result property="actualManufacturingCost" column="実際製造原価"/>
+        <result property="unitCost" column="単位原価"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+        <collection property="materialConsumptions"
+                    column="作業指示番号"
+                    select="com.example.pms.infrastructure.out.persistence.mapper.MaterialConsumptionMapper.findByWorkOrderNumber"/>
+        <collection property="laborHours"
+                    column="作業指示番号"
+                    select="com.example.pms.infrastructure.out.persistence.mapper.LaborHoursMapper.findByWorkOrderNumber"/>
+        <collection property="overheadAllocations"
+                    column="作業指示番号"
+                    select="com.example.pms.infrastructure.out.persistence.mapper.OverheadAllocationMapper.findByWorkOrderNumber"/>
+    </resultMap>
+
+    <select id="findWithPagination" resultMap="actualCostResultMap">
+        SELECT * FROM "実際原価データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "作業指示番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "実際原価データ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("作業指示番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" resultMap="actualCostResultMap">
+        SELECT * FROM "実際原価データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByWorkOrderNumber" resultMap="actualCostResultMap">
+        SELECT * FROM "実際原価データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </select>
+
+    <select id="findByWorkOrderNumberWithRelations" resultMap="actualCostWithRelationsResultMap">
+        SELECT * FROM "実際原価データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </select>
+
+    <select id="findAll" resultMap="actualCostResultMap">
+        SELECT * FROM "実際原価データ" ORDER BY "作業指示番号"
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "実際原価データ" (
+            "作業指示番号", "品目コード", "完成数量",
+            "実際材料費", "実際労務費", "実際経費",
+            "実際製造原価", "単位原価"
+        ) VALUES (
+            #{workOrderNumber}, #{itemCode}, #{completedQuantity},
+            #{actualMaterialCost}, #{actualLaborCost}, #{actualExpense},
+            #{actualManufacturingCost}, #{unitCost}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE "実際原価データ"
+        SET "完成数量" = #{completedQuantity},
+            "実際材料費" = #{actualMaterialCost},
+            "実際労務費" = #{actualLaborCost},
+            "実際経費" = #{actualExpense},
+            "実際製造原価" = #{actualManufacturingCost},
+            "単位原価" = #{unitCost},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "作業指示番号" = #{workOrderNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 原価再計算による更新（楽観ロック対応） -->
+    <update id="recalculateWithOptimisticLock">
+        UPDATE "実際原価データ"
+        SET "実際材料費" = #{actualMaterialCost},
+            "実際労務費" = #{actualLaborCost},
+            "実際経費" = #{actualExpense},
+            "実際製造原価" = #{actualMaterialCost} + #{actualLaborCost} + #{actualExpense},
+            "単位原価" = CASE
+                WHEN "完成数量" > 0
+                THEN (#{actualMaterialCost} + #{actualLaborCost} + #{actualExpense}) / "完成数量"
+                ELSE 0
+            END,
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "作業指示番号" = #{workOrderNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- バージョン取得 -->
+    <select id="findVersionByWorkOrderNumber" resultType="java.lang.Integer">
+        SELECT "バージョン" FROM "実際原価データ"
+        WHERE "作業指示番号" = #{workOrderNumber}
+    </select>
+
+    <delete id="deleteByWorkOrderNumber">
+        DELETE FROM "実際原価データ" WHERE "作業指示番号" = #{workOrderNumber}
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE FROM "実際原価データ"
+    </delete>
+
+</mapper>

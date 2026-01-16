@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ReceivingMapper">
+
+    <resultMap id="ReceivingResultMap" type="com.example.pms.domain.model.purchase.Receiving">
+        <id property="id" column="ID"/>
+        <result property="receivingNumber" column="入荷番号"/>
+        <result property="purchaseOrderNumber" column="発注番号"/>
+        <result property="lineNumber" column="発注行番号"/>
+        <result property="receivingDate" column="入荷日"/>
+        <result property="receiverCode" column="入荷担当者コード"/>
+        <result property="receivingType" column="入荷受入区分"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="miscellaneousItemFlag" column="諸口品目区分"/>
+        <result property="receivingQuantity" column="入荷数量"/>
+        <result property="remarks" column="入荷備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- 検査を含むResultMap（nested select） -->
+    <resultMap id="ReceivingWithInspectionsResultMap" type="com.example.pms.domain.model.purchase.Receiving"
+               extends="ReceivingResultMap">
+        <collection property="inspections" ofType="com.example.pms.domain.model.purchase.Inspection"
+                    column="入荷番号" select="com.example.pms.infrastructure.out.persistence.mapper.InspectionMapper.findByReceivingNumber"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.Receiving"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "入荷受入データ" (
+            "入荷番号", "発注番号", "発注行番号", "入荷日", "入荷担当者コード",
+            "入荷受入区分", "品目コード", "諸口品目区分", "入荷数量", "入荷備考", "作成者", "更新者"
+        ) VALUES (
+            #{receivingNumber},
+            #{purchaseOrderNumber},
+            #{lineNumber},
+            #{receivingDate},
+            #{receiverCode},
+            #{receivingType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler}::入荷受入区分,
+            #{itemCode},
+            #{miscellaneousItemFlag},
+            #{receivingQuantity},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.purchase.Receiving"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "入荷受入データ" (
+            "入荷番号", "発注番号", "発注行番号", "入荷日", "入荷担当者コード",
+            "入荷受入区分", "品目コード", "諸口品目区分", "入荷数量", "入荷備考", "作成者", "更新者"
+        ) VALUES (
+            #{receivingNumber},
+            #{purchaseOrderNumber},
+            #{lineNumber},
+            #{receivingDate},
+            #{receiverCode},
+            #{receivingType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler},
+            #{itemCode},
+            #{miscellaneousItemFlag},
+            #{receivingQuantity},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByReceivingNumber" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ" WHERE "入荷番号" = #{receivingNumber}
+    </select>
+
+    <!-- 検査を含めて取得 -->
+    <select id="findByReceivingNumberWithInspections" resultMap="ReceivingWithInspectionsResultMap">
+        SELECT * FROM "入荷受入データ" WHERE "入荷番号" = #{receivingNumber}
+    </select>
+
+    <select id="findByPurchaseOrderNumber" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ" WHERE "発注番号" = #{purchaseOrderNumber} ORDER BY "入荷日" DESC
+    </select>
+
+    <select id="findByPurchaseOrderNumberAndLineNumber" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ"
+        WHERE "発注番号" = #{purchaseOrderNumber} AND "発注行番号" = #{lineNumber}
+        ORDER BY "入荷日" DESC
+    </select>
+
+    <select id="findAll" resultMap="ReceivingResultMap">
+        SELECT * FROM "入荷受入データ" ORDER BY "入荷日" DESC
+    </select>
+
+    <!-- ページネーション付き検索（PostgreSQL用） -->
+    <select id="findWithPagination" resultMap="ReceivingResultMap" databaseId="postgresql">
+        SELECT * FROM "入荷受入データ"
+        <where>
+            <if test="receivingType != null">
+                AND "入荷受入区分" = #{receivingType}::入荷受入区分
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("入荷番号" LIKE '%' || #{keyword} || '%'
+                     OR "発注番号" LIKE '%' || #{keyword} || '%'
+                     OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "入荷日" DESC, "入荷番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- ページネーション付き検索（H2用） -->
+    <select id="findWithPagination" resultMap="ReceivingResultMap" databaseId="h2">
+        SELECT * FROM "入荷受入データ"
+        <where>
+            <if test="receivingType != null">
+                AND "入荷受入区分" = #{receivingType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("入荷番号" LIKE '%' || #{keyword} || '%'
+                     OR "発注番号" LIKE '%' || #{keyword} || '%'
+                     OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "入荷日" DESC, "入荷番号" DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得（PostgreSQL用） -->
+    <select id="count" resultType="long" databaseId="postgresql">
+        SELECT COUNT(*) FROM "入荷受入データ"
+        <where>
+            <if test="receivingType != null">
+                AND "入荷受入区分" = #{receivingType}::入荷受入区分
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("入荷番号" LIKE '%' || #{keyword} || '%'
+                     OR "発注番号" LIKE '%' || #{keyword} || '%'
+                     OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 件数取得（H2用） -->
+    <select id="count" resultType="long" databaseId="h2">
+        SELECT COUNT(*) FROM "入荷受入データ"
+        <where>
+            <if test="receivingType != null">
+                AND "入荷受入区分" = #{receivingType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("入荷番号" LIKE '%' || #{keyword} || '%'
+                     OR "発注番号" LIKE '%' || #{keyword} || '%'
+                     OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 更新（PostgreSQL用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.purchase.Receiving" databaseId="postgresql">
+        UPDATE "入荷受入データ"
+        SET "発注番号" = #{purchaseOrderNumber},
+            "発注行番号" = #{lineNumber},
+            "入荷日" = #{receivingDate},
+            "入荷担当者コード" = #{receiverCode},
+            "入荷受入区分" = #{receivingType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler}::入荷受入区分,
+            "品目コード" = #{itemCode},
+            "諸口品目区分" = #{miscellaneousItemFlag},
+            "入荷数量" = #{receivingQuantity},
+            "入荷備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "入荷番号" = #{receivingNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 更新（H2用） -->
+    <update id="update" parameterType="com.example.pms.domain.model.purchase.Receiving" databaseId="h2">
+        UPDATE "入荷受入データ"
+        SET "発注番号" = #{purchaseOrderNumber},
+            "発注行番号" = #{lineNumber},
+            "入荷日" = #{receivingDate},
+            "入荷担当者コード" = #{receiverCode},
+            "入荷受入区分" = #{receivingType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.ReceivingTypeTypeHandler},
+            "品目コード" = #{itemCode},
+            "諸口品目区分" = #{miscellaneousItemFlag},
+            "入荷数量" = #{receivingQuantity},
+            "入荷備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "入荷番号" = #{receivingNumber}
+          AND "バージョン" = #{version}
+    </update>
+
+    <!-- 削除 -->
+    <delete id="deleteByReceivingNumber">
+        DELETE FROM "入荷受入データ" WHERE "入荷番号" = #{receivingNumber}
+    </delete>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "入荷受入データ" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "入荷受入データ"
+    </delete>
+</mapper>

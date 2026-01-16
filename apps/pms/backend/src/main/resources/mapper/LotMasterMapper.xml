@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.LotMasterMapper">
+
+    <resultMap id="LotMasterResultMap" type="com.example.pms.domain.model.quality.LotMaster">
+        <id property="id" column="ID"/>
+        <result property="lotNumber" column="ロット番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="lotType" column="ロット種別"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler"/>
+        <result property="manufactureDate" column="製造日"/>
+        <result property="expirationDate" column="有効期限"/>
+        <result property="quantity" column="数量"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <!-- ロット構成を含むResultMap -->
+    <resultMap id="LotMasterWithCompositionsResultMap" type="com.example.pms.domain.model.quality.LotMaster"
+               extends="LotMasterResultMap">
+        <collection property="parentLotRelations" ofType="com.example.pms.domain.model.quality.LotComposition"
+                    column="ロット番号" select="com.example.pms.infrastructure.out.persistence.mapper.LotCompositionMapper.findByChildLotNumber"/>
+        <collection property="childLotRelations" ofType="com.example.pms.domain.model.quality.LotComposition"
+                    column="ロット番号" select="com.example.pms.infrastructure.out.persistence.mapper.LotCompositionMapper.findByParentLotNumber"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO "ロットマスタ" (
+            "ロット番号", "品目コード", "ロット種別",
+            "製造日", "有効期限", "数量", "倉庫コード", "備考"
+        ) VALUES (
+            #{lotNumber}, #{itemCode},
+            #{lotType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler},
+            #{manufactureDate}, #{expirationDate}, #{quantity}, #{warehouseCode}, #{remarks}
+        )
+    </insert>
+
+    <select id="findById" resultMap="LotMasterResultMap">
+        SELECT * FROM "ロットマスタ"
+        WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByLotNumber" resultMap="LotMasterResultMap">
+        SELECT * FROM "ロットマスタ"
+        WHERE "ロット番号" = #{lotNumber}
+    </select>
+
+    <select id="findByLotNumberWithCompositions" resultMap="LotMasterWithCompositionsResultMap">
+        SELECT * FROM "ロットマスタ"
+        WHERE "ロット番号" = #{lotNumber}
+    </select>
+
+    <select id="findByItemCode" resultMap="LotMasterResultMap">
+        SELECT * FROM "ロットマスタ"
+        WHERE "品目コード" = #{itemCode}
+        ORDER BY "製造日" DESC
+    </select>
+
+    <select id="findAll" resultMap="LotMasterResultMap">
+        SELECT * FROM "ロットマスタ"
+        ORDER BY "製造日" DESC, "ロット番号"
+    </select>
+
+    <!-- ページネーションで取得 -->
+    <select id="findWithPagination" resultMap="LotMasterResultMap">
+        SELECT * FROM "ロットマスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("ロット番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "製造日" DESC, "ロット番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "ロットマスタ"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                ("ロット番号" LIKE '%' || #{keyword} || '%'
+                OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- トレースフォワード: 子ロットから製造ロットを追跡 -->
+    <select id="traceForward" resultMap="LotMasterResultMap" databaseId="postgresql">
+        WITH RECURSIVE lot_tree AS (
+            SELECT lm.*, 0 AS level
+            FROM "ロットマスタ" lm
+            WHERE lm."ロット番号" = #{lotNumber}
+
+            UNION ALL
+
+            SELECT lm.*, lt.level + 1
+            FROM "ロットマスタ" lm
+            JOIN "ロット構成" lc ON lm."ロット番号" = lc."親ロット番号"
+            JOIN lot_tree lt ON lc."子ロット番号" = lt."ロット番号"
+            WHERE lt.level &lt; 10
+        )
+        SELECT * FROM lot_tree
+        ORDER BY level ASC
+    </select>
+
+    <!-- トレースバック: 親ロットから材料ロットを追跡 -->
+    <select id="traceBack" resultMap="LotMasterResultMap" databaseId="postgresql">
+        WITH RECURSIVE lot_tree AS (
+            SELECT lm.*, 0 AS level
+            FROM "ロットマスタ" lm
+            WHERE lm."ロット番号" = #{lotNumber}
+
+            UNION ALL
+
+            SELECT lm.*, lt.level + 1
+            FROM "ロットマスタ" lm
+            JOIN "ロット構成" lc ON lm."ロット番号" = lc."子ロット番号"
+            JOIN lot_tree lt ON lc."親ロット番号" = lt."ロット番号"
+            WHERE lt.level &lt; 10
+        )
+        SELECT * FROM lot_tree
+        ORDER BY level ASC
+    </select>
+
+    <!-- H2用のシンプルなトレース（再帰CTEなし、1レベルのみ） -->
+    <select id="traceForward" resultMap="LotMasterResultMap" databaseId="h2">
+        SELECT lm.* FROM "ロットマスタ" lm
+        WHERE lm."ロット番号" = #{lotNumber}
+        UNION
+        SELECT lm2.* FROM "ロットマスタ" lm2
+        JOIN "ロット構成" lc ON lm2."ロット番号" = lc."親ロット番号"
+        WHERE lc."子ロット番号" = #{lotNumber}
+    </select>
+
+    <select id="traceBack" resultMap="LotMasterResultMap" databaseId="h2">
+        SELECT lm.* FROM "ロットマスタ" lm
+        WHERE lm."ロット番号" = #{lotNumber}
+        UNION
+        SELECT lm2.* FROM "ロットマスタ" lm2
+        JOIN "ロット構成" lc ON lm2."ロット番号" = lc."子ロット番号"
+        WHERE lc."親ロット番号" = #{lotNumber}
+    </select>
+
+    <update id="update">
+        UPDATE "ロットマスタ" SET
+            "数量" = #{quantity},
+            "倉庫コード" = #{warehouseCode},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "バージョン" = "バージョン" + 1
+        WHERE "ロット番号" = #{lotNumber}
+        AND "バージョン" = #{version}
+    </update>
+
+    <delete id="deleteByLotNumber">
+        DELETE FROM "ロットマスタ"
+        WHERE "ロット番号" = #{lotNumber}
+    </delete>
+
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "ロット構成" CASCADE;
+        TRUNCATE TABLE "ロットマスタ" CASCADE
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "ロット構成";
+        DELETE FROM "ロットマスタ"
+    </delete>
+</mapper>

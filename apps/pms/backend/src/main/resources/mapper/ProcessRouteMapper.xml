@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ProcessRouteMapper">
+
+    <resultMap id="ProcessRouteResultMap" type="com.example.pms.domain.model.process.ProcessRoute">
+        <id property="itemCode" column="品目コード"/>
+        <id property="sequence" column="工順"/>
+        <result property="processCode" column="工程コード"/>
+        <result property="standardTime" column="標準作業時間"/>
+        <result property="setupTime" column="段取時間"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.pms.domain.model.process.ProcessRoute">
+        INSERT INTO "工程表" (
+            "品目コード", "工順", "工程コード", "標準作業時間", "段取時間",
+            "作成日時", "更新日時"
+        ) VALUES (
+            #{itemCode}, #{sequence}, #{processCode}, #{standardTime}, #{setupTime},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findByItemCodeAndSequence" resultMap="ProcessRouteResultMap">
+        SELECT * FROM "工程表"
+        WHERE "品目コード" = #{itemCode}
+          AND "工順" = #{sequence}
+    </select>
+
+    <select id="findByItemCode" resultMap="ProcessRouteResultMap">
+        SELECT * FROM "工程表"
+        WHERE "品目コード" = #{itemCode}
+        ORDER BY "工順"
+    </select>
+
+    <select id="findAll" resultMap="ProcessRouteResultMap">
+        SELECT * FROM "工程表"
+        ORDER BY "品目コード", "工順"
+    </select>
+
+    <update id="update" parameterType="com.example.pms.domain.model.process.ProcessRoute">
+        UPDATE "工程表" SET
+            "工程コード" = #{processCode},
+            "標準作業時間" = #{standardTime},
+            "段取時間" = #{setupTime},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "品目コード" = #{itemCode}
+          AND "工順" = #{sequence}
+    </update>
+
+    <delete id="deleteByItemCode">
+        DELETE FROM "工程表"
+        WHERE "品目コード" = #{itemCode}
+    </delete>
+
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "工程表" CASCADE
+    </delete>
+
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "工程表"
+    </delete>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="ProcessRouteResultMap">
+        SELECT * FROM "工程表"
+        WHERE 1=1
+        <if test="itemCode != null and itemCode != ''">
+            AND "品目コード" = #{itemCode}
+        </if>
+        ORDER BY "品目コード", "工順"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "工程表"
+        WHERE 1=1
+        <if test="itemCode != null and itemCode != ''">
+            AND "品目コード" = #{itemCode}
+        </if>
+    </select>
+
+    <delete id="deleteByItemCodeAndSequence">
+        DELETE FROM "工程表"
+        WHERE "品目コード" = #{itemCode}
+          AND "工順" = #{sequence}
+    </delete>
+</mapper>

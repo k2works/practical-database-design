@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>工数実績詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>工数実績詳細</h1>
+            <div>
+                <a th:href="@{/labor-hours/{no}/edit(no=${laborHours.laborHoursNumber})}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a th:href="@{/labor-hours}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 一覧に戻る
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">工数実績番号</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.laborHoursNumber}"></dd>
+
+                    <dt class="col-sm-3">作業指示番号</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.workOrderNumber}"></dd>
+
+                    <dt class="col-sm-3">品目コード</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.itemCode}"></dd>
+
+                    <dt class="col-sm-3">工順</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.sequence ?: '-'}"></dd>
+                </dl>
+
+                <hr>
+                <h5>工程・担当情報</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">工程コード</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.processCode ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">部門コード</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.departmentCode ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">担当者コード</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.employeeCode ?: '-'}"></dd>
+                </dl>
+
+                <hr>
+                <h5>作業情報</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">作業日</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.workDate}"></dd>
+
+                    <dt class="col-sm-3">工数（時間）</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.hours != null ? #numbers.formatDecimal(laborHours.hours, 1, 'COMMA', 2, 'POINT') : '-'}"></dd>
+                </dl>
+
+                <hr>
+                <h5>その他</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">備考</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.remarks ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">バージョン</dt>
+                    <dd class="col-sm-9" th:text="${laborHours.version}"></dd>
+                </dl>
+
+                <hr>
+                <div class="d-flex justify-content-end">
+                    <form th:action="@{/labor-hours/{no}/delete(no=${laborHours.laborHoursNumber})}"
+                          method="post" class="d-inline"
+                          onsubmit="return confirm('この工数実績を削除しますか？');">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> 削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

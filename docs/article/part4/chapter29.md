@@ -108,7 +108,7 @@ stop
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/InspectionJudgment.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 /**
  * 検査判定
@@ -148,9 +148,9 @@ public enum InspectionJudgment {
 
 ```java
 // src/main/java/com/example/sms/infrastructure/out/persistence/typehandler/InspectionJudgmentTypeHandler.java
-package com.example.sms.infrastructure.out.persistence.typehandler;
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.sms.domain.model.quality.InspectionJudgment;
+import com.example.pms.domain.model.quality.InspectionJudgment;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -205,7 +205,7 @@ public class InspectionJudgmentTypeHandler extends BaseTypeHandler<InspectionJud
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/DefectMaster.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.time.LocalDateTime;
@@ -273,7 +273,7 @@ stop
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/ReceivingInspection.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -289,7 +289,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReceivingInspection {
-    private Long id;
+    private Integer id;
     private String inspectionNumber;
     private String receivingNumber;
     private String purchaseOrderNumber;
@@ -305,7 +305,15 @@ public class ReceivingInspection {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private List<ReceivingInspectionResult> results;
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Item item;
+    private Supplier supplier;
+    @Builder.Default
+    private List<ReceivingInspectionResult> results = new ArrayList<>();
 }
 ```
 
@@ -318,24 +326,27 @@ public class ReceivingInspection {
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/ReceivingInspectionResult.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * 受入検査結果データエンティティ
+ * 受入検査結果データエンティティ.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReceivingInspectionResult {
-    private Long id;
+    private Integer id;
     private String inspectionNumber;
     private String defectCode;
     private BigDecimal quantity;
     private String remarks;
+
+    // リレーション
+    private Defect defect;
 }
 ```
 
@@ -350,10 +361,10 @@ public class ReceivingInspectionResult {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper">
 
     <resultMap id="ReceivingInspectionResultMap"
-               type="com.example.sms.domain.model.quality.ReceivingInspection">
+               type="com.example.pms.domain.model.quality.ReceivingInspection">
         <id property="id" column="ID"/>
         <result property="inspectionNumber" column="受入検査番号"/>
         <result property="receivingNumber" column="入荷番号"/>
@@ -366,16 +377,16 @@ public class ReceivingInspectionResult {
         <result property="passedQuantity" column="合格数"/>
         <result property="failedQuantity" column="不合格数"/>
         <result property="judgment" column="判定"
-                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
         <result property="remarks" column="備考"/>
         <result property="createdAt" column="作成日時"/>
         <result property="updatedAt" column="更新日時"/>
-        <collection property="results" ofType="com.example.sms.domain.model.quality.ReceivingInspectionResult"
+        <collection property="results" ofType="com.example.pms.domain.model.quality.ReceivingInspectionResult"
                     resultMap="ReceivingInspectionResultResultMap"/>
     </resultMap>
 
     <resultMap id="ReceivingInspectionResultResultMap"
-               type="com.example.sms.domain.model.quality.ReceivingInspectionResult">
+               type="com.example.pms.domain.model.quality.ReceivingInspectionResult">
         <id property="id" column="RESULT_ID"/>
         <result property="inspectionNumber" column="受入検査番号"/>
         <result property="defectCode" column="欠点コード"/>
@@ -415,7 +426,7 @@ public class ReceivingInspectionResult {
             #{inspectionNumber}, #{receivingNumber}, #{purchaseOrderNumber}, #{itemCode},
             #{supplierCode}, #{inspectionDate}, #{inspectorCode},
             #{inspectionQuantity}, #{passedQuantity}, #{failedQuantity},
-            #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
             #{remarks}
         )
     </insert>
@@ -433,7 +444,7 @@ public class ReceivingInspectionResult {
             "検査数量" = #{inspectionQuantity},
             "合格数" = #{passedQuantity},
             "不合格数" = #{failedQuantity},
-            "判定" = #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            "判定" = #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
             "備考" = #{remarks},
             "更新日時" = CURRENT_TIMESTAMP
         WHERE "受入検査番号" = #{inspectionNumber}
@@ -615,7 +626,7 @@ stop
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/ProcessInspection.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -624,14 +635,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 工程検査データエンティティ
+ * 工程検査データエンティティ.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProcessInspection {
-    private Long id;
+    private Integer id;
     private String inspectionNumber;
     private String workOrderNumber;
     private String processCode;
@@ -646,7 +657,15 @@ public class ProcessInspection {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private List<ProcessInspectionResult> results;
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Item item;
+    private Process process;
+    @Builder.Default
+    private List<ProcessInspectionResult> results = new ArrayList<>();
 }
 ```
 
@@ -659,24 +678,27 @@ public class ProcessInspection {
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/ProcessInspectionResult.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * 工程検査結果データエンティティ
+ * 工程検査結果データエンティティ.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProcessInspectionResult {
-    private Long id;
+    private Integer id;
     private String inspectionNumber;
     private String defectCode;
     private BigDecimal quantity;
     private String remarks;
+
+    // リレーション
+    private Defect defect;
 }
 ```
 
@@ -691,10 +713,10 @@ public class ProcessInspectionResult {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ProcessInspectionMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ProcessInspectionMapper">
 
     <resultMap id="ProcessInspectionResultMap"
-               type="com.example.sms.domain.model.quality.ProcessInspection">
+               type="com.example.pms.domain.model.quality.ProcessInspection">
         <id property="id" column="ID"/>
         <result property="inspectionNumber" column="工程検査番号"/>
         <result property="workOrderNumber" column="作業指示番号"/>
@@ -706,16 +728,16 @@ public class ProcessInspectionResult {
         <result property="passedQuantity" column="合格数"/>
         <result property="failedQuantity" column="不合格数"/>
         <result property="judgment" column="判定"
-                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
         <result property="remarks" column="備考"/>
         <result property="createdAt" column="作成日時"/>
         <result property="updatedAt" column="更新日時"/>
-        <collection property="results" ofType="com.example.sms.domain.model.quality.ProcessInspectionResult"
+        <collection property="results" ofType="com.example.pms.domain.model.quality.ProcessInspectionResult"
                     resultMap="ProcessInspectionResultResultMap"/>
     </resultMap>
 
     <resultMap id="ProcessInspectionResultResultMap"
-               type="com.example.sms.domain.model.quality.ProcessInspectionResult">
+               type="com.example.pms.domain.model.quality.ProcessInspectionResult">
         <id property="id" column="RESULT_ID"/>
         <result property="inspectionNumber" column="工程検査番号"/>
         <result property="defectCode" column="欠点コード"/>
@@ -756,7 +778,7 @@ public class ProcessInspectionResult {
             #{inspectionNumber}, #{workOrderNumber}, #{processCode}, #{itemCode},
             #{inspectionDate}, #{inspectorCode},
             #{inspectionQuantity}, #{passedQuantity}, #{failedQuantity},
-            #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
             #{remarks}
         )
     </insert>
@@ -774,7 +796,7 @@ public class ProcessInspectionResult {
             "検査数量" = #{inspectionQuantity},
             "合格数" = #{passedQuantity},
             "不合格数" = #{failedQuantity},
-            "判定" = #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            "判定" = #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
             "備考" = #{remarks},
             "更新日時" = CURRENT_TIMESTAMP
         WHERE "工程検査番号" = #{inspectionNumber}
@@ -942,7 +964,7 @@ stop
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/ShipmentInspection.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -951,14 +973,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 出荷検査データエンティティ
+ * 出荷検査データエンティティ.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShipmentInspection {
-    private Long id;
+    private Integer id;
     private String inspectionNumber;
     private String shipmentNumber;
     private String itemCode;
@@ -972,7 +994,14 @@ public class ShipmentInspection {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private List<ShipmentInspectionResult> results;
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Item item;
+    @Builder.Default
+    private List<ShipmentInspectionResult> results = new ArrayList<>();
 }
 ```
 
@@ -985,24 +1014,27 @@ public class ShipmentInspection {
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/ShipmentInspectionResult.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * 出荷検査結果データエンティティ
+ * 出荷検査結果データエンティティ.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShipmentInspectionResult {
-    private Long id;
+    private Integer id;
     private String inspectionNumber;
     private String defectCode;
     private BigDecimal quantity;
     private String remarks;
+
+    // リレーション
+    private Defect defect;
 }
 ```
 
@@ -1017,10 +1049,10 @@ public class ShipmentInspectionResult {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ShipmentInspectionMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ShipmentInspectionMapper">
 
     <resultMap id="ShipmentInspectionResultMap"
-               type="com.example.sms.domain.model.quality.ShipmentInspection">
+               type="com.example.pms.domain.model.quality.ShipmentInspection">
         <id property="id" column="ID"/>
         <result property="inspectionNumber" column="出荷検査番号"/>
         <result property="shipmentNumber" column="出荷番号"/>
@@ -1031,16 +1063,16 @@ public class ShipmentInspectionResult {
         <result property="passedQuantity" column="合格数"/>
         <result property="failedQuantity" column="不合格数"/>
         <result property="judgment" column="判定"
-                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
         <result property="remarks" column="備考"/>
         <result property="createdAt" column="作成日時"/>
         <result property="updatedAt" column="更新日時"/>
-        <collection property="results" ofType="com.example.sms.domain.model.quality.ShipmentInspectionResult"
+        <collection property="results" ofType="com.example.pms.domain.model.quality.ShipmentInspectionResult"
                     resultMap="ShipmentInspectionResultResultMap"/>
     </resultMap>
 
     <resultMap id="ShipmentInspectionResultResultMap"
-               type="com.example.sms.domain.model.quality.ShipmentInspectionResult">
+               type="com.example.pms.domain.model.quality.ShipmentInspectionResult">
         <id property="id" column="RESULT_ID"/>
         <result property="inspectionNumber" column="出荷検査番号"/>
         <result property="defectCode" column="欠点コード"/>
@@ -1072,7 +1104,7 @@ public class ShipmentInspectionResult {
         ) VALUES (
             #{inspectionNumber}, #{shipmentNumber}, #{itemCode}, #{inspectionDate},
             #{inspectorCode}, #{inspectionQuantity}, #{passedQuantity}, #{failedQuantity},
-            #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
             #{remarks}
         )
     </insert>
@@ -1090,7 +1122,7 @@ public class ShipmentInspectionResult {
             "検査数量" = #{inspectionQuantity},
             "合格数" = #{passedQuantity},
             "不合格数" = #{failedQuantity},
-            "判定" = #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
+            "判定" = #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler},
             "備考" = #{remarks},
             "更新日時" = CURRENT_TIMESTAMP
         WHERE "出荷検査番号" = #{inspectionNumber}
@@ -1242,7 +1274,7 @@ note right: 製品 → 材料 の追跡
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/LotType.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 /**
  * ロット種別
@@ -1281,9 +1313,9 @@ public enum LotType {
 
 ```java
 // src/main/java/com/example/sms/infrastructure/out/persistence/typehandler/LotTypeTypeHandler.java
-package com.example.sms.infrastructure.out.persistence.typehandler;
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.sms.domain.model.quality.LotType;
+import com.example.pms.domain.model.quality.LotType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -1334,7 +1366,7 @@ public class LotTypeTypeHandler extends BaseTypeHandler<LotType> {
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/LotMaster.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -1343,14 +1375,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * ロットマスタエンティティ
+ * ロットマスタエンティティ.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class LotMaster {
-    private Long id;
+    private Integer id;
     private String lotNumber;
     private String itemCode;
     private LotType lotType;
@@ -1362,8 +1394,25 @@ public class LotMaster {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private List<LotComposition> parentLotRelations;
-    private List<LotComposition> childLotRelations;
+    // 楽観ロック用バージョン
+    @Builder.Default
+    private Integer version = 1;
+
+    // リレーション
+    private Item item;
+    @Builder.Default
+    private List<LotComposition> parentLotRelations = new ArrayList<>();
+    @Builder.Default
+    private List<LotComposition> childLotRelations = new ArrayList<>();
+
+    /**
+     * 有効期限が切れているかチェック.
+     *
+     * @return 有効期限切れの場合 true
+     */
+    public boolean isExpired() {
+        return expirationDate != null && expirationDate.isBefore(LocalDate.now());
+    }
 }
 ```
 
@@ -1376,14 +1425,14 @@ public class LotMaster {
 
 ```java
 // src/main/java/com/example/sms/domain/model/quality/LotComposition.java
-package com.example.sms.domain.model.quality;
+package com.example.pms.domain.model.quality;
 
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * ロット構成エンティティ
+ * ロット構成エンティティ.
  * 親子ロット間の関係を管理（トレーサビリティ用）
  */
 @Data
@@ -1391,7 +1440,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LotComposition {
-    private Long id;
+    private Integer id;
     private String parentLotNumber;
     private String childLotNumber;
     private BigDecimal usedQuantity;
@@ -1410,14 +1459,14 @@ public class LotComposition {
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.LotMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.LotMapper">
 
-    <resultMap id="LotMasterResultMap" type="com.example.sms.domain.model.quality.LotMaster">
+    <resultMap id="LotMasterResultMap" type="com.example.pms.domain.model.quality.LotMaster">
         <id property="id" column="ID"/>
         <result property="lotNumber" column="ロット番号"/>
         <result property="itemCode" column="品目コード"/>
         <result property="lotType" column="ロット種別"
-                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler"/>
         <result property="manufactureDate" column="製造日"/>
         <result property="expirationDate" column="有効期限"/>
         <result property="quantity" column="数量"/>
@@ -1427,7 +1476,7 @@ public class LotComposition {
         <result property="updatedAt" column="更新日時"/>
     </resultMap>
 
-    <resultMap id="LotCompositionResultMap" type="com.example.sms.domain.model.quality.LotComposition">
+    <resultMap id="LotCompositionResultMap" type="com.example.pms.domain.model.quality.LotComposition">
         <id property="id" column="ID"/>
         <result property="parentLotNumber" column="親ロット番号"/>
         <result property="childLotNumber" column="子ロット番号"/>
@@ -1500,7 +1549,7 @@ public class LotComposition {
             "製造日", "有効期限", "数量", "倉庫コード", "備考"
         ) VALUES (
             #{lotNumber}, #{itemCode},
-            #{lotType, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler},
+            #{lotType, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler},
             #{manufactureDate}, #{expirationDate}, #{quantity}, #{warehouseCode}, #{remarks}
         )
     </insert>
@@ -1644,10 +1693,10 @@ end note
 
 ```java
 // src/main/java/com/example/sms/application/service/quality/TraceabilityService.java
-package com.example.sms.application.service.quality;
+package com.example.pms.application.service.quality;
 
-import com.example.sms.domain.model.quality.LotMaster;
-import com.example.sms.infrastructure.out.persistence.mapper.LotMapper;
+import com.example.pms.domain.model.quality.LotMaster;
+import com.example.pms.infrastructure.out.persistence.mapper.LotMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1819,11 +1868,20 @@ lot_master ||--o{ lot_composition : 子ロット
 
 ## 29.3 リレーションと楽観ロックの設計
 
-### MyBatis ネストした ResultMap によるリレーション設定
+### MyBatis ネストした select によるリレーション設定
 
-品質管理では、検査データ→検査結果→欠点マスタ、ロットマスタ→ロット構成といった親子関係があります。MyBatis でこれらの関係を効率的に取得するためのリレーション設定を実装します。
+品質管理では、検査データ→検査結果、ロットマスタ→ロット構成といった親子関係があります。MyBatis でこれらの関係を効率的に取得するために、ネストした select（Nested Select）方式を採用します。
 
-#### 受入検査データのネスト ResultMap（検査結果・欠点・品目・仕入先を含む）
+#### ネストした select 方式の利点
+
+| 観点 | 説明 |
+|-----|------|
+| **シンプルなクエリ** | 親テーブルのみを SELECT し、関連データは別クエリで取得 |
+| **遅延ロード対応** | 必要な時のみ関連データを取得可能 |
+| **N+1 問題への対応** | MyBatis のキャッシュ機能と組み合わせて最適化 |
+| **H2/PostgreSQL 両対応** | 複雑な JOIN を避けることで DB 互換性を確保 |
+
+#### 受入検査データのネスト select（検査結果を含む）
 
 <details>
 <summary>ReceivingInspectionMapper.xml（リレーション設定）</summary>
@@ -1834,102 +1892,40 @@ lot_master ||--o{ lot_composition : 子ロット
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/ReceivingInspectionMapper.xml -->
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper">
 
-    <!-- 受入検査データ with 検査結果・欠点・品目・仕入先 ResultMap -->
-    <resultMap id="receivingInspectionFullResultMap"
-               type="com.example.sms.domain.model.quality.ReceivingInspection">
-        <id property="id" column="ri_id"/>
-        <result property="inspectionNumber" column="ri_受入検査番号"/>
-        <result property="receivingNumber" column="ri_入荷番号"/>
-        <result property="purchaseOrderNumber" column="ri_発注番号"/>
-        <result property="itemCode" column="ri_品目コード"/>
-        <result property="supplierCode" column="ri_仕入先コード"/>
-        <result property="inspectionDate" column="ri_検査日"/>
-        <result property="inspectorCode" column="ri_検査担当者コード"/>
-        <result property="inspectionQuantity" column="ri_検査数量"/>
-        <result property="passedQuantity" column="ri_合格数"/>
-        <result property="failedQuantity" column="ri_不合格数"/>
-        <result property="judgment" column="ri_判定"
-                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
-        <result property="remarks" column="ri_備考"/>
-        <result property="version" column="ri_バージョン"/>
-        <result property="createdAt" column="ri_作成日時"/>
-        <result property="updatedAt" column="ri_更新日時"/>
-
-        <!-- 品目マスタとの N:1 関連 -->
-        <association property="item" javaType="com.example.sms.domain.model.item.Item">
-            <id property="itemCode" column="i_品目コード"/>
-            <result property="itemName" column="i_品目名"/>
-        </association>
-
-        <!-- 仕入先マスタとの N:1 関連 -->
-        <association property="supplier" javaType="com.example.sms.domain.model.supplier.Supplier">
-            <id property="supplierCode" column="s_仕入先コード"/>
-            <result property="supplierName" column="s_仕入先名"/>
-        </association>
-
-        <!-- 検査結果との 1:N 関連 -->
-        <collection property="results"
-                    ofType="com.example.sms.domain.model.quality.ReceivingInspectionResult"
-                    resultMap="receivingInspectionResultNestedResultMap"/>
+    <!-- 基本 ResultMap -->
+    <resultMap id="ReceivingInspectionResultMap" type="com.example.pms.domain.model.quality.ReceivingInspection">
+        <id property="id" column="ID"/>
+        <result property="inspectionNumber" column="受入検査番号"/>
+        <result property="receivingNumber" column="入荷番号"/>
+        <result property="purchaseOrderNumber" column="発注番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="supplierCode" column="仕入先コード"/>
+        <result property="inspectionDate" column="検査日"/>
+        <result property="inspectorCode" column="検査担当者コード"/>
+        <result property="inspectionQuantity" column="検査数量"/>
+        <result property="passedQuantity" column="合格数"/>
+        <result property="failedQuantity" column="不合格数"/>
+        <result property="judgment" column="判定"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
     </resultMap>
 
-    <!-- 検査結果のネスト ResultMap（欠点マスタを含む） -->
-    <resultMap id="receivingInspectionResultNestedResultMap"
-               type="com.example.sms.domain.model.quality.ReceivingInspectionResult">
-        <id property="id" column="rir_id"/>
-        <result property="inspectionNumber" column="rir_受入検査番号"/>
-        <result property="defectCode" column="rir_欠点コード"/>
-        <result property="quantity" column="rir_数量"/>
-        <result property="remarks" column="rir_備考"/>
-
-        <!-- 欠点マスタとの N:1 関連 -->
-        <association property="defect" javaType="com.example.sms.domain.model.quality.DefectMaster">
-            <id property="defectCode" column="d_欠点コード"/>
-            <result property="defectName" column="d_欠点名"/>
-            <result property="defectCategory" column="d_欠点分類"/>
-        </association>
+    <!-- 検査結果を含む ResultMap（ネスト select 方式） -->
+    <resultMap id="ReceivingInspectionWithResultsResultMap" type="com.example.pms.domain.model.quality.ReceivingInspection"
+               extends="ReceivingInspectionResultMap">
+        <collection property="results" ofType="com.example.pms.domain.model.quality.ReceivingInspectionResult"
+                    column="受入検査番号" select="com.example.pms.infrastructure.out.persistence.mapper.ReceivingInspectionResultMapper.findByInspectionNumber"/>
     </resultMap>
 
-    <!-- JOIN による一括取得クエリ -->
-    <select id="findFullByInspectionNumber" resultMap="receivingInspectionFullResultMap">
-        SELECT
-            ri."ID" AS ri_id,
-            ri."受入検査番号" AS ri_受入検査番号,
-            ri."入荷番号" AS ri_入荷番号,
-            ri."発注番号" AS ri_発注番号,
-            ri."品目コード" AS ri_品目コード,
-            ri."仕入先コード" AS ri_仕入先コード,
-            ri."検査日" AS ri_検査日,
-            ri."検査担当者コード" AS ri_検査担当者コード,
-            ri."検査数量" AS ri_検査数量,
-            ri."合格数" AS ri_合格数,
-            ri."不合格数" AS ri_不合格数,
-            ri."判定" AS ri_判定,
-            ri."備考" AS ri_備考,
-            ri."バージョン" AS ri_バージョン,
-            ri."作成日時" AS ri_作成日時,
-            ri."更新日時" AS ri_更新日時,
-            i."品目コード" AS i_品目コード,
-            i."品目名" AS i_品目名,
-            s."仕入先コード" AS s_仕入先コード,
-            s."仕入先名" AS s_仕入先名,
-            rir."ID" AS rir_id,
-            rir."受入検査番号" AS rir_受入検査番号,
-            rir."欠点コード" AS rir_欠点コード,
-            rir."数量" AS rir_数量,
-            rir."備考" AS rir_備考,
-            d."欠点コード" AS d_欠点コード,
-            d."欠点名" AS d_欠点名,
-            d."欠点分類" AS d_欠点分類
-        FROM "受入検査データ" ri
-        LEFT JOIN "品目マスタ" i ON ri."品目コード" = i."品目コード"
-        LEFT JOIN "仕入先マスタ" s ON ri."仕入先コード" = s."仕入先コード"
-        LEFT JOIN "受入検査結果データ" rir ON ri."受入検査番号" = rir."受入検査番号"
-        LEFT JOIN "欠点マスタ" d ON rir."欠点コード" = d."欠点コード"
-        WHERE ri."受入検査番号" = #{inspectionNumber}
-        ORDER BY rir."欠点コード"
+    <!-- 検査結果を含めて取得 -->
+    <select id="findByInspectionNumberWithResults" resultMap="ReceivingInspectionWithResultsResultMap">
+        SELECT * FROM "受入検査データ"
+        WHERE "受入検査番号" = #{inspectionNumber}
     </select>
 
 </mapper>
@@ -1937,102 +1933,89 @@ lot_master ||--o{ lot_composition : 子ロット
 
 </details>
 
-#### ロットマスタのネスト ResultMap（親子ロット構成を含む）
+#### ロットマスタのネスト select（親子ロット構成を含む）
 
 <details>
-<summary>LotMapper.xml（リレーション設定）</summary>
+<summary>LotMasterMapper.xml（リレーション設定）</summary>
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- src/main/resources/mapper/LotMapper.xml -->
-<mapper namespace="com.example.sms.infrastructure.out.persistence.mapper.LotMapper">
+<!-- src/main/resources/mapper/LotMasterMapper.xml -->
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.LotMasterMapper">
 
-    <!-- ロットマスタ with 親子ロット構成・品目 ResultMap -->
-    <resultMap id="lotMasterFullResultMap" type="com.example.sms.domain.model.quality.LotMaster">
-        <id property="id" column="lm_id"/>
-        <result property="lotNumber" column="lm_ロット番号"/>
-        <result property="itemCode" column="lm_品目コード"/>
-        <result property="lotType" column="lm_ロット種別"
-                typeHandler="com.example.sms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler"/>
-        <result property="manufactureDate" column="lm_製造日"/>
-        <result property="expirationDate" column="lm_有効期限"/>
-        <result property="quantity" column="lm_数量"/>
-        <result property="warehouseCode" column="lm_倉庫コード"/>
-        <result property="remarks" column="lm_備考"/>
-        <result property="version" column="lm_バージョン"/>
-        <result property="createdAt" column="lm_作成日時"/>
-        <result property="updatedAt" column="lm_更新日時"/>
-
-        <!-- 品目マスタとの N:1 関連 -->
-        <association property="item" javaType="com.example.sms.domain.model.item.Item">
-            <id property="itemCode" column="i_品目コード"/>
-            <result property="itemName" column="i_品目名"/>
-        </association>
-
-        <!-- 親ロット構成（このロットを材料として使用した製造ロット）との 1:N 関連 -->
-        <collection property="parentLotRelations"
-                    ofType="com.example.sms.domain.model.quality.LotComposition"
-                    resultMap="parentLotCompositionResultMap"/>
-
-        <!-- 子ロット構成（このロットが使用した材料ロット）との 1:N 関連 -->
-        <collection property="childLotRelations"
-                    ofType="com.example.sms.domain.model.quality.LotComposition"
-                    resultMap="childLotCompositionResultMap"/>
+    <!-- 基本 ResultMap -->
+    <resultMap id="LotMasterResultMap" type="com.example.pms.domain.model.quality.LotMaster">
+        <id property="id" column="ID"/>
+        <result property="lotNumber" column="ロット番号"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="lotType" column="ロット種別"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.LotTypeTypeHandler"/>
+        <result property="manufactureDate" column="製造日"/>
+        <result property="expirationDate" column="有効期限"/>
+        <result property="quantity" column="数量"/>
+        <result property="warehouseCode" column="倉庫コード"/>
+        <result property="remarks" column="備考"/>
+        <result property="version" column="バージョン"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="updatedAt" column="更新日時"/>
     </resultMap>
 
-    <!-- 親ロット構成 ResultMap -->
-    <resultMap id="parentLotCompositionResultMap" type="com.example.sms.domain.model.quality.LotComposition">
-        <id property="id" column="plc_id"/>
-        <result property="parentLotNumber" column="plc_親ロット番号"/>
-        <result property="childLotNumber" column="plc_子ロット番号"/>
-        <result property="usedQuantity" column="plc_使用数量"/>
-        <result property="createdAt" column="plc_作成日時"/>
+    <!-- ロット構成を含む ResultMap（ネスト select 方式） -->
+    <resultMap id="LotMasterWithCompositionsResultMap" type="com.example.pms.domain.model.quality.LotMaster"
+               extends="LotMasterResultMap">
+        <!-- 親ロット構成（このロットを材料として使用した製造ロット） -->
+        <collection property="parentLotRelations" ofType="com.example.pms.domain.model.quality.LotComposition"
+                    column="ロット番号" select="com.example.pms.infrastructure.out.persistence.mapper.LotCompositionMapper.findByChildLotNumber"/>
+        <!-- 子ロット構成（このロットが使用した材料ロット） -->
+        <collection property="childLotRelations" ofType="com.example.pms.domain.model.quality.LotComposition"
+                    column="ロット番号" select="com.example.pms.infrastructure.out.persistence.mapper.LotCompositionMapper.findByParentLotNumber"/>
     </resultMap>
 
-    <!-- 子ロット構成 ResultMap -->
-    <resultMap id="childLotCompositionResultMap" type="com.example.sms.domain.model.quality.LotComposition">
-        <id property="id" column="clc_id"/>
-        <result property="parentLotNumber" column="clc_親ロット番号"/>
-        <result property="childLotNumber" column="clc_子ロット番号"/>
-        <result property="usedQuantity" column="clc_使用数量"/>
-        <result property="createdAt" column="clc_作成日時"/>
-    </resultMap>
+    <!-- ロット構成を含めて取得 -->
+    <select id="findByLotNumberWithCompositions" resultMap="LotMasterWithCompositionsResultMap">
+        SELECT * FROM "ロットマスタ"
+        WHERE "ロット番号" = #{lotNumber}
+    </select>
 
-    <!-- JOIN による一括取得クエリ -->
-    <select id="findFullByLotNumber" resultMap="lotMasterFullResultMap">
-        SELECT
-            lm."ID" AS lm_id,
-            lm."ロット番号" AS lm_ロット番号,
-            lm."品目コード" AS lm_品目コード,
-            lm."ロット種別" AS lm_ロット種別,
-            lm."製造日" AS lm_製造日,
-            lm."有効期限" AS lm_有効期限,
-            lm."数量" AS lm_数量,
-            lm."倉庫コード" AS lm_倉庫コード,
-            lm."備考" AS lm_備考,
-            lm."バージョン" AS lm_バージョン,
-            lm."作成日時" AS lm_作成日時,
-            lm."更新日時" AS lm_更新日時,
-            i."品目コード" AS i_品目コード,
-            i."品目名" AS i_品目名,
-            plc."ID" AS plc_id,
-            plc."親ロット番号" AS plc_親ロット番号,
-            plc."子ロット番号" AS plc_子ロット番号,
-            plc."使用数量" AS plc_使用数量,
-            plc."作成日時" AS plc_作成日時,
-            clc."ID" AS clc_id,
-            clc."親ロット番号" AS clc_親ロット番号,
-            clc."子ロット番号" AS clc_子ロット番号,
-            clc."使用数量" AS clc_使用数量,
-            clc."作成日時" AS clc_作成日時
-        FROM "ロットマスタ" lm
-        LEFT JOIN "品目マスタ" i ON lm."品目コード" = i."品目コード"
-        LEFT JOIN "ロット構成" plc ON lm."ロット番号" = plc."子ロット番号"
-        LEFT JOIN "ロット構成" clc ON lm."ロット番号" = clc."親ロット番号"
-        WHERE lm."ロット番号" = #{lotNumber}
+    <!-- トレースフォワード: 子ロットから製造ロットを追跡（PostgreSQL用） -->
+    <select id="traceForward" resultMap="LotMasterResultMap" databaseId="postgresql">
+        WITH RECURSIVE lot_tree AS (
+            SELECT lm.*, 0 AS level
+            FROM "ロットマスタ" lm
+            WHERE lm."ロット番号" = #{lotNumber}
+
+            UNION ALL
+
+            SELECT lm.*, lt.level + 1
+            FROM "ロットマスタ" lm
+            JOIN "ロット構成" lc ON lm."ロット番号" = lc."親ロット番号"
+            JOIN lot_tree lt ON lc."子ロット番号" = lt."ロット番号"
+            WHERE lt.level &lt; 10
+        )
+        SELECT * FROM lot_tree
+        ORDER BY level ASC
+    </select>
+
+    <!-- トレースバック: 親ロットから材料ロットを追跡（PostgreSQL用） -->
+    <select id="traceBack" resultMap="LotMasterResultMap" databaseId="postgresql">
+        WITH RECURSIVE lot_tree AS (
+            SELECT lm.*, 0 AS level
+            FROM "ロットマスタ" lm
+            WHERE lm."ロット番号" = #{lotNumber}
+
+            UNION ALL
+
+            SELECT lm.*, lt.level + 1
+            FROM "ロットマスタ" lm
+            JOIN "ロット構成" lc ON lm."ロット番号" = lc."子ロット番号"
+            JOIN lot_tree lt ON lc."親ロット番号" = lt."ロット番号"
+            WHERE lt.level &lt; 10
+        )
+        SELECT * FROM lot_tree
+        ORDER BY level ASC
     </select>
 
 </mapper>
@@ -2044,10 +2027,10 @@ lot_master ||--o{ lot_composition : 子ロット
 
 | 設定項目 | 説明 |
 |---------|------|
-| `<collection>` | 1:N 関連のマッピング（検査→結果、ロット→構成） |
-| `<association>` | N:1 関連のマッピング（検査→品目、検査→仕入先、結果→欠点） |
-| 双方向ロット構成 | 親・子両方向のロット構成を別々の collection で取得 |
-| エイリアス（AS） | カラム名の重複を避けるプレフィックス（`ri_`, `rir_`, `d_`, `lm_`, `plc_`, `clc_` など） |
+| **ネスト select 方式** | `column` と `select` 属性で関連データを別クエリで取得 |
+| **extends 属性** | 基本 ResultMap を継承してリレーション付き ResultMap を定義 |
+| **双方向ロット構成** | 親・子両方向のロット構成を別々の collection で取得 |
+| **databaseId** | PostgreSQL と H2 で異なるクエリを使い分け |
 
 ### 楽観ロックの実装
 
@@ -2088,11 +2071,11 @@ COMMENT ON COLUMN "ロットマスタ"."バージョン" IS '楽観ロック用�
 <summary>ReceivingInspection.java（バージョンフィールド追加）</summary>
 
 ```java
-// src/main/java/com/example/sms/domain/model/quality/ReceivingInspection.java
-package com.example.sms.domain.model.quality;
+// src/main/java/com/example/pms/domain/model/quality/ReceivingInspection.java
+package com.example.pms.domain.model.quality;
 
-import com.example.sms.domain.model.item.Item;
-import com.example.sms.domain.model.supplier.Supplier;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.supplier.Supplier;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -2101,14 +2084,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 受入検査データエンティティ
+ * 受入検査データエンティティ.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReceivingInspection {
-    private Long id;
+    private Integer id;
     private String inspectionNumber;
     private String receivingNumber;
     private String purchaseOrderNumber;
@@ -2135,17 +2118,21 @@ public class ReceivingInspection {
     private List<ReceivingInspectionResult> results = new ArrayList<>();
 
     /**
-     * 再検査可能かどうかをチェック
+     * 再検査可能かどうかをチェック.
+     *
+     * @return 再検査可能な場合 true
      */
     public boolean canReinspect() {
         return judgment == InspectionJudgment.HOLD;
     }
 
     /**
-     * 不合格率を計算
+     * 不合格率を計算.
+     *
+     * @return 不合格率（%）
      */
     public BigDecimal getFailureRate() {
-        if (inspectionQuantity.compareTo(BigDecimal.ZERO) == 0) {
+        if (inspectionQuantity == null || inspectionQuantity.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
         return failedQuantity.divide(inspectionQuantity, 4, java.math.RoundingMode.HALF_UP)
@@ -2170,7 +2157,7 @@ public class ReceivingInspection {
     SET
         "合格数" = #{passedQuantity},
         "不合格数" = #{failedQuantity},
-        "判定" = #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler}::"検査判定",
+        "判定" = #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler}::"検査判定",
         "備考" = #{remarks},
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
@@ -2184,7 +2171,7 @@ public class ReceivingInspection {
     SET
         "合格数" = #{passedQuantity},
         "不合格数" = #{failedQuantity},
-        "判定" = #{judgment, typeHandler=com.example.sms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler}::"検査判定",
+        "判定" = #{judgment, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.InspectionJudgmentTypeHandler}::"検査判定",
         "備考" = #{remarks},
         "更新日時" = CURRENT_TIMESTAMP,
         "バージョン" = "バージョン" + 1
@@ -2215,13 +2202,13 @@ public class ReceivingInspection {
 
 ```java
 // src/main/java/com/example/sms/infrastructure/out/persistence/repository/ReceivingInspectionRepositoryImpl.java
-package com.example.sms.infrastructure.out.persistence.repository;
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.sms.application.port.out.ReceivingInspectionRepository;
-import com.example.sms.domain.exception.OptimisticLockException;
-import com.example.sms.domain.model.quality.InspectionJudgment;
-import com.example.sms.domain.model.quality.ReceivingInspection;
-import com.example.sms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper;
+import com.example.pms.application.port.out.ReceivingInspectionRepository;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.quality.InspectionJudgment;
+import com.example.pms.domain.model.quality.ReceivingInspection;
+import com.example.pms.infrastructure.out.persistence.mapper.ReceivingInspectionMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -2299,13 +2286,13 @@ public class ReceivingInspectionRepositoryImpl implements ReceivingInspectionRep
 
 ```java
 // src/test/java/com/example/sms/infrastructure/out/persistence/repository/ReceivingInspectionRepositoryOptimisticLockTest.java
-package com.example.sms.infrastructure.out.persistence.repository;
+package com.example.pms.infrastructure.out.persistence.repository;
 
-import com.example.sms.application.port.out.ReceivingInspectionRepository;
-import com.example.sms.domain.exception.OptimisticLockException;
-import com.example.sms.domain.model.quality.InspectionJudgment;
-import com.example.sms.domain.model.quality.ReceivingInspection;
-import com.example.sms.testsetup.BaseIntegrationTest;
+import com.example.pms.application.port.out.ReceivingInspectionRepository;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.quality.InspectionJudgment;
+import com.example.pms.domain.model.quality.ReceivingInspection;
+import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 

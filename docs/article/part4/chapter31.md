@@ -133,27 +133,18 @@ E 社では、特殊な表面処理を外注先に委託しています。
 ### 組織図（営業部・生産管理部・製造部・品質管理部・購買部・倉庫部・外注管理部）
 
 ```plantuml
-@startuml
-
+@startwbs
 title E精密工業株式会社 組織図
 
-rectangle "E精密工業株式会社" {
-  rectangle "営業部\n(SALES)" as sales
-  rectangle "生産管理部\n(PROD-PLAN)" as prodplan
-  rectangle "製造部\n(MFG)" as mfg
-  rectangle "品質管理部\n(QUALITY)" as quality
-  rectangle "購買部\n(PURCHASE)" as purchase
-  rectangle "倉庫部\n(WAREHOUSE)" as warehouse
-  rectangle "外注管理部\n(OUTSOURCE)" as outsource
-}
-
-sales -[hidden]right- prodplan
-prodplan -[hidden]right- mfg
-mfg -[hidden]right- quality
-purchase -[hidden]right- warehouse
-warehouse -[hidden]right- outsource
-
-@enduml
+* E精密工業株式会社
+** 営業部（SALES）
+** 生産管理部（PROD-PLAN）
+** 製造部（MFG）
+** 品質管理部（QUALITY）
+** 購買部（PURCHASE）
+** 倉庫部（WAREHOUSE）
+** 外注管理部（OUTSOURCE）
+@endwbs
 ```
 
 ```
@@ -449,19 +440,19 @@ Seed データ実装における技術的なポイントは以下の通りです
 #### プロジェクト構造
 
 ```
-src/
+apps/pms/backend/src/
 ├── main/
 │   └── java/
-│       └── com/example/sms/
-│           └── seed/
-│               ├── SeedDataService.java
-│               ├── MasterDataSeeder.java
-│               ├── TransactionDataSeeder.java
-│               └── SeedRunner.java
+│       └── com/example/pms/
+│           └── infrastructure/in/seed/
+│               ├── SeedDataService.java      # Seed データ投入サービス
+│               ├── MasterDataSeeder.java     # マスタデータ Seeder
+│               ├── TransactionDataSeeder.java # トランザクションデータ Seeder
+│               └── SeedDataRunner.java       # 起動時実行 Runner
 └── test/
     └── java/
-        └── com/example/sms/
-            └── seed/
+        └── com/example/pms/
+            └── integration/
                 └── SeedDataIntegrationTest.java
 ```
 
@@ -471,91 +462,108 @@ src/
 <summary>SeedDataService.java</summary>
 
 ```java
-// src/main/java/com/example/sms/seed/SeedDataService.java
-package com.example.sms.seed;
+package com.example.pms.infrastructure.in.seed;
 
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-
+/**
+ * Seed データ投入サービス.
+ * 生産管理システム（E社事例 chapter31.md 準拠）の初期データを投入する。
+ */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class SeedDataService {
 
-    private static final Logger log = LoggerFactory.getLogger(SeedDataService.class);
-
-    private final SqlSessionFactory sqlSessionFactory;
     private final MasterDataSeeder masterDataSeeder;
     private final TransactionDataSeeder transactionDataSeeder;
 
-    public SeedDataService(
-            SqlSessionFactory sqlSessionFactory,
-            MasterDataSeeder masterDataSeeder,
-            TransactionDataSeeder transactionDataSeeder) {
-        this.sqlSessionFactory = sqlSessionFactory;
-        this.masterDataSeeder = masterDataSeeder;
-        this.transactionDataSeeder = transactionDataSeeder;
-    }
-
+    /**
+     * すべての Seed データを投入.
+     */
     @Transactional
     public void seedAll() {
         log.info("========================================");
         log.info("生産管理システム Seed データ投入開始");
         log.info("========================================");
 
-        LocalDate effectiveDate = LocalDate.of(2025, 1, 1);
-
-        // 既存データの削除
-        cleanAllData();
-
         // マスタデータの投入
-        masterDataSeeder.seedAll(effectiveDate);
+        masterDataSeeder.seedAll();
 
         // トランザクションデータの投入
-        transactionDataSeeder.seedAll(effectiveDate);
+        transactionDataSeeder.seedAll();
 
         log.info("========================================");
         log.info("生産管理システム Seed データ投入完了!");
         log.info("========================================");
     }
 
-    private void cleanAllData() {
+    /**
+     * マスタデータのみ投入.
+     */
+    @Transactional
+    public void seedMasterDataOnly() {
+        log.info("マスタデータのみ投入開始");
+        masterDataSeeder.seedAll();
+        log.info("マスタデータ投入完了");
+    }
+
+    /**
+     * すべてのデータを削除.
+     */
+    @Transactional
+    public void cleanAllData() {
         log.info("既存データを削除中...");
 
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            // トランザクションデータから削除（外部キー制約のため逆順）
-            session.delete("seed.deleteAllLaborRecords");
-            session.delete("seed.deleteAllCompletionRecords");
-            session.delete("seed.deleteAllWorkOrderDetails");
-            session.delete("seed.deleteAllWorkOrders");
-            session.delete("seed.deleteAllPurchaseOrderDetails");
-            session.delete("seed.deleteAllPurchaseOrders");
-            session.delete("seed.deleteAllOrders");
-            session.delete("seed.deleteAllStocks");
+        // トランザクションデータから削除（外部キー制約のため逆順）
+        transactionDataSeeder.cleanAll();
 
-            // マスタデータを削除
-            session.delete("seed.deleteAllDefects");
-            session.delete("seed.deleteAllUnitPrices");
-            session.delete("seed.deleteAllEmployees");
-            session.delete("seed.deleteAllRoutings");
-            session.delete("seed.deleteAllBoms");
-            session.delete("seed.deleteAllItems");
-            session.delete("seed.deleteAllProcesses");
-            session.delete("seed.deleteAllWarehouses");
-            session.delete("seed.deleteAllLocations");
-            session.delete("seed.deleteAllSuppliers");
-            session.delete("seed.deleteAllDepartments");
-            session.delete("seed.deleteAllItemGroups");
-            session.delete("seed.deleteAllUnits");
-
-            session.commit();
-        }
+        // マスタデータを削除
+        masterDataSeeder.cleanAll();
 
         log.info("既存データ削除完了");
+    }
+}
+```
+
+</details>
+
+### SeedDataRunner の実装
+
+<details>
+<summary>SeedDataRunner.java</summary>
+
+```java
+package com.example.pms.infrastructure.in.seed;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+/**
+ * アプリケーション起動時に Seed データを投入する Runner.
+ * default または demo プロファイルが有効な場合に実行される.
+ */
+@Component
+@Profile({"default", "demo"})
+@RequiredArgsConstructor
+@Slf4j
+public class SeedDataRunner implements ApplicationRunner {
+
+    private final SeedDataService seedDataService;
+
+    @Override
+    public void run(ApplicationArguments args) {
+        if (log.isInfoEnabled()) {
+            log.info("Running seed data initialization...");
+        }
+        seedDataService.seedAll();
     }
 }
 ```
@@ -565,61 +573,68 @@ public class SeedDataService {
 ### MasterDataSeeder の実装（部門・担当者・品目・BOM・工程・取引先・単価）
 
 <details>
-<summary>MasterDataSeeder.java</summary>
+<summary>MasterDataSeeder.java（抜粋）</summary>
 
 ```java
-// src/main/java/com/example/sms/seed/MasterDataSeeder.java
-package com.example.sms.seed;
+package com.example.pms.infrastructure.in.seed;
 
-import com.example.sms.domain.model.item.*;
-import com.example.sms.domain.model.master.*;
-import com.example.sms.domain.model.bom.Bom;
-import com.example.sms.domain.model.process.*;
-import com.example.sms.infrastructure.out.persistence.mapper.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
+import com.example.pms.application.port.out.*;
+import com.example.pms.domain.model.bom.Bom;
+import com.example.pms.domain.model.department.Department;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
+import com.example.pms.domain.model.process.Process;
+import com.example.pms.domain.model.process.ProcessRoute;
+import com.example.pms.domain.model.supplier.Supplier;
+import com.example.pms.domain.model.supplier.SupplierType;
+import com.example.pms.domain.model.unit.Unit;
+import com.example.pms.domain.model.unitprice.UnitPrice;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+/**
+ * マスタデータ Seeder.
+ * chapter31.md 準拠の E 社マスタデータを投入する。
+ */
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class MasterDataSeeder {
 
-    private static final Logger log = LoggerFactory.getLogger(MasterDataSeeder.class);
+    private static final LocalDate EFFECTIVE_DATE = LocalDate.of(2025, 1, 1);
 
-    private final UnitMapper unitMapper;
-    private final ItemGroupMapper itemGroupMapper;
-    private final DepartmentMapper departmentMapper;
-    private final SupplierMapper supplierMapper;
-    private final LocationMapper locationMapper;
-    private final WarehouseMapper warehouseMapper;
-    private final ProcessMapper processMapper;
-    private final ItemMapper itemMapper;
-    private final BomMapper bomMapper;
-    private final RoutingMapper routingMapper;
-    private final EmployeeMapper employeeMapper;
-    private final UnitPriceMapper unitPriceMapper;
-    private final DefectMapper defectMapper;
+    private final UnitRepository unitRepository;
+    private final DepartmentRepository departmentRepository;
+    private final SupplierRepository supplierRepository;
+    private final LocationRepository locationRepository;
+    private final WarehouseRepository warehouseRepository;
+    private final ProcessRepository processRepository;
+    private final ItemRepository itemRepository;
+    private final BomRepository bomRepository;
+    private final ProcessRouteRepository processRouteRepository;
+    private final StaffRepository staffRepository;
+    private final UnitPriceRepository unitPriceRepository;
+    private final DefectRepository defectRepository;
 
-    public MasterDataSeeder(/* コンストラクタ引数省略 */) {
-        // 依存性注入
-    }
-
-    public void seedAll(LocalDate effectiveDate) {
+    /**
+     * すべてのマスタデータを投入.
+     */
+    public void seedAll() {
         seedUnits();
-        seedItemGroups();
-        seedDepartments(effectiveDate);
-        seedSuppliers(effectiveDate);
+        seedDepartments();
+        seedSuppliers();
         seedLocations();
         seedWarehouses();
-        seedProcesses(effectiveDate);
-        seedItems(effectiveDate);
-        seedBoms(effectiveDate);
-        seedRoutings(effectiveDate);
-        seedEmployees(effectiveDate);
-        seedUnitPrices(effectiveDate);
+        seedProcesses();
+        seedItems();
+        seedBoms();
+        seedProcessRoutes();
+        seedStaff();
+        seedUnitPrices();
         seedDefects();
     }
 
@@ -627,616 +642,283 @@ public class MasterDataSeeder {
         log.info("単位マスタを投入中...");
 
         List<Unit> units = List.of(
-            new Unit("PCS", "個"),
-            new Unit("KG", "キログラム"),
-            new Unit("M", "メートル"),
-            new Unit("SET", "セット"),
-            new Unit("L", "リットル")
+            Unit.builder().unitCode("PCS").unitSymbol("個").unitName("個数").build(),
+            Unit.builder().unitCode("KG").unitSymbol("kg").unitName("キログラム").build(),
+            Unit.builder().unitCode("M").unitSymbol("m").unitName("メートル").build(),
+            Unit.builder().unitCode("SET").unitSymbol("set").unitName("セット").build(),
+            Unit.builder().unitCode("L").unitSymbol("L").unitName("リットル").build()
         );
 
-        units.forEach(unitMapper::insert);
-        log.info("単位マスタ {}件 投入完了", units.size());
+        int count = 0;
+        for (Unit unit : units) {
+            if (unitRepository.findByUnitCode(unit.getUnitCode()).isEmpty()) {
+                unitRepository.save(unit);
+                count++;
+            }
+        }
+        log.info("単位マスタ {}件 投入完了", count);
     }
 
-    private void seedItemGroups() {
-        log.info("品目グループマスタを投入中...");
-
-        List<ItemGroup> groups = List.of(
-            new ItemGroup("PRODUCT", "完成品"),
-            new ItemGroup("SEMI", "半製品"),
-            new ItemGroup("PART", "購入部品"),
-            new ItemGroup("MATERIAL", "原材料"),
-            new ItemGroup("PACKING", "梱包材"),
-            new ItemGroup("BEARING", "軸受・シール部品")
-        );
-
-        groups.forEach(itemGroupMapper::insert);
-        log.info("品目グループマスタ {}件 投入完了", groups.size());
-    }
-
-    private void seedDepartments(LocalDate effectiveDate) {
+    private void seedDepartments() {
         log.info("部門マスタを投入中...");
 
         List<Department> departments = List.of(
-            new Department("SALES", effectiveDate, "営業部"),
-            new Department("PROD-PLAN", effectiveDate, "生産管理部"),
-            new Department("MFG", effectiveDate, "製造部"),
-            new Department("QUALITY", effectiveDate, "品質管理部"),
-            new Department("PURCHASE", effectiveDate, "購買部"),
-            new Department("WAREHOUSE", effectiveDate, "倉庫部"),
-            new Department("OUTSOURCE", effectiveDate, "外注管理部")
+            Department.builder().departmentCode("SALES").departmentName("営業部")
+                .departmentPath("E精密工業/営業部").lowestLevel(true).validFrom(EFFECTIVE_DATE).build(),
+            Department.builder().departmentCode("PROD-PLAN").departmentName("生産管理部")
+                .departmentPath("E精密工業/生産管理部").lowestLevel(true).validFrom(EFFECTIVE_DATE).build(),
+            Department.builder().departmentCode("MFG").departmentName("製造部")
+                .departmentPath("E精密工業/製造部").lowestLevel(true).validFrom(EFFECTIVE_DATE).build(),
+            // ... 他の部門省略
         );
 
-        departments.forEach(departmentMapper::insert);
-        log.info("部門マスタ {}件 投入完了", departments.size());
+        int count = 0;
+        for (Department dept : departments) {
+            if (departmentRepository.findByDepartmentCode(dept.getDepartmentCode()).isEmpty()) {
+                departmentRepository.save(dept);
+                count++;
+            }
+        }
+        log.info("部門マスタ {}件 投入完了", count);
     }
 
-    private void seedSuppliers(LocalDate effectiveDate) {
-        log.info("取引先マスタを投入中...");
-
-        List<Supplier> suppliers = List.of(
-            // 仕入先
-            new Supplier("SUP-001", effectiveDate, "東京スチール株式会社", SupplierType.VENDOR),
-            new Supplier("SUP-002", effectiveDate, "大阪金属工業", SupplierType.VENDOR),
-            new Supplier("SUP-003", effectiveDate, "名古屋ベアリング", SupplierType.VENDOR),
-            new Supplier("SUP-004", effectiveDate, "横浜部品センター", SupplierType.VENDOR),
-            new Supplier("SUP-005", effectiveDate, "神戸包装資材", SupplierType.VENDOR),
-            // 外注先
-            new Supplier("OUT-001", effectiveDate, "メッキ工業所", SupplierType.SUBCONTRACTOR),
-            new Supplier("OUT-002", effectiveDate, "熱処理センター", SupplierType.SUBCONTRACTOR),
-            // 得意先
-            new Supplier("CUS-001", effectiveDate, "機械メーカーA社", SupplierType.CUSTOMER),
-            new Supplier("CUS-002", effectiveDate, "産業機器B社", SupplierType.CUSTOMER),
-            new Supplier("CUS-003", effectiveDate, "精密機械C社", SupplierType.CUSTOMER)
-        );
-
-        suppliers.forEach(supplierMapper::insert);
-        log.info("取引先マスタ {}件 投入完了", suppliers.size());
-    }
-
-    private void seedProcesses(LocalDate effectiveDate) {
-        log.info("工程マスタを投入中...");
-
-        List<Process> processes = List.of(
-            // 切削工程
-            new Process("LATHE", effectiveDate, "旋盤加工", ProcessType.INTERNAL),
-            new Process("MILL", effectiveDate, "フライス加工", ProcessType.INTERNAL),
-            new Process("GRIND", effectiveDate, "研削加工", ProcessType.INTERNAL),
-            new Process("HOB", effectiveDate, "ホブ切り", ProcessType.INTERNAL),
-            new Process("DRILL", effectiveDate, "穴あけ加工", ProcessType.INTERNAL),
-            // 組立工程
-            new Process("ASM", effectiveDate, "組立", ProcessType.INTERNAL),
-            new Process("FINAL-ASM", effectiveDate, "最終組立", ProcessType.INTERNAL),
-            // 検査工程
-            new Process("INS-PROC", effectiveDate, "工程検査", ProcessType.INTERNAL),
-            new Process("INS-SHIP", effectiveDate, "出荷検査", ProcessType.INTERNAL),
-            new Process("INS-RCV", effectiveDate, "受入検査", ProcessType.INTERNAL),
-            // 外注工程
-            new Process("OUT-MEKI", effectiveDate, "メッキ処理", ProcessType.EXTERNAL),
-            new Process("OUT-HEAT", effectiveDate, "熱処理", ProcessType.EXTERNAL)
-        );
-
-        processes.forEach(processMapper::insert);
-        log.info("工程マスタ {}件 投入完了", processes.size());
-    }
-
-    private void seedItems(LocalDate effectiveDate) {
-        log.info("品目マスタを投入中...");
-
-        List<Item> items = List.of(
-            // 製品
-            new Item("PROD-A001", effectiveDate, "精密シャフトA",
-                    ItemCategory.PRODUCT, "PRODUCT", "PCS", "WH-PROD", 7, 100),
-            new Item("PROD-B001", effectiveDate, "ギアボックスアセンブリ",
-                    ItemCategory.PRODUCT, "PRODUCT", "PCS", "WH-PROD", 14, 50),
-            new Item("PROD-C001", effectiveDate, "精密プレート",
-                    ItemCategory.PRODUCT, "PRODUCT", "PCS", "WH-PROD", 5, 80),
-
-            // 半製品
-            new Item("SEMI-A001", effectiveDate, "加工済みシャフト",
-                    ItemCategory.SEMI_FINISHED, "SEMI", "PCS", "WH-PART", 5, 120),
-            new Item("SEMI-B001", effectiveDate, "ギアボックス本体",
-                    ItemCategory.SEMI_FINISHED, "SEMI", "PCS", "WH-PART", 7, 60),
-            new Item("SEMI-B002", effectiveDate, "駆動ギア",
-                    ItemCategory.SEMI_FINISHED, "SEMI", "PCS", "WH-PART", 7, 80),
-            new Item("SEMI-B003", effectiveDate, "従動ギア",
-                    ItemCategory.SEMI_FINISHED, "SEMI", "PCS", "WH-PART", 7, 80),
-            new Item("SEMI-C001", effectiveDate, "加工済みプレート",
-                    ItemCategory.SEMI_FINISHED, "SEMI", "PCS", "WH-PART", 3, 100),
-
-            // 部品
-            new Item("PART-001", effectiveDate, "ベアリング 6205",
-                    ItemCategory.PART, "BEARING", "PCS", "WH-PART", 7, 100),
-            new Item("PART-002", effectiveDate, "オイルシール φ20",
-                    ItemCategory.PART, "BEARING", "PCS", "WH-PART", 7, 100),
-
-            // 材料
-            new Item("MAT-001", effectiveDate, "丸棒材 SUS304 φ20",
-                    ItemCategory.MATERIAL, "MATERIAL", "KG", "WH-MAT", 14, 500),
-            new Item("MAT-002", effectiveDate, "アルミダイキャスト素材",
-                    ItemCategory.MATERIAL, "MATERIAL", "PCS", "WH-MAT", 21, 100),
-            new Item("MAT-003", effectiveDate, "歯車用素材 SCM415",
-                    ItemCategory.MATERIAL, "MATERIAL", "KG", "WH-MAT", 14, 300),
-            new Item("MAT-010", effectiveDate, "包装材セット",
-                    ItemCategory.MATERIAL, "PACKING", "SET", "WH-MAT", 3, 500)
-        );
-
-        items.forEach(itemMapper::insert);
-        log.info("品目マスタ {}件 投入完了", items.size());
-    }
-
-    private void seedBoms(LocalDate effectiveDate) {
+    private void seedBoms() {
         log.info("BOMを投入中...");
+
+        // 既存データがあればスキップ
+        if (!bomRepository.findByParentItemCode("PROD-A001").isEmpty()) {
+            log.info("BOM は既に存在します。スキップします。");
+            return;
+        }
 
         List<Bom> boms = List.of(
             // 精密シャフトA の構成
-            new Bom("PROD-A001", effectiveDate, "SEMI-A001", effectiveDate,
-                    BigDecimal.ONE, BigDecimal.ONE, new BigDecimal("0.02")),
-            new Bom("PROD-A001", effectiveDate, "PART-001", effectiveDate,
-                    BigDecimal.ONE, BigDecimal.ONE, null),
-            new Bom("PROD-A001", effectiveDate, "PART-002", effectiveDate,
-                    BigDecimal.ONE, BigDecimal.ONE, null),
-            new Bom("PROD-A001", effectiveDate, "MAT-010", effectiveDate,
-                    BigDecimal.ONE, BigDecimal.ONE, null),
-
-            // 加工済みシャフト の構成
-            new Bom("SEMI-A001", effectiveDate, "MAT-001", effectiveDate,
-                    BigDecimal.ONE, new BigDecimal("0.5"), new BigDecimal("0.05")),
-
-            // ギアボックスアセンブリ の構成
-            new Bom("PROD-B001", effectiveDate, "SEMI-B001", effectiveDate,
-                    BigDecimal.ONE, BigDecimal.ONE, null),
-            new Bom("PROD-B001", effectiveDate, "SEMI-B002", effectiveDate,
-                    BigDecimal.ONE, BigDecimal.ONE, null),
-            new Bom("PROD-B001", effectiveDate, "SEMI-B003", effectiveDate,
-                    BigDecimal.ONE, BigDecimal.ONE, null),
-            new Bom("PROD-B001", effectiveDate, "PART-001", effectiveDate,
-                    BigDecimal.ONE, new BigDecimal("2"), null)
+            Bom.builder().parentItemCode("PROD-A001").childItemCode("SEMI-A001")
+                .effectiveFrom(EFFECTIVE_DATE).baseQuantity(BigDecimal.ONE)
+                .requiredQuantity(BigDecimal.ONE).defectRate(new BigDecimal("0.02")).sequence(1).build(),
+            Bom.builder().parentItemCode("PROD-A001").childItemCode("PART-001")
+                .effectiveFrom(EFFECTIVE_DATE).baseQuantity(BigDecimal.ONE)
+                .requiredQuantity(BigDecimal.ONE).sequence(2).build(),
+            // ... 他の BOM 省略
         );
 
-        boms.forEach(bomMapper::insert);
+        boms.forEach(bomRepository::save);
         log.info("BOM {}件 投入完了", boms.size());
     }
 
-    private void seedRoutings(LocalDate effectiveDate) {
-        log.info("工程表を投入中...");
-
-        List<Routing> routings = List.of(
-            // 精密シャフトA
-            new Routing("PROD-A001", effectiveDate, "ASM", effectiveDate, 1, new BigDecimal("1.0")),
-            new Routing("PROD-A001", effectiveDate, "INS-SHIP", effectiveDate, 2, new BigDecimal("0.5")),
-
-            // 加工済みシャフト
-            new Routing("SEMI-A001", effectiveDate, "LATHE", effectiveDate, 1, new BigDecimal("2.0")),
-            new Routing("SEMI-A001", effectiveDate, "GRIND", effectiveDate, 2, new BigDecimal("1.0")),
-            new Routing("SEMI-A001", effectiveDate, "OUT-MEKI", effectiveDate, 3, BigDecimal.ZERO),
-            new Routing("SEMI-A001", effectiveDate, "INS-PROC", effectiveDate, 4, new BigDecimal("0.5")),
-
-            // ギアボックスアセンブリ
-            new Routing("PROD-B001", effectiveDate, "FINAL-ASM", effectiveDate, 1, new BigDecimal("2.0")),
-            new Routing("PROD-B001", effectiveDate, "INS-SHIP", effectiveDate, 2, new BigDecimal("0.5"))
-        );
-
-        routings.forEach(routingMapper::insert);
-        log.info("工程表 {}件 投入完了", routings.size());
-    }
-
-    private void seedEmployees(LocalDate effectiveDate) {
-        log.info("担当者マスタを投入中...");
-
-        List<Employee> employees = List.of(
-            new Employee("EMP-001", effectiveDate, "田中 太郎", "MFG", effectiveDate),
-            new Employee("EMP-002", effectiveDate, "鈴木 一郎", "MFG", effectiveDate),
-            new Employee("EMP-006", effectiveDate, "渡辺 五郎", "QUALITY", effectiveDate),
-            new Employee("EMP-008", effectiveDate, "中村 美咲", "PROD-PLAN", effectiveDate),
-            new Employee("EMP-009", effectiveDate, "小林 健一", "PURCHASE", effectiveDate),
-            new Employee("EMP-010", effectiveDate, "加藤 正", "WAREHOUSE", effectiveDate)
-        );
-
-        employees.forEach(employeeMapper::insert);
-        log.info("担当者マスタ {}件 投入完了", employees.size());
-    }
-
-    private void seedUnitPrices(LocalDate effectiveDate) {
-        log.info("単価マスタを投入中...");
-
-        List<UnitPrice> unitPrices = List.of(
-            // 材料の仕入単価
-            new UnitPrice("MAT-001", effectiveDate, "SUP-001", effectiveDate,
-                         effectiveDate, new BigDecimal("1500"), 10),
-            new UnitPrice("MAT-002", effectiveDate, "SUP-002", effectiveDate,
-                         effectiveDate, new BigDecimal("3500"), 1),
-            new UnitPrice("MAT-003", effectiveDate, "SUP-002", effectiveDate,
-                         effectiveDate, new BigDecimal("2000"), 10),
-
-            // 外注加工単価
-            new UnitPrice("SEMI-A001", effectiveDate, "OUT-001", effectiveDate,
-                         effectiveDate, new BigDecimal("500"), 1)
-        );
-
-        unitPrices.forEach(unitPriceMapper::insert);
-        log.info("単価マスタ {}件 投入完了", unitPrices.size());
-    }
-
-    private void seedDefects() {
-        log.info("欠点マスタを投入中...");
-
-        List<Defect> defects = List.of(
-            new Defect("DEF-001", "寸法不良", DefectCategory.MACHINING),
-            new Defect("DEF-002", "表面傷", DefectCategory.APPEARANCE),
-            new Defect("DEF-003", "メッキ不良", DefectCategory.SURFACE_TREATMENT),
-            new Defect("DEF-004", "熱処理不良", DefectCategory.HEAT_TREATMENT),
-            new Defect("DEF-005", "組立不良", DefectCategory.ASSEMBLY),
-            new Defect("DEF-006", "材料不良", DefectCategory.MATERIAL)
-        );
-
-        defects.forEach(defectMapper::insert);
-        log.info("欠点マスタ {}件 投入完了", defects.size());
-    }
+    // ... 他のメソッド省略（全実装は実際のソースコードを参照）
 }
 ```
 
 </details>
 
-### TransactionDataSeeder の実装（発注・入荷・作業指示・完成実績・在庫）
+**特徴:**
+- **べき等性（Idempotent）**: 既存データをチェックしてからデータ投入（2回目以降の起動でもエラーにならない）
+- **Lombok 活用**: `@RequiredArgsConstructor`, `@Slf4j`, `@Builder` でボイラープレートを削減
+- **Repository パターン**: MyBatis Mapper を Repository インターフェース経由で利用
+
+### TransactionDataSeeder の実装（発注・作業指示・在庫）
 
 <details>
-<summary>TransactionDataSeeder.java</summary>
+<summary>TransactionDataSeeder.java（抜粋）</summary>
 
 ```java
-// src/main/java/com/example/sms/seed/TransactionDataSeeder.java
-package com.example.sms.seed;
+package com.example.pms.infrastructure.in.seed;
 
-import com.example.sms.domain.model.inventory.*;
-import com.example.sms.domain.model.order.*;
-import com.example.sms.domain.model.purchase.*;
-import com.example.sms.domain.model.workorder.*;
-import com.example.sms.infrastructure.out.persistence.mapper.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
+import com.example.pms.application.port.out.*;
+import com.example.pms.domain.model.inventory.Stock;
+import com.example.pms.domain.model.plan.Order;
+import com.example.pms.domain.model.plan.OrderType;
+import com.example.pms.domain.model.plan.PlanStatus;
+import com.example.pms.domain.model.process.WorkOrder;
+import com.example.pms.domain.model.process.WorkOrderDetail;
+import com.example.pms.domain.model.process.WorkOrderStatus;
+import com.example.pms.domain.model.purchase.PurchaseOrder;
+import com.example.pms.domain.model.purchase.PurchaseOrderDetail;
+import com.example.pms.domain.model.purchase.PurchaseOrderStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+/**
+ * トランザクションデータ Seeder.
+ * chapter31.md 準拠の E 社トランザクションデータを投入する。
+ */
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class TransactionDataSeeder {
 
-    private static final Logger log = LoggerFactory.getLogger(TransactionDataSeeder.class);
+    private final StockRepository stockRepository;
+    private final OrderRepository orderRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
+    private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
+    private final WorkOrderRepository workOrderRepository;
+    private final WorkOrderDetailRepository workOrderDetailRepository;
 
-    private final StockMapper stockMapper;
-    private final OrderMapper orderMapper;
-    private final PurchaseOrderMapper purchaseOrderMapper;
-    private final PurchaseOrderDetailMapper purchaseOrderDetailMapper;
-    private final WorkOrderMapper workOrderMapper;
-    private final WorkOrderDetailMapper workOrderDetailMapper;
-    private final CompletionRecordMapper completionRecordMapper;
-    private final LaborRecordMapper laborRecordMapper;
-
-    public TransactionDataSeeder(/* コンストラクタ引数省略 */) {
-        // 依存性注入
+    /**
+     * すべてのトランザクションデータを投入.
+     */
+    public void seedAll() {
+        log.info("トランザクションデータを投入中...");
+        seedStocks();
+        seedOrders();
+        seedPurchaseOrders();
+        seedWorkOrders();
+        log.info("トランザクションデータ投入完了");
     }
 
-    public void seedAll(LocalDate effectiveDate) {
-        seedStocks(effectiveDate);
-        seedOrders(effectiveDate);
-        seedPurchaseOrders(effectiveDate);
-        seedWorkOrders(effectiveDate);
-        seedCompletionRecords(effectiveDate);
-        seedLaborRecords(effectiveDate);
-    }
-
-    private void seedStocks(LocalDate effectiveDate) {
+    private void seedStocks() {
         log.info("在庫情報を投入中...");
 
         List<Stock> stocks = List.of(
             // 材料倉庫
-            new Stock("WH-MAT", "MAT-001", effectiveDate,
-                     new BigDecimal("800"), StockStatus.PASSED),
-            new Stock("WH-MAT", "MAT-002", effectiveDate,
-                     new BigDecimal("150"), StockStatus.PASSED),
-            new Stock("WH-MAT", "MAT-003", effectiveDate,
-                     new BigDecimal("450"), StockStatus.PASSED),
-            new Stock("WH-MAT", "MAT-010", effectiveDate,
-                     new BigDecimal("600"), StockStatus.PASSED),
-
-            // 部品倉庫
-            new Stock("WH-PART", "PART-001", effectiveDate,
-                     new BigDecimal("200"), StockStatus.PASSED),
-            new Stock("WH-PART", "PART-002", effectiveDate,
-                     new BigDecimal("150"), StockStatus.PASSED),
-
-            // 半製品在庫
-            new Stock("WH-PART", "SEMI-A001", effectiveDate,
-                     new BigDecimal("50"), StockStatus.PASSED),
-            new Stock("WH-PART", "SEMI-B001", effectiveDate,
-                     new BigDecimal("30"), StockStatus.PASSED),
-            new Stock("WH-PART", "SEMI-B002", effectiveDate,
-                     new BigDecimal("40"), StockStatus.PASSED),
-            new Stock("WH-PART", "SEMI-B003", effectiveDate,
-                     new BigDecimal("40"), StockStatus.PASSED),
+            Stock.builder().locationCode("WH-MAT").itemCode("MAT-001")
+                .stockQuantity(new BigDecimal("800")).passedQuantity(new BigDecimal("800"))
+                .defectiveQuantity(BigDecimal.ZERO).uninspectedQuantity(BigDecimal.ZERO).build(),
+            // ... 他の在庫省略
 
             // 製品倉庫
-            new Stock("WH-PROD", "PROD-A001", effectiveDate,
-                     new BigDecimal("80"), StockStatus.PASSED),
-            new Stock("WH-PROD", "PROD-B001", effectiveDate,
-                     new BigDecimal("45"), StockStatus.PASSED),
-            new Stock("WH-PROD", "PROD-C001", effectiveDate,
-                     new BigDecimal("60"), StockStatus.PASSED)
+            Stock.builder().locationCode("WH-PROD").itemCode("PROD-A001")
+                .stockQuantity(new BigDecimal("80")).passedQuantity(new BigDecimal("80"))
+                .defectiveQuantity(BigDecimal.ZERO).uninspectedQuantity(BigDecimal.ZERO).build()
         );
 
-        stocks.forEach(stockMapper::insert);
-        log.info("在庫情報 {}件 投入完了", stocks.size());
+        int count = 0;
+        for (Stock stock : stocks) {
+            if (stockRepository.findByLocationAndItem(
+                    stock.getLocationCode(), stock.getItemCode()).isEmpty()) {
+                stockRepository.save(stock);
+                count++;
+            }
+        }
+        log.info("在庫情報 {}件 投入完了", count);
     }
 
-    private void seedOrders(LocalDate effectiveDate) {
+    private void seedOrders() {
         log.info("オーダ情報を投入中...");
 
         List<Order> orders = List.of(
             // 製造オーダ
-            new Order("MO-2025-001", OrderType.MANUFACTURING, "PROD-A001", effectiveDate,
-                     new BigDecimal("100"), LocalDate.of(2025, 1, 31), OrderStatus.CONFIRMED),
-            new Order("MO-2025-002", OrderType.MANUFACTURING, "PROD-A001", effectiveDate,
-                     new BigDecimal("100"), LocalDate.of(2025, 2, 7), OrderStatus.PLANNED),
-            new Order("MO-2025-003", OrderType.MANUFACTURING, "PROD-B001", effectiveDate,
-                     new BigDecimal("50"), LocalDate.of(2025, 1, 31), OrderStatus.CONFIRMED),
-
-            // 購買オーダ
-            new Order("PO-2025-001", OrderType.PURCHASE, "MAT-001", effectiveDate,
-                     new BigDecimal("200"), LocalDate.of(2025, 1, 20), OrderStatus.ORDERED),
-            new Order("PO-2025-002", OrderType.PURCHASE, "MAT-003", effectiveDate,
-                     new BigDecimal("150"), LocalDate.of(2025, 1, 22), OrderStatus.ORDERED)
+            Order.builder().orderNumber("MO-2025-001").orderType(OrderType.MANUFACTURING)
+                .itemCode("PROD-A001").planQuantity(new BigDecimal("100"))
+                .startDate(LocalDate.of(2025, 1, 15))
+                .dueDate(LocalDate.of(2025, 1, 31))
+                .locationCode("WH-PROD").status(PlanStatus.CONFIRMED).build()
+            // ... 他のオーダ省略
         );
 
-        orders.forEach(orderMapper::insert);
-        log.info("オーダ情報 {}件 投入完了", orders.size());
+        int count = 0;
+        for (Order order : orders) {
+            if (orderRepository.findByOrderNumber(order.getOrderNumber()).isEmpty()) {
+                orderRepository.save(order);
+                count++;
+            }
+        }
+        log.info("オーダ情報 {}件 投入完了", count);
     }
 
-    private void seedPurchaseOrders(LocalDate effectiveDate) {
+    private void seedPurchaseOrders() {
         log.info("発注データを投入中...");
 
-        // 発注1
-        PurchaseOrder po1 = new PurchaseOrder(
-            "PUR-2025-001", LocalDate.of(2025, 1, 10),
-            "SUP-001", effectiveDate, PurchaseOrderStatus.CONFIRMED
-        );
-        purchaseOrderMapper.insert(po1);
+        // 発注1: MAT-001
+        if (purchaseOrderRepository.findByPurchaseOrderNumber("PUR-2025-001").isEmpty()) {
+            PurchaseOrder po1 = PurchaseOrder.builder()
+                .purchaseOrderNumber("PUR-2025-001")
+                .orderDate(LocalDate.of(2025, 1, 10))
+                .supplierCode("SUP-001")
+                .status(PurchaseOrderStatus.ORDERED)
+                .build();
+            purchaseOrderRepository.save(po1);
 
-        purchaseOrderDetailMapper.insert(new PurchaseOrderDetail(
-            "PUR-2025-001", 1, "MAT-001", effectiveDate,
-            new BigDecimal("200"), new BigDecimal("1500"), LocalDate.of(2025, 1, 20)
-        ));
+            PurchaseOrderDetail detail1 = PurchaseOrderDetail.builder()
+                .purchaseOrderNumber("PUR-2025-001")
+                .lineNumber(1)
+                .itemCode("MAT-001")
+                .orderQuantity(new BigDecimal("200"))
+                .orderUnitPrice(new BigDecimal("1500"))
+                .expectedReceivingDate(LocalDate.of(2025, 1, 20))
+                .deliveryLocationCode("WH-MAT")
+                .build();
+            purchaseOrderDetailRepository.save(detail1);
+        }
 
-        // 発注2
-        PurchaseOrder po2 = new PurchaseOrder(
-            "PUR-2025-002", LocalDate.of(2025, 1, 10),
-            "SUP-002", effectiveDate, PurchaseOrderStatus.CONFIRMED
-        );
-        purchaseOrderMapper.insert(po2);
-
-        purchaseOrderDetailMapper.insert(new PurchaseOrderDetail(
-            "PUR-2025-002", 1, "MAT-003", effectiveDate,
-            new BigDecimal("150"), new BigDecimal("2000"), LocalDate.of(2025, 1, 22)
-        ));
-
-        log.info("発注データ 2件 投入完了");
+        log.info("発注データ 3件 投入完了");
     }
 
-    private void seedWorkOrders(LocalDate effectiveDate) {
+    private void seedWorkOrders() {
         log.info("作業指示データを投入中...");
 
-        // 作業指示1
-        WorkOrder wo1 = new WorkOrder(
-            "WO-2025-001", "MO-2025-001",
-            LocalDate.of(2025, 1, 15), WorkOrderStatus.IN_PROGRESS
-        );
-        workOrderMapper.insert(wo1);
+        // 作業指示1: MO-2025-001 用
+        if (workOrderRepository.findByWorkOrderNumber("WO-2025-001").isEmpty()) {
+            WorkOrder wo1 = WorkOrder.builder()
+                .workOrderNumber("WO-2025-001")
+                .orderNumber("MO-2025-001")
+                .workOrderDate(LocalDate.of(2025, 1, 15))
+                .itemCode("PROD-A001")
+                .orderQuantity(new BigDecimal("100"))
+                .locationCode("LINE1")
+                .plannedStartDate(LocalDate.of(2025, 1, 20))
+                .plannedEndDate(LocalDate.of(2025, 1, 25))
+                .completedQuantity(BigDecimal.ZERO)
+                .totalGoodQuantity(BigDecimal.ZERO)
+                .totalDefectQuantity(BigDecimal.ZERO)
+                .status(WorkOrderStatus.IN_PROGRESS)
+                .completedFlag(false)
+                .build();
+            workOrderRepository.save(wo1);
 
-        workOrderDetailMapper.insert(new WorkOrderDetail(
-            "WO-2025-001", 1, "ASM", effectiveDate,
-            new BigDecimal("100"),
-            LocalDateTime.of(2025, 1, 20, 9, 0),
-            LocalDateTime.of(2025, 1, 20, 17, 0)
-        ));
-        workOrderDetailMapper.insert(new WorkOrderDetail(
-            "WO-2025-001", 2, "INS-SHIP", effectiveDate,
-            new BigDecimal("100"),
-            LocalDateTime.of(2025, 1, 21, 9, 0),
-            LocalDateTime.of(2025, 1, 21, 12, 0)
-        ));
+            // 作業指示明細
+            WorkOrderDetail detail1 = WorkOrderDetail.builder()
+                .workOrderNumber("WO-2025-001")
+                .sequence(1)
+                .processCode("ASM")
+                .build();
+            workOrderDetailRepository.save(detail1);
+        }
 
-        // 作業指示2（完了済み）
-        WorkOrder wo2 = new WorkOrder(
-            "WO-2025-002", "MO-2025-005",
-            LocalDate.of(2025, 1, 12), WorkOrderStatus.COMPLETED
-        );
-        workOrderMapper.insert(wo2);
-
-        workOrderDetailMapper.insert(new WorkOrderDetail(
-            "WO-2025-002", 1, "LATHE", effectiveDate,
-            new BigDecimal("120"),
-            LocalDateTime.of(2025, 1, 15, 9, 0),
-            LocalDateTime.of(2025, 1, 16, 17, 0)
-        ));
-
-        log.info("作業指示データ 2件 投入完了");
+        log.info("作業指示データ 3件 投入完了");
     }
 
-    private void seedCompletionRecords(LocalDate effectiveDate) {
-        log.info("完成実績データを投入中...");
-
-        List<CompletionRecord> records = List.of(
-            new CompletionRecord(
-                "CR-2025-001", "WO-2025-002", 1,
-                LocalDate.of(2025, 1, 16),
-                new BigDecimal("118"), new BigDecimal("116"), new BigDecimal("2"),
-                "EMP-001", effectiveDate
-            ),
-            new CompletionRecord(
-                "CR-2025-002", "WO-2025-002", 2,
-                LocalDate.of(2025, 1, 17),
-                new BigDecimal("116"), new BigDecimal("115"), new BigDecimal("1"),
-                "EMP-002", effectiveDate
-            )
-        );
-
-        records.forEach(completionRecordMapper::insert);
-        log.info("完成実績データ {}件 投入完了", records.size());
-    }
-
-    private void seedLaborRecords(LocalDate effectiveDate) {
-        log.info("工数実績データを投入中...");
-
-        List<LaborRecord> records = List.of(
-            new LaborRecord(
-                "LH-2025-001", "WO-2025-002", 1,
-                LocalDate.of(2025, 1, 15),
-                "EMP-001", effectiveDate,
-                new BigDecimal("8.0"), new BigDecimal("0.5")
-            ),
-            new LaborRecord(
-                "LH-2025-002", "WO-2025-002", 1,
-                LocalDate.of(2025, 1, 16),
-                "EMP-001", effectiveDate,
-                new BigDecimal("6.0"), BigDecimal.ZERO
-            )
-        );
-
-        records.forEach(laborRecordMapper::insert);
-        log.info("工数実績データ {}件 投入完了", records.size());
-    }
+    // ... cleanAll() メソッド省略（全実装は実際のソースコードを参照）
 }
 ```
 
 </details>
 
-### Seed 削除用 Mapper XML
-
-<details>
-<summary>seed-mapper.xml</summary>
-
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="seed">
-
-    <!-- 削除文（トランザクションデータ） -->
-    <delete id="deleteAllLaborRecords">
-        DELETE FROM "工数実績データ"
-    </delete>
-
-    <delete id="deleteAllCompletionRecords">
-        DELETE FROM "完成実績データ"
-    </delete>
-
-    <delete id="deleteAllWorkOrderDetails">
-        DELETE FROM "作業指示明細データ"
-    </delete>
-
-    <delete id="deleteAllWorkOrders">
-        DELETE FROM "作業指示データ"
-    </delete>
-
-    <delete id="deleteAllPurchaseOrderDetails">
-        DELETE FROM "発注明細データ"
-    </delete>
-
-    <delete id="deleteAllPurchaseOrders">
-        DELETE FROM "発注データ"
-    </delete>
-
-    <delete id="deleteAllOrders">
-        DELETE FROM "オーダ情報"
-    </delete>
-
-    <delete id="deleteAllStocks">
-        DELETE FROM "在庫情報"
-    </delete>
-
-    <!-- 削除文（マスタデータ） -->
-    <delete id="deleteAllDefects">
-        DELETE FROM "欠点マスタ"
-    </delete>
-
-    <delete id="deleteAllUnitPrices">
-        DELETE FROM "単価マスタ"
-    </delete>
-
-    <delete id="deleteAllEmployees">
-        DELETE FROM "担当者マスタ"
-    </delete>
-
-    <delete id="deleteAllRoutings">
-        DELETE FROM "工程表"
-    </delete>
-
-    <delete id="deleteAllBoms">
-        DELETE FROM "BOM"
-    </delete>
-
-    <delete id="deleteAllItems">
-        DELETE FROM "品目マスタ"
-    </delete>
-
-    <delete id="deleteAllProcesses">
-        DELETE FROM "工程マスタ"
-    </delete>
-
-    <delete id="deleteAllWarehouses">
-        DELETE FROM "倉庫マスタ"
-    </delete>
-
-    <delete id="deleteAllLocations">
-        DELETE FROM "場所マスタ"
-    </delete>
-
-    <delete id="deleteAllSuppliers">
-        DELETE FROM "取引先マスタ"
-    </delete>
-
-    <delete id="deleteAllDepartments">
-        DELETE FROM "部門マスタ"
-    </delete>
-
-    <delete id="deleteAllItemGroups">
-        DELETE FROM "品目グループマスタ"
-    </delete>
-
-    <delete id="deleteAllUnits">
-        DELETE FROM "単位マスタ"
-    </delete>
-
-</mapper>
-```
-
-</details>
+**特徴:**
+- **べき等性（Idempotent）**: 各レコードで既存データをチェックしてから投入
+- **外部キー制約考慮**: ヘッダ → 明細の順で投入
 
 ### 実行方法
 
-#### Gradle タスクの設定
+#### アプリケーション起動時の自動実行
 
-```kotlin
-// build.gradle.kts
-tasks.register<JavaExec>("seedData") {
-    group = "application"
-    description = "Seed データを投入する"
-    mainClass.set("com.example.sms.seed.SeedRunner")
-    classpath = sourceSets["main"].runtimeClasspath
-    args("--spring.profiles.active=seed")
-}
-```
-
-#### 実行コマンド
+`SeedDataRunner` は `@Profile({"default", "demo"})` で設定されているため、以下のプロファイルで自動実行されます：
 
 ```bash
-# Gradle タスクで実行
-./gradlew seedData
+# default プロファイル（PostgreSQL）で起動
+./gradlew bootRun
 
-# または直接 Java で実行
-java -jar build/libs/production-management.jar --spring.profiles.active=seed
+# demo プロファイル（H2）で起動
+./gradlew bootRun --args='--spring.profiles.active=demo'
+```
+
+#### デモ用 data.sql
+
+`src/main/resources/db/demo/data.sql` は SeedDataRunner に委譲するため、以下のように空になっています：
+
+```sql
+-- =============================================================================
+-- H2 デモ環境用初期データ
+-- Seed データは SeedDataRunner によりアプリケーション起動時に投入されます
+-- =============================================================================
+
+-- ダミー文（Spring SQL init は空スクリプトを許容しないため）
+SELECT 1;
 ```
 
 ---
@@ -1246,61 +928,52 @@ java -jar build/libs/production-management.jar --spring.profiles.active=seed
 ### データの整合性確認（BOM 展開・在庫残高・発注残）
 
 <details>
-<summary>SeedDataIntegrationTest.java</summary>
+<summary>SeedDataIntegrationTest.java（抜粋）</summary>
 
 ```java
-// src/test/java/com/example/sms/seed/SeedDataIntegrationTest.java
-package com.example.sms.seed;
-
-import com.example.sms.domain.model.bom.Bom;
-import com.example.sms.domain.model.inventory.Stock;
-import com.example.sms.domain.model.item.Item;
-import com.example.sms.infrastructure.out.persistence.mapper.*;
-import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.util.List;
+package com.example.pms.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@Testcontainers
+import com.example.pms.application.port.out.*;
+import com.example.pms.domain.model.bom.Bom;
+import com.example.pms.domain.model.inventory.Stock;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
+import com.example.pms.domain.model.plan.Order;
+import com.example.pms.domain.model.process.ProcessRoute;
+import com.example.pms.infrastructure.in.seed.SeedDataService;
+import java.math.BigDecimal;
+import java.util.List;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+/**
+ * Seed データ整合性チェック.
+ * chapter31.md 準拠の E 社データが正しく投入され、整合性を保っているかを検証する。
+ */
 @DisplayName("Seed データ整合性チェック")
-class SeedDataIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("production_test")
-            .withUsername("test")
-            .withPassword("test");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class SeedDataIntegrationTest extends IntegrationTestBase {
 
     @Autowired
     private SeedDataService seedDataService;
 
     @Autowired
-    private ItemMapper itemMapper;
+    private ItemRepository itemRepository;
 
     @Autowired
-    private BomMapper bomMapper;
+    private BomRepository bomRepository;
 
     @Autowired
-    private StockMapper stockMapper;
+    private StockRepository stockRepository;
 
-    @BeforeEach
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @BeforeAll
     void seedData() {
+        // Seed データを投入（一度だけ実行）
         seedDataService.seedAll();
     }
 
@@ -1311,22 +984,38 @@ class SeedDataIntegrationTest {
         @Test
         @DisplayName("すべての品目が単位を持つ")
         void allItemsHaveUnit() {
-            List<Item> items = itemMapper.findAll();
+            List<Item> items = itemRepository.findAll();
 
             assertThat(items).isNotEmpty();
             for (Item item : items) {
-                assertThat(item.getUnitCode()).isNotBlank();
+                assertThat(item.getUnitCode())
+                        .as("品目 %s の単位", item.getItemCode())
+                        .isNotBlank();
             }
         }
 
         @Test
-        @DisplayName("すべての品目がデフォルト場所を持つ")
-        void allItemsHaveDefaultLocation() {
-            List<Item> items = itemMapper.findAll();
+        @DisplayName("品目区分ごとに適切な品目が登録されている")
+        void itemsHaveCorrectCategory() {
+            // 製品
+            var prodA001 = itemRepository.findByItemCode("PROD-A001");
+            assertThat(prodA001).isPresent();
+            assertThat(prodA001.get().getItemCategory()).isEqualTo(ItemCategory.PRODUCT);
 
-            for (Item item : items) {
-                assertThat(item.getLocationCode()).isNotBlank();
-            }
+            // 半製品
+            var semiA001 = itemRepository.findByItemCode("SEMI-A001");
+            assertThat(semiA001).isPresent();
+            assertThat(semiA001.get().getItemCategory()).isEqualTo(ItemCategory.SEMI_PRODUCT);
+
+            // 部品
+            var part001 = itemRepository.findByItemCode("PART-001");
+            assertThat(part001).isPresent();
+            assertThat(part001.get().getItemCategory()).isEqualTo(ItemCategory.PART);
+
+            // 材料
+            var mat001 = itemRepository.findByItemCode("MAT-001");
+            assertThat(mat001).isPresent();
+            assertThat(mat001.get().getItemCategory()).isEqualTo(ItemCategory.MATERIAL);
         }
     }
 
@@ -1335,25 +1024,30 @@ class SeedDataIntegrationTest {
     class BomIntegrity {
 
         @Test
-        @DisplayName("製品のBOMが正しく展開できる")
+        @DisplayName("製品 PROD-A001 の BOM が正しく展開できる")
         void productBomCanBeExpanded() {
-            List<Bom> boms = bomMapper.findByParentItemCode("PROD-A001");
+            List<Bom> boms = bomRepository.findByParentItemCode("PROD-A001");
 
             assertThat(boms).isNotEmpty();
-            for (Bom bom : boms) {
-                assertThat(bom.getRequiredQuantity()).isPositive();
-            }
+            assertThat(boms).anyMatch(bom -> "SEMI-A001".equals(bom.getChildItemCode()));
+            assertThat(boms).anyMatch(bom -> "PART-001".equals(bom.getChildItemCode()));
         }
 
         @Test
         @DisplayName("BOM に循環参照がない")
         void noCyclicReferenceInBom() {
-            List<Bom> allBoms = bomMapper.findAll();
+            List<String> parentItems = List.of(
+                    "PROD-A001", "PROD-B001", "PROD-C001",
+                    "SEMI-A001", "SEMI-B001", "SEMI-B002", "SEMI-B003", "SEMI-C001"
+            );
 
-            for (Bom bom : allBoms) {
-                // 簡易的な循環参照チェック（親=子は禁止）
-                assertThat(bom.getParentItemCode())
-                    .isNotEqualTo(bom.getChildItemCode());
+            for (String parentItemCode : parentItems) {
+                List<Bom> boms = bomRepository.findByParentItemCode(parentItemCode);
+                for (Bom bom : boms) {
+                    assertThat(bom.getParentItemCode())
+                            .as("BOM: %s -> %s", bom.getParentItemCode(), bom.getChildItemCode())
+                            .isNotEqualTo(bom.getChildItemCode());
+                }
             }
         }
     }
@@ -1365,11 +1059,49 @@ class SeedDataIntegrationTest {
         @Test
         @DisplayName("在庫数量が0以上である")
         void stockQuantityIsNonNegative() {
-            List<Stock> stocks = stockMapper.findAll();
+            List<Stock> stocks = stockRepository.findAll();
 
             assertThat(stocks).isNotEmpty();
             for (Stock stock : stocks) {
-                assertThat(stock.getQuantity()).isNotNegative();
+                assertThat(stock.getStockQuantity())
+                        .as("在庫 %s/%s の数量", stock.getLocationCode(), stock.getItemCode())
+                        .isGreaterThanOrEqualTo(BigDecimal.ZERO);
+            }
+        }
+
+        @Test
+        @DisplayName("材料倉庫に材料在庫がある")
+        void materialWarehouseHasMaterialStock() {
+            var matStock = stockRepository.findByLocationAndItem("WH-MAT", "MAT-001");
+
+            assertThat(matStock).isPresent();
+            assertThat(matStock.get().getStockQuantity()).isGreaterThan(BigDecimal.ZERO);
+        }
+    }
+
+    @Nested
+    @DisplayName("MRP シナリオの検証")
+    class MrpScenarioValidation {
+
+        @Test
+        @DisplayName("製造オーダから所要量が正しく計算される")
+        void calculateRequirementsFromManufacturingOrder() {
+            var orderOpt = orderRepository.findByOrderNumber("MO-2025-001");
+            assertThat(orderOpt).isPresent();
+
+            Order order = orderOpt.get();
+            assertThat(order.getPlanQuantity()).isEqualByComparingTo(new BigDecimal("100"));
+
+            // BOM 展開で必要量を計算
+            List<Bom> boms = bomRepository.findByParentItemCode(order.getItemCode());
+
+            assertThat(boms).isNotEmpty();
+            for (Bom bom : boms) {
+                BigDecimal requiredQty = order.getPlanQuantity()
+                        .multiply(bom.getRequiredQuantity());
+                assertThat(requiredQty)
+                        .as("品目 %s の所要量", bom.getChildItemCode())
+                        .isGreaterThan(BigDecimal.ZERO);
             }
         }
     }
@@ -1377,6 +1109,12 @@ class SeedDataIntegrationTest {
 ```
 
 </details>
+
+**特徴:**
+- **IntegrationTestBase 継承**: Testcontainers 設定を共通基底クラスで管理
+- **Repository インターフェース**: Mapper 直接利用ではなく Repository 経由でテスト
+- **@BeforeAll + PER_CLASS**: Seed データは1回だけ投入（テスト間で共有）
+- **包括的なテスト**: マスタデータ、BOM 整合性、在庫、MRP シナリオを網羅
 
 ### サンプルデータの活用方法
 
@@ -1398,18 +1136,22 @@ class SeedDataIntegrationTest {
 @Test
 @DisplayName("製造オーダから所要量が正しく計算される")
 void calculateRequirementsFromManufacturingOrder() {
-    var order = orderMapper.findByOrderNumber("MO-2025-001");
+    var orderOpt = orderRepository.findByOrderNumber("MO-2025-001");
+    assertThat(orderOpt).isPresent();
 
-    assertThat(order).isNotNull();
-    assertThat(order.getQuantity()).isEqualByComparingTo(new BigDecimal("100"));
+    Order order = orderOpt.get();
+    assertThat(order.getPlanQuantity()).isEqualByComparingTo(new BigDecimal("100"));
 
-    // BOM展開で必要量を計算
-    List<Bom> boms = bomMapper.findByParentItemCode(order.getItemCode());
+    // BOM 展開で必要量を計算
+    List<Bom> boms = bomRepository.findByParentItemCode(order.getItemCode());
 
+    assertThat(boms).isNotEmpty();
     for (Bom bom : boms) {
-        BigDecimal requiredQty = order.getQuantity()
-            .multiply(bom.getRequiredQuantity());
-        System.out.println(bom.getChildItemCode() + ": " + requiredQty + "個");
+        BigDecimal requiredQty = order.getPlanQuantity()
+                .multiply(bom.getRequiredQuantity());
+        assertThat(requiredQty)
+                .as("品目 %s の所要量", bom.getChildItemCode())
+                .isGreaterThan(BigDecimal.ZERO);
     }
 }
 ```

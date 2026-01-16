@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      lang="ja">
+<head>
+    <title>404 - Not Found</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="text-center py-5">
+            <h1 class="display-1 text-muted">404</h1>
+            <h2 th:text="${errorTitle ?: 'ページが見つかりません'}"></h2>
+            <p class="lead text-muted" th:text="${errorMessage ?: 'お探しのページは存在しないか、移動した可能性があります。'}"></p>
+            <div class="mt-4">
+                <a href="/" class="btn btn-primary">
+                    <i class="bi bi-house"></i> トップページへ
+                </a>
+                <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                    <i class="bi bi-arrow-left"></i> 戻る
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

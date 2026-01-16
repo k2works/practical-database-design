@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.MasterProductionScheduleMapper">
+
+    <!-- 日本語カラム名と英語プロパティ名のマッピング -->
+    <resultMap id="MasterProductionScheduleResultMap" type="com.example.pms.domain.model.plan.MasterProductionSchedule">
+        <id property="id" column="ID"/>
+        <result property="mpsNumber" column="MPS番号"/>
+        <result property="planDate" column="計画日"/>
+        <result property="itemCode" column="品目コード"/>
+        <result property="planQuantity" column="計画数量"/>
+        <result property="dueDate" column="納期"/>
+        <result property="status" column="ステータス"
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler"/>
+        <result property="locationCode" column="場所コード"/>
+        <result property="remarks" column="備考"/>
+        <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
+        <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
+        <result property="version" column="バージョン"/>
+    </resultMap>
+
+    <!-- オーダを含むResultMap（nested select） -->
+    <resultMap id="MasterProductionScheduleWithOrdersResultMap" type="com.example.pms.domain.model.plan.MasterProductionSchedule"
+               extends="MasterProductionScheduleResultMap">
+        <collection property="orders" ofType="com.example.pms.domain.model.plan.Order"
+                    column="ID" select="com.example.pms.infrastructure.out.persistence.mapper.OrderMapper.findByMpsId"/>
+    </resultMap>
+
+    <!-- PostgreSQL用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.plan.MasterProductionSchedule"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
+        INSERT INTO "基準生産計画" (
+            "MPS番号", "計画日", "品目コード", "計画数量", "納期",
+            "ステータス", "場所コード", "備考", "作成者", "更新者"
+        ) VALUES (
+            #{mpsNumber},
+            #{planDate},
+            #{itemCode},
+            #{planQuantity},
+            #{dueDate},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
+            #{locationCode},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- H2用 INSERT -->
+    <insert id="insert" parameterType="com.example.pms.domain.model.plan.MasterProductionSchedule"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "基準生産計画" (
+            "MPS番号", "計画日", "品目コード", "計画数量", "納期",
+            "ステータス", "場所コード", "備考", "作成者", "更新者"
+        ) VALUES (
+            #{mpsNumber},
+            #{planDate},
+            #{itemCode},
+            #{planQuantity},
+            #{dueDate},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler},
+            #{locationCode},
+            #{remarks},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <select id="findById" resultMap="MasterProductionScheduleResultMap">
+        SELECT * FROM "基準生産計画" WHERE "ID" = #{id}
+    </select>
+
+    <select id="findByMpsNumber" resultMap="MasterProductionScheduleResultMap">
+        SELECT * FROM "基準生産計画" WHERE "MPS番号" = #{mpsNumber}
+    </select>
+
+    <!-- オーダを含めて取得 -->
+    <select id="findByMpsNumberWithOrders" resultMap="MasterProductionScheduleWithOrdersResultMap">
+        SELECT * FROM "基準生産計画" WHERE "MPS番号" = #{mpsNumber}
+    </select>
+
+    <!-- PostgreSQL用 findByStatus -->
+    <select id="findByStatus" resultMap="MasterProductionScheduleResultMap" databaseId="postgresql">
+        SELECT * FROM "基準生産計画"
+        WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス
+        ORDER BY "納期"
+    </select>
+
+    <!-- H2用 findByStatus -->
+    <select id="findByStatus" resultMap="MasterProductionScheduleResultMap" databaseId="h2">
+        SELECT * FROM "基準生産計画"
+        WHERE "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}
+        ORDER BY "納期"
+    </select>
+
+    <select id="findAll" resultMap="MasterProductionScheduleResultMap">
+        SELECT * FROM "基準生産計画"
+        ORDER BY "納期"
+    </select>
+
+    <!-- ページネーション付き検索 -->
+    <select id="findWithPagination" resultMap="MasterProductionScheduleResultMap">
+        SELECT * FROM "基準生産計画"
+        <where>
+            <if test="status != null">
+                AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("MPS番号" LIKE '%' || #{keyword} || '%' OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+        ORDER BY "納期" DESC, "MPS番号"
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 件数取得 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM "基準生産計画"
+        <where>
+            <if test="status != null">
+                AND "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND ("MPS番号" LIKE '%' || #{keyword} || '%' OR "品目コード" LIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- PostgreSQL用 UPDATE -->
+    <update id="update" parameterType="com.example.pms.domain.model.plan.MasterProductionSchedule" databaseId="postgresql">
+        UPDATE "基準生産計画"
+        SET "計画日" = #{planDate},
+            "品目コード" = #{itemCode},
+            "計画数量" = #{planQuantity},
+            "納期" = #{dueDate},
+            "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
+            "場所コード" = #{locationCode},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- H2用 UPDATE -->
+    <update id="update" parameterType="com.example.pms.domain.model.plan.MasterProductionSchedule" databaseId="h2">
+        UPDATE "基準生産計画"
+        SET "計画日" = #{planDate},
+            "品目コード" = #{itemCode},
+            "計画数量" = #{planQuantity},
+            "納期" = #{dueDate},
+            "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler},
+            "場所コード" = #{locationCode},
+            "備考" = #{remarks},
+            "更新日時" = CURRENT_TIMESTAMP,
+            "更新者" = #{updatedBy},
+            "バージョン" = "バージョン" + 1
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- PostgreSQL用 updateStatus -->
+    <update id="updateStatus" databaseId="postgresql">
+        UPDATE "基準生産計画"
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler}::計画ステータス,
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- H2用 updateStatus -->
+    <update id="updateStatus" databaseId="h2">
+        UPDATE "基準生産計画"
+        SET "ステータス" = #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.PlanStatusTypeHandler},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "ID" = #{id}
+    </update>
+
+    <!-- PostgreSQL用 DELETE -->
+    <delete id="deleteAll" databaseId="postgresql">
+        TRUNCATE TABLE "基準生産計画" CASCADE
+    </delete>
+
+    <!-- H2用 DELETE -->
+    <delete id="deleteAll" databaseId="h2">
+        DELETE FROM "基準生産計画"
+    </delete>
+</mapper>

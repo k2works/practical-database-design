@@ -273,16 +273,20 @@ CREATE INDEX "idx_作業指示明細_工程コード" ON "作業指示明細デ�
 <summary>Entity: Process（工程マスタ）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/process/Process.java
-package com.example.production.domain.model.process;
+// src/main/java/com/example/pms/domain/model/process/Process.java
+package com.example.pms.domain.model.process;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Process {
     private String processCode;
     private String processName;
@@ -299,17 +303,21 @@ public class Process {
 <summary>Entity: Routing（工程表）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/process/Routing.java
-package com.example.production.domain.model.process;
+// src/main/java/com/example/pms/domain/model/process/Routing.java
+package com.example.pms.domain.model.process;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Routing {
     private Integer id;
     private String itemCode;
@@ -332,8 +340,8 @@ public class Routing {
 <summary>Enum: WorkOrderStatus（作業指示ステータス）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/process/WorkOrderStatus.java
-package com.example.production.domain.model.process;
+// src/main/java/com/example/pms/domain/model/process/WorkOrderStatus.java
+package com.example.pms.domain.model.process;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -354,7 +362,7 @@ public enum WorkOrderStatus {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Unknown work order status: " + displayName);
+        throw new IllegalArgumentException("不正な作業指示ステータス: " + displayName);
     }
 }
 ```
@@ -367,14 +375,16 @@ public enum WorkOrderStatus {
 <summary>Entity: WorkOrder（作業指示データ）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/process/WorkOrder.java
-package com.example.production.domain.model.process;
+// src/main/java/com/example/pms/domain/model/process/WorkOrder.java
+package com.example.pms.domain.model.process;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.master.Location;
-import com.example.production.domain.model.planning.Order;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.master.Location;
+import com.example.pms.domain.model.planning.Order;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -383,6 +393,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class WorkOrder {
     private Integer id;
     private String workOrderNumber;
@@ -420,23 +432,29 @@ public class WorkOrder {
 <summary>Entity: WorkOrderDetail（作業指示明細データ）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/process/WorkOrderDetail.java
-package com.example.production.domain.model.process;
+// src/main/java/com/example/pms/domain/model/process/WorkOrderDetail.java
+package com.example.pms.domain.model.process;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class WorkOrderDetail {
     private Integer id;
     private String workOrderNumber;
     private Integer sequence;
     private String processCode;
     private LocalDateTime createdAt;
+    private String createdBy;
     private LocalDateTime updatedAt;
+    private String updatedBy;
 
     // リレーション
     private WorkOrder workOrder;
@@ -452,10 +470,10 @@ public class WorkOrderDetail {
 <summary>TypeHandler: WorkOrderStatusTypeHandler</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/WorkOrderStatusTypeHandler.java
-package com.example.production.infrastructure.persistence;
+// src/main/java/com/example/pms/infrastructure/out/persistence/typehandler/WorkOrderStatusTypeHandler.java
+package com.example.pms.infrastructure.out.persistence.typehandler;
 
-import com.example.production.domain.model.process.WorkOrderStatus;
+import com.example.pms.domain.model.process.WorkOrderStatus;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -502,13 +520,13 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
 <summary>Mapper XML: WorkOrderMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/WorkOrderMapper.xml -->
+<!-- src/main/resources/com/example/pms/infrastructure/out/persistence/mapper/WorkOrderMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.WorkOrderMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.WorkOrderMapper">
 
-    <resultMap id="WorkOrderResultMap" type="com.example.production.domain.model.process.WorkOrder">
+    <resultMap id="WorkOrderResultMap" type="com.example.pms.domain.model.process.WorkOrder">
         <id property="id" column="ID"/>
         <result property="workOrderNumber" column="作業指示番号"/>
         <result property="orderNumber" column="オーダ番号"/>
@@ -524,7 +542,7 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
         <result property="totalGoodQuantity" column="総良品数"/>
         <result property="totalDefectQuantity" column="総不良品数"/>
         <result property="status" column="ステータス"
-                typeHandler="com.example.production.infrastructure.persistence.WorkOrderStatusTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.out.persistence.typehandler.WorkOrderStatusTypeHandler"/>
         <result property="completedFlag" column="完了フラグ"/>
         <result property="remarks" column="備考"/>
         <result property="createdAt" column="作成日時"/>
@@ -533,7 +551,8 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
         <result property="updatedBy" column="更新者"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+    <!-- PostgreSQL用 INSERT (ENUM キャスト必須) -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="postgresql">
         INSERT INTO "作業指示データ" (
             "作業指示番号", "オーダ番号", "作業指示日", "品目コード", "作業指示数",
             "場所コード", "開始予定日", "完成予定日", "ステータス", "完了フラグ", "備考", "作成者"
@@ -546,7 +565,28 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
             #{locationCode},
             #{plannedStartDate},
             #{plannedEndDate},
-            #{status, typeHandler=com.example.production.infrastructure.persistence.WorkOrderStatusTypeHandler}::作業指示ステータス,
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.WorkOrderStatusTypeHandler}::作業指示ステータス,
+            #{completedFlag},
+            #{remarks},
+            #{createdBy}
+        )
+    </insert>
+
+    <!-- H2用 INSERT (ENUM キャスト不要) -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID" databaseId="h2">
+        INSERT INTO "作業指示データ" (
+            "作業指示番号", "オーダ番号", "作業指示日", "品目コード", "作業指示数",
+            "場所コード", "開始予定日", "完成予定日", "ステータス", "完了フラグ", "備考", "作成者"
+        ) VALUES (
+            #{workOrderNumber},
+            #{orderNumber},
+            #{workOrderDate},
+            #{itemCode},
+            #{orderQuantity},
+            #{locationCode},
+            #{plannedStartDate},
+            #{plannedEndDate},
+            #{status, typeHandler=com.example.pms.infrastructure.out.persistence.typehandler.WorkOrderStatusTypeHandler},
             #{completedFlag},
             #{remarks},
             #{createdBy}
@@ -564,7 +604,8 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
         LIMIT 1
     </select>
 
-    <update id="startWork">
+    <!-- PostgreSQL用 UPDATE (ENUM キャスト必須) -->
+    <update id="startWork" databaseId="postgresql">
         UPDATE "作業指示データ"
         SET "ステータス" = '作業中'::作業指示ステータス,
             "実績開始日" = #{actualStartDate},
@@ -572,9 +613,29 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
         WHERE "作業指示番号" = #{workOrderNumber}
     </update>
 
-    <update id="completeWork">
+    <!-- H2用 UPDATE (ENUM キャスト不要) -->
+    <update id="startWork" databaseId="h2">
+        UPDATE "作業指示データ"
+        SET "ステータス" = '作業中',
+            "実績開始日" = #{actualStartDate},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "作業指示番号" = #{workOrderNumber}
+    </update>
+
+    <!-- PostgreSQL用 completeWork -->
+    <update id="completeWork" databaseId="postgresql">
         UPDATE "作業指示データ"
         SET "ステータス" = '完了'::作業指示ステータス,
+            "完了フラグ" = true,
+            "実績完了日" = #{actualEndDate},
+            "更新日時" = CURRENT_TIMESTAMP
+        WHERE "作業指示番号" = #{workOrderNumber}
+    </update>
+
+    <!-- H2用 completeWork -->
+    <update id="completeWork" databaseId="h2">
+        UPDATE "作業指示データ"
+        SET "ステータス" = '完了',
             "完了フラグ" = true,
             "実績完了日" = #{actualEndDate},
             "更新日時" = CURRENT_TIMESTAMP
@@ -602,28 +663,32 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
 <summary>Mapper XML: WorkOrderDetailMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/WorkOrderDetailMapper.xml -->
+<!-- src/main/resources/com/example/pms/infrastructure/out/persistence/mapper/WorkOrderDetailMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.WorkOrderDetailMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.WorkOrderDetailMapper">
 
-    <resultMap id="WorkOrderDetailResultMap" type="com.example.production.domain.model.process.WorkOrderDetail">
+    <resultMap id="WorkOrderDetailResultMap" type="com.example.pms.domain.model.process.WorkOrderDetail">
         <id property="id" column="ID"/>
         <result property="workOrderNumber" column="作業指示番号"/>
         <result property="sequence" column="工順"/>
         <result property="processCode" column="工程コード"/>
         <result property="createdAt" column="作成日時"/>
+        <result property="createdBy" column="作成者"/>
         <result property="updatedAt" column="更新日時"/>
+        <result property="updatedBy" column="更新者"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
         INSERT INTO "作業指示明細データ" (
-            "作業指示番号", "工順", "工程コード"
+            "作業指示番号", "工順", "工程コード", "作成者", "更新者"
         ) VALUES (
             #{workOrderNumber},
             #{sequence},
-            #{processCode}
+            #{processCode},
+            #{createdBy},
+            #{updatedBy}
         )
     </insert>
 
@@ -633,7 +698,7 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
         ORDER BY "工順"
     </select>
 
-    <select id="findByWorkOrderAndSequence" resultMap="WorkOrderDetailResultMap">
+    <select id="findByWorkOrderNumberAndSequence" resultMap="WorkOrderDetailResultMap">
         SELECT * FROM "作業指示明細データ"
         WHERE "作業指示番号" = #{workOrderNumber} AND "工順" = #{sequence}
     </select>
@@ -652,20 +717,27 @@ public class WorkOrderStatusTypeHandler extends BaseTypeHandler<WorkOrderStatus>
 <summary>Mapper Interface: WorkOrderMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/WorkOrderMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/WorkOrderMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.process.WorkOrder;
+import com.example.pms.domain.model.process.WorkOrder;
+import com.example.pms.domain.model.process.WorkOrderStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Mapper
 public interface WorkOrderMapper {
     void insert(WorkOrder workOrder);
+    void update(WorkOrder workOrder);
+    WorkOrder findById(Integer id);
     WorkOrder findByWorkOrderNumber(String workOrderNumber);
+    List<WorkOrder> findByOrderNumber(String orderNumber);
+    List<WorkOrder> findByStatus(WorkOrderStatus status);
+    List<WorkOrder> findAll();
     String findLatestWorkOrderNumber(String prefix);
     void startWork(@Param("workOrderNumber") String workOrderNumber,
                    @Param("actualStartDate") LocalDate actualStartDate);
@@ -685,10 +757,10 @@ public interface WorkOrderMapper {
 <summary>Mapper Interface: WorkOrderDetailMapper</summary>
 
 ```java
-// src/main/java/com/example/production/infrastructure/persistence/mapper/WorkOrderDetailMapper.java
-package com.example.production.infrastructure.persistence.mapper;
+// src/main/java/com/example/pms/infrastructure/out/persistence/mapper/WorkOrderDetailMapper.java
+package com.example.pms.infrastructure.out.persistence.mapper;
 
-import com.example.production.domain.model.process.WorkOrderDetail;
+import com.example.pms.domain.model.process.WorkOrderDetail;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -697,9 +769,12 @@ import java.util.List;
 @Mapper
 public interface WorkOrderDetailMapper {
     void insert(WorkOrderDetail detail);
+    void update(WorkOrderDetail detail);
+    WorkOrderDetail findById(Integer id);
     List<WorkOrderDetail> findByWorkOrderNumber(String workOrderNumber);
-    WorkOrderDetail findByWorkOrderAndSequence(@Param("workOrderNumber") String workOrderNumber,
-                                               @Param("sequence") Integer sequence);
+    WorkOrderDetail findByWorkOrderNumberAndSequence(@Param("workOrderNumber") String workOrderNumber,
+                                                     @Param("sequence") Integer sequence);
+    List<WorkOrderDetail> findAll();
     void deleteAll();
 }
 ```
@@ -712,12 +787,12 @@ public interface WorkOrderDetailMapper {
 <summary>Service: WorkOrderService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/WorkOrderService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/WorkOrderService.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.planning.Order;
-import com.example.production.domain.model.process.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.planning.Order;
+import com.example.pms.domain.model.process.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -862,8 +937,8 @@ public class WorkOrderService {
 <summary>Input DTO: WorkOrderCreateInput</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/WorkOrderCreateInput.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/WorkOrderCreateInput.java
+package com.example.pms.application.service;
 
 import lombok.Builder;
 import lombok.Data;
@@ -890,17 +965,17 @@ public class WorkOrderCreateInput {
 <summary>Test: WorkOrderServiceTest</summary>
 
 ```java
-// src/test/java/com/example/production/application/service/WorkOrderServiceTest.java
-package com.example.production.application.service;
+// src/test/java/com/example/pms/application/service/WorkOrderServiceTest.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.model.item.ItemCategory;
-import com.example.production.domain.master.Location;
-import com.example.production.domain.model.planning.Order;
-import com.example.production.domain.model.planning.OrderType;
-import com.example.production.domain.model.planning.OrderStatus;
-import com.example.production.domain.model.process.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.model.item.ItemCategory;
+import com.example.pms.domain.master.Location;
+import com.example.pms.domain.model.planning.Order;
+import com.example.pms.domain.model.planning.OrderType;
+import com.example.pms.domain.model.planning.OrderStatus;
+import com.example.pms.domain.model.process.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import org.junit.jupiter.api.*;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1238,12 +1313,14 @@ CREATE INDEX "idx_完成実績_完成日" ON "完成実績データ"("完成日"
 <summary>Entity: CompletionResult（完成実績データ）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/process/CompletionResult.java
-package com.example.production.domain.model.process;
+// src/main/java/com/example/pms/domain/model/process/CompletionResult.java
+package com.example.pms.domain.model.process;
 
-import com.example.production.domain.model.item.Item;
+import com.example.pms.domain.model.item.Item;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1252,6 +1329,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CompletionResult {
     private Integer id;
     private String completionResultNumber;
@@ -1280,25 +1359,31 @@ public class CompletionResult {
 <summary>Entity: InspectionResult（完成検査結果データ）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/process/InspectionResult.java
-package com.example.production.domain.model.process;
+// src/main/java/com/example/pms/domain/model/process/InspectionResult.java
+package com.example.pms.domain.model.process;
 
-import com.example.production.domain.master.Defect;
+import com.example.pms.domain.master.Defect;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class InspectionResult {
     private Integer id;
     private String completionResultNumber;
     private String defectCode;
     private BigDecimal quantity;
     private LocalDateTime createdAt;
+    private String createdBy;
     private LocalDateTime updatedAt;
+    private String updatedBy;
 
     // リレーション
     private CompletionResult completionResult;
@@ -1314,13 +1399,13 @@ public class InspectionResult {
 <summary>Mapper XML: CompletionResultMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/CompletionResultMapper.xml -->
+<!-- src/main/resources/com/example/pms/infrastructure/out/persistence/mapper/CompletionResultMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.CompletionResultMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.CompletionResultMapper">
 
-    <resultMap id="CompletionResultResultMap" type="com.example.production.domain.model.process.CompletionResult">
+    <resultMap id="CompletionResultResultMap" type="com.example.pms.domain.model.process.CompletionResult">
         <id property="id" column="ID"/>
         <result property="completionResultNumber" column="完成実績番号"/>
         <result property="workOrderNumber" column="作業指示番号"/>
@@ -1384,11 +1469,11 @@ public class InspectionResult {
 <summary>Service: CompletionResultService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/CompletionResultService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/CompletionResultService.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.process.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.process.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1560,14 +1645,16 @@ CREATE INDEX "idx_工数実績_作業日" ON "工数実績データ"("作業日"
 <summary>Entity: LaborHours（工数実績データ）</summary>
 
 ```java
-// src/main/java/com/example/production/domain/model/process/LaborHours.java
-package com.example.production.domain.model.process;
+// src/main/java/com/example/pms/domain/model/process/LaborHours.java
+package com.example.pms.domain.model.process;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.master.Department;
-import com.example.production.domain.master.Employee;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.master.Department;
+import com.example.pms.domain.master.Employee;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -1575,6 +1662,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LaborHours {
     private Integer id;
     private String laborHoursNumber;
@@ -1609,13 +1698,13 @@ public class LaborHours {
 <summary>Mapper XML: LaborHoursMapper.xml</summary>
 
 ```xml
-<!-- src/main/resources/com/example/production/infrastructure/persistence/mapper/LaborHoursMapper.xml -->
+<!-- src/main/resources/com/example/pms/infrastructure/out/persistence/mapper/LaborHoursMapper.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.LaborHoursMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.LaborHoursMapper">
 
-    <resultMap id="LaborHoursResultMap" type="com.example.production.domain.model.process.LaborHours">
+    <resultMap id="LaborHoursResultMap" type="com.example.pms.domain.model.process.LaborHours">
         <id property="id" column="ID"/>
         <result property="laborHoursNumber" column="工数実績番号"/>
         <result property="workOrderNumber" column="作業指示番号"/>
@@ -1696,11 +1785,11 @@ public class LaborHours {
 <summary>Service: LaborHoursService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/LaborHoursService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/LaborHoursService.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.process.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.process.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1828,8 +1917,8 @@ public class LaborHoursService {
 <summary>Input DTO: LaborHoursInput</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/LaborHoursInput.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/LaborHoursInput.java
+package com.example.pms.application.service;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1856,8 +1945,8 @@ public class LaborHoursInput {
 <summary>DTO: LaborHoursSummary・ProcessLaborHours</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/LaborHoursSummary.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/LaborHoursSummary.java
+package com.example.pms.application.service;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1874,8 +1963,8 @@ public class LaborHoursSummary {
 ```
 
 ```java
-// src/main/java/com/example/production/application/service/ProcessLaborHours.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/ProcessLaborHours.java
+package com.example.pms.application.service;
 
 import lombok.Builder;
 import lombok.Data;
@@ -1947,10 +2036,10 @@ end note
 <summary>DTO: WorkOrderProgress</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/WorkOrderProgress.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/WorkOrderProgress.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.process.WorkOrderStatus;
+import com.example.pms.domain.model.process.WorkOrderStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -2015,8 +2104,8 @@ public class WorkOrderProgress {
 <summary>DTO: ProcessProgress</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/ProcessProgress.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/ProcessProgress.java
+package com.example.pms.application.service;
 
 import lombok.Builder;
 import lombok.Data;
@@ -2054,11 +2143,11 @@ public class ProcessProgress {
 <summary>Service: ProgressManagementService</summary>
 
 ```java
-// src/main/java/com/example/production/application/service/ProgressManagementService.java
-package com.example.production.application.service;
+// src/main/java/com/example/pms/application/service/ProgressManagementService.java
+package com.example.pms.application.service;
 
-import com.example.production.domain.model.process.*;
-import com.example.production.infrastructure.persistence.mapper.*;
+import com.example.pms.domain.model.process.*;
+import com.example.pms.infrastructure.out.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -2283,10 +2372,10 @@ ORDER BY
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/WorkOrderMapper.xml -->
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.WorkOrderMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.WorkOrderMapper">
 
     <!-- 作業指示（ヘッダ）with 明細・オーダ・品目 ResultMap -->
-    <resultMap id="workOrderWithDetailsResultMap" type="com.example.production.domain.model.process.WorkOrder">
+    <resultMap id="workOrderWithDetailsResultMap" type="com.example.pms.domain.model.process.WorkOrder">
         <id property="id" column="wo_id"/>
         <result property="workOrderNumber" column="wo_作業指示番号"/>
         <result property="orderNumber" column="wo_オーダ番号"/>
@@ -2302,7 +2391,7 @@ ORDER BY
         <result property="totalGoodQuantity" column="wo_総良品数"/>
         <result property="totalDefectQuantity" column="wo_総不良品数"/>
         <result property="status" column="wo_ステータス"
-                typeHandler="com.example.production.infrastructure.persistence.WorkOrderStatusTypeHandler"/>
+                typeHandler="com.example.pms.infrastructure.persistence.WorkOrderStatusTypeHandler"/>
         <result property="completedFlag" column="wo_完了フラグ"/>
         <result property="remarks" column="wo_備考"/>
         <result property="version" column="wo_バージョン"/>
@@ -2310,7 +2399,7 @@ ORDER BY
         <result property="updatedAt" column="wo_更新日時"/>
 
         <!-- オーダ情報との N:1 関連 -->
-        <association property="order" javaType="com.example.production.domain.model.planning.Order">
+        <association property="order" javaType="com.example.pms.domain.model.planning.Order">
             <id property="id" column="o_id"/>
             <result property="orderNumber" column="o_オーダNO"/>
             <result property="itemCode" column="o_品目コード"/>
@@ -2319,20 +2408,20 @@ ORDER BY
         </association>
 
         <!-- 品目マスタとの N:1 関連 -->
-        <association property="item" javaType="com.example.production.domain.model.item.Item">
+        <association property="item" javaType="com.example.pms.domain.model.item.Item">
             <id property="itemCode" column="i_品目コード"/>
             <result property="itemName" column="i_品目名"/>
             <result property="itemCategory" column="i_品目カテゴリ"
-                    typeHandler="com.example.production.infrastructure.persistence.ItemCategoryTypeHandler"/>
+                    typeHandler="com.example.pms.infrastructure.persistence.ItemCategoryTypeHandler"/>
         </association>
 
         <!-- 作業指示明細との 1:N 関連 -->
-        <collection property="details" ofType="com.example.production.domain.model.process.WorkOrderDetail"
+        <collection property="details" ofType="com.example.pms.domain.model.process.WorkOrderDetail"
                     resultMap="workOrderDetailNestedResultMap"/>
     </resultMap>
 
     <!-- 作業指示明細のネスト ResultMap（工程マスタを含む） -->
-    <resultMap id="workOrderDetailNestedResultMap" type="com.example.production.domain.model.process.WorkOrderDetail">
+    <resultMap id="workOrderDetailNestedResultMap" type="com.example.pms.domain.model.process.WorkOrderDetail">
         <id property="id" column="wd_id"/>
         <result property="workOrderNumber" column="wd_作業指示番号"/>
         <result property="sequence" column="wd_工順"/>
@@ -2341,7 +2430,7 @@ ORDER BY
         <result property="updatedAt" column="wd_更新日時"/>
 
         <!-- 工程マスタとの N:1 関連 -->
-        <association property="process" javaType="com.example.production.domain.model.process.Process">
+        <association property="process" javaType="com.example.pms.domain.model.process.Process">
             <id property="processCode" column="p_工程コード"/>
             <result property="processName" column="p_工程名"/>
         </association>
@@ -2411,11 +2500,11 @@ ORDER BY
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- src/main/resources/mapper/CompletionResultMapper.xml -->
-<mapper namespace="com.example.production.infrastructure.persistence.mapper.CompletionResultMapper">
+<mapper namespace="com.example.pms.infrastructure.out.persistence.mapper.CompletionResultMapper">
 
     <!-- 完成実績 with 検査結果・作業指示 ResultMap -->
     <resultMap id="completionResultWithInspectionsResultMap"
-               type="com.example.production.domain.model.process.CompletionResult">
+               type="com.example.pms.domain.model.process.CompletionResult">
         <id property="id" column="cr_id"/>
         <result property="completionResultNumber" column="cr_完成実績番号"/>
         <result property="workOrderNumber" column="cr_作業指示番号"/>
@@ -2430,25 +2519,25 @@ ORDER BY
         <result property="updatedAt" column="cr_更新日時"/>
 
         <!-- 作業指示との N:1 関連 -->
-        <association property="workOrder" javaType="com.example.production.domain.model.process.WorkOrder">
+        <association property="workOrder" javaType="com.example.pms.domain.model.process.WorkOrder">
             <id property="id" column="wo_id"/>
             <result property="workOrderNumber" column="wo_作業指示番号"/>
             <result property="itemCode" column="wo_品目コード"/>
             <result property="orderQuantity" column="wo_作業指示数"/>
             <result property="completedQuantity" column="wo_完成済数"/>
             <result property="status" column="wo_ステータス"
-                    typeHandler="com.example.production.infrastructure.persistence.WorkOrderStatusTypeHandler"/>
+                    typeHandler="com.example.pms.infrastructure.persistence.WorkOrderStatusTypeHandler"/>
         </association>
 
         <!-- 検査結果との 1:N 関連 -->
         <collection property="inspectionResults"
-                    ofType="com.example.production.domain.model.process.InspectionResult"
+                    ofType="com.example.pms.domain.model.process.InspectionResult"
                     resultMap="inspectionResultNestedResultMap"/>
     </resultMap>
 
     <!-- 検査結果のネスト ResultMap（欠点マスタを含む） -->
     <resultMap id="inspectionResultNestedResultMap"
-               type="com.example.production.domain.model.process.InspectionResult">
+               type="com.example.pms.domain.model.process.InspectionResult">
         <id property="id" column="ir_id"/>
         <result property="completionResultNumber" column="ir_完成実績番号"/>
         <result property="defectCode" column="ir_欠点コード"/>
@@ -2457,7 +2546,7 @@ ORDER BY
         <result property="updatedAt" column="ir_更新日時"/>
 
         <!-- 欠点マスタとの N:1 関連 -->
-        <association property="defect" javaType="com.example.production.domain.master.Defect">
+        <association property="defect" javaType="com.example.pms.domain.master.Defect">
             <id property="defectCode" column="d_欠点コード"/>
             <result property="defectName" column="d_欠点名"/>
             <result property="defectCategory" column="d_欠点区分"/>
@@ -2554,11 +2643,11 @@ COMMENT ON COLUMN "工数実績データ"."バージョン" IS '楽観ロック�
 
 ```java
 // src/main/java/com/example/production/domain/model/process/WorkOrder.java
-package com.example.production.domain.model.process;
+package com.example.pms.domain.model.process;
 
-import com.example.production.domain.model.item.Item;
-import com.example.production.domain.master.Location;
-import com.example.production.domain.model.planning.Order;
+import com.example.pms.domain.model.item.Item;
+import com.example.pms.domain.master.Location;
+import com.example.pms.domain.model.planning.Order;
 import lombok.Builder;
 import lombok.Data;
 
@@ -2647,7 +2736,7 @@ public class WorkOrder {
 <update id="updateStatusWithOptimisticLock">
     UPDATE "作業指示データ"
     SET
-        "ステータス" = #{newStatus, typeHandler=com.example.production.infrastructure.persistence.WorkOrderStatusTypeHandler}::作業指示ステータス,
+        "ステータス" = #{newStatus, typeHandler=com.example.pms.infrastructure.persistence.WorkOrderStatusTypeHandler}::作業指示ステータス,
         "実績開始日" = COALESCE("実績開始日", #{actualStartDate}),
         "実績完了日" = #{actualEndDate},
         "完了フラグ" = #{completedFlag},
@@ -2673,13 +2762,13 @@ public class WorkOrder {
 
 ```java
 // src/main/java/com/example/production/infrastructure/persistence/repository/WorkOrderRepositoryImpl.java
-package com.example.production.infrastructure.persistence.repository;
+package com.example.pms.infrastructure.persistence.repository;
 
-import com.example.production.application.port.out.WorkOrderRepository;
-import com.example.production.domain.exception.OptimisticLockException;
-import com.example.production.domain.model.process.WorkOrder;
-import com.example.production.domain.model.process.WorkOrderStatus;
-import com.example.production.infrastructure.persistence.mapper.WorkOrderMapper;
+import com.example.pms.application.port.out.WorkOrderRepository;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.process.WorkOrder;
+import com.example.pms.domain.model.process.WorkOrderStatus;
+import com.example.pms.infrastructure.out.persistence.mapper.WorkOrderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -2747,13 +2836,13 @@ public class WorkOrderRepositoryImpl implements WorkOrderRepository {
 
 ```java
 // src/test/java/com/example/production/infrastructure/persistence/repository/WorkOrderRepositoryOptimisticLockTest.java
-package com.example.production.infrastructure.persistence.repository;
+package com.example.pms.infrastructure.persistence.repository;
 
-import com.example.production.application.port.out.WorkOrderRepository;
-import com.example.production.domain.exception.OptimisticLockException;
-import com.example.production.domain.model.process.WorkOrder;
-import com.example.production.domain.model.process.WorkOrderStatus;
-import com.example.production.testsetup.BaseIntegrationTest;
+import com.example.pms.application.port.out.WorkOrderRepository;
+import com.example.pms.domain.exception.OptimisticLockException;
+import com.example.pms.domain.model.process.WorkOrder;
+import com.example.pms.domain.model.process.WorkOrderStatus;
+import com.example.pms.testsetup.BaseIntegrationTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
