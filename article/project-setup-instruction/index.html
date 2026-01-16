@@ -1,0 +1,4789 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="基幹業務システム（販売管理・財務会計・生産管理）のデータベース設計を体系的に解説">
+      
+      
+        <meta name="author" content="k2works">
+      
+      
+      
+        <link rel="prev" href="../ops/">
+      
+      
+        <link rel="next" href="../deploy-sms/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>プロジェクトセットアップ手順書 - 実践データベース設計：基幹業務システム編</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../docs/mkdocs/assets/css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="実践データベース設計：基幹業務システム編" class="md-header__button md-logo" aria-label="実践データベース設計：基幹業務システム編" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            実践データベース設計：基幹業務システム編
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              プロジェクトセットアップ手順書
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/k2works/practical-database-design" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    practical-database-design
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  実践データベース設計
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="実践データベース設計：基幹業務システム編" class="md-nav__button md-logo" aria-label="実践データベース設計：基幹業務システム編" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    実践データベース設計：基幹業務システム編
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/k2works/practical-database-design" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    practical-database-design
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    実践データベース設計
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    実践データベース設計
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    概要
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../techstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技術スタック
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../outline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    アウトライン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    執筆ワークフロー
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    運用ガイド
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    プロジェクトセットアップ手順書
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    プロジェクトセットアップ手順書
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        概要
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        前提条件
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="前提条件">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        必須ツール
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        推奨ツール
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: アプリケーション基盤の作成
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: アプリケーション基盤の作成">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 ディレクトリ構造の作成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 パッケージ名・設定の変更
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2 パッケージ名・設定の変更">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#buildgradlekts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build.gradle.kts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#applicationyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        application.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-demoyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        application-demo.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-h2-console-spring-boot-40" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 H2 Console 設定（Spring Boot 4.0 対応）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3 H2 Console 設定（Spring Boot 4.0 対応）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#h2consoleconfigjava" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        H2ConsoleConfig.java
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-mybatis-databaseid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 MyBatis databaseId 設定
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.4 MyBatis databaseId 設定">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mybatisconfigjava" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MyBatisConfig.java
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-dockerfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Dockerfile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-docker-composeyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 docker-compose.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: 開発インフラの設定
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: 開発インフラの設定">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-nix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Nix 開発環境
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 Nix 開発環境">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#appsnew_systemopsnixshellnix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        apps/${NEW_SYSTEM}/ops/nix/shell.nix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flakenix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        flake.nix に追加
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-gulp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Gulp タスクの追加
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Gulp タスクの追加">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#opsscriptsdocker-new_systemjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ops/scripts/docker-${NEW_SYSTEM}.js
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opsscriptsschemaspy-new_systemjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ops/scripts/schemaspy-${NEW_SYSTEM}.js
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opsscriptsheroku-new_systemjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ops/scripts/heroku-${NEW_SYSTEM}.js
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opsscriptstestjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ops/scripts/test.js に追加
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gulpfilejs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gulpfile.js に追加
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-pre-commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 pre-commit フックの設定
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 pre-commit フックの設定">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#huskypre-commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .husky/pre-commit に追加
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lintstagedrcnew_systemjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .lintstagedrc.${NEW_SYSTEM}.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: CI/CD の設定
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: CI/CD の設定">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-github-actions-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 GitHub Actions CI ワークフロー
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 GitHub Actions CI ワークフロー">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#githubworkflowsci-new_systemyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .github/workflows/ci-${NEW_SYSTEM}.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-heroku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Heroku デプロイワークフロー
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 Heroku デプロイワークフロー">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#githubworkflowsdeploy-demo-new_systemyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .github/workflows/deploy-demo-${NEW_SYSTEM}.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-heroku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Heroku デプロイ
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Heroku デプロイ">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-heroku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Heroku アプリの作成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-github-secrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 GitHub Secrets の設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: ドキュメント更新
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5: ドキュメント更新">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-readmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 README.md の更新
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-docsindexmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 docs/index.md の更新
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-appsnew_systemreadmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 apps/${NEW_SYSTEM}/README.md の作成
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        チェックリスト
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="チェックリスト">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        アプリケーション基盤
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        開発インフラ
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI/CD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heroku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heroku
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ドキュメント
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        トラブルシューティング
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="トラブルシューティング">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#h2-console-404" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        H2 Console が 404 エラーになる
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heroku-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heroku デプロイで Docker イメージがプッシュできない
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#github-actions-nix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitHub Actions で Nix キャッシュが効かない
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考リンク
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    デプロイ
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    デプロイ
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deploy-sms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SMS デモデプロイ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deploy-fas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAS デモデプロイ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deploy-pms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PMS デモデプロイ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1部 基幹業務システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第1部 基幹業務システムの全体像
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第1章 基幹業務システムとは
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2章 基幹業務システムの業務領域
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part1/chapter03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3章 業務フローの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第2部 販売管理システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第2部 販売管理システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4章 販売管理システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5章 マスタ情報の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第6章 受注・出荷・売上の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第7章 債権管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第8章 調達管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第9章 在庫管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第10章 債務管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter11/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第11章 共通処理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第12章 販売管理データ設計（B社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part2/chapter13/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第13章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_10" id="__nav_1_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第3部 財務会計システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第3部 財務会計システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14章 財務会計システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15章 勘定科目の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter16/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16章 仕訳の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17章 自動仕訳の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter18/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18章 勘定科目残高の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19章 赤黒とログの設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20章 財務会計データ設計（D社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3/chapter21/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_11" id="__nav_1_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第4部 生産管理システム
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第4部 生産管理システム
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter22/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22章 生産管理システムの全体像
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter23/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第23章 マスタ情報の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter24/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第24章 生産計画の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter25/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第25章 購買管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter26/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第26章 外注委託管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter27/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第27章 工程管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter28/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第28章 在庫管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第29章 品質管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter30/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第30章 製造原価管理の設計
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter31/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第31章 生産管理データ設計（E社事例）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part4/chapter32/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第32章 APIサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_12" id="__nav_1_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第5部 エンタープライズインテグレーション
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    第5部 エンタープライズインテグレーション
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter33.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第33章 システム統合の概要
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter34.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第34章 メッセージングパターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter35.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第35章 システム間連携パターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter36.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第36章 マスタデータ管理（MDM）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter37.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第37章 イベント駆動アーキテクチャ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter38.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第38章 API設計とサービス連携
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part5/chapter39.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第39章 データ連携の実装パターン
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_13" id="__nav_1_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 販売管理システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 販売管理システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study2-5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究5 AxonCQRS/ESの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_14" id="__nav_1_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 財務会計システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 財務会計システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study3-5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究5 AxonCQRS/ESの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_15" id="__nav_1_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 生産管理システム実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 生産管理システム実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究1 モノリスサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究2 JavaFXデスクトップアプリケーションの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究3 gRPCサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究4 GraphQLサービスの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../study/study4-5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究5 AxonCQRS/ESの実装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_16" id="__nav_1_16_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    研究 財務会計システムORM実装編
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    研究 財務会計システムORM実装編
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter14-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第14章 財務会計システムの全体像【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter15-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第15章 勘定科目の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter16-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第16章 仕訳の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter17-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第17章 自動仕訳の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter18-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第18章 勘定科目残高の設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter19-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第19章 赤黒とログの設計【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter20-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第20章 財務会計データ設計（D社事例）【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter21-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第21章 APIサービスの実装【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part3-orm/chapter22-orm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第22章 Axon CQRS/ESの実装【ORM版】
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_17" id="__nav_1_17_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    付録
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    付録
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/er-diagrams.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A 全体ER図
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/table-definitions.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    B テーブル定義一覧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/glossary.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C 用語集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_18" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_18" id="__nav_1_18_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    データベース
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_18_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_18">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    データベース
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assets/schemaspy-output/sms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SchemaSpy ER図（SMS）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assets/schemaspy-output/fas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SchemaSpy ER図（FAS）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assets/schemaspy-output/pms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SchemaSpy ER図（PMS）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="_1">プロジェクトセットアップ手順書<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>本ドキュメントは、新しいサブシステム（アプリケーション）を追加する際の手順を再利用可能な形式でまとめたものです。</p>
+<h2 id="_2">概要<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>本プロジェクトでは、以下の 3 つのサブシステムを同一構成で管理しています：</p>
+<table>
+<thead>
+<tr>
+<th>システム</th>
+<th>ポート</th>
+<th>ディレクトリ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SMS（販売管理システム）</td>
+<td>8080</td>
+<td><code>apps/sms/</code></td>
+</tr>
+<tr>
+<td>FAS（財務会計システム）</td>
+<td>8081</td>
+<td><code>apps/fas/</code></td>
+</tr>
+<tr>
+<td>PMS（生産管理システム）</td>
+<td>8082</td>
+<td><code>apps/pms/</code></td>
+</tr>
+</tbody>
+</table>
+<p>新しいサブシステムを追加する場合は、既存のシステム（FAS または PMS）をテンプレートとして使用します。</p>
+<hr />
+<h2 id="_3">前提条件<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="_4">必須ツール<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Java 25（Nix 環境で提供）</li>
+<li>Docker &amp; Docker Compose</li>
+<li>Node.js 22（Gulp タスク用）</li>
+<li>Heroku CLI（デプロイ用）</li>
+<li>GitHub CLI（gh）</li>
+</ul>
+<h3 id="_5">推奨ツール<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Nix（開発環境の統一管理）</li>
+<li>IntelliJ IDEA または VS Code</li>
+</ul>
+<hr />
+<h2 id="phase-1">Phase 1: アプリケーション基盤の作成<a class="headerlink" href="#phase-1" title="Permanent link">&para;</a></h2>
+<h3 id="11">1.1 ディレクトリ構造の作成<a class="headerlink" href="#11" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 新システム名を定義（例: XMS）</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NEW_SYSTEM</span><span class="o">=</span>xms
+<span class="nb">export</span><span class="w"> </span><span class="nv">NEW_SYSTEM_UPPER</span><span class="o">=</span>XMS
+<span class="nb">export</span><span class="w"> </span><span class="nv">NEW_PORT</span><span class="o">=</span><span class="m">8083</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NEW_PG_PORT</span><span class="o">=</span><span class="m">5435</span>
+
+<span class="c1"># 既存システムをコピー</span>
+cp<span class="w"> </span>-r<span class="w"> </span>apps/pms<span class="w"> </span>apps/<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>
+
+<span class="c1"># ディレクトリ構造</span>
+apps/<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>/
+├──<span class="w"> </span>backend/<span class="w">                    </span><span class="c1"># Spring Boot アプリケーション</span>
+│<span class="w">   </span>├──<span class="w"> </span>src/
+│<span class="w">   </span>│<span class="w">   </span>├──<span class="w"> </span>main/
+│<span class="w">   </span>│<span class="w">   </span>│<span class="w">   </span>├──<span class="w"> </span>java/com/example/<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>/
+│<span class="w">   </span>│<span class="w">   </span>│<span class="w">   </span>└──<span class="w"> </span>resources/
+│<span class="w">   </span>│<span class="w">   </span>└──<span class="w"> </span>test/
+│<span class="w">   </span>├──<span class="w"> </span>build.gradle.kts
+│<span class="w">   </span>├──<span class="w"> </span>Dockerfile
+│<span class="w">   </span>└──<span class="w"> </span>config/<span class="w">                 </span><span class="c1"># 品質チェック設定</span>
+├──<span class="w"> </span>docker-compose.yml
+├──<span class="w"> </span>README.md
+└──<span class="w"> </span>ops/
+<span class="w">    </span>├──<span class="w"> </span>docker/schemaspy/
+<span class="w">    </span>└──<span class="w"> </span>nix/shell.nix
+</code></pre></div>
+<h3 id="12">1.2 パッケージ名・設定の変更<a class="headerlink" href="#12" title="Permanent link">&para;</a></h3>
+<h4 id="buildgradlekts">build.gradle.kts<a class="headerlink" href="#buildgradlekts" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">plugins</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">java</span>
+<span class="w">    </span><span class="n">jacoco</span>
+<span class="w">    </span><span class="n">checkstyle</span>
+<span class="w">    </span><span class="n">pmd</span>
+<span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;org.springframework.boot&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;4.0.0&quot;</span>
+<span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;io.spring.dependency-management&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;1.1.7&quot;</span>
+<span class="w">    </span><span class="n">id</span><span class="p">(</span><span class="s">&quot;com.github.spotbugs&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;6.0.27&quot;</span>
+<span class="p">}</span>
+
+<span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;com.example.</span><span class="si">${</span><span class="n">NEW_SYSTEM</span><span class="si">}</span><span class="s">&quot;</span>
+<span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0.0.1-SNAPSHOT&quot;</span>
+
+<span class="n">java</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">toolchain</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">languageVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JavaLanguageVersion</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="m">25</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// バージョン管理</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">mybatisVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;4.0.0&quot;</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">testcontainersVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1.20.4&quot;</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">springdocVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;2.8.3&quot;</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">thymeleafLayoutDialectVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;3.4.0&quot;</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">poiVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;5.3.0&quot;</span>
+<span class="kd">val</span><span class="w"> </span><span class="nv">openhtmltopdfVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1.1.36&quot;</span>
+
+<span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Spring Boot Starters</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-web&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-validation&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-jdbc&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-actuator&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// Thymeleaf</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-thymeleaf&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:</span><span class="si">$</span><span class="n">thymeleafLayoutDialectVersion</span><span class="s">&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// Webjars</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.webjars:bootstrap:5.3.3&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.webjars:webjars-locator-core:0.59&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// 帳票出力</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.apache.poi:poi-ooxml:</span><span class="si">$</span><span class="n">poiVersion</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;io.github.openhtmltopdf:openhtmltopdf-pdfbox:</span><span class="si">$</span><span class="n">openhtmltopdfVersion</span><span class="s">&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// OpenAPI/Swagger</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springdoc:springdoc-openapi-starter-webmvc-ui:</span><span class="si">$</span><span class="n">springdocVersion</span><span class="s">&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// Database</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.mybatis.spring.boot:mybatis-spring-boot-starter:</span><span class="si">$</span><span class="n">mybatisVersion</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-flyway&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;org.flywaydb:flyway-database-postgresql&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="n">developmentOnly</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-devtools&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">runtimeOnly</span><span class="p">(</span><span class="s">&quot;org.postgresql:postgresql&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// H2 Database（デモ環境用 - implementation でサーブレット登録可能に）</span>
+<span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;com.h2database:h2&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="n">compileOnly</span><span class="p">(</span><span class="s">&quot;org.projectlombok:lombok&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">annotationProcessor</span><span class="p">(</span><span class="s">&quot;org.projectlombok:lombok&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// Test</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-starter-test&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-webmvc-test&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.springframework.boot:spring-boot-testcontainers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.mybatis.spring.boot:mybatis-spring-boot-starter-test:</span><span class="si">$</span><span class="n">mybatisVersion</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="n">platform</span><span class="p">(</span><span class="s">&quot;org.testcontainers:testcontainers-bom:</span><span class="si">$</span><span class="n">testcontainersVersion</span><span class="s">&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.testcontainers:junit-jupiter&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;org.testcontainers:postgresql&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testCompileOnly</span><span class="p">(</span><span class="s">&quot;org.projectlombok:lombok&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testAnnotationProcessor</span><span class="p">(</span><span class="s">&quot;org.projectlombok:lombok&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">testRuntimeOnly</span><span class="p">(</span><span class="s">&quot;org.junit.platform:junit-platform-launcher&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// JaCoCo</span>
+<span class="n">jacoco</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">toolVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0.8.14&quot;</span><span class="w"> </span><span class="c1">// Java 25 support</span>
+<span class="p">}</span>
+
+<span class="c1">// Checkstyle</span>
+<span class="n">checkstyle</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">toolVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;10.20.2&quot;</span>
+<span class="w">    </span><span class="n">configFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">file</span><span class="p">(</span><span class="s">&quot;</span><span class="si">${</span><span class="n">rootDir</span><span class="si">}</span><span class="s">/config/checkstyle/checkstyle.xml&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">isIgnoreFailures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+
+<span class="c1">// SpotBugs (Java 25 対応: 4.9.7+)</span>
+<span class="n">spotbugs</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">ignoreFailures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="n">excludeFilter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">file</span><span class="p">(</span><span class="s">&quot;</span><span class="si">${</span><span class="n">rootDir</span><span class="si">}</span><span class="s">/config/spotbugs/exclude.xml&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">toolVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;4.9.8&quot;</span>
+<span class="p">}</span>
+
+<span class="c1">// PMD (Java 25 対応: 7.16.0+)</span>
+<span class="n">pmd</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">toolVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;7.16.0&quot;</span>
+<span class="w">    </span><span class="n">isConsoleOutput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="n">ruleSetFiles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">files</span><span class="p">(</span><span class="s">&quot;</span><span class="si">${</span><span class="n">rootDir</span><span class="si">}</span><span class="s">/config/pmd/ruleset.xml&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">ruleSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">listOf</span><span class="p">()</span>
+<span class="w">    </span><span class="n">isIgnoreFailures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+
+<span class="c1">// カスタムタスク</span>
+<span class="n">tasks</span><span class="p">.</span><span class="na">register</span><span class="o">&lt;</span><span class="n">Test</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;tdd&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* TDD用 */</span><span class="w"> </span><span class="p">}</span>
+<span class="n">tasks</span><span class="p">.</span><span class="na">register</span><span class="p">(</span><span class="s">&quot;qualityCheck&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* 品質チェック全実行 */</span><span class="w"> </span><span class="p">}</span>
+<span class="n">tasks</span><span class="p">.</span><span class="na">register</span><span class="p">(</span><span class="s">&quot;fullCheck&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* 全テストと品質チェック */</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<h4 id="applicationyml">application.yml<a class="headerlink" href="#applicationyml" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="nt">spring</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">application</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}</span>
+<span class="w">  </span><span class="nt">datasource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jdbc:postgresql://localhost:${NEW_PG_PORT}/${NEW_SYSTEM}</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">    </span><span class="nt">driver-class-name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.postgresql.Driver</span>
+<span class="w">  </span><span class="nt">flyway</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">locations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">classpath:db/migration</span>
+<span class="w">    </span><span class="nt">baseline-on-migrate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">h2</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">console</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="nt">server</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_PORT}</span>
+
+<span class="nt">mybatis</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">mapper-locations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">classpath:mapper/**/*.xml</span>
+<span class="w">  </span><span class="nt">configuration</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">map-underscore-to-camel-case</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<h4 id="application-demoyml">application-demo.yml<a class="headerlink" href="#application-demoyml" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="nt">spring</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">datasource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jdbc:h2:mem:${NEW_SYSTEM}_demo;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL</span>
+<span class="w">    </span><span class="nt">driver-class-name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.h2.Driver</span>
+<span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sa</span>
+<span class="w">    </span><span class="nt">password</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">flyway</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">sql</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">      </span><span class="nt">schema-locations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">classpath:db/demo/schema.sql</span>
+<span class="w">      </span><span class="nt">data-locations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">classpath:db/demo/data.sql</span>
+<span class="w">  </span><span class="nt">h2</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">console</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/h2-console</span>
+<span class="w">      </span><span class="nt">settings</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">web-allow-others</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<h3 id="13-h2-console-spring-boot-40">1.3 H2 Console 設定（Spring Boot 4.0 対応）<a class="headerlink" href="#13-h2-console-spring-boot-40" title="Permanent link">&para;</a></h3>
+<p><strong>重要</strong>: Spring Boot 4.0 では H2 Console サーブレットを明示的に登録する必要があります。</p>
+<h4 id="h2consoleconfigjava">H2ConsoleConfig.java<a class="headerlink" href="#h2consoleconfigjava" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.example.</span><span class="n">$</span><span class="p">{</span><span class="n">NEW_SYSTEM</span><span class="p">}.</span><span class="na">infrastructure</span><span class="p">.</span><span class="na">config</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.h2.server.web.JakartaWebServlet</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.boot.autoconfigure.condition.ConditionalOnProperty</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.boot.web.servlet.ServletRegistrationBean</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.context.annotation.Bean</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.context.annotation.Configuration</span><span class="p">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * H2 Console 設定クラス.</span>
+<span class="cm"> * Spring Boot 4.0 で H2 Console サーブレットを明示的に登録する.</span>
+<span class="cm"> */</span>
+<span class="nd">@Configuration</span>
+<span class="nd">@ConditionalOnProperty</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;spring.h2.console.enabled&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">havingValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="p">)</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">H2ConsoleConfig</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="cm">/**</span>
+<span class="cm">     * H2 Console サーブレットを登録.</span>
+<span class="cm">     *</span>
+<span class="cm">     * @return ServletRegistrationBean</span>
+<span class="cm">     */</span>
+<span class="w">    </span><span class="nd">@Bean</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ServletRegistrationBean</span><span class="o">&lt;</span><span class="n">JakartaWebServlet</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">h2ConsoleServlet</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ServletRegistrationBean</span><span class="o">&lt;</span><span class="n">JakartaWebServlet</span><span class="o">&gt;</span><span class="w"> </span><span class="n">registrationBean</span><span class="w"> </span><span class="o">=</span>
+<span class="w">                </span><span class="k">new</span><span class="w"> </span><span class="n">ServletRegistrationBean</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">JakartaWebServlet</span><span class="p">());</span>
+<span class="w">        </span><span class="n">registrationBean</span><span class="p">.</span><span class="na">addUrlMappings</span><span class="p">(</span><span class="s">&quot;/h2-console/*&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">registrationBean</span><span class="p">.</span><span class="na">setLoadOnStartup</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">registrationBean</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>注意</strong>: この設定を有効にするには、<code>build.gradle.kts</code> で H2 を <code>implementation</code> として追加する必要があります（<code>runtimeOnly</code> ではなく）。</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// ❌ これではサーブレット登録不可</span>
+<span class="n">runtimeOnly</span><span class="p">(</span><span class="s">&quot;com.h2database:h2&quot;</span><span class="p">)</span>
+
+<span class="c1">// ✅ これならサーブレット登録可能</span>
+<span class="n">implementation</span><span class="p">(</span><span class="s">&quot;com.h2database:h2&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="14-mybatis-databaseid">1.4 MyBatis databaseId 設定<a class="headerlink" href="#14-mybatis-databaseid" title="Permanent link">&para;</a></h3>
+<p>H2 と PostgreSQL の両方に対応するための設定です。</p>
+<h4 id="mybatisconfigjava">MyBatisConfig.java<a class="headerlink" href="#mybatisconfigjava" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nn">com.example.</span><span class="n">$</span><span class="p">{</span><span class="n">NEW_SYSTEM</span><span class="p">}.</span><span class="na">infrastructure</span><span class="p">.</span><span class="na">config</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.context.annotation.Bean</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.context.annotation.Configuration</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.jdbc.support.JdbcUtils</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.springframework.jdbc.support.MetaDataAccessException</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">javax.sql.DataSource</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.ibatis.mapping.VendorDatabaseIdProvider</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Properties</span><span class="p">;</span>
+
+<span class="nd">@Configuration</span>
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MyBatisConfig</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="nd">@Bean</span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">databaseId</span><span class="p">(</span><span class="n">DataSource</span><span class="w"> </span><span class="n">dataSource</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">VendorDatabaseIdProvider</span><span class="w"> </span><span class="n">databaseIdProvider</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">VendorDatabaseIdProvider</span><span class="p">();</span>
+<span class="w">        </span><span class="n">Properties</span><span class="w"> </span><span class="n">properties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Properties</span><span class="p">();</span>
+<span class="w">        </span><span class="n">properties</span><span class="p">.</span><span class="na">setProperty</span><span class="p">(</span><span class="s">&quot;PostgreSQL&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;postgresql&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">properties</span><span class="p">.</span><span class="na">setProperty</span><span class="p">(</span><span class="s">&quot;H2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;h2&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">databaseIdProvider</span><span class="p">.</span><span class="na">setProperties</span><span class="p">(</span><span class="n">properties</span><span class="p">);</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">String</span><span class="w"> </span><span class="n">productName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JdbcUtils</span><span class="p">.</span><span class="na">extractDatabaseMetaData</span><span class="p">(</span>
+<span class="w">                    </span><span class="n">dataSource</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;getDatabaseProductName&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">databaseIdProvider</span><span class="p">.</span><span class="na">getDatabaseId</span><span class="p">(</span><span class="n">dataSource</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">MetaDataAccessException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RuntimeException</span><span class="p">(</span><span class="s">&quot;Failed to determine database type&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="15-dockerfile">1.5 Dockerfile<a class="headerlink" href="#15-dockerfile" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c"># ビルドステージ</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">gradle:jdk25</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s">builder</span>
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+<span class="k">COPY</span><span class="w"> </span>./<span class="w"> </span>./
+<span class="k">RUN</span><span class="w"> </span>gradle<span class="w"> </span>build<span class="w"> </span>-x<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--no-daemon
+
+<span class="c"># 実行ステージ</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">eclipse-temurin:25-jre-alpine</span>
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>builder<span class="w"> </span>/app/build/libs/*.jar<span class="w"> </span>app.jar
+<span class="k">EXPOSE</span><span class="w"> </span><span class="s">${NEW_PORT}</span>
+
+<span class="c"># デフォルトは demo プロファイル（Heroku 用）</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">SPRING_PROFILES_ACTIVE</span><span class="o">=</span>demo
+<span class="k">CMD</span><span class="w"> </span>java<span class="w"> </span>-Dserver.port<span class="o">=</span><span class="si">${</span><span class="nv">PORT</span><span class="k">:-</span><span class="si">${</span><span class="nv">NEW_PORT</span><span class="si">}}</span><span class="w"> </span>-jar<span class="w"> </span>app.jar
+</code></pre></div>
+<h3 id="16-docker-composeyml">1.6 docker-compose.yml<a class="headerlink" href="#16-docker-composeyml" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">postgres</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres:16</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}-postgres</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;${NEW_PG_PORT}:5432&quot;</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">POSTGRES_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">      </span><span class="nt">POSTGRES_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">      </span><span class="nt">POSTGRES_DB</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}_postgres_data:/var/lib/postgresql/data</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD-SHELL&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;pg_isready</span><span class="nv"> </span><span class="s">-U</span><span class="nv"> </span><span class="s">postgres&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+
+<span class="w">  </span><span class="nt">backend</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./backend</span>
+<span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}-backend</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;${NEW_PORT}:${NEW_PORT}&quot;</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">SPRING_PROFILES_ACTIVE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+<span class="w">      </span><span class="nt">SPRING_DATASOURCE_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jdbc:postgresql://postgres:5432/${NEW_SYSTEM}</span>
+<span class="w">      </span><span class="nt">SPRING_DATASOURCE_USERNAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">      </span><span class="nt">SPRING_DATASOURCE_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">postgres</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+
+<span class="w">  </span><span class="nt">schemaspy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./ops/docker/schemaspy</span>
+<span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}-schemaspy</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">../docs/assets/schemaspy-output/${NEW_SYSTEM}:/output</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">postgres</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DATABASE_HOST</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">      </span><span class="nt">DATABASE_PORT</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5432</span>
+<span class="w">      </span><span class="nt">DATABASE_NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}</span>
+<span class="w">      </span><span class="nt">DATABASE_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+<span class="w">      </span><span class="nt">DATABASE_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
+
+<span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}_postgres_data</span><span class="p p-Indicator">:</span>
+</code></pre></div>
+<hr />
+<h2 id="phase-2">Phase 2: 開発インフラの設定<a class="headerlink" href="#phase-2" title="Permanent link">&para;</a></h2>
+<h3 id="21-nix">2.1 Nix 開発環境<a class="headerlink" href="#21-nix" title="Permanent link">&para;</a></h3>
+<h4 id="appsnew_systemopsnixshellnix">apps/${NEW_SYSTEM}/ops/nix/shell.nix<a class="headerlink" href="#appsnew_systemopsnixshellnix" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span> packages <span class="o">?</span> <span class="nb">import</span> <span class="l">&lt;nixpkgs&gt;</span> <span class="p">{}</span> <span class="p">}:</span>
+
+packages<span class="o">.</span>mkShell <span class="p">{</span>
+  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">${</span>NEW_SYSTEM<span class="si">}</span><span class="s2">-dev&quot;</span><span class="p">;</span>
+
+  <span class="ss">buildInputs</span> <span class="o">=</span> <span class="k">with</span> packages<span class="p">;</span> <span class="p">[</span>
+    <span class="c1"># Java</span>
+    jdk25
+    gradle
+
+    <span class="c1"># Database</span>
+    postgresql_16
+
+    <span class="c1"># Tools</span>
+    docker
+    docker-compose
+  <span class="p">];</span>
+
+  <span class="ss">shellHook</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
+<span class="s s-Multiline">    echo &quot;🚀 </span><span class="si">${</span>NEW_SYSTEM_UPPER<span class="si">}</span><span class="s s-Multiline"> Development Environment&quot;</span>
+<span class="s s-Multiline">    echo &quot;Java: $(java -version 2&gt;&amp;1 | head -1)&quot;</span>
+<span class="s s-Multiline">    echo &quot;Gradle: $(gradle --version | grep Gradle)&quot;</span>
+<span class="s s-Multiline">    echo &quot;&quot;</span>
+<span class="s s-Multiline">    echo &quot;Available commands:&quot;</span>
+<span class="s s-Multiline">    echo &quot;  cd apps/</span><span class="si">${</span>NEW_SYSTEM<span class="si">}</span><span class="s s-Multiline">/backend &amp;&amp; ./gradlew bootRun&quot;</span>
+<span class="s s-Multiline">    echo &quot;  cd apps/</span><span class="si">${</span>NEW_SYSTEM<span class="si">}</span><span class="s s-Multiline">/backend &amp;&amp; ./gradlew bootRun --args=&#39;--spring.profiles.active=demo&#39;&quot;</span>
+<span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="flakenix">flake.nix に追加<a class="headerlink" href="#flakenix" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="ss">devShells</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="c1"># ... 既存の設定 ...</span>
+  <span class="si">${</span>NEW_SYSTEM<span class="si">}</span> <span class="o">=</span> <span class="nb">import</span> <span class="l">./apps</span><span class="o">/</span><span class="si">${</span>NEW_SYSTEM<span class="si">}</span><span class="l">/ops/nix/shell.nix</span> <span class="p">{</span> <span class="k">inherit</span> packages<span class="p">;</span> <span class="p">};</span>
+<span class="p">};</span>
+</code></pre></div>
+<h3 id="22-gulp">2.2 Gulp タスクの追加<a class="headerlink" href="#22-gulp" title="Permanent link">&para;</a></h3>
+<h4 id="opsscriptsdocker-new_systemjs">ops/scripts/docker-${NEW_SYSTEM}.js<a class="headerlink" href="#opsscriptsdocker-new_systemjs" title="Permanent link">&para;</a></h4>
+<p>既存の <code>docker-pms.js</code> をコピーして、以下を置換：
+- <code>pms</code> → <code>${NEW_SYSTEM}</code>
+- <code>5434</code> → <code>${NEW_PG_PORT}</code></p>
+<h4 id="opsscriptsschemaspy-new_systemjs">ops/scripts/schemaspy-${NEW_SYSTEM}.js<a class="headerlink" href="#opsscriptsschemaspy-new_systemjs" title="Permanent link">&para;</a></h4>
+<p>既存の <code>schemaspy-pms.js</code> をコピーして置換。</p>
+<h4 id="opsscriptsheroku-new_systemjs">ops/scripts/heroku-${NEW_SYSTEM}.js<a class="headerlink" href="#opsscriptsheroku-new_systemjs" title="Permanent link">&para;</a></h4>
+<p>既存の <code>heroku-pms.js</code> をコピーして置換。</p>
+<h4 id="opsscriptstestjs">ops/scripts/test.js に追加<a class="headerlink" href="#opsscriptstestjs" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">$</span><span class="p">{</span><span class="nx">NEW_SYSTEM_UPPER</span><span class="p">}</span><span class="nx">_BACKEND_DIR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">cwd</span><span class="p">(),</span><span class="w"> </span><span class="s1">&#39;apps&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;${NEW_SYSTEM}&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;backend&#39;</span><span class="p">);</span>
+
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;test:${NEW_SYSTEM}:backend&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">done</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Running ${NEW_SYSTEM_UPPER} Backend tests...&#39;</span><span class="p">);</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">platform</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;win32&#39;</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;gradlew.bat test&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;sh gradlew test&#39;</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">execSync</span><span class="p">(</span><span class="nx">cmd</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">cwd</span><span class="o">:</span><span class="w"> </span><span class="nx">$</span><span class="p">{</span><span class="nx">NEW_SYSTEM_UPPER</span><span class="p">}</span><span class="nx">_BACKEND_DIR</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">stdio</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;inherit&#39;</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">        </span><span class="nx">done</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;${NEW_SYSTEM_UPPER} Backend tests failed&#39;</span><span class="p">);</span>
+<span class="w">        </span><span class="nx">done</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// test:backend に追加</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;test:backend&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">gulp</span><span class="p">.</span><span class="nx">parallel</span><span class="p">(</span>
+<span class="w">    </span><span class="s1">&#39;test:sms:backend&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;test:fas:backend&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;test:pms:backend&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;test:${NEW_SYSTEM}:backend&#39;</span>
+<span class="p">));</span>
+</code></pre></div>
+<h4 id="gulpfilejs">gulpfile.js に追加<a class="headerlink" href="#gulpfilejs" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">$</span><span class="p">{</span><span class="nx">NEW_SYSTEM</span><span class="p">}</span><span class="nx">DockerTasks</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./ops/scripts/docker-${NEW_SYSTEM}.js&#39;</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">$</span><span class="p">{</span><span class="nx">NEW_SYSTEM</span><span class="p">}</span><span class="nx">SchemaspyTasks</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./ops/scripts/schemaspy-${NEW_SYSTEM}.js&#39;</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">$</span><span class="p">{</span><span class="nx">NEW_SYSTEM</span><span class="p">}</span><span class="nx">HerokuTasks</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./ops/scripts/heroku-${NEW_SYSTEM}.js&#39;</span><span class="p">;</span>
+
+<span class="nx">$</span><span class="p">{</span><span class="nx">NEW_SYSTEM</span><span class="p">}</span><span class="nx">DockerTasks</span><span class="p">(</span><span class="nx">gulp</span><span class="p">);</span>
+<span class="nx">$</span><span class="p">{</span><span class="nx">NEW_SYSTEM</span><span class="p">}</span><span class="nx">SchemaspyTasks</span><span class="p">(</span><span class="nx">gulp</span><span class="p">);</span>
+<span class="nx">$</span><span class="p">{</span><span class="nx">NEW_SYSTEM</span><span class="p">}</span><span class="nx">HerokuTasks</span><span class="p">(</span><span class="nx">gulp</span><span class="p">);</span>
+
+<span class="c1">// dev タスクに追加</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">dev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">gulp</span><span class="p">.</span><span class="nx">series</span><span class="p">(</span>
+<span class="w">    </span><span class="nx">gulp</span><span class="p">.</span><span class="nx">parallel</span><span class="p">(</span><span class="s1">&#39;mkdocs:serve&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mkdocs:open&#39;</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">gulp</span><span class="p">.</span><span class="nx">parallel</span><span class="p">(</span><span class="s1">&#39;docker:sms:up&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;docker:fas:up&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;docker:pms:up&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;docker:${NEW_SYSTEM}:up&#39;</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">gulp</span><span class="p">.</span><span class="nx">parallel</span><span class="p">(</span><span class="s1">&#39;schemaspy:sms:generate&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;schemaspy:fas:generate&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;schemaspy:pms:generate&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;schemaspy:${NEW_SYSTEM}:generate&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<h3 id="23-pre-commit">2.3 pre-commit フックの設定<a class="headerlink" href="#23-pre-commit" title="Permanent link">&para;</a></h3>
+<h4 id="huskypre-commit">.husky/pre-commit に追加<a class="headerlink" href="#huskypre-commit" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code>npx<span class="w"> </span>lint-staged<span class="w"> </span>--config<span class="w"> </span>.lintstagedrc.<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>.json
+</code></pre></div>
+<h4 id="lintstagedrcnew_systemjson">.lintstagedrc.${NEW_SYSTEM}.json<a class="headerlink" href="#lintstagedrcnew_systemjson" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;apps/${NEW_SYSTEM}/backend/src/**/*.java&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;bash -c &#39;cd apps/${NEW_SYSTEM}/backend &amp;&amp; ./gradlew checkstyleMain checkstyleTest pmdMain spotbugsMain --no-daemon&#39;&quot;</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="phase-3-cicd">Phase 3: CI/CD の設定<a class="headerlink" href="#phase-3-cicd" title="Permanent link">&para;</a></h2>
+<h3 id="31-github-actions-ci">3.1 GitHub Actions CI ワークフロー<a class="headerlink" href="#31-github-actions-ci" title="Permanent link">&para;</a></h3>
+<h4 id="githubworkflowsci-new_systemyml">.github/workflows/ci-${NEW_SYSTEM}.yml<a class="headerlink" href="#githubworkflowsci-new_systemyml" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM_UPPER} CI</span>
+
+<span class="nt">on</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">push</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">main</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">paths</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;apps/${NEW_SYSTEM}/**&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;.github/workflows/ci-${NEW_SYSTEM}.yml&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;flake.nix&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;flake.lock&#39;</span>
+<span class="w">  </span><span class="nt">pull_request</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">main</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">paths</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;apps/${NEW_SYSTEM}/**&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;.github/workflows/ci-${NEW_SYSTEM}.yml&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;flake.nix&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;flake.lock&#39;</span>
+<span class="w">  </span><span class="nt">workflow_dispatch</span><span class="p">:</span>
+
+<span class="nt">jobs</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">backend-check</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
+
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Checkout repository</span>
+<span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v4</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Nix</span>
+<span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cachix/install-nix-action@v30</span>
+<span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">nix_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nixpkgs=channel:nixos-unstable</span>
+<span class="w">          </span><span class="nt">extra_nix_config</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">            </span><span class="no">experimental-features = nix-command flakes</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Cache Nix store</span>
+<span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/cache@v4</span>
+<span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/nix/store</span>
+<span class="w">          </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nix-${{ runner.os }}-${{ hashFiles(&#39;flake.lock&#39;) }}</span>
+<span class="w">          </span><span class="nt">restore-keys</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">            </span><span class="no">nix-${{ runner.os }}-</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run Quality Check and Test</span>
+<span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nix develop .#${NEW_SYSTEM} --command bash -c &quot;cd apps/${NEW_SYSTEM}/backend &amp;&amp; ./gradlew fullCheck&quot;</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Upload Test Report</span>
+<span class="w">        </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always()</span>
+<span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/upload-artifact@v4</span>
+<span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}-backend-test-report</span>
+<span class="w">          </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">apps/${NEW_SYSTEM}/backend/build/reports/tests/test</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Upload JaCoCo Report</span>
+<span class="w">        </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always()</span>
+<span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/upload-artifact@v4</span>
+<span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NEW_SYSTEM}-backend-jacoco-report</span>
+<span class="w">          </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">apps/${NEW_SYSTEM}/backend/build/reports/jacoco/test/html</span>
+</code></pre></div>
+<h3 id="32-heroku">3.2 Heroku デプロイワークフロー<a class="headerlink" href="#32-heroku" title="Permanent link">&para;</a></h3>
+<h4 id="githubworkflowsdeploy-demo-new_systemyml">.github/workflows/deploy-demo-${NEW_SYSTEM}.yml<a class="headerlink" href="#githubworkflowsdeploy-demo-new_systemyml" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Deploy ${NEW_SYSTEM_UPPER} Demo to Heroku</span>
+
+<span class="nt">on</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">push</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">main</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">paths</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;apps/${NEW_SYSTEM}/backend/**&#39;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;.github/workflows/deploy-demo-${NEW_SYSTEM}.yml&#39;</span>
+<span class="w">  </span><span class="nt">workflow_dispatch</span><span class="p">:</span>
+
+<span class="nt">jobs</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">deploy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
+
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Checkout repository</span>
+<span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v4</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Heroku CLI</span>
+<span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">curl https://cli-assets.heroku.com/install.sh | sh</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Login to Heroku Container Registry</span>
+<span class="w">        </span><span class="nt">env</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">HEROKU_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.HEROKU_API_KEY_${NEW_SYSTEM_UPPER} }}</span>
+<span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroku container:login</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Build and push</span>
+<span class="w">        </span><span class="nt">env</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">HEROKU_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.HEROKU_API_KEY_${NEW_SYSTEM_UPPER} }}</span>
+<span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">          </span><span class="no">docker build --platform linux/amd64 --provenance=false -t registry.heroku.com/deploy-demo-${NEW_SYSTEM}/web apps/${NEW_SYSTEM}/backend</span>
+<span class="w">          </span><span class="no">docker push registry.heroku.com/deploy-demo-${NEW_SYSTEM}/web</span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Release</span>
+<span class="w">        </span><span class="nt">env</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">HEROKU_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.HEROKU_API_KEY_${NEW_SYSTEM_UPPER} }}</span>
+<span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroku container:release web -a deploy-demo-${NEW_SYSTEM}</span>
+</code></pre></div>
+<hr />
+<h2 id="phase-4-heroku">Phase 4: Heroku デプロイ<a class="headerlink" href="#phase-4-heroku" title="Permanent link">&para;</a></h2>
+<h3 id="41-heroku">4.1 Heroku アプリの作成<a class="headerlink" href="#41-heroku" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Heroku CLI でログイン</span>
+heroku<span class="w"> </span>login
+
+<span class="c1"># アプリ作成</span>
+heroku<span class="w"> </span>create<span class="w"> </span>deploy-demo-<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>
+
+<span class="c1"># PostgreSQL アドオン追加（本番環境用、オプション）</span>
+<span class="c1"># heroku addons:create heroku-postgresql:essential-0 -a deploy-demo-${NEW_SYSTEM}</span>
+
+<span class="c1"># Container Registry ログイン</span>
+heroku<span class="w"> </span>container:login
+
+<span class="c1"># イメージをビルドしてプッシュ</span>
+docker<span class="w"> </span>build<span class="w"> </span>--platform<span class="w"> </span>linux/amd64<span class="w"> </span>--provenance<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-t<span class="w"> </span>registry.heroku.com/deploy-demo-<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>/web<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>apps/<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>/backend
+
+docker<span class="w"> </span>push<span class="w"> </span>registry.heroku.com/deploy-demo-<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>/web
+
+<span class="c1"># リリース</span>
+heroku<span class="w"> </span>container:release<span class="w"> </span>web<span class="w"> </span>-a<span class="w"> </span>deploy-demo-<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>
+
+<span class="c1"># ログ確認</span>
+heroku<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span>-a<span class="w"> </span>deploy-demo-<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>
+</code></pre></div>
+<h3 id="42-github-secrets">4.2 GitHub Secrets の設定<a class="headerlink" href="#42-github-secrets" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>Heroku API Key を取得:
+   <div class="highlight"><pre><span></span><code>heroku<span class="w"> </span>auth:token
+</code></pre></div></p>
+</li>
+<li>
+<p>GitHub リポジトリの Settings &gt; Secrets and variables &gt; Actions に追加:</p>
+</li>
+<li>Name: <code>HEROKU_API_KEY_${NEW_SYSTEM_UPPER}</code></li>
+<li>Value: 取得した API Key</li>
+</ol>
+<hr />
+<h2 id="phase-5">Phase 5: ドキュメント更新<a class="headerlink" href="#phase-5" title="Permanent link">&para;</a></h2>
+<h3 id="51-readmemd">5.1 README.md の更新<a class="headerlink" href="#51-readmemd" title="Permanent link">&para;</a></h3>
+<p>プロジェクトルートの README.md に以下を追加：</p>
+<ul>
+<li>進捗表に新システムを追加</li>
+<li>デモリンクを追加</li>
+<li>ディレクトリ構成に追加</li>
+<li>Gulp タスク一覧に追加</li>
+<li>Nix 環境設定に追加</li>
+</ul>
+<h3 id="52-docsindexmd">5.2 docs/index.md の更新<a class="headerlink" href="#52-docsindexmd" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">-</span><span class="w"> </span>[<span class="nt">${NEW_SYSTEM_UPPER}デモ</span>](<span class="na">https://deploy-demo-${NEW_SYSTEM}-XXXXX.herokuapp.com/</span>){:target=&quot;_blank&quot;}
+<span class="k">-</span><span class="w"> </span>[<span class="nt">SchemaSpy ER 図（${NEW_SYSTEM_UPPER}）</span>](<span class="na">./assets/schemaspy-output/${NEW_SYSTEM}/index.html</span>){:target=&quot;_blank&quot;}
+</code></pre></div>
+<h3 id="53-appsnew_systemreadmemd">5.3 apps/${NEW_SYSTEM}/README.md の作成<a class="headerlink" href="#53-appsnew_systemreadmemd" title="Permanent link">&para;</a></h3>
+<p>既存の <code>apps/pms/README.md</code> をテンプレートとして、システム固有の情報に書き換えます。</p>
+<hr />
+<h2 id="_6">チェックリスト<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<h3 id="_7">アプリケーション基盤<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<ul class="task-list">
+<li class="task-list-item"><input type="checkbox" disabled/> ディレクトリ構造の作成</li>
+<li class="task-list-item"><input type="checkbox" disabled/> build.gradle.kts の設定</li>
+<li class="task-list-item"><input type="checkbox" disabled/> application.yml の設定</li>
+<li class="task-list-item"><input type="checkbox" disabled/> application-demo.yml の設定</li>
+<li class="task-list-item"><input type="checkbox" disabled/> H2ConsoleConfig.java の作成</li>
+<li class="task-list-item"><input type="checkbox" disabled/> MyBatisConfig.java の作成</li>
+<li class="task-list-item"><input type="checkbox" disabled/> Dockerfile の作成</li>
+<li class="task-list-item"><input type="checkbox" disabled/> docker-compose.yml の作成</li>
+<li class="task-list-item"><input type="checkbox" disabled/> スキーマファイル（Flyway migration, demo schema/data）</li>
+</ul>
+<h3 id="_8">開発インフラ<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<ul class="task-list">
+<li class="task-list-item"><input type="checkbox" disabled/> Nix shell.nix の作成</li>
+<li class="task-list-item"><input type="checkbox" disabled/> flake.nix への追加</li>
+<li class="task-list-item"><input type="checkbox" disabled/> Gulp タスク（docker, schemaspy, heroku）</li>
+<li class="task-list-item"><input type="checkbox" disabled/> gulpfile.js への登録</li>
+<li class="task-list-item"><input type="checkbox" disabled/> test.js への追加</li>
+<li class="task-list-item"><input type="checkbox" disabled/> pre-commit フック設定</li>
+<li class="task-list-item"><input type="checkbox" disabled/> lint-staged 設定</li>
+</ul>
+<h3 id="cicd">CI/CD<a class="headerlink" href="#cicd" title="Permanent link">&para;</a></h3>
+<ul class="task-list">
+<li class="task-list-item"><input type="checkbox" disabled/> GitHub Actions CI ワークフロー</li>
+<li class="task-list-item"><input type="checkbox" disabled/> GitHub Actions デプロイワークフロー</li>
+<li class="task-list-item"><input type="checkbox" disabled/> GitHub Secrets の設定</li>
+</ul>
+<h3 id="heroku">Heroku<a class="headerlink" href="#heroku" title="Permanent link">&para;</a></h3>
+<ul class="task-list">
+<li class="task-list-item"><input type="checkbox" disabled/> Heroku アプリの作成</li>
+<li class="task-list-item"><input type="checkbox" disabled/> Container Registry へのプッシュ</li>
+<li class="task-list-item"><input type="checkbox" disabled/> リリース実行</li>
+<li class="task-list-item"><input type="checkbox" disabled/> 動作確認</li>
+</ul>
+<h3 id="_9">ドキュメント<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<ul class="task-list">
+<li class="task-list-item"><input type="checkbox" disabled/> README.md の更新</li>
+<li class="task-list-item"><input type="checkbox" disabled/> docs/index.md の更新</li>
+<li class="task-list-item"><input type="checkbox" disabled/> apps/${NEW_SYSTEM}/README.md の作成</li>
+</ul>
+<hr />
+<h2 id="_10">トラブルシューティング<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
+<h3 id="h2-console-404">H2 Console が 404 エラーになる<a class="headerlink" href="#h2-console-404" title="Permanent link">&para;</a></h3>
+<p><strong>症状</strong>: <code>/h2-console</code> にアクセスすると "No static resource h2-console" エラー</p>
+<p><strong>原因</strong>: Spring Boot 4.0 では H2 Console サーブレットが自動登録されない</p>
+<p><strong>解決策</strong>:
+1. <code>build.gradle.kts</code> で H2 を <code>implementation</code> に変更
+2. <code>H2ConsoleConfig.java</code> を作成して <code>JakartaWebServlet</code> を明示的に登録</p>
+<h3 id="heroku-docker">Heroku デプロイで Docker イメージがプッシュできない<a class="headerlink" href="#heroku-docker" title="Permanent link">&para;</a></h3>
+<p><strong>症状</strong>: <code>docker push</code> が失敗する</p>
+<p><strong>解決策</strong>:
+<div class="highlight"><pre><span></span><code><span class="c1"># platform と provenance オプションを指定</span>
+docker<span class="w"> </span>build<span class="w"> </span>--platform<span class="w"> </span>linux/amd64<span class="w"> </span>--provenance<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-t<span class="w"> </span>registry.heroku.com/deploy-demo-<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>/web<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>apps/<span class="si">${</span><span class="nv">NEW_SYSTEM</span><span class="si">}</span>/backend
+</code></pre></div></p>
+<h3 id="github-actions-nix">GitHub Actions で Nix キャッシュが効かない<a class="headerlink" href="#github-actions-nix" title="Permanent link">&para;</a></h3>
+<p><strong>解決策</strong>: <code>flake.lock</code> のハッシュをキーに含める
+<div class="highlight"><pre><span></span><code><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nix-${{ runner.os }}-${{ hashFiles(&#39;flake.lock&#39;) }}</span>
+</code></pre></div></p>
+<hr />
+<h2 id="_11">参考リンク<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://docs.spring.io/spring-boot/docs/4.0.0/reference/html/">Spring Boot 4.0 Reference</a></li>
+<li><a href="https://mybatis.org/mybatis-3/">MyBatis 4.0 Documentation</a></li>
+<li><a href="https://devcenter.heroku.com/articles/container-registry-and-runtime">Heroku Container Registry</a></li>
+<li><a href="https://docs.github.com/en/actions">GitHub Actions</a></li>
+<li><a href="https://nixos.wiki/wiki/Flakes">Nix Flakes</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/k2works/practical-database-design" target="_blank" rel="noopener" title="GitHub Repository" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+      
+        <script src="../../docs/assets/js/extra.js"></script>
+      
+    
+  </body>
+</html>
